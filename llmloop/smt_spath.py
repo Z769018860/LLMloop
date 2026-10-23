@@ -463,7 +463,7 @@ class SMTPathGraph:
                 for path_name in sequence:
                     path=self.paths[path_name]
                     updates={name:parse(path.texts[name],symbols) for name in self.variables}
-                    state={name:sp.expand(updates[name].subs(state,simultaneous=True)) for name in self.variables}
+                    state={name:sp.expand(updates[name].subs({symbols[v]:state[v] for v in self.variables},simultaneous=True)) for name in self.variables}
                 macro={}
                 affine=True
                 for name,expr in state.items():

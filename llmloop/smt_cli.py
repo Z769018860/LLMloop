@@ -80,12 +80,12 @@ def main(argv=None):
             if name in values:raise SMTGraphError('Duplicate parameter value')
             values[name]=int(number)
         if values:
-            if args.c_cfg:
+            if args.c_cfg or args.c_memory:
                 report['evaluation']={'execution_mode':'bounded concrete oracle; no symbolic acceleration claim',**graph.concrete(values)}
             else:
                 report['evaluation']=(graph.compose_nested(obj['outer'],values) if nested else graph.evaluate(values))
         if args.check_range:
-            if args.c_cfg:raise SMTGraphError('--check-range requires a certified symbolic summary; --c-cfg mode is graph analysis plus bounded concrete evaluation')
+            if args.c_cfg or args.c_memory:raise SMTGraphError('--check-range requires a certified symbolic summary; C frontend mode is graph analysis plus bounded concrete evaluation')
             lo,hi=(int(x) for x in args.check_range.split(':'))
             if len(graph.parameters)!=1 or not 0<=hi-lo<=50:
                 raise SMTGraphError('Cross-check requires one parameter and 1..51 values')

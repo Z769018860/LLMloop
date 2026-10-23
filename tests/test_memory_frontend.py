@@ -23,8 +23,7 @@ def test_pointer_aliases_share_object_and_offset():
     source='''int f(int n){int a[2]={4,9};int *p=&a[1];int *q=p;int x=0;int i=0;while(i<n){*q=*p+1;x=*q;i++;}return x;}'''
     obj=translate_memory_c(source,parameter_bounds={'n':[0,2]})
     graph=SMTPathGraph(obj)
-    for inv in ['p__obj == 1','p__off == 1','q__obj == 1','q__off == 1','i >= 0']:
-        graph.certify_invariants([inv])
+    graph.certify_invariants(['p__obj == 1 and p__off == 1 and q__obj == 1 and q__off == 1 and i >= 0'])
     assert graph.analyze()['path_partition']['covered']
     out=graph.concrete({'n':1})
     assert out['final_state']['a__cell_1']==10

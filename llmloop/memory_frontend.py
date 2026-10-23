@@ -17,7 +17,7 @@ _ITE=sp.Function('ite')
 
 def _base_int(decl):
     t=decl.type
-    while isinstance(t,(c_ast.TypeDecl,c_ast.PtrDecl,c_ast.ArrayDecl)):t=t.type
+    while isinstance(t,(c_ast.FuncDecl,c_ast.TypeDecl,c_ast.PtrDecl,c_ast.ArrayDecl)):t=t.type
     return isinstance(t,c_ast.IdentifierType) and t.names==['int']
 
 
