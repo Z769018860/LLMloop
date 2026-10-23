@@ -25,7 +25,7 @@ claim superiority to LoopSCC or any new soundness theorem for unrestricted C.
 - SCC-specific parametric region discovery using abstract interpretation.
 - General oscillatory intervals for arbitrary piecewise-affine recurrences.
 - Symbolic nested-loop effects with interleaved outer body mutations.
-- Termination/ranking synthesis for non-monotone progress.
+- General lexicographic/piecewise termination rankings beyond the v0.7 affine template bank.
 - Validated array/pointer heap-state invariants (QCP-inspired).
 - Solver-independent proof-certificate replay and cross-tool benchmark suite.
 
@@ -38,3 +38,11 @@ Added a template generator for threshold intervals, monotone bounds and
 pairwise affine equalities. Candidates remain hypotheses until Z3 proves
 initiation, path coverage and consecution. The frontend is path-bounded and
 the template search is incomplete; neither claims general C analysis.
+
+
+## v0.7 verification layer
+
+Whole-graph initial-state bounded verification and universally checked affine
+ranking templates are implemented; see VERIFICATION_API.md. They complement
+SCC summaries rather than treating may-edges as execution schedules. Bounded
+verification does not imply unbounded safety when an active execution remains.

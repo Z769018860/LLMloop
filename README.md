@@ -3,13 +3,20 @@
 A reproducible Python research prototype for **certified integer-loop state
 summarization without per-iteration symbolic unfolding**.
 
-This repository implements a restricted **JSON transition IR** and a strictly checked
-C-to-IR frontend for one scalar integer while-loop function.
-It does **not** implement complete C parsing, QCP, LoopSCC, arbitrary nesting,
-pointer semantics, or universal loop acceleration. Unsupported semantics
-return an explicit error rather than a guessed answer.
+Current modules include a JSON SPath transition IR, restricted scalar C CFG
+extraction, bounded whole-function array/pointer/calloc analysis, certified
+periodic acceleration, guarded SCC recurrences, whole-graph bounded verification
+and affine termination rankings. The JSON-compatible Python API supports editor
+and service integration. Unsupported semantics return explicit UNKNOWN/error
+results. This is not a universal C analyzer or a complete LoopSCC reimplementation.
 
-## C source example
+Start with the [v0.7 verification/API guide](docs/VERIFICATION_API.md),
+[bounded C memory guide](docs/C_MEMORY_FRONTEND.md), and
+[SCC proof obligations](docs/SMT_SCC.md). Sections below describe the successive
+modules and their individual proof boundaries; mathematical integer memory
+analysis and fixed-width scalar analysis remain separate modes.
+
+## Original scalar C source frontend
 
 ~~~bash
 llmloop-c examples/alternating.c --input n=5 --check-range 0:20
@@ -22,7 +29,7 @@ assignments. Unsupported C AST constructs are rejected; signed overflow and
 pointer/memory semantics are **not** verified. Source-to-IR equivalence holds
 only for executions without undefined behavior under these restrictions.
 
-## Features
+## Original periodic accelerator features
 
 - Symbolic *simultaneous* affine phase updates with persistent variables
 - Exact full-period transition matrices and binomial closed forms when the
@@ -258,19 +265,19 @@ a separate mathematical-integer offset sort.
 
 
 For multiple sequential loops and interleaved updates, the memory frontend also
-offers \`--c-memory --bounded-function\`. It symbolically unrolls the whole
+offers `--c-memory --bounded-function`. It symbolically unrolls the whole
 function from initialized local state as one transition, preserving array and
 pointer updates across loops. This mode is exact only within its configured
 unroll/path bounds; it is not an unbounded-loop summary.
 
 
-For non-functional cyclic SPath graphs, \`--synthesize-scc-relations\` emits
+For non-functional cyclic SPath graphs, `--synthesize-scc-relations` emits
 guarded disjunctive one-step recurrence families with explicit SCC entry,
 internal and exit edges. The generated SMT-LIB relations preserve branching;
 they do not claim closed-form acceleration for arbitrary SCCs.
 
 
-Use \`--synthesize-scc-analysis\` to classify cyclic SCCs by combining guarded
+Use `--synthesize-scc-analysis` to classify cyclic SCCs by combining guarded
 one-step recurrence relations with the existing universally checked affine
 cycle search. The report distinguishes a whole-SCC certified cycle from a
 recurrence-only result and from incomplete/unknown cases; it never treats a
@@ -278,13 +285,31 @@ cycle certificate as a termination proof.
 
 
 A guarded SCC recurrence can be composed for a bounded number of steps using
-\`--compose-scc scc_0 --scc-steps 4\`. The generated SMT-LIB formula preserves
+`--compose-scc scc_0 --scc-steps 4`. The generated SMT-LIB formula preserves
 all path alternatives at every step rather than inventing a single execution
-schedule; \`--scc-from-initial\` can anchor the first state to the IR initial
+schedule; `--scc-from-initial` can anchor the first state to the IR initial
 state. This remains bounded relational composition, not unbounded acceleration.
 
 
-Use \`--compose-scc-exit scc_0 --scc-steps 1 --scc-from-initial\` to check a
+Use `--compose-scc-exit scc_0 --scc-steps 1 --scc-from-initial` to check a
 bounded path that remains inside an SCC for the requested number of transitions
 and then reaches a defined external path or safely exits the loop guard. This
 does not prove termination or summarize the downstream component.
+
+
+## v0.7: whole-graph verification, ranking certificates and integration API
+
+- `--verify-steps K --assertion 'EXPR'` checks all initial-state SPath executions
+  across SCC boundaries and emits state/input/path witnesses for failures.
+- `--ranking 'EXPR'` or `--synthesize-ranking` proves natural-valued affine
+  descent on every defined transition; this can establish termination of
+  branching SCCs without claiming an exact closed form.
+- `llmloop.api.analyze_request` accepts JSON-compatible IR or bounded C requests
+  and returns structured reports for editor/web/service adapters, without
+  remote LLM calls.
+- Fixed aliased memory compound stores, short circuit memory checks, calloc
+  element-size validation and excessive array initializers.
+
+See [verification statuses, proof obligations and API](docs/VERIFICATION_API.md).
+General C semantics, arbitrary unbounded nested memory summaries and general
+piecewise-affine closed forms remain outside the implemented proof boundary.

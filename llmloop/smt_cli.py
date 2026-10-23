@@ -36,9 +36,14 @@ def main(argv=None):
     parser.add_argument('--llm-model',help='Explicit opt-in remote LLM candidate generation')
     parser.add_argument('--llm-url',default='https://api.openai.com/v1')
     parser.add_argument('--check-range',metavar='0:30',help='Bounded concrete oracle comparison')
+    parser.add_argument('--ranking',help='Universally verify an affine natural-valued ranking expression')
+    parser.add_argument('--synthesize-ranking',action='store_true',help='Try a bounded affine ranking template bank')
+    parser.add_argument('--verify-steps',type=int,help='Verify all initial-state executions across the complete SPath graph up to this bound')
+    parser.add_argument('--assertion',help='State predicate checked at every reachable loop head, including exit')
     parser.add_argument('--output',type=Path)
     args=parser.parse_args(argv)
     try:
+        if args.assertion and args.verify_steps is None:raise SMTGraphError('--assertion requires --verify-steps')
         if args.c_int_bits and args.bv_wrap_bits:raise SMTGraphError('Choose either --c-int-bits or --bv-wrap-bits')
         if args.bounded_function and not args.c_memory:raise SMTGraphError('--bounded-function requires --c-memory')
         if args.scc_from_initial and not (args.compose_scc or args.compose_scc_exit):raise SMTGraphError('--scc-from-initial requires --compose-scc or --compose-scc-exit')
@@ -94,6 +99,15 @@ def main(argv=None):
             report['scc_exit_composition']=graph.compose_scc_exit(args.compose_scc_exit,args.scc_steps,args.scc_from_initial)
         report['analysis']=graph.analyze()
         report['acceleration']=graph.try_accelerate()
+        if args.verify_steps is not None:
+            if nested:raise SMTGraphError('Bounded verification expects an unnested graph or a bounded whole-function C translation')
+            from .bounded import verify_bounded
+            report['bounded_verification']=verify_bounded(graph,args.verify_steps,args.assertion)
+        if args.ranking or args.synthesize_ranking:
+            if nested:raise SMTGraphError('Ranking expects an unnested SPath graph')
+            from .ranking import verify_ranking, synthesize_ranking
+            if args.ranking:report['ranking']=verify_ranking(graph,args.ranking)
+            if args.synthesize_ranking:report['ranking_synthesis']=synthesize_ranking(graph)
         values={}
         for item in args.input:
             name,number=item.split('=',1)

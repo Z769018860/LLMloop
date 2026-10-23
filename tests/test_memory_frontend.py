@@ -99,3 +99,36 @@ def test_bounded_function_rejects_use_after_free_through_alias():
     }'''
     with pytest.raises(SMTGraphError,match='No paths or CFG path explosion'):
         translate_memory_c(source,max_unroll=3,whole_function=True)
+
+
+@pytest.mark.parametrize('op,expected',[('+=',7),('-=',1),('*=',12)])
+def test_memory_compound_store_reads_previous_cell(op,expected):
+    source=f'int f(){{int a[1]={{4}};int *p=&a[0];*p {op} 3;return a;}}'
+    # Return values remain restricted to scalar identifiers/literals.
+    source=source.replace('return a;','return 0;')
+    graph=SMTPathGraph(translate_memory_c(source,whole_function=True))
+    assert graph.concrete({})['final_state']['a__cell_0']==expected
+
+
+def test_unsupported_memory_store_operator_is_rejected():
+    with pytest.raises(SMTGraphError,match='Unsupported memory assignment'):
+        translate_memory_c('int f(){int a[1]={4};a[0]/=2;return 0;}',whole_function=True)
+
+
+@pytest.mark.parametrize('condition',['0 && p[3]','1 || p[3]'])
+def test_short_circuit_skips_invalid_dereference(condition):
+    source=f'int f(){{int *p=0;int x=0;if({condition}){{x=1;}}return x;}}'
+    graph=SMTPathGraph(translate_memory_c(source,whole_function=True))
+    assert graph.analyze()['path_partition']['covered']
+    assert graph.concrete({})['final_state']['x']==int(condition.startswith('1'))
+
+
+@pytest.mark.parametrize('size',['sizeof(char)','sizeof(int *)','2*sizeof(char)'])
+def test_calloc_rejects_non_int_element_size(size):
+    with pytest.raises(SMTGraphError,match='calloc size'):
+        translate_memory_c(f'int f(){{int *p=calloc(2,{size});return 0;}}',whole_function=True)
+
+
+def test_excess_array_initializers_are_rejected():
+    with pytest.raises(SMTGraphError,match='Too many array initializers'):
+        translate_memory_c('int f(){int a[1]={1,2};return 0;}',whole_function=True)
