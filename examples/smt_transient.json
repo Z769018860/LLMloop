@@ -1,0 +1,16 @@
+{
+  "kind": "smt_spgraph",
+  "name": "z3_certified_transient_scc",
+  "parameters": ["n"],
+  "parameter_bounds": {"n": [0, 1000]},
+  "state": {"p": 0, "i": 0, "x": 0},
+  "control_var": "p",
+  "control_values": {"entry": 0, "odd": 1, "even": 2},
+  "loop_guard": "i < n",
+  "exit": {"var": "i", "op": "<", "bound": "n"},
+  "paths": [
+    {"id": "entry", "when": "p == 0", "updates": {"p": "1", "i": "i+1", "x": "x+5"}},
+    {"id": "odd", "when": "p == 1", "updates": {"p": "2", "i": "i+1", "x": "x+1"}},
+    {"id": "even", "when": "p == 2", "updates": {"p": "1", "i": "i+1", "x": "x+3"}}
+  ]
+}

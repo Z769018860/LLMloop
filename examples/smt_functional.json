@@ -1,0 +1,15 @@
+{
+  "kind": "smt_spgraph",
+  "name": "z3_derived_two_phase_loop",
+  "parameters": ["n"],
+  "parameter_bounds": {"n": [0, 1000000]},
+  "state": {"p": 0, "i": 0, "x": 0},
+  "control_var": "p",
+  "control_values": {"phase_a": 0, "phase_b": 1},
+  "loop_guard": "i < n",
+  "exit": {"var": "i", "op": "<", "bound": "n"},
+  "paths": [
+    {"id": "phase_a", "when": "p == 0", "updates": {"p": "1-p", "i": "i+1", "x": "x+1"}},
+    {"id": "phase_b", "when": "p == 1", "updates": {"p": "1-p", "i": "i+1", "x": "x+2"}}
+  ]
+}

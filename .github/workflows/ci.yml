@@ -18,7 +18,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install
-        run: python -m pip install -e '.[test]'
+        run: python -m pip install -e '.[test,smt]'
       - name: Unit and regression tests
         run: pytest -q
       - name: Existing C frontend examples
@@ -36,3 +36,9 @@ jobs:
         run: |
           llmloop-oscillation examples/oscillation_threshold.json --input n=1000000 --check-range=0:30
           llmloop-oscillation-c examples/oscillation_threshold.c --input n=1000000 --check-range=0:30
+
+      - name: Verified SMT SPath, invariant and nested demos
+        run: |
+          llmloop-smt examples/smt_functional.json --proposals examples/smt_proposals.json --input n=19 --check-range 0:6
+          llmloop-smt examples/smt_nonfunctional.json --invariant 'x >= 0 and x <= 6'
+          llmloop-smt examples/smt_nested.json --invariant 'p >= 0 and p <= 1' --input n=4

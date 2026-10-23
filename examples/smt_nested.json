@@ -1,0 +1,17 @@
+{
+  "kind": "smt_spgraph_nested",
+  "body": {
+    "kind": "smt_spgraph",
+    "name": "nested_inner_periodic_body",
+    "parameters": ["n"],
+    "parameter_bounds": {"n": [0, 100]},
+    "state": {"p": 0, "x": 0},
+    "control_var": "p",
+    "control_values": {"a": 0, "b": 1},
+    "paths": [
+      {"id": "a", "when": "p == 0", "updates": {"p": "1-p", "x": "x+1"}},
+      {"id": "b", "when": "p == 1", "updates": {"p": "1-p", "x": "x+3"}}
+    ]
+  },
+  "outer": {"index": "j", "iterations": "n", "inner_iterations": "j+1", "parameter_mins": {"n": 0}}
+}

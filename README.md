@@ -195,3 +195,27 @@ For the arithmetic soundness argument and precise supported class, read
 This remains a limited mathematical-integer prototype and is NOT a
 complete LoopSCC reproduction or a general C verifier. Its partial C
 frontend does not prove absence of signed overflow.
+
+
+---
+
+## v0.4 — General Z3 SPath may-graph + certified SCC/LLM candidates
+
+`llmloop-smt` constructs existential SPath successor relations using Z3,
+extracts Tarjan SCCs, proves inductive invariants, checks hypothesized
+periodic macro-effects and phase boundaries, and **only** accelerates SCCs
+when the finite-control phase graph is independently certified to be
+functional. Nonfunctional SCCs remain MAY-transition graphs and do not
+produce fabricated exact bounds. The restricted nested-loop composition
+uses these proven functional summaries without resetting inner state.
+
+```bash
+python -m pip install -e '.[test,smt]'
+llmloop-smt examples/smt_functional.json --proposals examples/smt_proposals.json --input n=15
+llmloop-smt examples/smt_nonfunctional.json --invariant 'x >= 0 and x <= 6'
+llmloop-smt examples/smt_nested.json --invariant 'p >= 0 and p <= 1' --input n=6
+```
+
+See [docs/SMT_SCC.md](docs/SMT_SCC.md) for proof obligations, limitations,
+opt-in LLM invocation, C frontend, and original LoopSCC comparison.
+This remains a restricted mathematical-integer research prototype.
