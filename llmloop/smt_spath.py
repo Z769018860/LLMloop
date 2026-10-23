@@ -624,6 +624,103 @@ class SMTPathGraph:
             'limitation':'This is an exact one-step recurrence family relative to the supplied SPath IR when component_relation_complete is true; it does not derive a closed form or prove termination.'
         }
 
+    def synthesize_scc_analysis(self,max_cycle_length:int=8,max_candidates:int=128):
+        """Combine SCC recurrence families and certified affine-cycle candidates.
+
+        The classifier never treats a may-edge graph as an execution schedule.
+        A cycle is selected only when its certified phase sequence covers the
+        whole SCC and every node has exactly one internal may-successor.
+        """
+        if type(max_cycle_length) is not int or not 1<=max_cycle_length<=12:
+            raise SMTGraphError('max_cycle_length must be in [1,12]')
+        if type(max_candidates) is not int or not 1<=max_candidates<=512:
+            raise SMTGraphError('max_candidates must be in [1,512]')
+        analysis=self.analyze()
+        recurrence=self.synthesize_scc_relations()
+        cycles=self.synthesize_cycle_relations(max_cycle_length,max_candidates)
+        relation_by_members={
+            frozenset(component['path_ids']):component
+            for component in recurrence['components']
+        }
+        classified=[]
+        for raw_component in analysis['spath_sccs']:
+            members=set(raw_component)
+            cyclic=(len(members)>1 or any(node in analysis['spath_edges'].get(node,[]) for node in members))
+            if not cyclic:continue
+            relation=relation_by_members.get(frozenset(members))
+            if relation is None:
+                classified.append({
+                    'path_ids':sorted(members),
+                    'classification':'INCOMPLETE_OR_UNKNOWN',
+                    'reason':'No cyclic recurrence relation was emitted for this may-SCC',
+                    'component_relation_complete':False,
+                    'source_semantics_complete':False,
+                    'closed_form_acceleration':False
+                })
+                continue
+            successors={
+                node:[dst for dst in analysis['spath_edges'].get(node,[]) if dst in members]
+                for node in members
+            }
+            deterministic=all(len(successors[node])==1 for node in members)
+            certified=[
+                candidate for candidate in cycles['certified_relations']
+                if set(candidate.get('phase_sequence',[]))==members
+                and len(candidate.get('phase_sequence',[]))==len(members)
+            ]
+            selected=certified[0] if deterministic and certified else None
+            if not relation['component_relation_complete']:
+                classification='INCOMPLETE_OR_UNKNOWN'
+                reason='Path coverage/disjointness or an SMT may-edge/exit check is not certified'
+            elif selected is not None and relation['source_semantics_complete']:
+                classification='CERTIFIED_AFFINE_CYCLE'
+                reason='The certified phase cycle covers the SCC and each node has one internal may-successor'
+            elif selected is not None:
+                classification='CERTIFIED_AFFINE_CYCLE_IR_ONLY'
+                reason='Affine cycle is certified for the supplied IR, but source-level semantic completeness is not established'
+            elif relation['source_semantics_complete']:
+                classification='GUARDED_RECURRENCE_ONLY'
+                reason='Complete guarded one-step recurrence is available; no whole-SCC affine cycle was certified'
+            else:
+                classification='GUARDED_RECURRENCE_IR_ONLY'
+                reason='Guarded recurrence is complete for the supplied IR, but source-level semantic completeness is not established'
+            classified.append({
+                'path_ids':sorted(members),
+                'classification':classification,
+                'reason':reason,
+                'component_relation_complete':relation['component_relation_complete'],
+                'source_semantics_complete':relation['source_semantics_complete'],
+                'deterministic_internal_may_graph':deterministic,
+                'internal_successors':{key:sorted(value) for key,value in successors.items()},
+                'certified_cycle':selected,
+                'recurrence_component':relation,
+                'closed_form_acceleration':selected is not None,
+                'termination_proved':False
+            })
+        all_complete=all(item['component_relation_complete'] for item in classified)
+        source_complete=bool(classified) and all(item['source_semantics_complete'] for item in classified)
+        return {
+            'status':'SCC_ANALYSIS_COMPLETE_FOR_IR' if all_complete else 'SCC_ANALYSIS_WITH_UNKNOWN',
+            'method':'guarded SCC recurrence synthesis + universally checked affine-cycle candidates',
+            'cyclic_scc_count':len(classified),
+            'complete_component_count':sum(item['component_relation_complete'] for item in classified),
+            'source_semantics_complete':source_complete,
+            'components':classified,
+            'cycle_search':{
+                'candidate_count':cycles['candidate_count'],
+                'certified_count':cycles['certified_count'],
+                'complete':False
+            },
+            'closed_form_complete':False,
+            'termination_proved':False,
+            'limitations':[
+                'SCC edges are existential may-transitions, not an execution schedule',
+                'A certified affine cycle is selected only when it covers the entire SCC and the internal may-graph is functional',
+                'Cycle search is bounded by max_cycle_length and max_candidates',
+                'No termination or global trip-count proof is produced'
+            ]
+        }
+
     def compose_nested(self,outer:dict[str,Any],inputs:dict[str,int]):
         """Reuse already proven functional phase transformer as nested loop.
 

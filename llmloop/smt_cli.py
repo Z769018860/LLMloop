@@ -18,6 +18,7 @@ def main(argv=None):
     parser.add_argument('--synthesize-invariants',action='store_true',help='Generate and SMT-check conservative invariant templates')
     parser.add_argument('--synthesize-cycles',action='store_true',help='Discover bounded SCC cycles and prove affine cycle maps with Z3')
     parser.add_argument('--synthesize-scc-relations',action='store_true',help='Emit guarded disjunctive one-step recurrence relations for cyclic SCCs')
+    parser.add_argument('--synthesize-scc-analysis',action='store_true',help='Classify cyclic SCCs as certified affine cycles, guarded recurrence only, or incomplete')
     parser.add_argument('--max-cycle-length',type=int,default=8,help='Maximum simple cycle length to synthesize (1..12)')
     parser.add_argument('--max-invariant-candidates',type=int,default=30,help='Maximum invariant templates to try (1..30)')
     parser.add_argument('--function')
@@ -79,6 +80,8 @@ def main(argv=None):
             report['cycle_synthesis']=graph.synthesize_cycle_relations(args.max_cycle_length)
         if args.synthesize_scc_relations:
             report['scc_relation_synthesis']=graph.synthesize_scc_relations()
+        if args.synthesize_scc_analysis:
+            report['scc_analysis']=graph.synthesize_scc_analysis(args.max_cycle_length)
         report['analysis']=graph.analyze()
         report['acceleration']=graph.try_accelerate()
         values={}

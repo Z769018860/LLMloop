@@ -268,3 +268,10 @@ For non-functional cyclic SPath graphs, \`--synthesize-scc-relations\` emits
 guarded disjunctive one-step recurrence families with explicit SCC entry,
 internal and exit edges. The generated SMT-LIB relations preserve branching;
 they do not claim closed-form acceleration for arbitrary SCCs.
+
+
+Use \`--synthesize-scc-analysis\` to classify cyclic SCCs by combining guarded
+one-step recurrence relations with the existing universally checked affine
+cycle search. The report distinguishes a whole-SCC certified cycle from a
+recurrence-only result and from incomplete/unknown cases; it never treats a
+cycle certificate as a termination proof.

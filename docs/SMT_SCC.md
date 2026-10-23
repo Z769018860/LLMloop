@@ -129,3 +129,25 @@ the SPath IR; it does not infer a closed form, establish termination, or
 accelerate arbitrary non-functional SCCs. The existing \`--synthesize-cycles\`
 option separately enumerates bounded simple cycles and attempts to certify
 affine cycle maps.
+
+
+## Unified SCC classification
+
+Use \`--synthesize-scc-analysis\` to combine recurrence-family construction with
+the existing universally checked affine-cycle search. Each cyclic SCC is
+classified as one of:
+
+- \`CERTIFIED_AFFINE_CYCLE\`: an affine cycle certificate covers the full SCC,
+  the internal may-graph has exactly one successor per path, and the supplied
+  source semantics are complete under the configured checks.
+- \`CERTIFIED_AFFINE_CYCLE_IR_ONLY\`: the cycle is certified for the supplied
+  IR, but source-level semantic completeness is not established.
+- \`GUARDED_RECURRENCE_ONLY\` / \`GUARDED_RECURRENCE_IR_ONLY\`: a complete
+  one-step recurrence family is available, but no whole-SCC affine cycle was
+  certified.
+- \`INCOMPLETE_OR_UNKNOWN\`: path partition or solver checks do not justify a
+  complete recurrence claim.
+
+This classification is conservative. Even a certified affine cycle does not
+prove termination, a global trip count, or that the loop exits after a
+particular number of cycles.
