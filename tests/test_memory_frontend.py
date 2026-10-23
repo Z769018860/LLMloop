@@ -44,10 +44,20 @@ def test_nested_constant_for_loop_is_unrolled_exactly():
     obj=translate_memory_c(source,parameter_bounds={'n':[0,5]},max_unroll=4)
     graph=SMTPathGraph(obj)
     assert graph.analyze()['path_partition']['covered']
-    for n in range(6):assert graph.concrete({'n':n})['final_state']['x']==13*n
+    for n in range(6):assert graph.concrete({'n':n})['final_state']['x']==16*n
 
 
 def test_nested_loop_without_proven_static_exit_is_rejected():
     source='''int f(int n){int i=0;int x=0;int j=0;while(i<n){while(j<n){j++;x++;}i++;}return x;}'''
     with pytest.raises(SMTGraphError,match='not proven to exit'):
         translate_memory_c(source,parameter_bounds={'n':[0,100]},max_unroll=3)
+
+
+def test_parameter_bounded_nested_for_is_proved_by_input_domain():
+    source='''int f(int n){int i=0;int x=0;while(i<n){for(int j=0;j<n;j++){x++;}i++;}return x;}'''
+    obj=translate_memory_c(source,parameter_bounds={'n':[0,3]},max_unroll=3)
+    graph=SMTPathGraph(obj)
+    for n in range(4):
+        assert graph.concrete({'n':n})['final_state']['x']==n*n
+    with pytest.raises(SMTGraphError,match='not proven to exit'):
+        translate_memory_c(source,parameter_bounds={'n':[0,5]},max_unroll=3)

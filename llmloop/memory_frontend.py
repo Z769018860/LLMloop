@@ -10,7 +10,7 @@ import re
 from pycparser import c_ast, c_parser
 import sympy as sp
 from sympy.core.relational import Relational
-from .smt_spath import SMTGraphError
+from .smt_spath import SMTGraphError, _z3_expr, z3
 
 _ITE=sp.Function('ite')
 
@@ -153,20 +153,20 @@ def _ptr_value(n,env,arrays,pointers,safety):
     raise SMTGraphError('Pointer assignment supports &array[index], pointer copy/arithmetic, or NULL')
 
 
-def _run(node,env,guard,initial,state_names,arrays,pointers,max_paths,max_unroll):
+def _run(node,env,guard,initial,state_names,arrays,pointers,max_paths,max_unroll,parameters,parameter_bounds):
     if node is None or isinstance(node,c_ast.EmptyStatement):return [(guard,env)]
     if isinstance(node,c_ast.Compound):
         states=[(guard,env)]
         for stmt in node.block_items or []:
             out=[]
-            for g,e in states:out.extend(_run(stmt,e,g,initial,state_names,arrays,pointers,max_paths,max_unroll))
+            for g,e in states:out.extend(_run(stmt,e,g,initial,state_names,arrays,pointers,max_paths,max_unroll,parameters,parameter_bounds))
             if len(out)>max_paths:raise SMTGraphError('CFG path explosion exceeds limit '+str(max_paths))
             states=out
         return states
     if isinstance(node,c_ast.If):
         checks=[];cond=_bool(node.cond,env,arrays,pointers,checks);base=_and(guard,*checks)
-        left=_run(node.iftrue,env.copy(),_and(base,cond),initial,state_names,arrays,pointers,max_paths,max_unroll)
-        right=_run(node.iffalse,env.copy(),_and(base,sp.Not(cond)),initial,state_names,arrays,pointers,max_paths,max_unroll)
+        left=_run(node.iftrue,env.copy(),_and(base,cond),initial,state_names,arrays,pointers,max_paths,max_unroll,parameters,parameter_bounds)
+        right=_run(node.iffalse,env.copy(),_and(base,sp.Not(cond)),initial,state_names,arrays,pointers,max_paths,max_unroll,parameters,parameter_bounds)
         if len(left)+len(right)>max_paths:raise SMTGraphError('CFG path explosion exceeds limit '+str(max_paths))
         return left+right
     if isinstance(node,c_ast.Assignment):
@@ -206,15 +206,24 @@ def _run(node,env,guard,initial,state_names,arrays,pointers,max_paths,max_unroll
         raise SMTGraphError('Increment/decrement requires scalar or pointer local')
     if isinstance(node,c_ast.For):
         init_stmt=node.init
-        if isinstance(init_stmt,c_ast.Decl):
+        if isinstance(init_stmt,c_ast.DeclList):
+            if len(init_stmt.decls)!=1:
+                raise SMTGraphError('Nested for declaration must introduce exactly one scalar')
+            declaration=init_stmt.decls[0]
+            if not _base_int(declaration) or isinstance(declaration.type,(c_ast.PtrDecl,c_ast.ArrayDecl)) or declaration.name in env or declaration.init is None:
+                raise SMTGraphError('Nested for declaration must be a new initialized scalar int')
+            initial.setdefault(declaration.name,'0');state_names.add(declaration.name)
+            env=env.copy();env[declaration.name]=sp.Symbol(declaration.name,integer=True)
+            init_stmt=c_ast.Assignment(op='=',lvalue=c_ast.ID(name=declaration.name),rvalue=declaration.init)
+        elif isinstance(init_stmt,c_ast.Decl):
             if not _base_int(init_stmt) or isinstance(init_stmt.type,(c_ast.PtrDecl,c_ast.ArrayDecl)) or init_stmt.name in env or init_stmt.init is None:
                 raise SMTGraphError('Nested for declaration must be a new initialized scalar int')
             initial.setdefault(init_stmt.name,'0');state_names.add(init_stmt.name)
             env=env.copy();env[init_stmt.name]=sp.Symbol(init_stmt.name,integer=True)
-            init_stmt=c_ast.Assignment(op='=',lvalue=c_ast.ID(name=init_stmt.name),rvalue=node.init.init)
-        return _unroll(node,env,guard,initial,state_names,arrays,pointers,max_paths,max_unroll,init_stmt,node.next)
+            init_stmt=c_ast.Assignment(op='=',lvalue=c_ast.ID(name=init_stmt.name),rvalue=init_stmt.init)
+        return _unroll(node,env,guard,initial,state_names,arrays,pointers,max_paths,max_unroll,parameters,parameter_bounds,init_stmt,node.next)
     if isinstance(node,c_ast.While):
-        return _unroll(node,env,guard,initial,state_names,arrays,pointers,max_paths,max_unroll)
+        return _unroll(node,env,guard,initial,state_names,arrays,pointers,max_paths,max_unroll,parameters,parameter_bounds)
     if isinstance(node,c_ast.FuncCall) and isinstance(node.name,c_ast.ID) and node.name.name=='free':
         args=node.args.exprs if node.args else []
         if len(args)!=1 or not isinstance(args[0],c_ast.ID) or args[0].name not in pointers:
@@ -228,9 +237,28 @@ def _run(node,env,guard,initial,state_names,arrays,pointers,max_paths,max_unroll
     raise SMTGraphError('Unsupported statement in memory frontend: '+type(node).__name__)
 
 
-def _unroll(node,env,guard,initial,state_names,arrays,pointers,max_paths,max_unroll,init_stmt=None,next_stmt=None):
+def _parameter_bounds_prove_false(cond,parameters,bounds):
+    """Prove a residual inner-loop condition unreachable from parameter bounds alone."""
+    if z3 is None:return False
+    names={str(symbol) for symbol in cond.free_symbols}
+    if not names.issubset(set(parameters)) or set(bounds)-set(parameters):return False
+    try:
+        env={name:z3.Int('nested_param_'+name) for name in parameters}
+        solver=z3.Solver();solver.set(timeout=1500)
+        for name,limits in bounds.items():
+            if not isinstance(limits,list) or len(limits)!=2:return False
+            lo,hi=limits
+            if lo is not None:solver.add(env[name]>=lo)
+            if hi is not None:solver.add(env[name]<=hi)
+        solver.add(_z3_expr(_btxt(cond),env))
+        return solver.check()==z3.unsat
+    except Exception:
+        return False
+
+
+def _unroll(node,env,guard,initial,state_names,arrays,pointers,max_paths,max_unroll,parameters,parameter_bounds,init_stmt=None,next_stmt=None):
     states=[(guard,env)]
-    if init_stmt is not None:states=_run(init_stmt,env,guard,initial,state_names,arrays,pointers,max_paths,max_unroll)
+    if init_stmt is not None:states=_run(init_stmt,env,guard,initial,state_names,arrays,pointers,max_paths,max_unroll,parameters,parameter_bounds)
     finished=[]
     for _ in range(max_unroll):
         continuing=[]
@@ -238,9 +266,9 @@ def _unroll(node,env,guard,initial,state_names,arrays,pointers,max_paths,max_unr
             checks=[];cond=sp.simplify(_bool(node.cond,e,arrays,pointers,checks));base=_and(g,*checks)
             if cond is sp.false or cond==sp.false:finished.append((base,e));continue
             if cond is not sp.true and cond!=sp.true:finished.append((_and(base,sp.Not(cond)),e))
-            body=_run(node.stmt,e,_and(base,cond),initial,state_names,arrays,pointers,max_paths,max_unroll)
+            body=_run(node.stmt,e,_and(base,cond),initial,state_names,arrays,pointers,max_paths,max_unroll,parameters,parameter_bounds)
             for bg,be in body:
-                if next_stmt is not None:continuing.extend(_run(next_stmt,be,bg,initial,state_names,arrays,pointers,max_paths,max_unroll))
+                if next_stmt is not None:continuing.extend(_run(next_stmt,be,bg,initial,state_names,arrays,pointers,max_paths,max_unroll,parameters,parameter_bounds))
                 else:continuing.append((bg,be))
         if len(finished)+len(continuing)>max_paths:raise SMTGraphError('Nested-loop path explosion exceeds limit '+str(max_paths))
         states=continuing
@@ -248,7 +276,7 @@ def _unroll(node,env,guard,initial,state_names,arrays,pointers,max_paths,max_unr
     if states:
         for g,e in states:
             checks=[];cond=sp.simplify(_bool(node.cond,e,arrays,pointers,checks))
-            if cond is not sp.false and cond!=sp.false:
+            if cond is not sp.false and cond!=sp.false and not _parameter_bounds_prove_false(cond,parameters,parameter_bounds):
                 raise SMTGraphError('Nested loop not proven to exit within unroll limit '+str(max_unroll))
             finished.append((_and(g,*checks),e))
     return finished
@@ -345,7 +373,7 @@ def translate_memory_c(source:str,function:str|None=None,parameter_bounds:dict|N
         if a.get('alive'):a['alive_expr']=head[a['alive']]
     checks=[];guard=_bool(loop.cond,head,arrays,pointers,checks)
     if checks:raise SMTGraphError('Memory access in outer loop guard is not supported yet')
-    outcomes=_run(loop.stmt,head,sp.true,initial,state_names,arrays,pointers,max_paths,max_unroll)
+    outcomes=_run(loop.stmt,head,sp.true,initial,state_names,arrays,pointers,max_paths,max_unroll,params,parameter_bounds or {})
     if not 1<=len(outcomes)<=max_paths:raise SMTGraphError('No paths or CFG path explosion')
     paths=[]
     for k,(g,e) in enumerate(outcomes):
