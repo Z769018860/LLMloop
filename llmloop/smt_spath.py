@@ -521,6 +521,109 @@ class SMTPathGraph:
                 'complete':False,
                 'limitation':'Search is bounded by cycle length/candidate count and only emits affine cycle maps; no termination or global closed-form claim'}
 
+    def synthesize_scc_relations(self):
+        """Emit exact guarded one-step recurrence families for cyclic may-SCCs.
+
+        Unlike cycle enumeration, this preserves all branch guards and the
+        disjunctive next-state relation. It deliberately makes no closed-form
+        acceleration claim for a non-functional SCC.
+        """
+        report=self.analyze()
+        edges=report['spath_edges']
+        inv=self._invariant()
+        effective_guard=z3.And(self.loop_guard,*self.loop_guard_overflow_checks)
+        unknown_edges={tuple(edge) for edge in report['unknown_edges']}
+        unknown_exits=set(report['unknown_exits'])
+        partition=report['path_partition']
+        graph_complete=(partition['covered'] and partition['disjoint'] and
+                        not unknown_edges and not unknown_exits)
+        overflow_status=report.get('signed_overflow',{}).get('status','NOT_APPLICABLE')
+        source_semantics_complete=(graph_complete and
+            (not self.check_signed_overflow or overflow_status=='PROVED_NO_OVERFLOW'))
+        source_entries={entry['id']:entry for entry in self.obj.get('paths',[])}
+        components=[]
+        for component in report['spath_sccs']:
+            members=set(component)
+            cyclic=(len(members)>1 or any(node in edges.get(node,[]) for node in members))
+            if not cyclic:continue
+            scc_index=len(components)
+            ordered=sorted(members)
+            post_vars={name:(z3.BitVec('scc_'+str(scc_index)+'_post_'+name,self.bit_width)
+                             if self.bit_width else z3.Int('scc_'+str(scc_index)+'_post_'+name))
+                       for name in self.variables}
+            internal_edges=[{'from':src,'to':dst} for src in ordered
+                            for dst in edges.get(src,[]) if dst in members]
+            exit_edges=[{'from':src,'to':dst} for src in ordered
+                        for dst in edges.get(src,[]) if dst not in members]
+            entry_edges=[{'from':src,'to':dst} for src,dsts in edges.items()
+                         for dst in dsts if dst in members and src not in members]
+            cases=[];within_relations=[];transition_relations=[]
+            for path_id in ordered:
+                path=self.paths[path_id]
+                after=self._updated(path)
+                source_entry=source_entries.get(path_id,{})
+                precondition=z3.And(self.pre,inv,effective_guard,path.guard)
+                next_equalities=z3.And(*[post_vars[v]==after[v] for v in self.variables])
+                transition_relation=z3.And(precondition,next_equalities)
+                next_active=self._at(effective_guard,after)
+                internal_next_guards=[self._at(self.paths[dst].guard,after)
+                                      for dst in ordered]
+                stays=z3.And(precondition,next_equalities,next_active,z3.Or(*internal_next_guards))
+                transition_relations.append(transition_relation)
+                within_relations.append(stays)
+                cases.append({
+                    'path_id':path_id,
+                    'source_guard':source_entry.get('when',True),
+                    'source_updates':{v:source_entry.get('updates',{}).get(v,v)
+                                      for v in self.variables},
+                    'current_guard_smt2':z3.simplify(precondition).sexpr(),
+                    'next_state_smt2':{v:z3.simplify(after[v]).sexpr() for v in self.variables},
+                    'transition_relation_smt2':z3.simplify(transition_relation).sexpr(),
+                    'within_scc_relation_smt2':z3.simplify(stays).sexpr(),
+                    'internal_successors':[dst for dst in edges.get(path_id,[]) if dst in members],
+                    'may_exit_to':[dst for dst in edges.get(path_id,[]) if dst not in members],
+                    'can_exit_loop':path_id in report['exit_spaths'],
+                    'edge_checks_unknown':[dst for src,dst in report['unknown_edges'] if src==path_id]
+                })
+            branching=any(len([dst for dst in edges.get(node,[]) if dst in members])>1
+                          for node in members)
+            within_relation=z3.simplify(z3.Or(*within_relations))
+            transition_relation=z3.simplify(z3.Or(*transition_relations))
+            component_exact=graph_complete and not any(
+                src in members and dst in members for src,dst in unknown_edges)
+            components.append({
+                'id':'scc_'+str(scc_index),
+                'kind':'branching_nonfunctional' if branching else 'cycle',
+                'path_ids':ordered,
+                'entry_edges':entry_edges,
+                'internal_edges':internal_edges,
+                'exit_edges':exit_edges,
+                'transition_cases':cases,
+                'transition_relation_smt2':transition_relation.sexpr(),
+                'within_scc_recurrence_smt2':within_relation.sexpr(),
+                'case_relations_exact_by_construction':True,
+                'component_relation_complete':component_exact,
+                'source_semantics_complete':source_semantics_complete,
+                'closed_form_acceleration':False,
+                'closed_form_reason':'Branch guards and state-dependent successor choices are preserved; no single-cycle schedule is assumed'
+            })
+        branching_count=sum(c['kind']=='branching_nonfunctional' for c in components)
+        exact_count=sum(c['component_relation_complete'] for c in components)
+        return {
+            'status':'SCC_RECURRENCE_FAMILIES_SYNTHESIZED' if components else 'NO_CYCLIC_SCC',
+            'method':'guarded disjunctive transition relations + explicit SCC entry/internal/exit edges',
+            'cyclic_scc_count':len(components),
+            'branching_scc_count':branching_count,
+            'component_relation_complete_count':exact_count,
+            'source_semantics_complete':source_semantics_complete,
+            'path_partition':partition,
+            'unknown_edges':report['unknown_edges'],
+            'unknown_exits':report['unknown_exits'],
+            'components':components,
+            'closed_form_complete':False,
+            'limitation':'This is an exact one-step recurrence family relative to the supplied SPath IR when component_relation_complete is true; it does not derive a closed form or prove termination.'
+        }
+
     def compose_nested(self,outer:dict[str,Any],inputs:dict[str,int]):
         """Reuse already proven functional phase transformer as nested loop.
 

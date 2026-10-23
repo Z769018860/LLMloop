@@ -107,3 +107,25 @@ This is intentionally not a complete recurrence synthesizer: the search is
 bounded, only affine macro maps are emitted, and a conditional cycle certificate
 does not prove termination or that every state follows that cycle. A genuinely
 non-functional SCC may correctly produce zero certified cycles.
+
+
+## Exact guarded recurrence families for non-functional SCCs
+
+Use \`--synthesize-scc-relations\` to export a guarded, disjunctive one-step
+transition relation for every cyclic SCC. Each case retains the original SPath
+guard and next-state equations, rendered as SMT-LIB, and reports SCC entry,
+internal, and exit edges. This is suitable for downstream bounded composition
+without pretending a branching SCC follows one deterministic cycle.
+
+\`component_relation_complete\` is true only when the whole active path
+partition is covered and disjoint and no may-edge/exit check is unknown.
+\`source_semantics_complete\` additionally requires the signed-overflow checks
+to prove safe when signed C mode is selected. If these flags are false, the
+relation family remains a candidate representation of the supplied IR, not a
+complete source-level proof.
+
+This feature synthesizes an exact **one-step recurrence family** relative to
+the SPath IR; it does not infer a closed form, establish termination, or
+accelerate arbitrary non-functional SCCs. The existing \`--synthesize-cycles\`
+option separately enumerates bounded simple cycles and attempts to certify
+affine cycle maps.

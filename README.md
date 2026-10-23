@@ -262,3 +262,9 @@ offers \`--c-memory --bounded-function\`. It symbolically unrolls the whole
 function from initialized local state as one transition, preserving array and
 pointer updates across loops. This mode is exact only within its configured
 unroll/path bounds; it is not an unbounded-loop summary.
+
+
+For non-functional cyclic SPath graphs, \`--synthesize-scc-relations\` emits
+guarded disjunctive one-step recurrence families with explicit SCC entry,
+internal and exit edges. The generated SMT-LIB relations preserve branching;
+they do not claim closed-form acceleration for arbitrary SCCs.
