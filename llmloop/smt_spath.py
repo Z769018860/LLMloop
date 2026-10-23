@@ -3,7 +3,7 @@
 A satisfiable SPath edge is an existential *may* edge, NOT a guarantee of a
 feasible arbitrary graph walk. Only an inductive invariant + guard partition +
 functional successor certificate permits translation to a GraphAnalyzer.
-Mathematical integers are used; source C bitvector/overflow is not modeled.
+Mathematical integers are the default. Optional fixed-width signed bit-vector mode models C integer wraparound, but does not use the affine accelerator.
 """
 from __future__ import annotations
 import ast
@@ -44,12 +44,12 @@ def _check(*clauses):
     return "sat" if result == z3.sat else "unsat"
 
 
-def _z3_expr(text: Any, symbols: dict[str, Any]):
+def _z3_expr(text: Any, symbols: dict[str, Any], bit_width: int | None = None):
     """Parse a bounded Python-shaped integer/Boolean DSL; never use eval()."""
     if isinstance(text, bool):
         return z3.BoolVal(text)
     if type(text) is int:
-        return z3.IntVal(text)
+        return z3.BitVecVal(text,bit_width) if bit_width else z3.IntVal(text)
     if not isinstance(text, str) or len(text)>1200:
         raise SMTGraphError("Expected a short textual expression")
     try:
@@ -60,7 +60,7 @@ def _z3_expr(text: Any, symbols: dict[str, Any]):
     def rec(n):
         if isinstance(n, ast.Constant):
             if type(n.value) is bool: return z3.BoolVal(n.value)
-            if type(n.value) is int: return z3.IntVal(n.value)
+            if type(n.value) is int: return z3.BitVecVal(n.value,bit_width) if bit_width else z3.IntVal(n.value)
         if isinstance(n, ast.Name) and n.id in symbols:
             return symbols[n.id]
         if isinstance(n, ast.UnaryOp):
@@ -76,6 +76,7 @@ def _z3_expr(text: Any, symbols: dict[str, Any]):
             if isinstance(n.op,(ast.FloorDiv,ast.Mod)):
                 if not isinstance(n.right,ast.Constant) or type(n.right.value) is not int or n.right.value==0:
                     raise SMTGraphError('Division/modulo requires a nonzero literal divisor')
+                if isinstance(n.op,ast.Mod) and z3.is_bv(a): return z3.SRem(a,b)
                 return a/b if isinstance(n.op,ast.FloorDiv) else a%b
         if isinstance(n, ast.BoolOp):
             args=[rec(x) for x in n.values]
@@ -95,6 +96,9 @@ def _z3_expr(text: Any, symbols: dict[str, Any]):
                 else:raise SMTGraphError("Unsupported comparator")
                 claims.append(claim)
             return z3.And(*claims)
+        if isinstance(n,ast.Call) and isinstance(n.func,ast.Name) and n.func.id=='ite' and not n.keywords and len(n.args)==3:
+            condition,yes,no=(rec(x) for x in n.args)
+            return z3.If(condition,yes,no)
         raise SMTGraphError("Unsupported expression node: "+type(n).__name__)
     try:
         return rec(node)
@@ -141,9 +145,18 @@ class SMTPathGraph:
         self.parameters=tuple(obj.get("parameters",[]))
         self.control=obj.get("control_var")
         if not self.variables or len(set(self.variables+self.parameters))!=len(self.variables+self.parameters):
-            raise SMTGraphError("State and parameters must have unique names")
-        self.x={v:z3.Int("state_"+v) for v in self.variables}
-        self.p={v:z3.Int("param_"+v) for v in self.parameters}
+            raise SMTGraphError("State and parameter names must be unique")
+        semantics=obj.get('integer_semantics','math')
+        if semantics=='math' or semantics is None:
+            self.bit_width=None
+        elif isinstance(semantics,dict) and semantics.get('kind')=='c_signed' and type(semantics.get('bits')) is int and semantics['bits'] in (8,16,32,64):
+            self.bit_width=semantics['bits']
+        else:
+            raise SMTGraphError("integer_semantics must be 'math' or {'kind':'c_signed','bits':8|16|32|64}")
+        self.signed_min=-(1 << (self.bit_width-1)) if self.bit_width else None
+        self.signed_max=(1 << (self.bit_width-1))-1 if self.bit_width else None
+        self.x={v:(z3.BitVec("state_"+v,self.bit_width) if self.bit_width else z3.Int("state_"+v)) for v in self.variables}
+        self.p={v:(z3.BitVec("param_"+v,self.bit_width) if self.bit_width else z3.Int("param_"+v)) for v in self.parameters}
         self.env={**self.p,**self.x}
         self.lower_bounds=obj.get("parameter_bounds",{})
         if set(self.lower_bounds)-set(self.parameters):
@@ -152,20 +165,23 @@ class SMTPathGraph:
         for k,limits in self.lower_bounds.items():
             if not isinstance(limits,list) or len(limits)!=2 or any(x is not None and type(x)!=int for x in limits):
                 raise SMTGraphError("Parameter bound must be [minimum,maximum] or null")
+            if self.bit_width and any(x is not None and not self.signed_min<=x<=self.signed_max for x in limits):
+                raise SMTGraphError('Parameter bounds exceed signed '+str(self.bit_width)+'-bit range for '+k)
             if limits[0] is not None:bounds.append(self.p[k]>=limits[0])
             if limits[1] is not None:bounds.append(self.p[k]<=limits[1])
         self.pre=z3.And(*bounds)
         if _check(self.pre)!='sat':
             raise SMTGraphError('Empty or undecidable input parameter domain')
-        self.initial={v:_z3_expr(expr,self.env) for v,expr in obj['state'].items()}
+        self.initial={v:_z3_expr(expr,self.env,self.bit_width) for v,expr in obj['state'].items()}
         try:
-            for value in self.initial.values():z3.IntVal(0)+value
+            zero=z3.BitVecVal(0,self.bit_width) if self.bit_width else z3.IntVal(0)
+            for value in self.initial.values():zero+value
         except z3.Z3Exception as exc:
             raise SMTGraphError('Initial state must contain integers') from exc
         if any(z3.eq(self.x[v],symbol) for value in self.initial.values()
                for symbol in z3.z3util.get_vars(value) for v in self.variables):
             raise SMTGraphError("Initial state cannot refer to mutable state")
-        self.loop_guard=_z3_expr(obj.get("loop_guard",True),self.env)
+        self.loop_guard=_z3_expr(obj.get("loop_guard",True),self.env,self.bit_width)
         self.exit=obj.get('exit')
         self.paths={}
         source=obj.get('paths',[])
@@ -178,8 +194,8 @@ class SMTPathGraph:
             if not isinstance(writes,dict) or set(writes)-set(self.variables):
                 raise SMTGraphError('Unknown SPath update')
             texts={v:str(writes.get(v,v)) for v in self.variables}
-            self.paths[name]=_Path(name,_z3_expr(entry.get('when',True),self.env),
-                         {v:_z3_expr(writes.get(v,v),self.env) for v in self.variables},texts)
+            self.paths[name]=_Path(name,_z3_expr(entry.get('when',True),self.env,self.bit_width),
+                         {v:_z3_expr(writes.get(v,v),self.env,self.bit_width) for v in self.variables},texts)
         self.certified=[]
         self._accelerated=None
         self._nested=None
@@ -191,7 +207,8 @@ class SMTPathGraph:
             z3.And(self.loop_guard)
             for path in self.paths.values():
                 z3.And(path.guard)
-                for value in path.updates.values():z3.IntVal(0)+value
+                zero=z3.BitVecVal(0,self.bit_width) if self.bit_width else z3.IntVal(0)
+                for value in path.updates.values():zero+value
         except z3.Z3Exception as exc:
             raise SMTGraphError('Non-Boolean guard or non-integer assignment: '+str(exc)) from exc
 
@@ -205,7 +222,7 @@ class SMTPathGraph:
     def _invariant(self,mapping=None):
         mapping=mapping or self.x
         if not self.certified:return z3.BoolVal(True)
-        return z3.And(*[self._at(_z3_expr(pred,self.env),mapping) for pred in self.certified])
+        return z3.And(*[self._at(_z3_expr(pred,self.env,self.bit_width),mapping) for pred in self.certified])
 
     def _init_map(self):return self.initial
 
@@ -229,7 +246,7 @@ class SMTPathGraph:
             if not isinstance(expr,str) or len(expr)>1000:
                 outcomes.append({'candidate':str(expr)[:60],'certified':False,'reason':'Invalid expression'});continue
             try:
-                inv=_z3_expr(expr,self.env)
+                inv=_z3_expr(expr,self.env,self.bit_width)
                 z3.And(inv)
                 base=_check(self.pre,z3.Not(self._at(inv,self._init_map())))
                 if base!='unsat':
@@ -279,6 +296,8 @@ class SMTPathGraph:
         No exact summary is emitted on ambiguous transitions or missing proof.
         """
         report=self.analyze()
+        if self.bit_width:
+            return {'status':'UNKNOWN','reason':'Fixed-width bit-vector analysis is enabled; exact affine acceleration requires a separate no-overflow proof and is intentionally disabled'}
         if not report['path_partition']['covered'] or not report['path_partition']['disjoint'] or report['unknown_edges'] or report['unknown_exits']:
             return {'status':'UNKNOWN','reason':'Path partition or SMT may-edge check is not certified'}
         if self.control not in self.variables or set(self._path_values)!=set(self.paths):
@@ -316,7 +335,7 @@ class SMTPathGraph:
             actual_control=after[self.control]
             # Even the final (exiting) step must preserve the concrete
             # control-state output, not only its abstract next phase.
-            expected=z3.IntVal(self._path_values[successors[key]])
+            expected=z3.BitVecVal(self._path_values[successors[key]],self.bit_width) if self.bit_width else z3.IntVal(self._path_values[successors[key]])
             if _check(self.pre,invariant,self.loop_guard,path.guard,
                       actual_control!=expected)!='unsat':
                 return {'status':'UNKNOWN','reason':'Concrete control update differs from predicted phase for '+key}
@@ -377,7 +396,7 @@ class SMTPathGraph:
                 state=self._updated(here,state)
             if _check(*assumptions)=='unsat':return {'certified':False,'reason':'No feasible complete cycle'}
             for v in self.variables:
-                claimed=_z3_expr(effects[v],self.env)
+                claimed=_z3_expr(effects[v],self.env,self.bit_width)
                 mismatch=_check(*assumptions,state[v]!=claimed)
                 if mismatch!='unsat':
                     return {'certified':False,'reason':'Incorrect macro update for '+v,'solver':mismatch}
@@ -393,12 +412,90 @@ class SMTPathGraph:
         except (SMTGraphError,z3.Z3Exception,ValueError,TypeError) as exc:
             return {'certified':False,'reason':str(exc)}
 
+    @staticmethod
+    def _render_affine(expr):
+        expr=sp.expand(sp.sympify(expr))
+        if expr.is_Integer:return str(int(expr))
+        if expr.is_Symbol:return str(expr)
+        if expr.is_Add:
+            return '('+' + '.join(SMTPathGraph._render_affine(term) if not term.could_extract_minus_sign()
+                else '-'+SMTPathGraph._render_affine(-term) for term in expr.as_ordered_terms())+')'
+        if expr.is_Mul:
+            return '('+' * '.join(SMTPathGraph._render_affine(term) for term in expr.as_ordered_factors())+')'
+        raise SMTGraphError('Cycle macro is not in the supported affine expression language')
+
+    def synthesize_cycle_relations(self,max_cycle_length:int=8,max_candidates:int=128):
+        """Enumerate bounded simple cycles in the may-SCC graph and synthesize exact affine macro maps.
+
+        A candidate is only returned as certified if verify_cycle_proposal proves
+        every branch choice, the macro identity, and the phase reset with Z3.
+        """
+        if type(max_cycle_length) is not int or not 1<=max_cycle_length<=12:
+            raise SMTGraphError('max_cycle_length must be in [1,12]')
+        if type(max_candidates) is not int or not 1<=max_candidates<=512:
+            raise SMTGraphError('max_candidates must be in [1,512]')
+        report=self.analyze()
+        edges=report['spath_edges']
+        cycles=[];seen=set()
+        for component in report['spath_sccs']:
+            members=set(component)
+            for start in sorted(component):
+                def walk(path):
+                    if len(cycles)>=max_candidates:return
+                    last=path[-1]
+                    for nxt in sorted(edges.get(last,[])):
+                        if nxt not in members:continue
+                        if nxt==start:
+                            cycle=tuple(path)
+                            if len(cycle)<=max_cycle_length and cycle not in seen:
+                                seen.add(cycle);cycles.append(list(cycle))
+                            continue
+                        if nxt in path or nxt<start or len(path)>=max_cycle_length:continue
+                        walk(path+[nxt])
+                walk([start])
+                if len(cycles)>=max_candidates:break
+            if len(cycles)>=max_candidates:break
+        symbols={name:sp.Symbol(name,integer=True) for name in (*self.parameters,*self.variables)}
+        outcomes=[]
+        for sequence in cycles:
+            try:
+                state={name:symbols[name] for name in self.variables}
+                for path_name in sequence:
+                    path=self.paths[path_name]
+                    updates={name:parse(path.texts[name],symbols) for name in self.variables}
+                    state={name:sp.expand(updates[name].subs(state,simultaneous=True)) for name in self.variables}
+                macro={}
+                affine=True
+                for name,expr in state.items():
+                    polynomial=sp.Poly(sp.expand(expr),*symbols.values())
+                    if polynomial.total_degree()>1:
+                        affine=False;break
+                    macro[name]=self._render_affine(expr)
+                if not affine:
+                    outcomes.append({'phase_sequence':sequence,'certified':False,
+                                     'reason':'Macro relation is not affine; current synthesis backend only emits affine recurrences'})
+                    continue
+                proposal={'phase_sequence':sequence,'macro_map':macro}
+                proof=self.verify_cycle_proposal(proposal)
+                outcomes.append({'phase_sequence':sequence,'macro_map':macro,**proof})
+            except (SMTGraphError,ValueError,TypeError,sp.PolynomialError) as exc:
+                outcomes.append({'phase_sequence':sequence,'certified':False,'reason':str(exc)})
+        certified=[item for item in outcomes if item.get('certified')]
+        return {'status':'CYCLE_RELATIONS_SYNTHESIZED',
+                'method':'bounded simple-cycle enumeration + affine symbolic composition + universal SMT certificate',
+                'candidate_count':len(outcomes),'certified_count':len(certified),
+                'certified_relations':certified,'candidates':outcomes,
+                'complete':False,
+                'limitation':'Search is bounded by cycle length/candidate count and only emits affine cycle maps; no termination or global closed-form claim'}
+
     def compose_nested(self,outer:dict[str,Any],inputs:dict[str,int]):
         """Reuse already proven functional phase transformer as nested loop.
 
         Requires unconditional SPaths, no inner exit guard. Guarded inner loops
         must not be replaced by arbitrary fixed counts.
         """
+        if self.bit_width:
+            raise SMTGraphError('Nested affine composition currently requires mathematical-integer semantics')
         if self.exit is not None or not z3.is_true(z3.simplify(self.loop_guard)):
             raise SMTGraphError('Nested fixed iteration requires unconditional inner-loop body')
         if self._accelerated is None:
@@ -446,10 +543,18 @@ class SMTPathGraph:
             return self._accelerated.execute_until_exit(inputs)
         raise SMTGraphError('No exit guard: use compose_nested or after_steps')
 
+    def _signed_value(self,value:int)->int:
+        if not self.bit_width:return value
+        modulus=1 << self.bit_width
+        return value-modulus if value >= (1 << (self.bit_width-1)) else value
+
     def concrete(self,inputs:dict[str,int],max_steps:int=10000,steps:int|None=None):
         """Bounded literal execution oracle, separate from the matrix accelerator."""
         self._validate_inputs(inputs)
-        assignments=[(self.p[k],z3.IntVal(value)) for k,value in inputs.items()]
+        if self.bit_width and any(not self.signed_min<=value<=self.signed_max for value in inputs.values()):
+            raise SMTGraphError('Input outside signed '+str(self.bit_width)+'-bit range')
+        numeral=lambda value: z3.BitVecVal(value,self.bit_width) if self.bit_width else z3.IntVal(value)
+        assignments=[(self.p[k],numeral(value)) for k,value in inputs.items()]
         state={v:z3.simplify(z3.substitute(expr,*assignments))
                for v,expr in self.initial.items()}
         def value(term):
@@ -460,7 +565,7 @@ class SMTPathGraph:
         for k in range(max_steps+1):
             active=value(self.loop_guard)
             if z3.is_false(active) or (steps is not None and k==steps):
-                return {'trip_count':k,'final_state':{v:state[v].as_long() for v in self.variables}}
+                return {'trip_count':k,'final_state':{v:(self._signed_value(state[v].as_long()) if self.bit_width else state[v].as_long()) for v in self.variables}}
             if not z3.is_true(active):raise SMTGraphError('Concrete guard not ground')
             if k==max_steps:break
             choices=[p for p in self.paths.values() if z3.is_true(value(p.guard))]

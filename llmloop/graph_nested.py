@@ -26,8 +26,8 @@ class GraphNestedAnalyzer:
     def __init__(self,obj):
         if obj.get('kind')!='spgraph_nested':raise GraphError('Expected spgraph_nested')
         outer=obj.get('outer',{})
-        if outer.get('reset_control',False) or outer.get('updates'):
-            raise GraphError('Outer state mutations and control resets are unsupported')
+        if outer.get('reset_control',False):
+            raise GraphError('Outer control resets are unsupported')
         self.body=GraphAnalyzer(obj['body'])
         if self.body.exit is not None:
             raise GraphError('Nested fixed inner count cannot override an inner exit guard')
@@ -54,12 +54,42 @@ class GraphNestedAnalyzer:
         if not _positive_polynomial(smallest,self.minima):
             raise GraphError('Could not prove inner iteration lengths nonnegative')
         self.total=s.factor(s.summation(self.inner,(self.j,0,self.N-1)))
-        # Do not allow the summation to introduce a symbolic Sum left unevaluated.
         if self.total.has(s.Sum):raise GraphError('Cannot sum symbolic inner lengths exactly')
+        self.outer_updates={}
+        updates=outer.get('updates',{})
+        if updates:
+            if outer.get('update_mode')!='additive' or not isinstance(updates,dict):
+                raise GraphError("Outer updates must use update_mode='additive' and map state variables to per-iteration deltas")
+            names={**self.body.syms,self.var:self.j}
+            state_symbols={self.body.syms[x] for x in self.body.variables}
+            for target,source in updates.items():
+                if target not in self.body.data_vars:
+                    raise GraphError('Outer additive updates may target only non-control data variables')
+                target_index=self.body.data_vars.index(target)
+                for path in self.body.paths.values():
+                    # The target must be observationally independent of the inner
+                    # transformer: it is neither written nor read by any row.
+                    for col in range(self.body.d):
+                        expected=1 if col==target_index else 0
+                        if s.simplify(path.matrix[target_index,col]-expected)!=0:
+                            raise GraphError('Outer-updated variable is modified by inner loop: '+target)
+                        if col!=target_index and s.simplify(path.matrix[col,target_index])!=0:
+                            raise GraphError('Outer-updated variable influences inner-loop state: '+target)
+                    if s.simplify(path.matrix[target_index,self.body.d])!=0:
+                        raise GraphError('Inner loop has a nonzero constant update for outer-updated variable: '+target)
+                delta=parse(source,names)
+                if delta.free_symbols & state_symbols:
+                    raise GraphError('Outer additive deltas may depend only on the outer index and immutable parameters')
+                total_delta=s.factor(s.summation(delta,(self.j,0,self.N-1)))
+                if total_delta.has(s.Sum):
+                    raise GraphError('Cannot sum outer additive update exactly for '+target)
+                self.outer_updates[target]=total_delta
         self.evidence={'outer_count':str(self.N),'inner_count':str(self.inner),
                        'total_microsteps':str(self.total),
                        'induction':'state persists and composition T^a o T^b = T^(a+b)',
-                       'nonnegative':'endpoint-and-coefficient certificate'}
+                       'nonnegative':'endpoint-and-coefficient certificate',
+                       'outer_additive_updates':{k:str(v) for k,v in self.outer_updates.items()},
+                       'outer_update_mode':'additive independent-state deltas' if self.outer_updates else 'none'}
 
     def summary(self):
         ans=self.body.summary(None)
@@ -76,8 +106,11 @@ class GraphNestedAnalyzer:
         if N<0:raise GraphError('Negative outer count')
         steps=integer_value(self.total,values)
         if steps<0:raise GraphError('Negative inner microstep count')
+        final_state=self.body.after_steps(steps,values)
+        for target,delta in self.outer_updates.items():
+            final_state[target]=integer_value(delta,values)+final_state[target]
         return {'outer_iterations':N,'total_inner_steps':steps,
-                'final_state':self.body.after_steps(steps,values)}
+                'final_state':final_state}
 
     def concrete(self,values:dict[str,int]):
         """Independent nested step interpreter. Retains phase across outer loops."""
@@ -100,4 +133,6 @@ class GraphNestedAnalyzer:
                 data={k:integer_value(s.simplify(new[i]),values)
                       for i,k in enumerate(self.body.data_vars)}
                 control=path.successor
+        for target,delta in self.outer_updates.items():
+            data[target]+=integer_value(delta,values)
         return {self.body.control_var:control,**data}

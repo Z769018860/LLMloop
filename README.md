@@ -236,3 +236,6 @@ llmloop-smt examples/smt_nonfunctional.json --synthesize-invariants
 
 See docs/CFG_AND_INVARIANTS.md. This is a bounded path-explosion frontend and
 incomplete template search, not a general C CFG analyzer or abstract interpreter.
+
+
+For bounded automatic cycle discovery, use `llmloop-smt examples/smt_functional.json --invariant 'p >= 0 and p <= 1' --synthesize-cycles`. Each affine cycle relation is accepted only after the universal Z3 cycle verifier succeeds. The search is incomplete and does not imply loop termination.

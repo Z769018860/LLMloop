@@ -11,6 +11,8 @@ def main(argv=None):
     parser.add_argument('--c',action='store_true',help='Parse restricted scalar C source')
     parser.add_argument('--c-cfg',action='store_true',help='Path-explode nested/sequential if/else CFGs in one scalar while loop')
     parser.add_argument('--synthesize-invariants',action='store_true',help='Generate and SMT-check conservative invariant templates')
+    parser.add_argument('--synthesize-cycles',action='store_true',help='Discover bounded SCC cycles and prove affine cycle maps with Z3')
+    parser.add_argument('--max-cycle-length',type=int,default=8,help='Maximum simple cycle length to synthesize (1..12)')
     parser.add_argument('--max-invariant-candidates',type=int,default=30,help='Maximum invariant templates to try (1..30)')
     parser.add_argument('--function')
     parser.add_argument('--control-var',help='Finite control variable used for certified acceleration')
@@ -55,6 +57,8 @@ def main(argv=None):
         if args.synthesize_invariants:
             from .invariant_synthesis import synthesize_invariants
             report['invariant_synthesis']=synthesize_invariants(graph,args.max_invariant_candidates)
+        if args.synthesize_cycles:
+            report['cycle_synthesis']=graph.synthesize_cycle_relations(args.max_cycle_length)
         report['analysis']=graph.analyze()
         report['acceleration']=graph.try_accelerate()
         values={}

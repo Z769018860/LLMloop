@@ -93,3 +93,17 @@ LLM is fully optional; `--proposals` tests equivalent hypotheses offline.
 
 See `docs/UPSTREAMS.md` for LoopSCC's public repository, Python/Z3 dependencies,
 and reproduction commands. This project does not vendor third-party source files.
+
+
+## Automatic affine cycle-relation discovery
+
+The `--synthesize-cycles` option enumerates simple cycles in the SMT may-SCC
+graph up to a configurable length, composes their affine updates symbolically,
+and sends each candidate through the existing universal cycle verifier.
+Only candidates for which Z3 proves every step is forced, the composed macro
+map is exact, and the cycle phase is preserved are marked certified.
+
+This is intentionally not a complete recurrence synthesizer: the search is
+bounded, only affine macro maps are emitted, and a conditional cycle certificate
+does not prove termination or that every state follows that cycle. A genuinely
+non-functional SCC may correctly produce zero certified cycles.
