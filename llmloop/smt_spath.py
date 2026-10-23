@@ -610,7 +610,7 @@ class SMTPathGraph:
             if len(choices)!=1:
                 if self.check_signed_overflow:
                     raise SMTGraphError('No defined C transition: possible signed overflow or incomplete path partition')
-                raise SMTGraphError('Concrete path partition violated: '+str(len(choices))
+                raise SMTGraphError('Concrete path partition violated: '+str(len(choices)))
             after={v:value(expr) for v,expr in choices[0].updates.items()}
             if not all((z3.is_bv_value(x) if self.bit_width else z3.is_int_value(x)) for x in after.values()):
                 raise SMTGraphError('Concrete next state not an integer')
