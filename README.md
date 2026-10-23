@@ -132,4 +132,4 @@ phase graphs, array/heap summaries, SMT-verifiable certificates,
 general nested-loop composition, ranking functions, and comparative
 performance evaluation. None of these are claimed complete.
 
-MIT license.
+License to be selected by repository owner.
