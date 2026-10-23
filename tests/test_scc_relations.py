@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 import pytest
 pytest.importorskip('z3')
-from llmloop.smt_spath import SMTPathGraph
+from llmloop.smt_spath import SMTPathGraph, SMTGraphError
 
 
 def _branching_scc():
