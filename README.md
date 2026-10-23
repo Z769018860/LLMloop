@@ -133,3 +133,36 @@ general nested-loop composition, ranking functions, and comparative
 performance evaluation. None of these are claimed complete.
 
 License to be selected by repository owner.
+
+
+---
+
+## New in 0.2.0: finite-control SPath graph and compositional analysis
+
+This new, independent analysis module generalizes the earlier fixed alternating
+phase examples to a **complete deterministic finite-control SPath graph** with
+Tarjan SCC detection, a transient prefix and a reachable periodic SCC. Its
+quasi-unipotent macro acceleration, symbolic first-exit iteration formula,
+parameterized nested composition and conservatively verified invariants are
+implemented in Python/SymPy. The module fails closed on unsupported loops.
+
+Examples (after `pip install -e '.[test]'`):
+
+```bash
+llmloop-graph examples/three_scc.json --input n=20 --check-range 0:20
+llmloop-graph examples/sign_flip.json --input n=100000000
+llmloop-graph examples/nested_graph.json --input n=20 --check-range 0:20
+llmloop-graph examples/three_scc.c --c --control p --values 0,1,2,3 --input n=20
+```
+
+Candidate invariants can be checked offline via `--invariant 'i >= 0'
+--parameter-min n=0`; optional `--llm-invariants-model MODEL` requests
+LLM proposals but **never trusts them without algebraic checking**. Models
+are not called by default.
+
+**Scope:** all code above uses mathematical unbounded integers, control-only
+finite branch guards and affine scalar updates. Array/pointer semantics,
+nonlinear paths, arbitrary data-dependent phase selection, unrestricted nested
+loops and signed-C overflow reasoning remain unsupported. The tool is **not**
+a drop-in copy of LoopSCC or QCP. See [detailed proof/IR documentation](docs/SPGRAPH.md)
+and [upstream sources and reproducibility](docs/UPSTREAMS.md).

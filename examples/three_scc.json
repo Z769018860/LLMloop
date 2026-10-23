@@ -1,0 +1,13 @@
+{
+  "kind":"spgraph", "name":"transient_to_three_phase_cycle",
+  "parameters":["n"],
+  "state":{"p":0,"i":0,"x":0,"y":0},
+  "control":{"var":"p","values":[0,1,2,3]},
+  "paths":[
+    {"id":"transient","guard":{"p":0},"updates":{"p":1,"x":"x+5"}},
+    {"id":"A","guard":{"p":1},"updates":{"p":2,"x":"x+1","i":"i+1"}},
+    {"id":"B","guard":{"p":2},"updates":{"p":3,"x":"x+3","i":"i+1"}},
+    {"id":"C","guard":{"p":3},"updates":{"p":1,"x":"x+2","i":"i+1"}}
+  ],
+  "exit":{"var":"i","op":"<","bound":"n"}
+}
