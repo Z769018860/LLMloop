@@ -13,7 +13,7 @@ def test_synthesize_and_verify_affine_cycle_relation():
     assert graph.certify_invariants(['p >= 0 and p <= 1'])[0]['certified']
     result=graph.synthesize_cycle_relations()
     assert result['candidate_count']>=1
-    assert result['certified_count']>=1
+    assert result['certified_count']>=1, result['candidates']
     cert=result['certified_relations'][0]
     assert cert['phase_sequence']==['phase_a','phase_b']
     assert cert['macro_map']['i']=='(i + 2)'

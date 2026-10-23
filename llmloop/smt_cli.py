@@ -10,6 +10,9 @@ def main(argv=None):
     parser.add_argument('file',type=Path)
     parser.add_argument('--c',action='store_true',help='Parse restricted scalar C source')
     parser.add_argument('--c-cfg',action='store_true',help='Path-explode nested/sequential if/else CFGs in one scalar while loop')
+    parser.add_argument('--c-memory',action='store_true',help='Use bounded fixed-array/pointer/calloc memory frontend')
+    parser.add_argument('--c-int-bits',type=int,choices=(8,16,32,64),help='Use signed C-style fixed-width bit-vector semantics; affine acceleration is disabled')
+    parser.add_argument('--max-unroll',type=int,default=12,help='Maximum statically unrolled nested-loop iterations (1..64)')
     parser.add_argument('--synthesize-invariants',action='store_true',help='Generate and SMT-check conservative invariant templates')
     parser.add_argument('--synthesize-cycles',action='store_true',help='Discover bounded SCC cycles and prove affine cycle maps with Z3')
     parser.add_argument('--max-cycle-length',type=int,default=8,help='Maximum simple cycle length to synthesize (1..12)')
@@ -28,9 +31,15 @@ def main(argv=None):
     parser.add_argument('--output',type=Path)
     args=parser.parse_args(argv)
     try:
-        if args.c and args.c_cfg:
-            raise SMTGraphError('Choose either --c or --c-cfg, not both')
-        if args.c_cfg:
+        if sum(bool(x) for x in (args.c,args.c_cfg,args.c_memory))>1:
+            raise SMTGraphError('Choose only one of --c, --c-cfg, or --c-memory')
+        if args.c_memory:
+            if args.c_int_bits:raise SMTGraphError('--c-int-bits cannot yet be combined with --c-memory; pointer offsets require a separate integer sort')
+            from .memory_frontend import translate_memory_c
+            bounds=json.loads(args.parameter_bounds) if args.parameter_bounds else {}
+            obj=translate_memory_c(args.file.read_text(encoding='utf-8'),function=args.function,parameter_bounds=bounds,max_unroll=args.max_unroll)
+            if args.dump_ir:args.dump_ir.write_text(json.dumps(obj,indent=2)+'\n',encoding='utf-8')
+        elif args.c_cfg:
             from .cfg_frontend import translate_cfg_smt_c
             bounds=json.loads(args.parameter_bounds) if args.parameter_bounds else {}
             obj=translate_cfg_smt_c(args.file.read_text(encoding='utf-8'),
@@ -45,6 +54,10 @@ def main(argv=None):
                 control_values=controls,parameter_bounds=bounds)
             if args.dump_ir:args.dump_ir.write_text(json.dumps(obj,indent=2)+'\n',encoding='utf-8')
         else:obj=json.loads(args.file.read_text(encoding='utf-8'))
+        if args.c_int_bits:
+            sem={'kind':'c_signed','bits':args.c_int_bits}
+            if obj.get('kind')=='smt_spgraph_nested':obj['body']['integer_semantics']=sem
+            else:obj['integer_semantics']=sem
         nested=obj.get('kind')=='smt_spgraph_nested'
         graph=SMTPathGraph(obj['body'] if nested else obj)
         report={'analysis':graph.analyze()}

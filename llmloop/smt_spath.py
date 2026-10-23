@@ -550,9 +550,9 @@ class SMTPathGraph:
 
     def concrete(self,inputs:dict[str,int],max_steps:int=10000,steps:int|None=None):
         """Bounded literal execution oracle, separate from the matrix accelerator."""
-        self._validate_inputs(inputs)
         if self.bit_width and any(not self.signed_min<=value<=self.signed_max for value in inputs.values()):
             raise SMTGraphError('Input outside signed '+str(self.bit_width)+'-bit range')
+        self._validate_inputs(inputs)
         numeral=lambda value: z3.BitVecVal(value,self.bit_width) if self.bit_width else z3.IntVal(value)
         assignments=[(self.p[k],numeral(value)) for k,value in inputs.items()]
         state={v:z3.simplify(z3.substitute(expr,*assignments))
@@ -572,7 +572,7 @@ class SMTPathGraph:
             if len(choices)!=1:
                 raise SMTGraphError('Concrete path partition violated: '+str(len(choices)))
             after={v:value(expr) for v,expr in choices[0].updates.items()}
-            if not all(z3.is_int_value(x) for x in after.values()):
+            if not all((z3.is_bv_value(x) if self.bit_width else z3.is_int_value(x)) for x in after.values()):
                 raise SMTGraphError('Concrete next state not an integer')
             state=after
         raise SMTGraphError('Concrete oracle step budget exceeded')

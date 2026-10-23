@@ -239,3 +239,18 @@ incomplete template search, not a general C CFG analyzer or abstract interpreter
 
 
 For bounded automatic cycle discovery, use `llmloop-smt examples/smt_functional.json --invariant 'p >= 0 and p <= 1' --synthesize-cycles`. Each affine cycle relation is accepted only after the universal Z3 cycle verifier succeeds. The search is incomplete and does not imply loop termination.
+
+
+## v0.6 bounded C memory and integer-semantics frontends
+
+`llmloop-smt FILE.c --c-memory` handles initialized fixed-size int arrays,
+pointer aliases/offsets, bounds/lifetime guards, fixed-size `calloc` and
+`free`, plus nested loops that can be statically unrolled within the chosen
+`--max-unroll`. It rejects uninitialized arrays and unsupported allocation
+semantics. See docs/C_MEMORY_FRONTEND.md.
+
+`--c-int-bits 8|16|32|64` enables signed fixed-width bit-vector semantics for
+the scalar SPath frontend. It models two's-complement wraparound but disables
+the affine accelerator until a no-overflow equivalence certificate exists.
+The bit-vector and memory modes are not yet combined because pointers require
+a separate mathematical-integer offset sort.
