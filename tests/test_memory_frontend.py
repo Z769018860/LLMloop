@@ -97,7 +97,5 @@ def test_bounded_function_rejects_use_after_free_through_alias():
         while(i<2){if(i==0){free(p);}else{x=q[0];}i++;}
         return x;
     }'''
-    obj=translate_memory_c(source,max_unroll=3,whole_function=True)
-    graph=SMTPathGraph(obj)
-    with pytest.raises(SMTGraphError,match='No defined C transition'):
-        graph.concrete({})
+    with pytest.raises(SMTGraphError,match='No paths or CFG path explosion'):
+        translate_memory_c(source,max_unroll=3,whole_function=True)

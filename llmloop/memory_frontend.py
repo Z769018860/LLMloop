@@ -167,8 +167,11 @@ def _run(node,env,guard,initial,state_names,arrays,pointers,max_paths,max_unroll
         return states
     if isinstance(node,c_ast.If):
         checks=[];cond=_bool(node.cond,env,arrays,pointers,checks);base=_and(guard,*checks)
-        left=_run(node.iftrue,env.copy(),_and(base,cond),initial,state_names,arrays,pointers,max_paths,max_unroll,parameters,parameter_bounds)
-        right=_run(node.iffalse,env.copy(),_and(base,sp.Not(cond)),initial,state_names,arrays,pointers,max_paths,max_unroll,parameters,parameter_bounds)
+        left_guard=_and(base,cond);right_guard=_and(base,sp.Not(cond))
+        left=(_run(node.iftrue,env.copy(),left_guard,initial,state_names,arrays,pointers,max_paths,max_unroll,parameters,parameter_bounds)
+              if _parameter_bounds_feasible(left_guard,parameters,parameter_bounds) else [])
+        right=(_run(node.iffalse,env.copy(),right_guard,initial,state_names,arrays,pointers,max_paths,max_unroll,parameters,parameter_bounds)
+               if _parameter_bounds_feasible(right_guard,parameters,parameter_bounds) else [])
         if len(left)+len(right)>max_paths:raise SMTGraphError('CFG path explosion exceeds limit '+str(max_paths))
         return left+right
     if isinstance(node,c_ast.Assignment):
@@ -239,23 +242,34 @@ def _run(node,env,guard,initial,state_names,arrays,pointers,max_paths,max_unroll
     raise SMTGraphError('Unsupported statement in memory frontend: '+type(node).__name__)
 
 
-def _parameter_bounds_prove_false(cond,parameters,bounds):
-    """Prove a residual inner-loop condition unreachable from parameter bounds alone."""
-    if z3 is None:return False
-    names={str(symbol) for symbol in cond.free_symbols}
-    if not names.issubset(set(parameters)) or set(bounds)-set(parameters):return False
+def _parameter_domain_status(expr,parameters,bounds):
+    """Return sat/unsat/unknown for a guard over bounded symbolic parameters."""
+    if z3 is None:return 'unknown'
+    names={str(symbol) for symbol in expr.free_symbols}
+    if not names.issubset(set(parameters)) or set(bounds)-set(parameters):return 'unknown'
     try:
         env={name:z3.Int('nested_param_'+name) for name in parameters}
-        solver=z3.Solver();solver.set(timeout=1500)
+        solver=z3.Solver();solver.set(timeout=1000)
         for name,limits in bounds.items():
-            if not isinstance(limits,list) or len(limits)!=2:return False
+            if not isinstance(limits,list) or len(limits)!=2:return 'unknown'
             lo,hi=limits
             if lo is not None:solver.add(env[name]>=lo)
             if hi is not None:solver.add(env[name]<=hi)
-        solver.add(_z3_expr(_btxt(cond),env))
-        return solver.check()==z3.unsat
+        solver.add(_z3_expr(_btxt(expr),env))
+        result=solver.check()
+        return 'sat' if result==z3.sat else 'unsat' if result==z3.unsat else 'unknown'
     except Exception:
-        return False
+        return 'unknown'
+
+
+def _parameter_bounds_feasible(expr,parameters,bounds):
+    # Unknown means "keep it"; pruning is only allowed after an UNSAT proof.
+    return _parameter_domain_status(expr,parameters,bounds)!='unsat'
+
+
+def _parameter_bounds_prove_false(cond,parameters,bounds,guard=sp.true):
+    """Prove a loop condition impossible under both input bounds and the current path guard."""
+    return _parameter_domain_status(_and(guard,cond),parameters,bounds)=='unsat'
 
 
 def _unroll(node,env,guard,initial,state_names,arrays,pointers,max_paths,max_unroll,parameters,parameter_bounds,init_stmt=None,next_stmt=None):
@@ -266,9 +280,15 @@ def _unroll(node,env,guard,initial,state_names,arrays,pointers,max_paths,max_unr
         continuing=[]
         for g,e in states:
             checks=[];cond=sp.simplify(_bool(node.cond,e,arrays,pointers,checks));base=_and(g,*checks)
-            if cond is sp.false or cond==sp.false:finished.append((base,e));continue
-            if cond is not sp.true and cond!=sp.true:finished.append((_and(base,sp.Not(cond)),e))
-            body=_run(node.stmt,e,_and(base,cond),initial,state_names,arrays,pointers,max_paths,max_unroll,parameters,parameter_bounds)
+            if cond is sp.false or cond==sp.false:
+                if _parameter_bounds_feasible(base,parameters,parameter_bounds):finished.append((base,e))
+                continue
+            if cond is not sp.true and cond!=sp.true:
+                exit_guard=_and(base,sp.Not(cond))
+                if _parameter_bounds_feasible(exit_guard,parameters,parameter_bounds):finished.append((exit_guard,e))
+            body_guard=_and(base,cond)
+            if not _parameter_bounds_feasible(body_guard,parameters,parameter_bounds):continue
+            body=_run(node.stmt,e,body_guard,initial,state_names,arrays,pointers,max_paths,max_unroll,parameters,parameter_bounds)
             for bg,be in body:
                 if next_stmt is not None:continuing.extend(_run(next_stmt,be,bg,initial,state_names,arrays,pointers,max_paths,max_unroll,parameters,parameter_bounds))
                 else:continuing.append((bg,be))
@@ -277,10 +297,10 @@ def _unroll(node,env,guard,initial,state_names,arrays,pointers,max_paths,max_unr
         if not states:break
     if states:
         for g,e in states:
-            checks=[];cond=sp.simplify(_bool(node.cond,e,arrays,pointers,checks))
-            if cond is not sp.false and cond!=sp.false and not _parameter_bounds_prove_false(cond,parameters,parameter_bounds):
+            checks=[];cond=sp.simplify(_bool(node.cond,e,arrays,pointers,checks));guard_now=_and(g,*checks)
+            if cond is not sp.false and cond!=sp.false and not _parameter_bounds_prove_false(cond,parameters,parameter_bounds,guard_now):
                 raise SMTGraphError('Nested loop not proven to exit within unroll limit '+str(max_unroll))
-            finished.append((_and(g,*checks),e))
+            if _parameter_bounds_feasible(guard_now,parameters,parameter_bounds):finished.append((guard_now,e))
     return finished
 
 
