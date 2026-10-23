@@ -15,6 +15,14 @@ from .smt_spath import SMTGraphError, _z3_expr, z3
 _ITE=sp.Function('ite')
 
 
+def _ite(condition,yes,no):
+    # Fold concrete cell selections before repeated stores grow nested terms.
+    if condition is sp.true or condition==sp.true:return sp.sympify(yes)
+    if condition is sp.false or condition==sp.false:return sp.sympify(no)
+    if yes==no:return sp.sympify(yes)
+    return _ITE(condition,yes,no)
+
+
 def _base_int(decl):
     t=decl.type
     while isinstance(t,(c_ast.FuncDecl,c_ast.TypeDecl,c_ast.PtrDecl,c_ast.ArrayDecl)):t=t.type
@@ -101,7 +109,7 @@ def _read(obj,idx,env,arrays):
         for k in reversed(range(a['length'])):
             terms=[sp.Eq(obj,a['id']),sp.Eq(idx,k)]
             if a.get('alive'):terms.append(sp.Eq(env[a['alive']],1))
-            value=_ITE(_and(*terms),env[a['cells'][k]],value)
+            value=_ite(_and(*terms),env[a['cells'][k]],value)
     return value
 
 
@@ -124,7 +132,12 @@ def _arith(n,env,arrays,pointers,safety):
 
 def _bool(n,env,arrays,pointers,safety):
     if isinstance(n,c_ast.BinaryOp) and n.op in ('&&','||'):
-        a=_bool(n.left,env,arrays,pointers,safety);b=_bool(n.right,env,arrays,pointers,safety)
+        a=_bool(n.left,env,arrays,pointers,safety)
+        right_checks=[]
+        b=_bool(n.right,env,arrays,pointers,right_checks)
+        # C evaluates the RHS only when the LHS has not decided the result.
+        needed=a if n.op=='&&' else sp.Not(a)
+        safety.extend(sp.Or(sp.Not(needed),check) for check in right_checks)
         return sp.And(a,b) if n.op=='&&' else sp.Or(a,b)
     if isinstance(n,c_ast.UnaryOp) and n.op=='!':return sp.Not(_bool(n.expr,env,arrays,pointers,safety))
     if isinstance(n,c_ast.BinaryOp) and n.op in ('==','!=') and isinstance(n.left,c_ast.ID) and n.left.name in pointers:
@@ -194,11 +207,14 @@ def _run(node,env,guard,initial,state_names,arrays,pointers,max_paths,max_unroll
             out=env.copy();out[name]=sp.simplify(value);return [(_and(guard,*checks),out)]
         if isinstance(node.lvalue,c_ast.ArrayRef) or (isinstance(node.lvalue,c_ast.UnaryOp) and node.lvalue.op=='*'):
             checks=[];rhs=_arith(node.rvalue,env,arrays,pointers,checks);obj,idx=_address(node.lvalue,env,arrays,pointers,checks);out=env.copy()
+            old=_read(obj,idx,env,arrays)
+            rhs=rhs if node.op=='=' else old+rhs if node.op=='+=' else old-rhs if node.op=='-=' else old*rhs if node.op=='*=' else None
+            if rhs is None:raise SMTGraphError('Unsupported memory assignment operator '+node.op)
             for a in arrays.values():
                 for k,cell in enumerate(a['cells']):
                     cond=_and(sp.Eq(obj,a['id']),sp.Eq(idx,k))
                     if a.get('alive'):cond=_and(cond,sp.Eq(env[a['alive']],1))
-                    out[cell]=_ITE(cond,rhs,env[cell])
+                    out[cell]=_ite(cond,rhs,env[cell])
             return [(_and(guard,*checks),out)]
         raise SMTGraphError('Unsupported assignment target')
     if isinstance(node,c_ast.UnaryOp) and node.op in ('p++','++','p--','--'):
@@ -237,7 +253,7 @@ def _run(node,env,guard,initial,state_names,arrays,pointers,max_paths,max_unroll
         checks=[sp.Or(sp.Eq(obj,0),*[_and(sp.Eq(obj,a['id']),sp.Eq(off,0),sp.Eq(env[a['alive']],1)) for a in arrays.values() if a.get('alive')])]
         out=env.copy()
         for a in arrays.values():
-            if a.get('alive'):out[a['alive']]=_ITE(sp.Eq(obj,a['id']),0,env[a['alive']])
+            if a.get('alive'):out[a['alive']]=_ite(sp.Eq(obj,a['id']),0,env[a['alive']])
         return [(_and(guard,*checks),out)]
     raise SMTGraphError('Unsupported statement in memory frontend: '+type(node).__name__)
 
@@ -309,20 +325,20 @@ def _calloc_len(node):
         raise SMTGraphError('Heap allocation supports calloc only; malloc/uninitialized memory is rejected')
     args=node.args.exprs if node.args else []
     if len(args)!=2:raise SMTGraphError('calloc requires two arguments')
+    def int_size(n):
+        return (isinstance(n,c_ast.UnaryOp) and n.op=='sizeof'
+                and isinstance(n.expr,c_ast.Typename)
+                and isinstance(n.expr.type,c_ast.TypeDecl)
+                and isinstance(n.expr.type.type,c_ast.IdentifierType)
+                and n.expr.type.type.names==['int'])
     count=_lit(args[0])
     if count is not None and count>0:
         size=args[1]
-        if isinstance(size,c_ast.UnaryOp) and size.op=='sizeof' and isinstance(size.expr,c_ast.Typename):return int(count)
+        if int_size(size):return int(count)
         if isinstance(size,c_ast.BinaryOp) and size.op=='*':
-            for term in (size.left,size.right):
-                if isinstance(term,c_ast.UnaryOp) and term.op=='sizeof':
-                    other=size.right if term is size.left else size.left;val=_lit(other)
-                    if val is not None and val>0:return int(count)*int(val)
-    if count==1 and isinstance(args[1],c_ast.BinaryOp) and args[1].op=='*':
-        for term in (args[1].left,args[1].right):
-            if isinstance(term,c_ast.UnaryOp) and term.op=='sizeof':
-                other=args[1].right if term is args[1].left else args[1].left;val=_lit(other)
-                if val is not None and val>0:return int(val)
+            for term,other in ((size.left,size.right),(size.right,size.left)):
+                val=_lit(other)
+                if int_size(term) and val is not None and val>0:return int(count)*int(val)
     raise SMTGraphError('calloc size must be a positive compile-time number of int cells')
 
 
@@ -367,6 +383,7 @@ def translate_memory_c(source:str,function:str|None=None,parameter_bounds:dict|N
                 if length is None:raise SMTGraphError('Only fixed-size array bounds are supported')
                 if stmt.name in arrays or stmt.name in init_env:raise SMTGraphError('Duplicate local name')
                 if not isinstance(stmt.init,c_ast.InitList):raise SMTGraphError('Arrays require explicit initializers')
+                if len(stmt.init.exprs)>int(length):raise SMTGraphError('Too many array initializers')
                 checks=[];vals=[_arith(x,init_env,arrays,pointers,checks) for x in stmt.init.exprs]
                 if checks:raise SMTGraphError('Array initializer may not read memory dynamically')
                 add_array(stmt.name,int(length),vals)
