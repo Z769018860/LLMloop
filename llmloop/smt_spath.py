@@ -44,7 +44,7 @@ def _check(*clauses):
     return "sat" if result == z3.sat else "unsat"
 
 
-def _z3_expr(text: Any, symbols: dict[str, Any], bit_width: int | None = None):
+def _z3_expr(text: Any, symbols: dict[str, Any], bit_width: int | None = None, overflow_checks: list | None = None):
     """Parse a bounded Python-shaped integer/Boolean DSL; never use eval()."""
     if isinstance(text, bool):
         return z3.BoolVal(text)
@@ -64,18 +64,31 @@ def _z3_expr(text: Any, symbols: dict[str, Any], bit_width: int | None = None):
         if isinstance(n, ast.Name) and n.id in symbols:
             return symbols[n.id]
         if isinstance(n, ast.UnaryOp):
+            # A negative literal is a literal value, not an overflowing negation
+            # of a narrow signed object (e.g. -128 is representable in int8).
+            if isinstance(n.op,ast.USub) and bit_width and isinstance(n.operand,ast.Constant) and type(n.operand.value) is int:
+                return z3.BitVecVal(-n.operand.value,bit_width)
             a=rec(n.operand)
             if isinstance(n.op, ast.Not): return z3.Not(a)
-            if isinstance(n.op, ast.USub): return -a
+            if isinstance(n.op, ast.USub):
+                if overflow_checks is not None and bit_width and z3.is_bv(a):
+                    overflow_checks.append(a!=z3.BitVecVal(-(1 << (bit_width-1)),bit_width))
+                return -a
             if isinstance(n.op, ast.UAdd): return a
         if isinstance(n, ast.BinOp):
             a,b=rec(n.left),rec(n.right)
-            if isinstance(n.op, ast.Add): return a+b
-            if isinstance(n.op, ast.Sub): return a-b
-            if isinstance(n.op, ast.Mult): return a*b
+            if isinstance(n.op,(ast.Add,ast.Sub,ast.Mult)):
+                if overflow_checks is not None and bit_width and z3.is_bv(a) and z3.is_bv(b):
+                    ai,bi=z3.BV2Int(a,is_signed=True),z3.BV2Int(b,is_signed=True)
+                    exact=ai+bi if isinstance(n.op,ast.Add) else ai-bi if isinstance(n.op,ast.Sub) else ai*bi
+                    lo,hi=-(1 << (bit_width-1)),(1 << (bit_width-1))-1
+                    overflow_checks.append(z3.And(exact>=lo,exact<=hi))
+                return a+b if isinstance(n.op,ast.Add) else a-b if isinstance(n.op,ast.Sub) else a*b
             if isinstance(n.op,(ast.FloorDiv,ast.Mod)):
                 if not isinstance(n.right,ast.Constant) or type(n.right.value) is not int or n.right.value==0:
                     raise SMTGraphError('Division/modulo requires a nonzero literal divisor')
+                if overflow_checks is not None and bit_width and z3.is_bv(a) and n.right.value==-1:
+                    overflow_checks.append(a!=z3.BitVecVal(-(1 << (bit_width-1)),bit_width))
                 if isinstance(n.op,ast.Mod) and z3.is_bv(a): return z3.SRem(a,b)
                 return a/b if isinstance(n.op,ast.FloorDiv) else a%b
         if isinstance(n, ast.BoolOp):
@@ -148,11 +161,11 @@ class SMTPathGraph:
             raise SMTGraphError("State and parameter names must be unique")
         semantics=obj.get('integer_semantics','math')
         if semantics=='math' or semantics is None:
-            self.bit_width=None
-        elif isinstance(semantics,dict) and semantics.get('kind')=='c_signed' and type(semantics.get('bits')) is int and semantics['bits'] in (8,16,32,64):
-            self.bit_width=semantics['bits']
+            self.bit_width=None;self.check_signed_overflow=False
+        elif isinstance(semantics,dict) and semantics.get('kind') in ('c_signed','bv_wrap') and type(semantics.get('bits')) is int and semantics['bits'] in (8,16,32,64):
+            self.bit_width=semantics['bits'];self.check_signed_overflow=semantics.get('kind')=='c_signed'
         else:
-            raise SMTGraphError("integer_semantics must be 'math' or {'kind':'c_signed','bits':8|16|32|64}")
+            raise SMTGraphError("integer_semantics must be 'math' or {'kind':'c_signed'|'bv_wrap','bits':8|16|32|64}")
         self.signed_min=-(1 << (self.bit_width-1)) if self.bit_width else None
         self.signed_max=(1 << (self.bit_width-1))-1 if self.bit_width else None
         self.x={v:(z3.BitVec("state_"+v,self.bit_width) if self.bit_width else z3.Int("state_"+v)) for v in self.variables}
@@ -172,7 +185,9 @@ class SMTPathGraph:
         self.pre=z3.And(*bounds)
         if _check(self.pre)!='sat':
             raise SMTGraphError('Empty or undecidable input parameter domain')
-        self.initial={v:_z3_expr(expr,self.env,self.bit_width) for v,expr in obj['state'].items()}
+        initial_checks=[] if self.check_signed_overflow else None
+        self.initial={v:_z3_expr(expr,self.env,self.bit_width,initial_checks) for v,expr in obj['state'].items()}
+        self.initial_overflow_checks=initial_checks or []
         try:
             zero=z3.BitVecVal(0,self.bit_width) if self.bit_width else z3.IntVal(0)
             for value in self.initial.values():zero+value
@@ -181,7 +196,9 @@ class SMTPathGraph:
         if any(z3.eq(self.x[v],symbol) for value in self.initial.values()
                for symbol in z3.z3util.get_vars(value) for v in self.variables):
             raise SMTGraphError("Initial state cannot refer to mutable state")
-        self.loop_guard=_z3_expr(obj.get("loop_guard",True),self.env,self.bit_width)
+        loop_checks=[] if self.check_signed_overflow else None
+        self.loop_guard=_z3_expr(obj.get("loop_guard",True),self.env,self.bit_width,loop_checks)
+        self.loop_guard_overflow_checks=loop_checks or []
         self.exit=obj.get('exit')
         self.paths={}
         source=obj.get('paths',[])
@@ -194,8 +211,13 @@ class SMTPathGraph:
             if not isinstance(writes,dict) or set(writes)-set(self.variables):
                 raise SMTGraphError('Unknown SPath update')
             texts={v:str(writes.get(v,v)) for v in self.variables}
-            self.paths[name]=_Path(name,_z3_expr(entry.get('when',True),self.env,self.bit_width),
-                         {v:_z3_expr(writes.get(v,v),self.env,self.bit_width) for v in self.variables},texts)
+            guard_checks=[] if self.check_signed_overflow else None
+            guard=_z3_expr(entry.get('when',True),self.env,self.bit_width,guard_checks)
+            update_checks=[] if self.check_signed_overflow else None
+            updates={v:_z3_expr(writes.get(v,v),self.env,self.bit_width,update_checks) for v in self.variables}
+            if self.check_signed_overflow:
+                guard=z3.And(guard,*(guard_checks or []),*(update_checks or []))
+            self.paths[name]=_Path(name,guard,updates,texts)
         self.certified=[]
         self._accelerated=None
         self._nested=None
@@ -285,10 +307,21 @@ class SMTPathGraph:
                 if check=='sat':edges[name].append(dst)
                 if check=='unknown':unknown.append([name,dst])
         partition=self._partition(inv)
-        return {'kind':'smt_spgraph','spath_edges':edges,'spath_sccs':_tarjan(edges),
+        report={'kind':'smt_spgraph','spath_edges':edges,'spath_sccs':_tarjan(edges),
                 'exit_spaths':exit_paths,'unknown_edges':unknown,'unknown_exits':unknown_exit,
                 'path_partition':partition,'certified_invariants':list(self.certified),
                 'meaning':'SAT edges are existential overapproximations, not an executable path schedule'}
+        if self.check_signed_overflow:
+            init_checks=[_check(self.pre,z3.Not(check)) for check in self.initial_overflow_checks]
+            guard_checks=[_check(self.pre,inv,z3.Not(check)) for check in self.loop_guard_overflow_checks]
+            initial_safe=all(x=='unsat' for x in init_checks)
+            guard_safe=all(x=='unsat' for x in guard_checks)
+            report['signed_overflow']={'status':'PROVED_NO_OVERFLOW' if initial_safe and guard_safe and partition['covered'] else 'POSSIBLE_SIGNED_OVERFLOW_OR_UNDEFINED_PATH',
+                'initial_checks':len(init_checks),'loop_guard_checks':len(guard_checks),
+                'initial_checks_universally_safe':initial_safe,'loop_guard_checks_safe_under_invariant':guard_safe,
+                'transition_coverage_exposes_possible_update_overflow':not partition['covered'],
+                'semantics':'signed fixed-width arithmetic with overflow paths excluded from defined transitions'}
+        return report
 
     def try_accelerate(self):
         """Build proven phase-functional accelerated IR when source control is finite.
@@ -555,6 +588,9 @@ class SMTPathGraph:
         self._validate_inputs(inputs)
         numeral=lambda value: z3.BitVecVal(value,self.bit_width) if self.bit_width else z3.IntVal(value)
         assignments=[(self.p[k],numeral(value)) for k,value in inputs.items()]
+        for check in self.initial_overflow_checks:
+            result=z3.simplify(z3.substitute(check,*assignments))
+            if not z3.is_true(result):raise SMTGraphError('Signed overflow in initial state: undefined C execution')
         state={v:z3.simplify(z3.substitute(expr,*assignments))
                for v,expr in self.initial.items()}
         def value(term):
@@ -563,6 +599,8 @@ class SMTPathGraph:
         if steps is None and z3.is_true(z3.simplify(self.loop_guard)):
             raise SMTGraphError('Concrete execution of nonterminating inner loop requires steps')
         for k in range(max_steps+1):
+            for check in self.loop_guard_overflow_checks:
+                if not z3.is_true(value(check)):raise SMTGraphError('Signed overflow in loop guard: undefined C execution')
             active=value(self.loop_guard)
             if z3.is_false(active) or (steps is not None and k==steps):
                 return {'trip_count':k,'final_state':{v:(self._signed_value(state[v].as_long()) if self.bit_width else state[v].as_long()) for v in self.variables}}
@@ -570,7 +608,9 @@ class SMTPathGraph:
             if k==max_steps:break
             choices=[p for p in self.paths.values() if z3.is_true(value(p.guard))]
             if len(choices)!=1:
-                raise SMTGraphError('Concrete path partition violated: '+str(len(choices)))
+                if self.check_signed_overflow:
+                    raise SMTGraphError('No defined C transition: possible signed overflow or incomplete path partition')
+                raise SMTGraphError('Concrete path partition violated: '+str(len(choices))
             after={v:value(expr) for v,expr in choices[0].updates.items()}
             if not all((z3.is_bv_value(x) if self.bit_width else z3.is_int_value(x)) for x in after.values()):
                 raise SMTGraphError('Concrete next state not an integer')

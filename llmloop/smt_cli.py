@@ -11,7 +11,8 @@ def main(argv=None):
     parser.add_argument('--c',action='store_true',help='Parse restricted scalar C source')
     parser.add_argument('--c-cfg',action='store_true',help='Path-explode nested/sequential if/else CFGs in one scalar while loop')
     parser.add_argument('--c-memory',action='store_true',help='Use bounded fixed-array/pointer/calloc memory frontend')
-    parser.add_argument('--c-int-bits',type=int,choices=(8,16,32,64),help='Use signed C-style fixed-width bit-vector semantics; affine acceleration is disabled')
+    parser.add_argument('--c-int-bits',type=int,choices=(8,16,32,64),help='Use signed fixed-width arithmetic and flag possible signed overflow (undefined C execution)')
+    parser.add_argument('--bv-wrap-bits',type=int,choices=(8,16,32,64),help='Use raw modular bit-vector wraparound; not C signed-overflow semantics')
     parser.add_argument('--max-unroll',type=int,default=12,help='Maximum statically unrolled nested-loop iterations (1..64)')
     parser.add_argument('--synthesize-invariants',action='store_true',help='Generate and SMT-check conservative invariant templates')
     parser.add_argument('--synthesize-cycles',action='store_true',help='Discover bounded SCC cycles and prove affine cycle maps with Z3')
@@ -31,10 +32,11 @@ def main(argv=None):
     parser.add_argument('--output',type=Path)
     args=parser.parse_args(argv)
     try:
+        if args.c_int_bits and args.bv_wrap_bits:raise SMTGraphError('Choose either --c-int-bits or --bv-wrap-bits')
         if sum(bool(x) for x in (args.c,args.c_cfg,args.c_memory))>1:
             raise SMTGraphError('Choose only one of --c, --c-cfg, or --c-memory')
         if args.c_memory:
-            if args.c_int_bits:raise SMTGraphError('--c-int-bits cannot yet be combined with --c-memory; pointer offsets require a separate integer sort')
+            if args.c_int_bits or args.bv_wrap_bits:raise SMTGraphError('Fixed-width modes cannot yet be combined with --c-memory; pointer offsets require a separate integer sort')
             from .memory_frontend import translate_memory_c
             bounds=json.loads(args.parameter_bounds) if args.parameter_bounds else {}
             obj=translate_memory_c(args.file.read_text(encoding='utf-8'),function=args.function,parameter_bounds=bounds,max_unroll=args.max_unroll)
@@ -54,8 +56,8 @@ def main(argv=None):
                 control_values=controls,parameter_bounds=bounds)
             if args.dump_ir:args.dump_ir.write_text(json.dumps(obj,indent=2)+'\n',encoding='utf-8')
         else:obj=json.loads(args.file.read_text(encoding='utf-8'))
-        if args.c_int_bits:
-            sem={'kind':'c_signed','bits':args.c_int_bits}
+        if args.c_int_bits or args.bv_wrap_bits:
+            sem={'kind':'c_signed','bits':args.c_int_bits} if args.c_int_bits else {'kind':'bv_wrap','bits':args.bv_wrap_bits}
             if obj.get('kind')=='smt_spgraph_nested':obj['body']['integer_semantics']=sem
             else:obj['integer_semantics']=sem
         nested=obj.get('kind')=='smt_spgraph_nested'
@@ -80,12 +82,12 @@ def main(argv=None):
             if name in values:raise SMTGraphError('Duplicate parameter value')
             values[name]=int(number)
         if values:
-            if args.c_cfg or args.c_memory:
+            if args.c_cfg or args.c_memory or args.c_int_bits or args.bv_wrap_bits:
                 report['evaluation']={'execution_mode':'bounded concrete oracle; no symbolic acceleration claim',**graph.concrete(values)}
             else:
                 report['evaluation']=(graph.compose_nested(obj['outer'],values) if nested else graph.evaluate(values))
         if args.check_range:
-            if args.c_cfg or args.c_memory:raise SMTGraphError('--check-range requires a certified symbolic summary; C frontend mode is graph analysis plus bounded concrete evaluation')
+            if args.c_cfg or args.c_memory or args.c_int_bits or args.bv_wrap_bits:raise SMTGraphError('--check-range requires a certified symbolic summary; selected mode uses bounded concrete evaluation')
             lo,hi=(int(x) for x in args.check_range.split(':'))
             if len(graph.parameters)!=1 or not 0<=hi-lo<=50:
                 raise SMTGraphError('Cross-check requires one parameter and 1..51 values')

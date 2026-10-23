@@ -249,8 +249,9 @@ pointer aliases/offsets, bounds/lifetime guards, fixed-size `calloc` and
 `--max-unroll`. It rejects uninitialized arrays and unsupported allocation
 semantics. See docs/C_MEMORY_FRONTEND.md.
 
-`--c-int-bits 8|16|32|64` enables signed fixed-width bit-vector semantics for
-the scalar SPath frontend. It models two's-complement wraparound but disables
-the affine accelerator until a no-overflow equivalence certificate exists.
+`--c-int-bits 8|16|32|64` enables signed fixed-width semantics with overflow
+checks for the scalar SPath frontend. `--bv-wrap-bits` instead requests raw
+modular wraparound. Both disable the affine accelerator until a suitable
+source-to-summary equivalence certificate exists.
 The bit-vector and memory modes are not yet combined because pointers require
 a separate mathematical-integer offset sort.
