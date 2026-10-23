@@ -166,3 +166,32 @@ nonlinear paths, arbitrary data-dependent phase selection, unrestricted nested
 loops and signed-C overflow reasoning remain unsupported. The tool is **not**
 a drop-in copy of LoopSCC or QCP. See [detailed proof/IR documentation](docs/SPGRAPH.md)
 and [upstream sources and reproducibility](docs/UPSTREAMS.md).
+
+---
+
+## v0.3: data-dependent oscillatory SCC / exact threshold acceleration
+
+The independently implemented threshold oscillator no longer requires the
+branch-selected control variable to belong to a manually enumerated finite
+domain. For loops of the restricted form x<T ? x+=a : x-=b, with positive
+a,b and branch-wise constant accumulator updates, it infers the inductive
+interval [T-b,T+a-1] and computes exact branch counts, transition formulas
+and monotone first-exit iterations without unrolling.
+
+**Run:**
+
+~~~bash
+llmloop-oscillation examples/oscillation_threshold.json --input n=1000000
+llmloop-oscillation-c examples/oscillation_threshold.c --input n=1000000
+pytest -q tests/test_oscillation.py
+~~~
+
+Original LoopSCC source has now been identified on GitHub. For upstream
+repository links, reproduction, and licensing caveats, read
+[docs/UPSTREAMS.md](docs/UPSTREAMS.md).
+For the arithmetic soundness argument and precise supported class, read
+[docs/OSCILLATION.md](docs/OSCILLATION.md).
+
+This remains a limited mathematical-integer prototype and is NOT a
+complete LoopSCC reproduction or a general C verifier. Its partial C
+frontend does not prove absence of signed overflow.

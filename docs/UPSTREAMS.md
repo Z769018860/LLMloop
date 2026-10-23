@@ -1,26 +1,53 @@
-# Source projects and reproduction links
+# LoopSCC public GitHub sources and reproduction
 
-Do **not** mistake this repository for a vendor fork of LoopSCC or QCP. The
-new finite-control SPath algorithm was independently implemented from the
-published conceptual ideas; it makes much narrower claims than the originals.
-No third-party source files or pretrained model weights are redistributed.
+**LoopSCC does have public GitHub source code.** Verified via GitHub's
+contents API:
 
-| Project | Official source or paper | Relation |
-|---|---|---|
-| LoopSCC (ICSE 2026) | https://anonymous.4open.science/r/LoopSCC-386F/ | Reference method for multi-branch SPath/SCC and oscillation interval; official link published on the ICSE conference page |
-| QCP | https://github.com/QinxiangCao/QualifiedCProgramming | Separate C verification and separation-logic tool; optional future verifier |
-| MALICE (ICML 2026) | https://proceedings.mlr.press/v306/chen26cm.html | Symbolic traces + LLM invariant-generation research; not vendored |
-| LoopSCC paper (earlier version) | https://arxiv.org/abs/2411.02863 | Describes SPath, SPath Graph, SCC contraction and oscillatory intervals |
+- https://github.com/hahaleyile/LoopSCC (master branch)
+- https://github.com/the-elves/LoopSCC (public copy)
+- https://github.com/smallzhong/LoopSCC (public copy)
 
-To reproduce published projects, follow their respective upstream READMEs,
-platform-specific build instructions, licenses and versions. QCP has an MIT
-license at the linked repository. The conference-hosted LoopSCC anonymous
-source URL was verified in the paper's ICSE 2026 listing, but **we could not
-access the anonymous source endpoint from this runtime**, so its exact license,
-build requirements and code-level behavior have not been independently checked.
-Please verify these before copying any upstream implementation into LLMloop.
+All three copies share README blob SHA dc8a4776260ac00784cff5dbef755af3db88c530.
+The first repository includes cfg.py, spath_graph.py, summarizer.py,
+recurrence.py, int.py and extensive experiments/exp1 assets.
 
-Current experimental comparison targets include publicly defined looping
-examples, but we do not claim performance equivalence to upstream LoopSCC,
-QCP, ELBA or MALICE. A proper paper must reproduce each baseline under
-comparable language semantics, timeout and hardware conditions.
+The ICSE 2026 conference page also links
+https://anonymous.4open.science/r/LoopSCC-386F/ .
+The identities of the GitHub owners and relationship to the original
+anonymous artifact were not conclusively confirmed.
+
+## Reproduction (do NOT copy upstream source into LLMloop)
+
+On a computer with Python 3.12, network and Git:
+
+~~~bash
+git clone https://github.com/hahaleyile/LoopSCC.git external/LoopSCC
+python3.12 -m venv external/loopscc-venv
+source external/loopscc-venv/bin/activate
+python -m pip install -r external/LoopSCC/requirements.txt
+cd external/LoopSCC
+PYTHONPATH=. python experiments/exp1/LoopSCC/input/speed_pldi09_fig1.py
+~~~
+
+The upstream requirements pin sympy==1.12.1 and z3-solver==4.13.0.0.
+On Windows use Scripts/activate for the venv.
+
+The upstream README describes INT.define_int, CFG.define_loop,
+SPath_Graph, Summarizer.summarize and solve/solver_check_trace/check_after_loop.
+Its spath_graph.py checks SPath jumps by satisfiable Z3 conditions, then
+computes strongly connected components.
+
+**License caution:** the inspected GitHub tree has no root LICENSE file.
+Public accessibility is NOT equivalent to a license permitting redistribution.
+Do not vendor upstream code without obtaining clarification/permission.
+This project provides independent algorithms, not upstream copies.
+
+## Related independently implemented modules
+
+- graph.py: fixed finite-control SPath graph with Tarjan SCCs.
+- oscillation.py: data-dependent two-branch oscillation with exact interval
+  and modular closed-form acceleration, plus monotone exit bounds.
+- oscillation_c.py: small restricted C-to-oscillation translator.
+
+See OSCILLATION.md for mathematical derivations and scope. None of these
+is a complete reproduction of the original LoopSCC, QCP or MALICE.
