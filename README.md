@@ -3,10 +3,24 @@
 A reproducible Python research prototype for **certified integer-loop state
 summarization without per-iteration symbolic unfolding**.
 
-This repository implements a restricted, explicit **JSON transition IR**.
+This repository implements a restricted **JSON transition IR** and a strictly checked
+C-to-IR frontend for one scalar integer while-loop function.
 It does **not** implement complete C parsing, QCP, LoopSCC, arbitrary nesting,
 pointer semantics, or universal loop acceleration. Unsupported semantics
 return an explicit error rather than a guessed answer.
+
+## C source example
+
+~~~bash
+llmloop-c examples/alternating.c --input n=5 --check-range 0:20
+llmloop-c examples/two_phase.c --input n=5 --check-range 0:20
+~~~
+
+This C parser supports only initialized scalar int locals, scalar int arguments,
+one while loop, a straight-line body or a two-way p==0 conditional and integer
+assignments. Unsupported C AST constructs are rejected; signed overflow and
+pointer/memory semantics are **not** verified. Source-to-IR equivalence holds
+only for executions without undefined behavior under these restrictions.
 
 ## Features
 

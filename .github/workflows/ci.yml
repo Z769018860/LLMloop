@@ -17,6 +17,10 @@ jobs:
         run: python -m pip install -e '.[test]'
       - name: Unit and regression tests
         run: pytest -q
+      - name: C frontend examples
+        run: |
+          llmloop-c examples/alternating.c --input n=10 --check-range 0:20
+          llmloop-c examples/two_phase.c --input n=10 --check-range 0:20
       - name: End-to-end examples
         run: |
           llmloop analyze examples/alternating.json --input n=100 --check-range 0:40
