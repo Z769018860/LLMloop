@@ -95,3 +95,20 @@ def test_signed_multiplication_overflow_is_not_treated_as_valid_wraparound():
     assert report['signed_overflow']['status']=='POSSIBLE_SIGNED_OVERFLOW_OR_UNDEFINED_PATH'
     with pytest.raises(SMTGraphError,match='Signed overflow in initial state'):
         graph.concrete({'n':20})
+
+
+@pytest.mark.parametrize('text',['256','-129'])
+def test_out_of_range_signed_literals_cannot_silently_wrap(text):
+    graph=SMTPathGraph({'kind':'smt_spgraph','parameters':[],
+                       'state':{'x':text},'loop_guard':'False',
+                       'integer_semantics':{'kind':'c_signed','bits':8},
+                       'paths':[{'id':'p','when':True,'updates':{}}]})
+    from llmloop.bounded import verify_bounded
+    assert verify_bounded(graph,0)['status']=='UNDEFINED_OR_AMBIGUOUS_TRANSITION'
+
+
+def test_chained_comparison_skips_later_overflow_checks():
+    obj={'kind':'smt_spgraph','parameters':[],'state':{'x':127,'i':0},'loop_guard':'i<1',
+         'integer_semantics':{'kind':'c_signed','bits':8},
+         'paths':[{'id':'step','when':'not (0 > 1 > x+1)','updates':{'i':'i+1'}}]}
+    assert SMTPathGraph(obj).concrete({})['trip_count']==1

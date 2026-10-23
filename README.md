@@ -313,3 +313,12 @@ does not prove termination or summarize the downstream component.
 See [verification statuses, proof obligations and API](docs/VERIFICATION_API.md).
 General C semantics, arbitrary unbounded nested memory summaries and general
 piecewise-affine closed forms remain outside the implemented proof boundary.
+
+
+## v0.8: preserve C intermediate evaluations before signed-overflow checking
+
+Signed scalar C mode now bypasses algebraic simplification and retains executed
+RHS/condition evaluations even when a later assignment overwrites them. Short
+circuit and conditional-expression checks follow the evaluated branch. The API
+accepts `frontend: "ordered_scalar"` and `int_bits`; unsupported option combinations
+fail explicitly. See [supported semantics and validation](docs/ORDERED_C.md).
