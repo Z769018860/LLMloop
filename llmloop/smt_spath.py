@@ -721,6 +721,73 @@ class SMTPathGraph:
             ]
         }
 
+    def compose_scc_recurrence(self,scc_id:str,steps:int=2,from_initial:bool=False):
+        """Compose a bounded number of transitions that remain inside one SCC.
+
+        The result is a relational formula over fresh state variables for every
+        step. It does not choose one may-edge schedule; each step is a disjunction
+        over all guarded SPaths in the SCC.
+        """
+        if not isinstance(scc_id,str) or not scc_id:
+            raise SMTGraphError('scc_id must be a nonempty string')
+        if type(steps) is not int or not 1<=steps<=64:
+            raise SMTGraphError('steps must be in [1,64]')
+        if type(from_initial) is not bool:
+            raise SMTGraphError('from_initial must be boolean')
+        report=self.synthesize_scc_relations()
+        component=next((item for item in report['components'] if item['id']==scc_id),None)
+        if component is None:
+            raise SMTGraphError('Unknown cyclic SCC id: '+scc_id)
+        members=component['path_ids']
+        def fresh_state(index):
+            return {
+                name:(z3.BitVec('scc_'+scc_id+'_step_'+str(index)+'_'+name,self.bit_width)
+                      if self.bit_width else z3.Int('scc_'+scc_id+'_step_'+str(index)+'_'+name))
+                for name in self.variables
+            }
+        states=[fresh_state(i) for i in range(steps+1)]
+        effective_guard=z3.And(self.loop_guard,*self.loop_guard_overflow_checks)
+        transitions=[]
+        for index in range(steps):
+            current=states[index];following=states[index+1]
+            cases=[]
+            for path_id in members:
+                path=self.paths[path_id]
+                current_guard=self._at(path.guard,current)
+                current_active=self._at(effective_guard,current)
+                updated=self._updated(path,current)
+                equalities=z3.And(*[following[name]==updated[name] for name in self.variables])
+                next_active=self._at(effective_guard,following)
+                next_internal=[self._at(self.paths[target].guard,following) for target in members]
+                stays=z3.And(next_active,z3.Or(*next_internal))
+                cases.append(z3.And(self.pre,self._invariant(current),current_active,
+                                    current_guard,equalities,stays))
+            transitions.append(z3.Or(*cases))
+        constraints=list(transitions)
+        if from_initial:
+            constraints.append(z3.And(*[
+                states[0][name]==self.initial[name] for name in self.variables
+            ]))
+        formula=z3.simplify(z3.And(*constraints))
+        solver_status=_check(formula)
+        return {
+            'status':'COMPOSED_BOUNDED_RECURRENCE' if component['component_relation_complete']
+                     else 'CANDIDATE_BOUNDED_RECURRENCE',
+            'scc_id':scc_id,
+            'path_ids':members,
+            'steps':steps,
+            'from_initial':from_initial,
+            'component_relation_complete':component['component_relation_complete'],
+            'source_semantics_complete':component['source_semantics_complete'],
+            'satisfiability':solver_status,
+            'state_variables':[
+                {name:str(value) for name,value in state.items()} for state in states
+            ],
+            'relation_smt2':formula.sexpr(),
+            'semantics':'Exactly the requested number of transitions, with every transition remaining inside the selected SCC',
+            'limitation':'Bounded relational composition only; no unbounded closed form or termination proof'
+        }
+
     def compose_nested(self,outer:dict[str,Any],inputs:dict[str,int]):
         """Reuse already proven functional phase transformer as nested loop.
 

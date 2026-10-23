@@ -106,3 +106,60 @@ def test_cli_exports_unified_scc_classification(tmp_path,capsys):
     assert main([str(source),'--synthesize-scc-analysis'])==0
     report=json.loads(capsys.readouterr().out)
     assert report['scc_analysis']['components'][0]['classification']=='GUARDED_RECURRENCE_ONLY'
+
+
+def test_bounded_scc_composition_preserves_all_guarded_state_transitions():
+    from llmloop.smt_spath import z3
+    graph=SMTPathGraph(_branching_scc())
+    result=graph.compose_scc_recurrence('scc_0',steps=2)
+    assert result['status']=='COMPOSED_BOUNDED_RECURRENCE'
+    assert result['satisfiability']=='sat'
+    assert len(result['state_variables'])==3
+    decls={value:z3.Int(value) for state in result['state_variables'] for value in state.values()}
+    relation=z3.parse_smt2_string('(assert '+result['relation_smt2']+')',decls=decls)
+    start=z3.Int('scc_scc_0_step_0_x')
+    middle=z3.Int('scc_scc_0_step_1_x')
+    final=z3.Int('scc_scc_0_step_2_x')
+    solver=z3.Solver()
+    solver.add(*relation)
+    solver.add(start==4,middle==5,final==4)
+    assert solver.check()==z3.sat
+    solver2=z3.Solver()
+    solver2.add(*relation)
+    solver2.add(start==4,middle==4,final==4)
+    assert solver2.check()==z3.unsat
+
+
+def test_bounded_scc_composition_can_anchor_to_initial_state():
+    from llmloop.smt_spath import z3
+    graph=SMTPathGraph(_branching_scc())
+    result=graph.compose_scc_recurrence('scc_0',steps=2,from_initial=True)
+    assert result['from_initial']
+    decls={value:z3.Int(value) for state in result['state_variables'] for value in state.values()}
+    relation=z3.parse_smt2_string('(assert '+result['relation_smt2']+')',decls=decls)
+    start=z3.Int('scc_scc_0_step_0_x')
+    final=z3.Int('scc_scc_0_step_2_x')
+    solver=z3.Solver()
+    solver.add(*relation,final==4)
+    assert solver.check()==z3.sat
+    solver2=z3.Solver()
+    solver2.add(*relation,start==3)
+    assert solver2.check()==z3.unsat
+
+
+def test_bounded_scc_composition_rejects_invalid_bounds_and_ids():
+    graph=SMTPathGraph(_branching_scc())
+    with pytest.raises(SMTGraphError,match='steps must be in'):
+        graph.compose_scc_recurrence('scc_0',steps=0)
+    with pytest.raises(SMTGraphError,match='Unknown cyclic SCC'):
+        graph.compose_scc_recurrence('scc_missing',steps=2)
+
+
+def test_cli_exports_bounded_scc_composition(tmp_path,capsys):
+    from llmloop.smt_cli import main
+    source=tmp_path/'scc.json'
+    source.write_text(json.dumps(_branching_scc()),encoding='utf-8')
+    assert main([str(source),'--compose-scc','scc_0','--scc-steps','2'])==0
+    report=json.loads(capsys.readouterr().out)
+    assert report['scc_composition']['steps']==2
+    assert report['scc_composition']['status']=='COMPOSED_BOUNDED_RECURRENCE'

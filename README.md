@@ -275,3 +275,10 @@ one-step recurrence relations with the existing universally checked affine
 cycle search. The report distinguishes a whole-SCC certified cycle from a
 recurrence-only result and from incomplete/unknown cases; it never treats a
 cycle certificate as a termination proof.
+
+
+A guarded SCC recurrence can be composed for a bounded number of steps using
+\`--compose-scc scc_0 --scc-steps 4\`. The generated SMT-LIB formula preserves
+all path alternatives at every step rather than inventing a single execution
+schedule; \`--scc-from-initial\` can anchor the first state to the IR initial
+state. This remains bounded relational composition, not unbounded acceleration.

@@ -151,3 +151,25 @@ classified as one of:
 This classification is conservative. Even a certified affine cycle does not
 prove termination, a global trip count, or that the loop exits after a
 particular number of cycles.
+
+
+## Bounded composition of an SCC recurrence
+
+The one-step recurrence can be composed without selecting one path schedule.
+For example:
+
+~~~bash
+llmloop-smt examples/smt_nonfunctional.json --compose-scc scc_0 --scc-steps 4
+~~~
+
+The output contains an SMT-LIB relation over \`step_0\` through \`step_4\`.
+Each transition is a disjunction over all SPaths in the selected SCC, and
+each intermediate state must remain in that SCC while the loop guard holds.
+Use \`--scc-from-initial\` to additionally constrain the first state to the IR's
+initial state. \`satisfiability\` reports whether at least one such sequence
+exists under the parameter bounds; it is not a proof that all executions
+follow that sequence.
+
+Composition is bounded to 64 transitions and does not infer an unbounded
+closed form or prove termination. The report retains the component/source
+completeness flags from the SCC analysis.
