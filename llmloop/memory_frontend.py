@@ -69,12 +69,14 @@ def _and(*xs):
     return sp.And(*xs) if xs else sp.true
 
 
-def _valid(obj,idx,arrays,one_past=False):
+def _valid(obj,idx,arrays,one_past=False,env=None):
     cases=[]
     for a in arrays.values():
         top=idx<=a['length'] if one_past else idx<a['length']
         terms=[sp.Eq(obj,a['id']),idx>=0,top]
-        if a.get('alive'):terms.append(sp.Eq(a['alive_expr'],1))
+        if a.get('alive'):
+            alive=(env[a['alive']] if env is not None and a['alive'] in env else a.get('alive_expr',sp.Integer(1)))
+            terms.append(sp.Eq(alive,1))
         cases.append(_and(*terms))
     return sp.Or(*cases) if cases else sp.false
 
@@ -86,10 +88,10 @@ def _address(node,env,arrays,pointers,safety,one_past=False):
         return sp.Integer(a['id']),idx
     if isinstance(node,c_ast.ArrayRef) and isinstance(node.name,c_ast.ID) and node.name.name in pointers:
         p=pointers[node.name.name];idx=env[p['off']]+_arith(node.subscript,env,arrays,pointers,safety);obj=env[p['obj']]
-        safety.append(_valid(obj,idx,arrays,one_past));return obj,idx
+        safety.append(_valid(obj,idx,arrays,one_past,env));return obj,idx
     if isinstance(node,c_ast.UnaryOp) and node.op=='*' and isinstance(node.expr,c_ast.ID) and node.expr.name in pointers:
         p=pointers[node.expr.name];obj,idx=env[p['obj']],env[p['off']]
-        safety.append(_valid(obj,idx,arrays,False));return obj,idx
+        safety.append(_valid(obj,idx,arrays,False,env));return obj,idx
     raise SMTGraphError('Memory access must use a fixed array or known pointer')
 
 
@@ -149,7 +151,7 @@ def _ptr_value(n,env,arrays,pointers,safety):
     if isinstance(n,c_ast.BinaryOp) and n.op in ('+','-') and isinstance(n.left,c_ast.ID) and n.left.name in pointers:
         p=pointers[n.left.name];d=_arith(n.right,env,arrays,pointers,safety)
         obj=env[p['obj']];off=env[p['off']]+d if n.op=='+' else env[p['off']]-d
-        safety.append(_valid(obj,off,arrays,True));return obj,off
+        safety.append(_valid(obj,off,arrays,True,env));return obj,off
     raise SMTGraphError('Pointer assignment supports &array[index], pointer copy/arithmetic, or NULL')
 
 
@@ -176,7 +178,7 @@ def _run(node,env,guard,initial,state_names,arrays,pointers,max_paths,max_unroll
             elif node.op in ('+=','-='):
                 d=_arith(node.rvalue,env,arrays,pointers,checks);obj=env[p['obj']]
                 off=env[p['off']]+d if node.op=='+=' else env[p['off']]-d
-                checks.append(_valid(obj,off,arrays,True))
+                checks.append(_valid(obj,off,arrays,True,env))
             else:raise SMTGraphError('Unsupported pointer assignment operator')
             out=env.copy();out[p['obj']]=sp.simplify(obj);out[p['off']]=sp.simplify(off)
             return [(_and(guard,*checks),out)]
@@ -199,7 +201,7 @@ def _run(node,env,guard,initial,state_names,arrays,pointers,max_paths,max_unroll
     if isinstance(node,c_ast.UnaryOp) and node.op in ('p++','++','p--','--'):
         delta=1 if '++' in node.op else -1
         if isinstance(node.expr,c_ast.ID) and node.expr.name in pointers:
-            p=pointers[node.expr.name];off=sp.simplify(env[p['off']]+delta);check=_valid(env[p['obj']],off,arrays,True)
+            p=pointers[node.expr.name];off=sp.simplify(env[p['off']]+delta);check=_valid(env[p['obj']],off,arrays,True,env)
             out=env.copy();out[p['off']]=off;return [(_and(guard,check),out)]
         if isinstance(node.expr,c_ast.ID) and node.expr.name in state_names:
             out=env.copy();out[node.expr.name]=sp.simplify(env[node.expr.name]+delta);return [(guard,out)]
@@ -305,10 +307,12 @@ def _calloc_len(node):
 
 
 def translate_memory_c(source:str,function:str|None=None,parameter_bounds:dict|None=None,
-                       max_paths:int=48,max_unroll:int=12,max_array_len:int=32)->dict:
+                       max_paths:int=48,max_unroll:int=12,max_array_len:int=32,
+                       whole_function:bool=False)->dict:
     if type(max_paths) is not int or not 1<=max_paths<=256:raise SMTGraphError('max_paths must be in [1,256]')
     if type(max_unroll) is not int or not 1<=max_unroll<=64:raise SMTGraphError('max_unroll must be in [1,64]')
     if type(max_array_len) is not int or not 1<=max_array_len<=128:raise SMTGraphError('max_array_len must be in [1,128]')
+    if type(whole_function) is not bool:raise SMTGraphError('whole_function must be boolean')
     try:unit=c_parser.CParser().parse(source)
     except Exception as exc:raise SMTGraphError('C parsing failed: '+str(exc)) from exc
     funcs=[f for f in unit.ext if isinstance(f,c_ast.FuncDef) and (function is None or f.decl.name==function)]
@@ -320,21 +324,24 @@ def translate_memory_c(source:str,function:str|None=None,parameter_bounds:dict|N
         if not isinstance(p,c_ast.Decl) or not _base_int(p) or isinstance(p.type,(c_ast.PtrDecl,c_ast.ArrayDecl)):
             raise SMTGraphError('Only scalar int parameters are supported')
         params.append(p.name)
-    init_env={n:sp.Symbol(n,integer=True) for n in params};initial={};arrays={};pointers={};loop=None;returned=False;objid=1;heapid=0
+    init_env={n:sp.Symbol(n,integer=True) for n in params}
+    initial={};arrays={};pointers={};loop=None;returned=False;started=False;exec_stmts=[];objid=1;heapid=0
     def add_array(name,length,values,heap=False):
         nonlocal objid
         if length<1 or length>max_array_len:raise SMTGraphError('Array length exceeds configured bound')
         cells=[name+'__cell_'+str(k) for k in range(length)]
         a={'name':name,'id':objid,'length':length,'cells':cells,'heap':heap};objid+=1
         if heap:
-            a['alive']=name+'__alive';a['alive_expr']=sp.Symbol(a['alive'],integer=True)
+            a['alive']=name+'__alive';a['alive_expr']=sp.Integer(1)
             initial[a['alive']]='1';init_env[a['alive']]=sp.Integer(1)
         for k,cell in enumerate(cells):
             value=values[k] if k<len(values) else sp.Integer(0)
             initial[cell]=_atxt(value);init_env[cell]=value
         arrays[name]=a
-    for stmt in func.body.block_items or []:
-        if isinstance(stmt,c_ast.Decl) and loop is None:
+    statements=func.body.block_items or []
+    for pos,stmt in enumerate(statements):
+        is_decl=isinstance(stmt,c_ast.Decl)
+        if is_decl and ((whole_function and not started) or (not whole_function and loop is None)):
             if _is_arr(stmt):
                 length=_lit(stmt.type.dim)
                 if length is None:raise SMTGraphError('Only fixed-size array bounds are supported')
@@ -361,30 +368,64 @@ def translate_memory_c(source:str,function:str|None=None,parameter_bounds:dict|N
                 if any(x is not sp.true and x!=sp.true for x in checks):raise SMTGraphError('Initializer has nonconstant memory safety condition')
                 initial[stmt.name]=_atxt(value);init_env[stmt.name]=value
             else:raise SMTGraphError('Only int scalars, fixed arrays, and int pointers are supported')
-        elif isinstance(stmt,c_ast.While) and loop is None:loop=stmt
-        elif isinstance(stmt,c_ast.Return) and loop is not None and not returned:
+        elif whole_function and isinstance(stmt,c_ast.Return):
+            if returned or pos!=len(statements)-1:raise SMTGraphError('Return must be the final statement')
             if not isinstance(stmt.expr,(c_ast.ID,c_ast.Constant)):raise SMTGraphError('Return must be scalar identifier or integer literal')
             if isinstance(stmt.expr,c_ast.ID) and stmt.expr.name not in init_env:raise SMTGraphError('Unknown return variable')
             returned=True
+        elif whole_function:
+            if is_decl:raise SMTGraphError('Whole-function mode requires declarations before executable statements')
+            if isinstance(stmt,c_ast.Return):raise SMTGraphError('Return must be the final statement')
+            started=True;exec_stmts.append(stmt)
+        elif isinstance(stmt,c_ast.While) and loop is None:
+            loop=stmt
+        elif isinstance(stmt,c_ast.Return) and loop is not None and not returned:
+            if not isinstance(stmt.expr,(c_ast.ID,c_ast.Constant)):raise SMTGraphError('Return must be scalar identifier or integer literal')
+            if isinstance(stmt.expr,c_ast.ID) and stmt.expr.name not in init_env:raise SMTGraphError('Unknown return variable')
+            if pos!=len(statements)-1:raise SMTGraphError('Return must be the final statement')
+            returned=True
         else:raise SMTGraphError('Expected declarations, one outer while loop, then return')
-    if loop is None or not initial or not returned:raise SMTGraphError('Function requires initialized state, one outer while, and scalar return')
-    state_names=set(initial);head={n:sp.Symbol(n,integer=True) for n in (*params,*initial)}
-    for a in arrays.values():
-        if a.get('alive'):a['alive_expr']=head[a['alive']]
-    checks=[];guard=_bool(loop.cond,head,arrays,pointers,checks)
-    if checks:raise SMTGraphError('Memory access in outer loop guard is not supported yet')
-    outcomes=_run(loop.stmt,head,sp.true,initial,state_names,arrays,pointers,max_paths,max_unroll,params,parameter_bounds or {})
+    if not initial or not returned:raise SMTGraphError('Function requires initialized state and a final scalar return')
+    state_names=set(initial)
+    if whole_function:
+        done='__llmloop_done'
+        if done in initial or done in init_env:raise SMTGraphError('Reserved internal state name used by C program')
+        initial[done]='0';init_env[done]=sp.Integer(0);state_names.add(done)
+        # Unlike loop-summary mode, whole-function mode starts from C initializers,
+        # so every loop is symbolically unrolled from its actual initialized state.
+        head={n:init_env.get(n,sp.Integer(0)) for n in initial}
+        for p in params:head[p]=init_env[p]
+        outcomes=_run(c_ast.Compound(block_items=exec_stmts),head,sp.true,initial,state_names,
+                      arrays,pointers,max_paths,max_unroll,params,parameter_bounds or {})
+        guard=sp.Eq(sp.Symbol(done,integer=True),0)
+    else:
+        if loop is None:raise SMTGraphError('Function requires one outer while loop')
+        head={n:sp.Symbol(n,integer=True) for n in (*params,*initial)}
+        for a in arrays.values():
+            if a.get('alive'):a['alive_expr']=head[a['alive']]
+        checks=[];guard=_bool(loop.cond,head,arrays,pointers,checks)
+        if checks:raise SMTGraphError('Memory access in outer loop guard is not supported yet')
+        outcomes=_run(loop.stmt,head,sp.true,initial,state_names,arrays,pointers,max_paths,max_unroll,params,parameter_bounds or {})
     if not 1<=len(outcomes)<=max_paths:raise SMTGraphError('No paths or CFG path explosion')
     paths=[]
     for k,(g,e) in enumerate(outcomes):
         updates={}
+        if whole_function:
+            e=e.copy();e['__llmloop_done']=sp.Integer(1)
         for n in initial:
-            if n in head and sp.simplify(e[n]-head[n])!=0:updates[n]=_atxt(e[n])
+            baseline=(init_env.get(n,sp.Integer(0)) if whole_function else head.get(n,sp.Symbol(n,integer=True)))
+            final=e.get(n,baseline)
+            if sp.simplify(final-baseline)!=0:updates[n]=_atxt(final)
         paths.append({'id':'mem_path_'+str(k),'when':_btxt(sp.simplify(g)),'updates':updates})
+    limitations=['mathematical integers','fixed-size initialized arrays','pointer object/offset abstraction','calloc only; malloc rejected','no casts, structs, unions, or general function calls']
+    if whole_function:
+        limitations.extend(['all loops are statically unrolled within max_unroll','bounded whole-function execution is one transition, not an unbounded loop summary','declarations must precede executable statements','path count bounded by max_paths'])
+    else:
+        limitations.extend(['one outer while loop','nested loops statically unrolled within max_unroll','memory access in outer loop guard unsupported'])
     return {'kind':'smt_spgraph','name':func.decl.name,'parameters':params,'state':initial,
             'loop_guard':_btxt(sp.simplify(guard)),'paths':paths,'parameter_bounds':parameter_bounds or {},
-            'frontend':'bounded C scalar/array/pointer memory model',
+            'frontend':'bounded whole-function C memory model' if whole_function else 'bounded C scalar/array/pointer memory model',
             'memory_model':{'arrays':{n:{'object_id':a['id'],'length':a['length'],'heap':a['heap']} for n,a in arrays.items()},
                 'pointer_representation':'(object_id, offset)','heap':'fixed-size calloc only; allocation failure excluded',
                 'safety':'access bounds/lifetime conditions are embedded in path guards'},
-            'limitations':['mathematical integers','one outer while loop','nested loops statically unrolled within max_unroll','fixed-size arrays','calloc only; malloc rejected','no casts, structs, unions, or general function calls']}
+            'limitations':limitations}

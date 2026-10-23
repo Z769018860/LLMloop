@@ -61,3 +61,43 @@ def test_parameter_bounded_nested_for_is_proved_by_input_domain():
         assert graph.concrete({'n':n})['final_state']['x']==n*n
     with pytest.raises(SMTGraphError,match='not proven to exit'):
         translate_memory_c(source,parameter_bounds={'n':[0,5]},max_unroll=3)
+
+
+def test_bounded_function_handles_sequential_loops_and_interleaved_array_updates():
+    source='''int f(int n){
+        int a[2]={1,2}; int i=0; int j=0; int x=0;
+        while(i<n){x=x+1;i++;}
+        x=x+10;
+        for(j=0;j<2;j++){a[j]=a[j]+x;}
+        while(i<n+2){x=x+2;i++;}
+        return x;
+    }'''
+    obj=translate_memory_c(source,parameter_bounds={'n':[0,3]},max_unroll=5,whole_function=True)
+    assert obj['frontend']=='bounded whole-function C memory model'
+    graph=SMTPathGraph(obj)
+    assert graph.analyze()['path_partition']['covered']
+    for n in range(4):
+        out=graph.concrete({'n':n})
+        assert out['final_state']['x']==n+14
+        assert out['final_state']['i']==n+2
+        assert out['final_state']['a__cell_0']==n+11
+        assert out['final_state']['a__cell_1']==n+12
+        assert out['final_state']['__llmloop_done']==1
+
+
+def test_bounded_function_rejects_inner_loop_beyond_budget():
+    source='''int f(int n){int i=0;int x=0;while(i<n){x++;i++;}return x;}'''
+    with pytest.raises(SMTGraphError,match='not proven to exit'):
+        translate_memory_c(source,parameter_bounds={'n':[0,20]},max_unroll=3,whole_function=True)
+
+
+def test_bounded_function_rejects_use_after_free_through_alias():
+    source='''int f(){
+        int *p=calloc(1,sizeof(int)); int *q=p; int i=0; int x=0;
+        while(i<2){if(i==0){free(p);}else{x=q[0];}i++;}
+        return x;
+    }'''
+    obj=translate_memory_c(source,max_unroll=3,whole_function=True)
+    graph=SMTPathGraph(obj)
+    with pytest.raises(SMTGraphError,match='No defined C transition'):
+        graph.concrete({})

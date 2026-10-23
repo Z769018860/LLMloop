@@ -11,6 +11,7 @@ def main(argv=None):
     parser.add_argument('--c',action='store_true',help='Parse restricted scalar C source')
     parser.add_argument('--c-cfg',action='store_true',help='Path-explode nested/sequential if/else CFGs in one scalar while loop')
     parser.add_argument('--c-memory',action='store_true',help='Use bounded fixed-array/pointer/calloc memory frontend')
+    parser.add_argument('--bounded-function',action='store_true',help='With --c-memory, unroll all sequential/nested loops as one bounded whole-function transition')
     parser.add_argument('--c-int-bits',type=int,choices=(8,16,32,64),help='Use signed fixed-width arithmetic and flag possible signed overflow (undefined C execution)')
     parser.add_argument('--bv-wrap-bits',type=int,choices=(8,16,32,64),help='Use raw modular bit-vector wraparound; not C signed-overflow semantics')
     parser.add_argument('--max-unroll',type=int,default=12,help='Maximum statically unrolled nested-loop iterations (1..64)')
@@ -33,13 +34,14 @@ def main(argv=None):
     args=parser.parse_args(argv)
     try:
         if args.c_int_bits and args.bv_wrap_bits:raise SMTGraphError('Choose either --c-int-bits or --bv-wrap-bits')
+        if args.bounded_function and not args.c_memory:raise SMTGraphError('--bounded-function requires --c-memory')
         if sum(bool(x) for x in (args.c,args.c_cfg,args.c_memory))>1:
             raise SMTGraphError('Choose only one of --c, --c-cfg, or --c-memory')
         if args.c_memory:
             if args.c_int_bits or args.bv_wrap_bits:raise SMTGraphError('Fixed-width modes cannot yet be combined with --c-memory; pointer offsets require a separate integer sort')
             from .memory_frontend import translate_memory_c
             bounds=json.loads(args.parameter_bounds) if args.parameter_bounds else {}
-            obj=translate_memory_c(args.file.read_text(encoding='utf-8'),function=args.function,parameter_bounds=bounds,max_unroll=args.max_unroll)
+            obj=translate_memory_c(args.file.read_text(encoding='utf-8'),function=args.function,parameter_bounds=bounds,max_unroll=args.max_unroll,whole_function=args.bounded_function)
             if args.dump_ir:args.dump_ir.write_text(json.dumps(obj,indent=2)+'\n',encoding='utf-8')
         elif args.c_cfg:
             from .cfg_frontend import translate_cfg_smt_c

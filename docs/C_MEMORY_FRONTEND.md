@@ -20,3 +20,22 @@ guard, and arbitrary parameter-dependent inner loops remain unsupported.
 llmloop-smt examples/c_memory_array.c --c-memory --parameter-bounds '{"n":[0,3]}' --input n=3
 llmloop-smt examples/c_memory_pointer_alias.c --c-memory --parameter-bounds '{"n":[0,2]}' --input n=1
 ~~~
+
+
+## Sequential-loop mode: bounded whole-function execution
+
+For code with multiple sequential loops or state updates between loops, use
+\`--c-memory --bounded-function\`. This mode starts from the function's actual
+initialized local state and symbolically unrolls the entire statement sequence
+as one transition. It can combine fixed arrays, pointer aliases, \`calloc/free\`,
+nested loops, and state updates between loops when each loop is proven to exit
+within \`--max-unroll\` and the path count stays under \`max_paths\`.
+
+~~~bash
+llmloop-smt examples/c_memory_sequential_loops.c --c-memory --bounded-function --max-unroll 8 --parameter-bounds '{"n":[0,3]}' --input n=3
+~~~
+
+This is a bounded whole-function analysis, not an exact summary for arbitrary
+unbounded loops. Declarations must precede executable statements. The normal
+\`--c-memory\` mode still summarizes one outer \`while\` iteration and statically
+unrolls nested loops.

@@ -255,3 +255,10 @@ modular wraparound. Both disable the affine accelerator until a suitable
 source-to-summary equivalence certificate exists.
 The bit-vector and memory modes are not yet combined because pointers require
 a separate mathematical-integer offset sort.
+
+
+For multiple sequential loops and interleaved updates, the memory frontend also
+offers \`--c-memory --bounded-function\`. It symbolically unrolls the whole
+function from initialized local state as one transition, preserving array and
+pointer updates across loops. This mode is exact only within its configured
+unroll/path bounds; it is not an unbounded-loop summary.
