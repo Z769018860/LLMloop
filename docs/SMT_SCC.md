@@ -173,3 +173,16 @@ follow that sequence.
 Composition is bounded to 64 transitions and does not infer an unbounded
 closed form or prove termination. The report retains the component/source
 completeness flags from the SCC analysis.
+
+
+## Bounded SCC boundary/exit composition
+
+Use \`--compose-scc-exit scc_0 --scc-steps 1 --scc-from-initial\` to require
+one SCC-internal transition followed by a transition whose post-state either
+safely exits the loop guard or enables a defined path outside the SCC. Here
+\`--scc-steps\` counts internal transitions; the final boundary transition is
+additional. Zero internal steps checks whether an immediate boundary transition
+is possible.
+
+Undefined/overflow states are not treated as normal exits. The report is still
+bounded and does not prove termination or summarize the downstream SCC.

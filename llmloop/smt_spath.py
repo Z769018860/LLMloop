@@ -788,6 +788,95 @@ class SMTPathGraph:
             'limitation':'Bounded relational composition only; no unbounded closed form or termination proof'
         }
 
+    def compose_scc_exit(self,scc_id:str,internal_steps:int=0,from_initial:bool=False):
+        """Compose internal SCC steps followed by one defined boundary/loop-exit step.
+
+        The final transition originates in the SCC. Its post-state must either
+        fail the safe loop guard (normal loop exit) or enable a defined SPath
+        outside this SCC. Undefined/overflow states are not counted as exits.
+        """
+        if not isinstance(scc_id,str) or not scc_id:
+            raise SMTGraphError('scc_id must be a nonempty string')
+        if type(internal_steps) is not int or not 0<=internal_steps<=63:
+            raise SMTGraphError('internal_steps must be in [0,63]')
+        if type(from_initial) is not bool:
+            raise SMTGraphError('from_initial must be boolean')
+        report=self.synthesize_scc_relations()
+        component=next((item for item in report['components'] if item['id']==scc_id),None)
+        if component is None:
+            raise SMTGraphError('Unknown cyclic SCC id: '+scc_id)
+        members=component['path_ids']
+        external=[name for name in self.paths if name not in members]
+        def fresh_state(index):
+            return {
+                name:(z3.BitVec('scc_'+scc_id+'_exit_step_'+str(index)+'_'+name,self.bit_width)
+                      if self.bit_width else z3.Int('scc_'+scc_id+'_exit_step_'+str(index)+'_'+name))
+                for name in self.variables
+            }
+        states=[fresh_state(i) for i in range(internal_steps+2)]
+        effective_guard=z3.And(self.loop_guard,*self.loop_guard_overflow_checks)
+        guard_safe=z3.And(*self.loop_guard_overflow_checks)
+        transitions=[]
+        for index in range(internal_steps):
+            current=states[index];following=states[index+1]
+            cases=[]
+            for path_id in members:
+                path=self.paths[path_id]
+                updated=self._updated(path,current)
+                equalities=z3.And(*[following[name]==updated[name] for name in self.variables])
+                next_active=self._at(effective_guard,following)
+                next_internal=[self._at(self.paths[target].guard,following) for target in members]
+                stays=z3.And(next_active,z3.Or(*next_internal))
+                cases.append(z3.And(self.pre,self._invariant(current),
+                                    self._at(effective_guard,current),
+                                    self._at(path.guard,current),equalities,stays))
+            transitions.append(z3.Or(*cases))
+        current=states[internal_steps];following=states[internal_steps+1]
+        terminal_cases=[]
+        safe_after=self._at(guard_safe,following)
+        guard_after=self._at(self.loop_guard,following)
+        internal_after=[self._at(self.paths[target].guard,following) for target in members]
+        external_after=[self._at(self.paths[target].guard,following) for target in external]
+        internal_enabled=z3.Or(*internal_after)
+        external_enabled=z3.Or(*external_after) if external_after else z3.BoolVal(False)
+        exits_loop=z3.And(safe_after,z3.Not(guard_after))
+        enters_external=z3.And(safe_after,guard_after,external_enabled,z3.Not(internal_enabled))
+        leaves_scc=z3.Or(exits_loop,enters_external)
+        for path_id in members:
+            path=self.paths[path_id]
+            updated=self._updated(path,current)
+            equalities=z3.And(*[following[name]==updated[name] for name in self.variables])
+            terminal_cases.append(z3.And(
+                self.pre,self._invariant(current),self._at(effective_guard,current),
+                self._at(path.guard,current),equalities,leaves_scc
+            ))
+        transitions.append(z3.Or(*terminal_cases))
+        constraints=list(transitions)
+        if from_initial:
+            constraints.append(z3.And(*[
+                states[0][name]==self.initial[name] for name in self.variables
+            ]))
+        formula=z3.simplify(z3.And(*constraints))
+        return {
+            'status':'COMPOSED_BOUNDED_SCC_EXIT' if component['component_relation_complete']
+                     else 'CANDIDATE_BOUNDED_SCC_EXIT',
+            'scc_id':scc_id,
+            'path_ids':members,
+            'external_path_ids':external,
+            'internal_steps':internal_steps,
+            'total_transitions':internal_steps+1,
+            'from_initial':from_initial,
+            'component_relation_complete':component['component_relation_complete'],
+            'source_semantics_complete':component['source_semantics_complete'],
+            'satisfiability':_check(formula),
+            'state_variables':[
+                {name:str(value) for name,value in state.items()} for state in states
+            ],
+            'relation_smt2':formula.sexpr(),
+            'semantics':'Internal transitions stay in the selected SCC; the final transition exits the loop or reaches a defined SPath outside the SCC',
+            'limitation':'Bounded boundary relation only; it does not prove termination or summarize downstream SCCs'
+        }
+
     def compose_nested(self,outer:dict[str,Any],inputs:dict[str,int]):
         """Reuse already proven functional phase transformer as nested loop.
 

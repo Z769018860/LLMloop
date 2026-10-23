@@ -20,7 +20,8 @@ def main(argv=None):
     parser.add_argument('--synthesize-scc-relations',action='store_true',help='Emit guarded disjunctive one-step recurrence relations for cyclic SCCs')
     parser.add_argument('--synthesize-scc-analysis',action='store_true',help='Classify cyclic SCCs as certified affine cycles, guarded recurrence only, or incomplete')
     parser.add_argument('--compose-scc',help='Compose a bounded recurrence inside an SCC, e.g. scc_0')
-    parser.add_argument('--scc-steps',type=int,default=2,help='Number of SCC-internal transitions to compose (1..64)')
+    parser.add_argument('--compose-scc-exit',help='Compose internal SCC steps followed by one loop-exit or external-SCC transition')
+    parser.add_argument('--scc-steps',type=int,default=2,help='Internal transitions: 1..64 for --compose-scc; 0..63 before the boundary step for --compose-scc-exit')
     parser.add_argument('--scc-from-initial',action='store_true',help='Constrain the first composed state to the IR initial state')
     parser.add_argument('--max-cycle-length',type=int,default=8,help='Maximum simple cycle length to synthesize (1..12)')
     parser.add_argument('--max-invariant-candidates',type=int,default=30,help='Maximum invariant templates to try (1..30)')
@@ -40,7 +41,8 @@ def main(argv=None):
     try:
         if args.c_int_bits and args.bv_wrap_bits:raise SMTGraphError('Choose either --c-int-bits or --bv-wrap-bits')
         if args.bounded_function and not args.c_memory:raise SMTGraphError('--bounded-function requires --c-memory')
-        if args.scc_from_initial and not args.compose_scc:raise SMTGraphError('--scc-from-initial requires --compose-scc')
+        if args.scc_from_initial and not (args.compose_scc or args.compose_scc_exit):raise SMTGraphError('--scc-from-initial requires --compose-scc or --compose-scc-exit')
+        if args.compose_scc and args.compose_scc_exit:raise SMTGraphError('Choose either --compose-scc or --compose-scc-exit')
         if sum(bool(x) for x in (args.c,args.c_cfg,args.c_memory))>1:
             raise SMTGraphError('Choose only one of --c, --c-cfg, or --c-memory')
         if args.c_memory:
@@ -88,6 +90,8 @@ def main(argv=None):
             report['scc_analysis']=graph.synthesize_scc_analysis(args.max_cycle_length)
         if args.compose_scc:
             report['scc_composition']=graph.compose_scc_recurrence(args.compose_scc,args.scc_steps,args.scc_from_initial)
+        if args.compose_scc_exit:
+            report['scc_exit_composition']=graph.compose_scc_exit(args.compose_scc_exit,args.scc_steps,args.scc_from_initial)
         report['analysis']=graph.analyze()
         report['acceleration']=graph.try_accelerate()
         values={}

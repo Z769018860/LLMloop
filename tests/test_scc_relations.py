@@ -163,3 +163,50 @@ def test_cli_exports_bounded_scc_composition(tmp_path,capsys):
     report=json.loads(capsys.readouterr().out)
     assert report['scc_composition']['steps']==2
     assert report['scc_composition']['status']=='COMPOSED_BOUNDED_RECURRENCE'
+
+
+def _exit_scc_graph():
+    return {
+        'kind':'smt_spgraph','name':'step_then_external','parameters':[],
+        'state':{'x':0},'loop_guard':'x < 3',
+        'paths':[
+            {'id':'step','when':'x < 2','updates':{'x':'x + 1'}},
+            {'id':'last','when':'x >= 2','updates':{'x':'x + 1'}}
+        ]
+    }
+
+
+def test_scc_exit_composition_finds_first_defined_external_boundary():
+    from llmloop.smt_spath import z3
+    graph=SMTPathGraph(_exit_scc_graph())
+    relation0=graph.compose_scc_exit('scc_0',internal_steps=0,from_initial=True)
+    assert relation0['status']=='COMPOSED_BOUNDED_SCC_EXIT'
+    assert relation0['satisfiability']=='unsat'
+    relation1=graph.compose_scc_exit('scc_0',internal_steps=1,from_initial=True)
+    assert relation1['satisfiability']=='sat'
+    decls={value:z3.Int(value) for state in relation1['state_variables'] for value in state.values()}
+    parsed=z3.parse_smt2_string('(assert '+relation1['relation_smt2']+')',decls=decls)
+    start=z3.Int('scc_scc_0_exit_step_0_x')
+    middle=z3.Int('scc_scc_0_exit_step_1_x')
+    final=z3.Int('scc_scc_0_exit_step_2_x')
+    solver=z3.Solver()
+    solver.add(*parsed,start==0,middle==1,final==2)
+    assert solver.check()==z3.sat
+
+
+def test_scc_exit_composition_rejects_invalid_budget_and_unknown_scc():
+    graph=SMTPathGraph(_exit_scc_graph())
+    with pytest.raises(SMTGraphError,match='internal_steps must be in'):
+        graph.compose_scc_exit('scc_0',internal_steps=64)
+    with pytest.raises(SMTGraphError,match='Unknown cyclic SCC'):
+        graph.compose_scc_exit('scc_missing',internal_steps=0)
+
+
+def test_cli_exports_scc_exit_composition(tmp_path,capsys):
+    from llmloop.smt_cli import main
+    source=tmp_path/'exit.json'
+    source.write_text(json.dumps(_exit_scc_graph()),encoding='utf-8')
+    assert main([str(source),'--compose-scc-exit','scc_0','--scc-steps','1','--scc-from-initial'])==0
+    report=json.loads(capsys.readouterr().out)
+    assert report['scc_exit_composition']['total_transitions']==2
+    assert report['scc_exit_composition']['satisfiability']=='sat'

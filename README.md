@@ -282,3 +282,9 @@ A guarded SCC recurrence can be composed for a bounded number of steps using
 all path alternatives at every step rather than inventing a single execution
 schedule; \`--scc-from-initial\` can anchor the first state to the IR initial
 state. This remains bounded relational composition, not unbounded acceleration.
+
+
+Use \`--compose-scc-exit scc_0 --scc-steps 1 --scc-from-initial\` to check a
+bounded path that remains inside an SCC for the requested number of transitions
+and then reaches a defined external path or safely exits the loop guard. This
+does not prove termination or summarize the downstream component.
