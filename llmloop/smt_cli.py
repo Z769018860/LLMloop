@@ -9,6 +9,9 @@ def main(argv=None):
     parser=argparse.ArgumentParser(prog='llmloop-smt')
     parser.add_argument('file',type=Path)
     parser.add_argument('--c',action='store_true',help='Parse restricted scalar C source')
+    parser.add_argument('--c-cfg',action='store_true',help='Path-explode nested/sequential if/else CFGs in one scalar while loop')
+    parser.add_argument('--synthesize-invariants',action='store_true',help='Generate and SMT-check conservative invariant templates')
+    parser.add_argument('--max-invariant-candidates',type=int,default=30,help='Maximum invariant templates to try (1..30)')
     parser.add_argument('--function')
     parser.add_argument('--control-var',help='Finite control variable used for certified acceleration')
     parser.add_argument('--control-values',help='JSON object mapping path IDs to integer phase values')
@@ -23,7 +26,15 @@ def main(argv=None):
     parser.add_argument('--output',type=Path)
     args=parser.parse_args(argv)
     try:
-        if args.c:
+        if args.c and args.c_cfg:
+            raise SMTGraphError('Choose either --c or --c-cfg, not both')
+        if args.c_cfg:
+            from .cfg_frontend import translate_cfg_smt_c
+            bounds=json.loads(args.parameter_bounds) if args.parameter_bounds else {}
+            obj=translate_cfg_smt_c(args.file.read_text(encoding='utf-8'),
+                function=args.function,parameter_bounds=bounds)
+            if args.dump_ir:args.dump_ir.write_text(json.dumps(obj,indent=2)+'\n',encoding='utf-8')
+        elif args.c:
             from .smt_c import translate_smt_c
             controls=json.loads(args.control_values) if args.control_values else None
             bounds=json.loads(args.parameter_bounds) if args.parameter_bounds else {}
@@ -41,6 +52,10 @@ def main(argv=None):
             report['proposals']=check_proposals(graph,candidate)
         if args.llm_model:
             report['llm']=propose_and_check(graph,args.llm_model,args.llm_url)
+        if args.synthesize_invariants:
+            from .invariant_synthesis import synthesize_invariants
+            report['invariant_synthesis']=synthesize_invariants(graph,args.max_invariant_candidates)
+        report['analysis']=graph.analyze()
         report['acceleration']=graph.try_accelerate()
         values={}
         for item in args.input:
@@ -48,8 +63,12 @@ def main(argv=None):
             if name in values:raise SMTGraphError('Duplicate parameter value')
             values[name]=int(number)
         if values:
-            report['evaluation']=(graph.compose_nested(obj['outer'],values) if nested else graph.evaluate(values))
+            if args.c_cfg:
+                report['evaluation']={'execution_mode':'bounded concrete oracle; no symbolic acceleration claim',**graph.concrete(values)}
+            else:
+                report['evaluation']=(graph.compose_nested(obj['outer'],values) if nested else graph.evaluate(values))
         if args.check_range:
+            if args.c_cfg:raise SMTGraphError('--check-range requires a certified symbolic summary; --c-cfg mode is graph analysis plus bounded concrete evaluation')
             lo,hi=(int(x) for x in args.check_range.split(':'))
             if len(graph.parameters)!=1 or not 0<=hi-lo<=50:
                 raise SMTGraphError('Cross-check requires one parameter and 1..51 values')

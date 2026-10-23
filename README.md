@@ -219,3 +219,20 @@ llmloop-smt examples/smt_nested.json --invariant 'p >= 0 and p <= 1' --input n=6
 See [docs/SMT_SCC.md](docs/SMT_SCC.md) for proof obligations, limitations,
 opt-in LLM invocation, C frontend, and original LoopSCC comparison.
 This remains a restricted mathematical-integer research prototype.
+
+
+## v0.5: sequential/nested branch CFG extraction and invariant template synthesis
+
+The --c-cfg frontend expands a bounded number of paths from nested if/else
+blocks and multiple sequential conditionals. Later conditions are substituted
+through prior assignments. --synthesize-invariants generates threshold
+intervals, monotone accumulator bounds, and preserved pairwise differences;
+every candidate must pass Z3 initiation, path-coverage and consecution checks.
+
+~~~bash
+llmloop-smt examples/smt_sequential_cfg.c --c-cfg --parameter-bounds '{"n":[0,100]}' --synthesize-invariants
+llmloop-smt examples/smt_nonfunctional.json --synthesize-invariants
+~~~
+
+See docs/CFG_AND_INVARIANTS.md. This is a bounded path-explosion frontend and
+incomplete template search, not a general C CFG analyzer or abstract interpreter.

@@ -28,3 +28,13 @@ claim superiority to LoopSCC or any new soundness theorem for unrestricted C.
 - Termination/ranking synthesis for non-monotone progress.
 - Validated array/pointer heap-state invariants (QCP-inspired).
 - Solver-independent proof-certificate replay and cross-tool benchmark suite.
+
+
+## v0.5 bounded CFG and invariant discovery
+
+Added a scalar C frontend that expands nested and sequential if/else blocks
+into SPaths while rewriting later predicates through earlier assignments.
+Added a template generator for threshold intervals, monotone bounds and
+pairwise affine equalities. Candidates remain hypotheses until Z3 proves
+initiation, path coverage and consecution. The frontend is path-bounded and
+the template search is incomplete; neither claims general C analysis.
