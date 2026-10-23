@@ -50,7 +50,13 @@ def main(argv=None):
         if args.compose_scc and args.compose_scc_exit:raise SMTGraphError('Choose either --compose-scc or --compose-scc-exit')
         if sum(bool(x) for x in (args.c,args.c_cfg,args.c_memory))>1:
             raise SMTGraphError('Choose only one of --c, --c-cfg, or --c-memory')
-        if args.c_memory:
+        if args.c_int_bits and (args.c or args.c_cfg):
+            if args.control_var or args.control_values:raise SMTGraphError('Ordered signed C mode does not use finite-control acceleration')
+            from .ordered_c import translate_ordered_c
+            bounds=json.loads(args.parameter_bounds) if args.parameter_bounds else {}
+            obj=translate_ordered_c(args.file.read_text(encoding='utf-8'),function=args.function,parameter_bounds=bounds,bits=args.c_int_bits)
+            if args.dump_ir:args.dump_ir.write_text(json.dumps(obj,indent=2)+'\n',encoding='utf-8')
+        elif args.c_memory:
             if args.c_int_bits or args.bv_wrap_bits:raise SMTGraphError('Fixed-width modes cannot yet be combined with --c-memory; pointer offsets require a separate integer sort')
             from .memory_frontend import translate_memory_c
             bounds=json.loads(args.parameter_bounds) if args.parameter_bounds else {}

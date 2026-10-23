@@ -13,18 +13,30 @@ def analyze_request(request: dict) -> dict:
     try:
         if not isinstance(request, dict):raise SMTGraphError('Request must be an object')
         allowed = {'ir', 'source', 'function', 'parameter_bounds', 'max_unroll',
-                   'max_paths', 'whole_function', 'invariants', 'verify_steps', 'assertion', 'ranking', 'synthesize_ranking'}
+                   'max_paths', 'whole_function', 'invariants', 'verify_steps', 'assertion', 'ranking', 'synthesize_ranking', 'frontend', 'int_bits'}
         if set(request)-allowed:raise SMTGraphError('Unknown request fields: '+', '.join(sorted(set(request)-allowed)))
+        if 'synthesize_ranking' in request and type(request['synthesize_ranking']) is not bool:raise SMTGraphError('synthesize_ranking must be Boolean')
         if ('ir' in request) == ('source' in request):raise SMTGraphError('Provide exactly one of ir or source')
         if 'source' in request:
             from .memory_frontend import translate_memory_c
             if not isinstance(request['source'], str):raise SMTGraphError('source must be a string')
-            obj = translate_memory_c(request['source'], function=request.get('function'),
-                                     parameter_bounds=request.get('parameter_bounds'),
-                                     max_unroll=request.get('max_unroll',12),
-                                     max_paths=request.get('max_paths',48),
-                                     whole_function=request.get('whole_function',True))
+            frontend=request.get('frontend','memory')
+            if frontend=='ordered_scalar':
+                if 'whole_function' in request or 'max_unroll' in request:raise SMTGraphError('ordered_scalar supports one while loop, not whole_function or max_unroll')
+                from .ordered_c import translate_ordered_c
+                obj=translate_ordered_c(request['source'],function=request.get('function'),
+                                        parameter_bounds=request.get('parameter_bounds'),
+                                        bits=request.get('int_bits',32),max_paths=request.get('max_paths',48))
+            elif frontend=='memory':
+                if 'int_bits' in request:raise SMTGraphError('int_bits requires ordered_scalar frontend')
+                obj = translate_memory_c(request['source'], function=request.get('function'),
+                                         parameter_bounds=request.get('parameter_bounds'),
+                                         max_unroll=request.get('max_unroll',12),
+                                         max_paths=request.get('max_paths',48),
+                                         whole_function=request.get('whole_function',True))
+            else:raise SMTGraphError('frontend must be memory or ordered_scalar')
         else:
+            if set(request) & {'frontend','int_bits','whole_function','function','parameter_bounds','max_paths','max_unroll'}:raise SMTGraphError('Source translation options cannot be applied to an existing IR')
             obj = request['ir']
             if not isinstance(obj, dict):raise SMTGraphError('ir must be an object')
         graph = SMTPathGraph(obj)

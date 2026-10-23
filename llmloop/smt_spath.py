@@ -49,6 +49,8 @@ def _z3_expr(text: Any, symbols: dict[str, Any], bit_width: int | None = None, o
     if isinstance(text, bool):
         return z3.BoolVal(text)
     if type(text) is int:
+        if overflow_checks is not None and bit_width:
+            overflow_checks.append(z3.BoolVal(-(1 << (bit_width-1)) <= text < (1 << (bit_width-1))))
         return z3.BitVecVal(text,bit_width) if bit_width else z3.IntVal(text)
     if not isinstance(text, str) or len(text)>1200:
         raise SMTGraphError("Expected a short textual expression")
@@ -60,13 +62,18 @@ def _z3_expr(text: Any, symbols: dict[str, Any], bit_width: int | None = None, o
     def rec(n):
         if isinstance(n, ast.Constant):
             if type(n.value) is bool: return z3.BoolVal(n.value)
-            if type(n.value) is int: return z3.BitVecVal(n.value,bit_width) if bit_width else z3.IntVal(n.value)
+            if type(n.value) is int:
+                if overflow_checks is not None and bit_width:
+                    overflow_checks.append(z3.BoolVal(-(1 << (bit_width-1)) <= n.value < (1 << (bit_width-1))))
+                return z3.BitVecVal(n.value,bit_width) if bit_width else z3.IntVal(n.value)
         if isinstance(n, ast.Name) and n.id in symbols:
             return symbols[n.id]
         if isinstance(n, ast.UnaryOp):
             # A negative literal is a literal value, not an overflowing negation
             # of a narrow signed object (e.g. -128 is representable in int8).
             if isinstance(n.op,ast.USub) and bit_width and isinstance(n.operand,ast.Constant) and type(n.operand.value) is int:
+                if overflow_checks is not None:
+                    overflow_checks.append(z3.BoolVal(-(1 << (bit_width-1)) <= -n.operand.value < (1 << (bit_width-1))))
                 return z3.BitVecVal(-n.operand.value,bit_width)
             a=rec(n.operand)
             if isinstance(n.op, ast.Not): return z3.Not(a)
@@ -92,14 +99,17 @@ def _z3_expr(text: Any, symbols: dict[str, Any], bit_width: int | None = None, o
                 if isinstance(n.op,ast.Mod) and z3.is_bv(a): return z3.SRem(a,b)
                 return a/b if isinstance(n.op,ast.FloorDiv) else a%b
         if isinstance(n, ast.BoolOp):
-            args=[rec(x) for x in n.values]
+            args=[]
+            for child in n.values:
+                needed=z3.And(*args) if isinstance(n.op,ast.And) else z3.Not(z3.Or(*args))
+                args.append(guarded_rec(child,needed))
             if isinstance(n.op, ast.And): return z3.And(*args)
             if isinstance(n.op, ast.Or): return z3.Or(*args)
         if isinstance(n, ast.Compare):
-            terms=[rec(n.left)]+[rec(v) for v in n.comparators]
+            a=rec(n.left)
             claims=[]
             for i,op in enumerate(n.ops):
-                a,b=terms[i],terms[i+1]
+                b=guarded_rec(n.comparators[i],z3.And(*claims))
                 if isinstance(op,ast.Eq):claim=a==b
                 elif isinstance(op,ast.NotEq):claim=a!=b
                 elif isinstance(op,ast.Lt):claim=a<b
@@ -108,11 +118,22 @@ def _z3_expr(text: Any, symbols: dict[str, Any], bit_width: int | None = None, o
                 elif isinstance(op,ast.GtE):claim=a>=b
                 else:raise SMTGraphError("Unsupported comparator")
                 claims.append(claim)
+                a=b
             return z3.And(*claims)
         if isinstance(n,ast.Call) and isinstance(n.func,ast.Name) and n.func.id=='ite' and not n.keywords and len(n.args)==3:
-            condition,yes,no=(rec(x) for x in n.args)
+            condition=rec(n.args[0])
+            yes=guarded_rec(n.args[1],condition)
+            no=guarded_rec(n.args[2],z3.Not(condition))
             return z3.If(condition,yes,no)
         raise SMTGraphError("Unsupported expression node: "+type(n).__name__)
+    def guarded_rec(child,needed):
+        if overflow_checks is None:return rec(child)
+        start=len(overflow_checks)
+        value=rec(child)
+        local=overflow_checks[start:]
+        del overflow_checks[start:]
+        overflow_checks.extend(z3.Implies(needed,check) for check in local)
+        return value
     try:
         return rec(node)
     except (z3.Z3Exception, TypeError) as exc:
@@ -215,7 +236,11 @@ class SMTPathGraph:
             guard=_z3_expr(entry.get('when',True),self.env,self.bit_width,guard_checks)
             update_checks=[] if self.check_signed_overflow else None
             updates={v:_z3_expr(writes.get(v,v),self.env,self.bit_width,update_checks) for v in self.variables}
+            evaluated=entry.get('evaluated',[])
+            if not isinstance(evaluated,list) or not all(isinstance(expr,str) for expr in evaluated):
+                raise SMTGraphError('SPath evaluated expressions must be a list of strings')
             if self.check_signed_overflow:
+                for expr in evaluated:_z3_expr(expr,self.env,self.bit_width,update_checks)
                 guard=z3.And(guard,*(guard_checks or []),*(update_checks or []))
             self.paths[name]=_Path(name,guard,updates,texts)
         self.certified=[]
