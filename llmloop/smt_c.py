@@ -67,6 +67,17 @@ def translate_smt_c(source:str,function:str|None=None,control_var:str|None=None,
     obj={'kind':'smt_spgraph','name':func.decl.name,'parameters':parameters,
          'state':init,'loop_guard':_guard(loop.cond),'paths':paths,
          'parameter_bounds':parameter_bounds or {}}
+    # A simple monotone while guard is also an exact-exit IR candidate.
+    # General Boolean guards remain graph-only until a separate bound proof exists.
+    from .expressions import parse
+    condition=loop.cond
+    if (isinstance(condition,c_ast.BinaryOp) and
+            condition.op in ('<','<=','>','>=') and
+            isinstance(condition.left,c_ast.ID) and condition.left.name in init):
+        bound=_expr(condition.right)
+        if not (parse(bound,scope).free_symbols & {scope[v] for v in init}):
+            obj['exit']={'var':condition.left.name,
+                         'op':condition.op,'bound':bound}
     if control_var is not None:
         if control_var not in init:raise SMTGraphError('Unknown control variable')
         if control_values is None or set(control_values)!={x['id'] for x in paths}:
