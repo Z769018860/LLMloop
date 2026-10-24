@@ -47,12 +47,15 @@ def entry_form(source,names,entry):
 
 class TypedCNested(TypedCRecurrence):
     def __init__(self,source,loop_summaries,function=None,parameter_bounds=None,abi='LP64',char_signed=True,max_paths=48):
-        self.summaries=loop_summaries;self.live=[];self.loop_certificates=[]
-        super().__init__(source,loop_summaries,function,parameter_bounds,abi,char_signed,max_paths)
+        from .candidate_synthesis import normalize_summaries
+        self.summaries=normalize_summaries(source,function,loop_summaries);self.live=[];self.loop_certificates=[];self.synthesis_records=[]
+        self.nonnegative_parameters={name for name,bound in (parameter_bounds or {}).items() if isinstance(bound,list) and len(bound)==2 and type(bound[0]) is int and bound[0]>=0} if isinstance(parameter_bounds,(dict,type(None))) else set()
+        super().__init__(source,self.summaries,function,parameter_bounds,abi,char_signed,max_paths)
 
     def build(self,unused):
         if not isinstance(self.summaries,dict):raise SMTGraphError('loop_summaries must map unique index names to coordinate formulas')
         definitions={};parameters=set(self.parameters)
+        automatic=any(value=='auto' for value in self.summaries.values())
         class Syntax(c_ast.NodeVisitor):
             def visit_For(self,node):
                 init=node.init
@@ -63,6 +66,12 @@ class TypedCNested(TypedCRecurrence):
             def visit_While(self,node):raise SMTGraphError('Only counted for loops can be summarized')
             def visit_DoWhile(self,node):raise SMTGraphError('Only counted for loops can be summarized')
             def visit_Return(self,node):raise SMTGraphError('Only the final function return is supported')
+            def visit_Assignment(self,node):
+                if automatic and isinstance(node.lvalue,c_ast.ID) and node.lvalue.name in parameters:raise SMTGraphError('Automatic inference requires parameters unchanged in the function')
+                self.generic_visit(node)
+            def visit_UnaryOp(self,node):
+                if automatic and node.op in ('++','p++','--','p--') and isinstance(node.expr,c_ast.ID) and node.expr.name in parameters:raise SMTGraphError('Automatic inference requires parameters unchanged in the function')
+                self.generic_visit(node)
         items=self.func.body.block_items or []
         if not items or not isinstance(items[-1],c_ast.Return):raise SMTGraphError('Final return required')
         visitor=Syntax()
@@ -120,6 +129,10 @@ class TypedCNested(TypedCRecurrence):
         old_witness=dict(self.witness);count=z3.FreshInt('typed_nested_'+index);self.witness[index]=count
         state={name:term for name,term in entry.items() if name not in frozen}
         summary=self.summaries[index]
+        if summary=='auto':
+            from .candidate_synthesis import synthesize
+            summary,evidence=synthesize(node,state,self.parameters,self.live,self.engine.abi,self.nonnegative_parameters)
+            self.synthesis_records.append(evidence)
         limit=getattr(self,'max_coordinates',15)
         if not isinstance(summary,dict) or set(summary)!=set(state) or len(state)>limit:raise SMTGraphError(f'Summary must cover every visible coordinate (at most {limit})')
         immutable={name:entry[name] for name in entry if name in frozen}
@@ -173,6 +186,7 @@ class TypedCNested(TypedCRecurrence):
               'parameter_types':{name:term.type.name for name,term in self.parameters.items()},
               'semantics':'typed C integer semantics with explicit implementation choices',
               'implementation_choices':{'signed_cast':'two-complement modular','signed_right_shift':'arithmetic'},
+              'summary_synthesis':self.synthesis_records,
               'certificate':{'method':'compositional nested trajectory induction','obligations':self.checks,'loops':self.loop_certificates},
               'scope':'canonical scalar for loops at nesting depth up to 16, with supplied entry-relative state formulas; no memory or general loop exits'}
         if self.failure is not None:

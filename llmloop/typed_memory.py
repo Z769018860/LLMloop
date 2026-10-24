@@ -5,6 +5,7 @@ checked proof coordinates. Dynamic integer subscripts preserve typed evaluation;
 address formation is exact and never narrows a large displacement silently.
 """
 import ast
+import sympy as s
 from dataclasses import dataclass
 import z3
 from pycparser import c_ast,c_parser
@@ -253,10 +254,23 @@ class TypedCMemory(TypedCNested):
 
     def prove_loop(self,node,guard,entry):
         index=node.init.decls[0].name;provided=self.summaries[index]
-        if not isinstance(provided,dict):raise SMTGraphError('Memory loop summary must be an object')
         frozen=set(self.parameters)|{name for name,_,_ in self.live}|{index}
         state={name:term for name,term in entry.items() if name not in frozen}
         labels={self.fields.get(name,name):name for name in state}
+        if provided=='auto':
+            from .candidate_synthesis import synthesize
+            aliases={}
+            for name,obj in self.arrays.items():
+                if obj.alive in entry:aliases[name]=([self.fields[key] for key in obj.cells],s.Integer(0))
+            for name,(obj,key) in self.pointers.items():
+                if key in entry:
+                    offset=z3.simplify(entry[key].value)
+                    if not z3.is_int_value(offset):raise SMTGraphError('Automatic memory inference requires constant alias offsets')
+                    aliases[name]=([self.fields[cell] for cell in obj.cells],s.Integer(offset.as_long()))
+            public={self.fields.get(name,name):term for name,term in state.items() if name not in self.metadata}
+            provided,evidence=synthesize(node,public,self.parameters,self.live,self.engine.abi,self.nonnegative_parameters,aliases)
+            self.synthesis_records.append(evidence)
+        if not isinstance(provided,dict):raise SMTGraphError('Memory loop summary must be an object or auto')
         mandatory={label for label,name in labels.items() if name not in self.metadata}
         if set(provided)-set(labels) or not mandatory<=set(provided):raise SMTGraphError('Summary needs scalar/canonical cell coordinates; optional initialized:/alive:/offset: coordinates allowed')
         def translate(source):

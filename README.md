@@ -488,3 +488,23 @@ See [the finite-memory model and assumptions](docs/TYPED_FINITE_MEMORY.md) and
 leak freedom is not proved, and general escaping/dynamic heaps remain unsupported.
 The report also preserves the observed absence of a sanitizer diagnostic for a
 canceled overflow fixture, rather than treating that absence as proof of safety.
+
+
+## v0.18: automatic candidates verified against original typed C
+
+`--auto-summaries` (API `loop_summaries: "auto"`) generates trajectories for
+supported triangular polynomial, saturation, nested scalar and static finite-cell
+loops. Each candidate must pass the existing ABI-aware original-source proof;
+mathematical extraction alone never certifies C safety. Supplied and automatic
+summaries can be mixed per loop.
+
+```sh
+python -m llmloop.symbolic_cli examples/typed_nested_loop.c \
+  --c-typed-nested --auto-summaries \
+  --parameter-bounds '{"n":[0,1000],"m":[0,1000]}' --inputs '{"n":5,"m":7}'
+```
+
+See [discovery scope and proof separation](docs/AUTOMATIC_VERIFIED_SUMMARIES.md)
+and [v0.18 experiments](experiments/v018/report.md). General coupled/branching
+trajectory discovery, escaping dynamic heaps and arbitrary C control flow remain
+outstanding. Unsupported or unproved cases return `UNKNOWN`.

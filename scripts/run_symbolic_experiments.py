@@ -30,8 +30,8 @@ def command(args, timeout=300):
 
 def main(argv=None):
     parser=argparse.ArgumentParser()
-    parser.add_argument('--output',type=Path,default=ROOT/'experiments/v017')
-    parser.add_argument('--fixtures',type=Path,default=ROOT/'experiments/v017/cases.json')
+    parser.add_argument('--output',type=Path,default=ROOT/'experiments/v018')
+    parser.add_argument('--fixtures',type=Path,default=ROOT/'experiments/v018/cases.json')
     args=parser.parse_args(argv)
     args.output.mkdir(parents=True,exist_ok=True)
     version=command(['git','rev-parse','HEAD'])
@@ -68,7 +68,8 @@ def main(argv=None):
         evidence['guarded_cases'].append({'name':fixture['name'],'expected_status':fixture['expected_status'],
             'actual_status':report['status'],'matched':matched,
             **{k:report[k] for k in ['failed_obligation','counterexample','evaluation','reason','c_overflow_verified'] if k in report},
-            'proved_obligations':len(report.get('certificate',{}).get('obligations',report.get('proved_obligations',[])))})
+            'proved_obligations':len(report.get('certificate',{}).get('obligations',report.get('proved_obligations',[]))),
+            'synthesized_candidates':len(report.get('summary_synthesis',[]))})
         print(fixture['name']+': '+('PASS' if matched else 'FAIL'),flush=True)
     native=[c for suite in evidence['suites'] if suite['name']!='pytest' for c in suite['checks']]
     pytest_counts=re.findall(r'(\d+) passed',evidence['suites'][0]['stdout'])
@@ -97,7 +98,7 @@ def main(argv=None):
               'Native checks are finite differential tests; the memory-rejection sanitizer suite counts expected fault correspondences separately in its log, not certified safe executions. Mathematical recurrence and typed scalar-loop claims come from checked induction obligations within their reported domains, not from the sample count.',
               'Negative controls include incorrect base/successor formulas, a failure near iteration one million, ambiguous/missing branches, an empty domain, typed intermediate/return overflow, overwritten division by zero, index wrap, and unsupported expressions. UNKNOWN controls are never counted as supported functionality.',
               'These are controlled examples, not a representative real-world library benchmark. No performance advantage or universal C coverage is claimed.',
-              'General escaping heap shapes, dynamic-size/failed allocations, external pointer layouts, arbitrary typed CFG loops, and automatic discovery of arbitrary closed forms remain incomplete.','',
+              'General escaping heap shapes, dynamic-size/failed allocations, external pointer layouts, arbitrary typed CFG loops, and arbitrary coupled/branching closed-form discovery remain incomplete; automatic candidates are accepted only after original typed-source proof.','',
               f'Reproduce: `python scripts/run_symbolic_experiments.py --fixtures {args.fixtures} --output {args.output}` after `python -m pip install -e ".[test,smt]"`.']
     (args.output/'report.md').write_text('\n'.join(lines)+'\n')
     print(json.dumps(summary),flush=True)

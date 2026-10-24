@@ -37,3 +37,14 @@ def test_parameter_poles_cannot_disappear_during_symbolic_simplification(express
     with pytest.raises(SMTGraphError,match='nonzero literal divisor'):summarize_recurrence(obj)
     obj['kind']='polynomial_recurrence'
     with pytest.raises(SMTGraphError,match='nonzero literal divisor'):summarize_polynomial(obj)
+
+
+def test_eighth_degree_closed_span_is_not_lost_to_expansion_budget():
+    obj={'kind':'polynomial_recurrence','state':{'x':0,'total':0},
+         'updates':{'x':'x+1','total':'total+x**8'},'max_degree':8,'max_terms':16}
+    report=summarize_polynomial(obj)
+    assert report['status']=='CERTIFIED_FINITE_POLYNOMIAL_RECURRENCE'
+    import sympy as s
+    k=s.Symbol('k',integer=True,nonnegative=True)
+    formula=s.sympify(report['final_state']['total'],locals={'k':k})
+    assert [formula.subs(k,n) for n in range(6)]==[sum(i**8 for i in range(n)) for n in range(6)]
