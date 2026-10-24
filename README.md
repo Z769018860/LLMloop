@@ -390,3 +390,20 @@ See [periodic recurrence contracts](docs/PERIODIC_RECURRENCES.md). This mode use
 mathematical integers and counter/immutable-parameter guards; arbitrary
 state-dependent branching and unified unbounded C integer/memory verification
 remain unsupported.
+
+## v0.13: inductive state-dependent branch guards and C source integration
+
+Periodic summaries now accept checked cyclic `phase_invariants` and immutable
+parameter bounds. They prove the initial phase, unique branch selection, and
+successor phase universally, allowing guards on mutable state without trusting
+candidate annotations. The new `periodic_scalar` C frontend preserves sequential
+branch assignments and returns a closed function-result expression.
+
+```sh
+python -m llmloop.symbolic_cli examples/state_guarded_periodic.c \
+  --c-periodic --phase-invariants '["sign > 0", "sign < 0"]'
+```
+
+See [inductive phase contracts and C syntax](docs/INDUCTIVE_PHASES_AND_C.md).
+This frontend uses mathematical integers; machine overflow and arbitrary
+nonperiodic schedules remain outside its certificate.

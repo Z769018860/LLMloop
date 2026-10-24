@@ -31,6 +31,10 @@ def analyze_request(request: dict) -> dict:
                 if set(request)-{'source','function','frontend','parameter_mins','inputs'}:raise SMTGraphError('Private allocation fold accepts mathematical source/count domains only')
                 from .private_allocations import PrivateAllocations
                 return {'schema_version':1,**PrivateAllocations(request['source'],function=request.get('function'),parameter_mins=request.get('parameter_mins')).report(request.get('inputs'))}
+            elif frontend=='periodic_scalar':
+                if set(request)-{'source','function','frontend','parameter_bounds','invariants'}:raise SMTGraphError('Invalid periodic scalar C options')
+                from .periodic_c import analyze_periodic_c
+                return {'schema_version':1,**analyze_periodic_c(request['source'],function=request.get('function'),parameter_bounds=request.get('parameter_bounds'),invariants=request.get('invariants'))}
             elif frontend=='memory_scan':
                 if set(request)-{'source','function','frontend','parameter_bounds','int_bits','inputs'}:raise SMTGraphError('Invalid memory scan options')
                 from .scan_c import translate_scan_c

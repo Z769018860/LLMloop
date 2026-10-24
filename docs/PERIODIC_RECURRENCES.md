@@ -39,3 +39,10 @@ termination, infer a schedule from arbitrary C syntax, or solve arbitrary
 state-dependent branches. The report explicitly sets `c_overflow_verified` and
 `termination_proved` to false. General escaping heap analysis, heterogeneous
 machine-integer unbounded memory, and arbitrary branching schedules remain open.
+
+## v0.13 extension
+
+For mutable-state guards, the optional `phase_invariants` mode proves an
+inductive schedule and supports explicit immutable `parameter_bounds`. See
+[inductive phases and C integration](INDUCTIVE_PHASES_AND_C.md). Without this
+option the original counter/parameter-only contract above is unchanged.
