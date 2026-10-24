@@ -13,7 +13,7 @@ def analyze_request(request: dict) -> dict:
     try:
         if not isinstance(request, dict):raise SMTGraphError('Request must be an object')
         allowed = {'ir', 'source', 'function', 'parameter_bounds', 'max_unroll',
-                   'max_paths', 'whole_function', 'invariants', 'verify_steps', 'assertion', 'ranking', 'synthesize_ranking', 'frontend', 'int_bits', 'parameter_mins', 'inputs'}
+                   'max_paths', 'whole_function', 'invariants', 'verify_steps', 'assertion', 'ranking', 'synthesize_ranking', 'frontend', 'int_bits', 'parameter_mins', 'inputs', 'memory_layout'}
         if set(request)-allowed:raise SMTGraphError('Unknown request fields: '+', '.join(sorted(set(request)-allowed)))
         if 'synthesize_ranking' in request and type(request['synthesize_ranking']) is not bool:raise SMTGraphError('synthesize_ranking must be Boolean')
         if ('ir' in request) == ('source' in request):raise SMTGraphError('Provide exactly one of ir or source')
@@ -21,12 +21,17 @@ def analyze_request(request: dict) -> dict:
             from .memory_frontend import translate_memory_c
             if not isinstance(request['source'], str):raise SMTGraphError('source must be a string')
             frontend=request.get('frontend','memory')
+            if 'memory_layout' in request and frontend!='sweep_memory':raise SMTGraphError('memory_layout requires sweep_memory frontend')
             if frontend=='ordered_scalar':
                 if 'whole_function' in request or 'max_unroll' in request:raise SMTGraphError('ordered_scalar supports one while loop, not whole_function or max_unroll')
                 from .ordered_c import translate_ordered_c
                 obj=translate_ordered_c(request['source'],function=request.get('function'),
                                         parameter_bounds=request.get('parameter_bounds'),
                                         bits=request.get('int_bits',32),max_paths=request.get('max_paths',48))
+            elif frontend=='sweep_memory':
+                if set(request)-{'source','function','frontend','parameter_bounds','memory_layout','int_bits','inputs'}:raise SMTGraphError('Invalid sweep_memory translation options')
+                from .sweep_c import translate_sweep_c
+                obj=translate_sweep_c(request['source'],function=request.get('function'),parameter_bounds=request.get('parameter_bounds'),memory_layout=request.get('memory_layout'),signed_bits=request.get('int_bits'))
             elif frontend=='counted_memory':
                 if set(request)-{'source','function','frontend','parameter_mins','inputs'}:raise SMTGraphError('counted_memory accepts only source, function, parameter_mins and inputs')
                 from .counted_c import translate_counted_memory_c
@@ -38,18 +43,27 @@ def analyze_request(request: dict) -> dict:
                                          max_unroll=request.get('max_unroll',12),
                                          max_paths=request.get('max_paths',48),
                                          whole_function=request.get('whole_function',True))
-            else:raise SMTGraphError('frontend must be memory, ordered_scalar or counted_memory')
+            else:raise SMTGraphError('frontend must be memory, ordered_scalar, counted_memory or sweep_memory')
         else:
-            if set(request) & {'frontend','int_bits','whole_function','function','parameter_bounds','max_paths','max_unroll','parameter_mins'}:raise SMTGraphError('Source translation options cannot be applied to an existing IR')
+            if set(request) & {'frontend','int_bits','whole_function','function','parameter_bounds','max_paths','max_unroll','parameter_mins','memory_layout'}:raise SMTGraphError('Source translation options cannot be applied to an existing IR')
             obj = request['ir']
             if not isinstance(obj, dict):raise SMTGraphError('ir must be an object')
         kind=obj.get('kind')
-        if kind in ('counted_memory','affine_recurrence','c_integer_expression'):
+        if kind in ('counted_memory','affine_recurrence','c_integer_expression','sweep_memory','polynomial_recurrence','c_integer_symbolic'):
             if 'ir' in request and set(request)-{'ir','inputs'}:raise SMTGraphError('Special symbolic IR accepts only ir and optional inputs')
+            if kind=='sweep_memory':
+                from .sweep_memory import SweepMemory
+                return {'schema_version':1,**SweepMemory(obj).report(request.get('inputs'))}
+            if kind=='c_integer_symbolic':
+                from .symbolic_integers import SymbolicIntegers
+                return {'schema_version':1,**SymbolicIntegers(obj).report(request.get('inputs'))}
             if kind=='counted_memory':
                 from .unbounded_memory import UnboundedMemory
                 return {'schema_version':1,**UnboundedMemory(obj).report(request.get('inputs'))}
             if 'inputs' in request:raise SMTGraphError('inputs is supported only for counted_memory or SPath IR')
+            if kind=='polynomial_recurrence':
+                from .polynomial_recurrence import summarize_polynomial
+                return {'schema_version':1,**summarize_polynomial(obj)}
             if kind=='affine_recurrence':
                 from .recurrence import summarize_recurrence
                 return {'schema_version':1,**summarize_recurrence(obj)}

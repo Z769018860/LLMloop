@@ -340,3 +340,20 @@ See [exact support boundaries and reproduction](docs/UNBOUNDED_AND_INTEGER.md).
 The memory/recurrence summaries remain mathematical-integer results; the integer
 reference kernel is not complete symbolic C verification. Unsupported general
 branching, nonlinear recurrences, dynamic memory or integer syntax remain UNKNOWN.
+
+
+## v0.10: dynamic sweeps, exact polynomial lifting and typed SMT expressions
+
+- Symbolic-length arrays and canonical dynamic indices such as `i*m+j` now have
+  pointwise unbounded Lambda summaries. Overlapping pointer-offset aliases,
+  sequential rebinding, free/double-free/use-after-free and optional single-width
+  source-intermediate overflow checks are modeled with universal SMT obligations.
+- Finite polynomial recurrence lifts prove closure before matrix acceleration;
+  nonlinear terms are never silently truncated.
+- Typed C integer expressions now support domain-wide SMT definedness/assertion
+  proofs with promotions and usual conversions, not only concrete evaluation.
+- API and `llmloop-symbolic --c-sweep` expose the new modes. Recurrence expressions
+  with variable/zero divisors are rejected before simplification can hide poles.
+
+See [proof obligations, supported syntax, statuses and reproduction](docs/DYNAMIC_SWEEPS_AND_SYMBOLIC_INTEGERS.md).
+These modes do not claim arbitrary C verification or universal recurrence solving.

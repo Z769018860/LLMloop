@@ -6,8 +6,26 @@ exactly to zero, with no parameter-dependent denominator or unevaluated power.
 """
 from __future__ import annotations
 import sympy as s
+import ast
 from .expressions import parse
 from .smt_spath import SMTGraphError
+
+
+def parse_total(source,names):
+    """Reject variable/zero divisors before simplification can erase a pole."""
+    if isinstance(source,str):
+        tree=ast.parse(source,mode='eval')
+        for node in ast.walk(tree):
+            divisor=None
+            if isinstance(node,ast.BinOp) and isinstance(node.op,(ast.FloorDiv,ast.Mod)):divisor=node.right
+            elif isinstance(node,ast.Call) and isinstance(node.func,ast.Name) and node.func.id=='Mod':
+                if len(node.args)!=2:raise SMTGraphError('Mod requires two arguments')
+                divisor=node.args[1]
+            if divisor is not None:
+                try:value=ast.literal_eval(divisor)
+                except (ValueError,TypeError):value=None
+                if type(value) is not int or value==0:raise SMTGraphError('Recurrence expressions require a nonzero literal divisor')
+    return parse(source,names)
 
 
 def normalize(expr):
@@ -64,7 +82,7 @@ def certified_power(matrix, count, counter=None):
 def affine_matrix(variables,names,updates):
     if not isinstance(updates,dict) or set(updates)-set(variables):raise SMTGraphError('Unknown recurrence update target')
     state=[names[v] for v in variables]
-    expressions=s.Matrix([parse(updates.get(v,v),names) for v in variables])
+    expressions=s.Matrix([parse_total(updates.get(v,v),names) for v in variables])
     linear=expressions.jacobian(state)
     if linear.free_symbols & set(state):raise SMTGraphError('Non-affine recurrence update')
     offset=expressions-linear*s.Matrix(state)
@@ -82,7 +100,7 @@ def summarize_recurrence(obj):
     count_name=obj.get('counter','k')
     if not isinstance(count_name,str) or not count_name.isidentifier() or count_name in names:raise SMTGraphError('Counter must be a fresh identifier')
     k=s.Symbol(count_name,integer=True,nonnegative=True)
-    initial=s.Matrix([parse(obj['state'][v],names) for v in variables]+[1])
+    initial=s.Matrix([parse_total(obj['state'][v],names) for v in variables]+[1])
     if initial.free_symbols & {names[v] for v in variables}:raise SMTGraphError('Initial state cannot depend on mutable state')
     matrix=affine_matrix(variables,names,obj.get('updates',{}))
     # Arbitrary fixed integer coefficient matrices are supported; parameterized
