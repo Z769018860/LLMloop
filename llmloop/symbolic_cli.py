@@ -15,6 +15,8 @@ def main(argv=None):
     source_mode.add_argument('--c-scan',action='store_true')
     source_mode.add_argument('--c-typed',action='store_true')
     source_mode.add_argument('--c-periodic',action='store_true')
+    source_mode.add_argument('--c-guarded',action='store_true')
+    parser.add_argument('--closed-forms',help='JSON candidate coordinate formulas for --c-guarded')
     parser.add_argument('--phase-invariants',help='JSON list of inductive predicates in source branch order')
     parser.add_argument('--abi',choices=('LP64','ILP32','LLP64'),default='LP64')
     parser.add_argument('--char-unsigned',action='store_true')
@@ -31,7 +33,11 @@ def main(argv=None):
     try:
         text=args.file.read_text(encoding='utf-8')
         if args.phase_invariants is not None and not args.c_periodic:raise ValueError('--phase-invariants requires --c-periodic')
-        if args.c_periodic:
+        if args.closed_forms is not None and not args.c_guarded:raise ValueError('--closed-forms requires --c-guarded')
+        if args.c_guarded:
+            request={'source':text,'frontend':'guarded_scalar','function':args.function,'parameter_bounds':json.loads(args.parameter_bounds),
+                     'closed_forms':json.loads(args.closed_forms) if args.closed_forms is not None else None}
+        elif args.c_periodic:
             request={'source':text,'frontend':'periodic_scalar','function':args.function,'parameter_bounds':json.loads(args.parameter_bounds)}
             if args.phase_invariants is not None:request['invariants']=json.loads(args.phase_invariants)
         elif args.c_typed:

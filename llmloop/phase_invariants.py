@@ -16,6 +16,16 @@ def exact_term(expr, env):
         return z3.IntVal(int(expr))
     if expr.is_Rational:
         return z3.RealVal(f'{expr.p}/{expr.q}')
+    if isinstance(expr, s.Piecewise):
+        value = None
+        for item, condition in reversed(expr.args):
+            if condition is s.true:
+                value = exact_term(item, env)
+            else:
+                if value is None:
+                    raise SMTGraphError('Closed-form Piecewise must have a default branch')
+                value = z3.If(exact_condition(condition, env), exact_term(item, env), value)
+        return value
     args = [exact_term(a, env) for a in expr.args]
     if expr.func == s.Add:
         return z3.Sum(*args)
@@ -47,6 +57,24 @@ def exact_term(expr, env):
         quotient = z3.ToInt(z3.ToReal(a) / z3.ToReal(b)) if z3.is_int(a) else z3.ToInt(a / b)
         return a - b * quotient
     raise SMTGraphError('Unsupported exact phase arithmetic: ' + str(expr))
+
+
+def exact_condition(condition, env):
+    if condition is s.true:
+        return z3.BoolVal(True)
+    if condition is s.false:
+        return z3.BoolVal(False)
+    if condition.func in (s.And, s.Or):
+        terms = [exact_condition(term, env) for term in condition.args]
+        return z3.And(*terms) if condition.func == s.And else z3.Or(*terms)
+    if condition.func == s.Not:
+        return z3.Not(exact_condition(condition.args[0], env))
+    if isinstance(condition, s.core.relational.Relational):
+        a, b = exact_term(condition.lhs, env), exact_term(condition.rhs, env)
+        operators = {'==':lambda:a==b, '!=':lambda:a!=b, '<':lambda:a<b,
+                     '<=':lambda:a<=b, '>':lambda:a>b, '>=':lambda:a>=b}
+        return operators[condition.rel_op]()
+    raise SMTGraphError('Unsupported exact closed-form condition: ' + str(condition))
 
 
 def prove(label, premise, claim):
