@@ -448,3 +448,22 @@ See [typed-loop proof obligations and limits](docs/TYPED_UNBOUNDED_RECURRENCES.m
 and [the reproducible v0.15 experiments](experiments/v015/report.md). This is a
 scalar-loop certificate; nested typed loops, arbitrary candidate discovery, and
 unified unbounded typed heap-memory verification remain incomplete.
+
+## v0.16: compositional typed nesting and proof symbol hygiene
+
+`typed_nested` / `--c-typed-nested` composes checked entry-relative summaries for
+nested and sequential scalar for loops, including outer-index-dependent inner
+bounds and interleaved state updates. It preserves the typed integer safety and
+termination obligations at every layer without iteration-count unrolling.
+
+```sh
+python -m llmloop.symbolic_cli examples/typed_nested_loop.c \
+  --c-typed-nested --loop-summaries-file examples/typed_nested_summaries.json \
+  --parameter-bounds '{"n":[0,1000],"m":[0,1000]}' --inputs '{"n":5,"m":7}'
+```
+
+This release also fixes a single-loop proof-symbol collision involving parameters
+named `counter_<index>` by using fresh SMT symbols, with a rejecting regression
+for an incorrect candidate. See [contracts and the correction](docs/COMPOSITIONAL_TYPED_NESTING.md)
+and [the v0.16 experiment report](experiments/v016/report.md). Heap memory,
+arbitrary loop exits and general candidate discovery remain outside this mode.

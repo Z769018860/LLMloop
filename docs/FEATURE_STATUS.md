@@ -1,15 +1,15 @@
-# Feature status after v0.15
+# Feature status after v0.16
 
 This inventory distinguishes certified capabilities from outstanding general
 requirements. The project remains a restricted research prototype.
 
 | Requirement | Implemented certified fragment | Outstanding general cases |
 | --- | --- | --- |
-| Nested loop summaries | Counted finite-cell affine summaries, immutable parameter bounds, interleaved outer scalar updates | Arbitrary data-dependent nested CFGs and escaping heap interactions |
+| Nested loop summaries | Counted finite-cell affine summaries, immutable parameter bounds, interleaved outer scalar updates; compositional typed scalar for-loop trajectories up to 16 levels | Arbitrary data-dependent nested CFGs and escaping heap interactions |
 | Arrays/pointers/heap | Finite layouts, aliases/lifetimes, dynamic pointwise sweeps, finite-window backward scans, repeated private fixed calloc/free folds | General escaping heap shapes, variable-size repeated allocation, uninitialized malloc/realloc and physical allocation failure |
 | General recurrences | Affine induction-certified matrix powers, finite polynomial lifts, periodic schedules, inductive state-dependent phases, supplied nonperiodic Piecewise candidates | Automatic discovery of arbitrary nonperiodic trajectories or closed forms; unsupported symbolic exponentials in candidate SMT mode |
-| C integer semantics | ABI-aware concrete and symbolic typed expressions, bounded typed scalar function execution, unroll-free heterogeneous scalar loop certificates from supplied state candidates, restricted single-width memory safety proofs | Unified unbounded heterogeneous typed integer plus pointer/memory execution, general C calls/side effects |
-| Execution validity | Bounded reachable-state checks, ranking certificates, counted-loop termination in mathematical frontends and certified typed scalar trajectories | General termination and feasibility for arbitrary C programs; nested typed loops |
+| C integer semantics | ABI-aware concrete and symbolic typed expressions, bounded typed scalar function execution, unroll-free heterogeneous single/nested scalar loop certificates from supplied state candidates, restricted single-width memory safety proofs | Unified unbounded heterogeneous typed integer plus pointer/memory execution, general C calls/side effects |
+| Execution validity | Bounded reachable-state checks, ranking certificates, counted-loop termination in mathematical frontends and certified typed scalar trajectories | General termination and feasibility for arbitrary C CFG loops and early exits |
 | Experiments | Full local regressions, native C/UBSan oracles, positive and negative proof controls, reproducible manifests/results | Representative real-library coverage and independent external benchmarks |
 
 Mathematical summaries never imply machine arithmetic safety. Check
@@ -19,6 +19,8 @@ particular exit condition terminates. `UNKNOWN` is an explicit unsupported or
 unproved result, not a valid summary.
 
 See [v0.14 recurrence and experiment contracts](GUARDED_RECURRENCES_AND_EXPERIMENTS.md)
-and the committed [latest experiment report](../experiments/v015/report.md).
+and the committed [latest experiment report](../experiments/v016/report.md).
 
 See [unroll-free typed scalar C contracts](TYPED_UNBOUNDED_RECURRENCES.md) for the new machine-integer certificate. It does not certify general heap memory.
+
+See [compositional typed nesting and the symbol-hygiene fix](COMPOSITIONAL_TYPED_NESTING.md). Supplied formulas are checked per actual loop-entry context; general memory and automatic trajectory discovery remain open.

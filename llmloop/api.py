@@ -13,7 +13,7 @@ def analyze_request(request: dict) -> dict:
     try:
         if not isinstance(request, dict):raise SMTGraphError('Request must be an object')
         allowed = {'ir', 'source', 'function', 'parameter_bounds', 'max_unroll',
-                   'max_paths', 'whole_function', 'invariants', 'verify_steps', 'assertion', 'ranking', 'synthesize_ranking', 'frontend', 'int_bits', 'parameter_mins', 'inputs', 'memory_layout', 'abi', 'char_signed', 'closed_forms'}
+                   'max_paths', 'whole_function', 'invariants', 'verify_steps', 'assertion', 'ranking', 'synthesize_ranking', 'frontend', 'int_bits', 'parameter_mins', 'inputs', 'memory_layout', 'abi', 'char_signed', 'closed_forms', 'loop_summaries'}
         if set(request)-allowed:raise SMTGraphError('Unknown request fields: '+', '.join(sorted(set(request)-allowed)))
         if 'synthesize_ranking' in request and type(request['synthesize_ranking']) is not bool:raise SMTGraphError('synthesize_ranking must be Boolean')
         if ('ir' in request) == ('source' in request):raise SMTGraphError('Provide exactly one of ir or source')
@@ -21,8 +21,9 @@ def analyze_request(request: dict) -> dict:
             from .memory_frontend import translate_memory_c
             if not isinstance(request['source'], str):raise SMTGraphError('source must be a string')
             frontend=request.get('frontend','memory')
+            if 'loop_summaries' in request and frontend!='typed_nested':raise SMTGraphError('loop_summaries requires typed_nested')
             if 'closed_forms' in request and frontend not in ('guarded_scalar','typed_recurrence'):raise SMTGraphError('closed_forms requires guarded_scalar or typed_recurrence frontend')
-            if (set(request)&{'abi','char_signed'}) and frontend not in ('typed_c','typed_recurrence'):raise SMTGraphError('ABI options require typed_c or typed_recurrence frontend')
+            if (set(request)&{'abi','char_signed'}) and frontend not in ('typed_c','typed_recurrence','typed_nested'):raise SMTGraphError('ABI options require typed_c or typed_recurrence frontend')
             if 'memory_layout' in request and frontend!='sweep_memory':raise SMTGraphError('memory_layout requires sweep_memory frontend')
             if frontend=='typed_c':
                 if set(request)-{'source','function','frontend','parameter_bounds','abi','char_signed','max_unroll','max_paths','inputs'}:raise SMTGraphError('Invalid typed C options')
@@ -32,6 +33,10 @@ def analyze_request(request: dict) -> dict:
                 if set(request)-{'source','function','frontend','parameter_mins','inputs'}:raise SMTGraphError('Private allocation fold accepts mathematical source/count domains only')
                 from .private_allocations import PrivateAllocations
                 return {'schema_version':1,**PrivateAllocations(request['source'],function=request.get('function'),parameter_mins=request.get('parameter_mins')).report(request.get('inputs'))}
+            elif frontend=='typed_nested':
+                if set(request)-{'source','function','frontend','parameter_bounds','loop_summaries','abi','char_signed','max_paths','inputs'}:raise SMTGraphError('Invalid typed nested options')
+                from .typed_nested import TypedCNested
+                return {'schema_version':1,**TypedCNested(request['source'],request.get('loop_summaries'),function=request.get('function'),parameter_bounds=request.get('parameter_bounds'),abi=request.get('abi','LP64'),char_signed=request.get('char_signed',True),max_paths=request.get('max_paths',48)).report(request.get('inputs'))}
             elif frontend=='typed_recurrence':
                 if set(request)-{'source','function','frontend','parameter_bounds','closed_forms','abi','char_signed','max_paths','inputs'}:raise SMTGraphError('Invalid typed recurrence options')
                 from .typed_recurrence import TypedCRecurrence
@@ -71,7 +76,7 @@ def analyze_request(request: dict) -> dict:
                                          whole_function=request.get('whole_function',True))
             else:raise SMTGraphError('Unsupported source frontend')
         else:
-            if set(request) & {'frontend','int_bits','whole_function','function','parameter_bounds','max_paths','max_unroll','parameter_mins','memory_layout','abi','char_signed','closed_forms'}:raise SMTGraphError('Source translation options cannot be applied to an existing IR')
+            if set(request) & {'frontend','int_bits','whole_function','function','parameter_bounds','max_paths','max_unroll','parameter_mins','memory_layout','abi','char_signed','closed_forms','loop_summaries'}:raise SMTGraphError('Source translation options cannot be applied to an existing IR')
             obj = request['ir']
             if not isinstance(obj, dict):raise SMTGraphError('ir must be an object')
         kind=obj.get('kind')

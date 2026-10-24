@@ -144,3 +144,13 @@ def test_plain_char_signedness_policy_is_respected():
                                'closed_forms':{'x':str(value)},'inputs':{'n':1000000}})
         assert report['status']=='PROVED_DEFINED_TYPED_C_RECURRENCE'
         assert report['evaluation']['value']==value
+
+
+def test_counter_parameter_namespace_cannot_mask_wrong_successors():
+    source='''int f(int n,int counter_i){int x=0;for(int i=0;i<n;i++){x++;}return x;}'''
+    request={'source':source,'frontend':'typed_recurrence','parameter_bounds':{'n':[2,3],'counter_i':[0,0]},
+             'closed_forms':{'x':'0 if i == 0 else 1'}}
+    report=analyze_request(request)
+    assert report['status']=='UNKNOWN' and 'successor' in report['failed_obligation']
+    request['closed_forms']={'x':'i'};request['inputs']={'n':3,'counter_i':0}
+    assert analyze_request(request)['evaluation']['value']==3

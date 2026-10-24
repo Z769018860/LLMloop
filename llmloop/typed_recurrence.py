@@ -31,7 +31,7 @@ class TypedCRecurrence(TypedCFunction):
         parameters={};constraints=[]
         for decl in raw:
             if not isinstance(decl,c_ast.Decl) or not decl.name or decl.name in parameters:raise SMTGraphError('Unique scalar typed parameters required')
-            t=c_type(decl,self.engine.abi);value=z3.Int('typed_loop_'+decl.name)
+            t=c_type(decl,self.engine.abi);value=z3.FreshInt('typed_loop_'+decl.name)
             parameters[decl.name]=TypedTerm(value,t,z3.BoolVal(True));self.types[decl.name]=t;self.declarations[decl.name]=None
             if 'const' in decl.quals:self.const.add(decl.name)
             limits=bounds.get(decl.name,[None,None])
@@ -92,7 +92,7 @@ class TypedCRecurrence(TypedCFunction):
                 if node.op in ('++','p++','--','p--') and isinstance(node.expr,c_ast.ID) and node.expr.name in forbidden:raise SMTGraphError('Loop body cannot modify parameters or index')
                 self.generic_visit(node)
         BodySyntax().visit(loop.stmt)
-        count=z3.Int('typed_loop_counter_'+index);self.witness[index]=count
+        count=z3.FreshInt('typed_loop_counter_'+index);self.witness[index]=count
         zero=TypedTerm(z3.IntVal(0),itype,z3.BoolVal(True))
         bound=self.evaluate(cond.right,dict(self.parameters))
         _,converted=self.engine.common(zero,bound)
