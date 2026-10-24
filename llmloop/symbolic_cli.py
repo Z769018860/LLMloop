@@ -14,6 +14,8 @@ def main(argv=None):
     source_mode.add_argument('--c-private',action='store_true')
     source_mode.add_argument('--c-scan',action='store_true')
     source_mode.add_argument('--c-typed',action='store_true')
+    source_mode.add_argument('--c-periodic',action='store_true')
+    parser.add_argument('--phase-invariants',help='JSON list of inductive predicates in source branch order')
     parser.add_argument('--abi',choices=('LP64','ILP32','LLP64'),default='LP64')
     parser.add_argument('--char-unsigned',action='store_true')
     parser.add_argument('--max-unroll',type=int,default=12)
@@ -28,7 +30,11 @@ def main(argv=None):
     args=parser.parse_args(argv)
     try:
         text=args.file.read_text(encoding='utf-8')
-        if args.c_typed:
+        if args.phase_invariants is not None and not args.c_periodic:raise ValueError('--phase-invariants requires --c-periodic')
+        if args.c_periodic:
+            request={'source':text,'frontend':'periodic_scalar','function':args.function,'parameter_bounds':json.loads(args.parameter_bounds)}
+            if args.phase_invariants is not None:request['invariants']=json.loads(args.phase_invariants)
+        elif args.c_typed:
             request={'source':text,'frontend':'typed_c','function':args.function,'parameter_bounds':json.loads(args.parameter_bounds),
                      'abi':args.abi,'char_signed':not args.char_unsigned,'max_unroll':args.max_unroll,'max_paths':args.max_paths}
         elif args.c_private:
