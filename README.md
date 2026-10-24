@@ -407,3 +407,25 @@ python -m llmloop.symbolic_cli examples/state_guarded_periodic.c \
 See [inductive phase contracts and C syntax](docs/INDUCTIVE_PHASES_AND_C.md).
 This frontend uses mathematical integers; machine overflow and arbitrary
 nonperiodic schedules remain outside its certificate.
+
+## v0.14: nonperiodic guarded closed forms and reproducible experiments
+
+`guarded_recurrence` checks supplied Piecewise closed-form candidates by universal
+trajectory induction, without a periodic branch schedule. It proves initial
+values, complete/exclusive branch selection and every enabled successor.
+Incorrect candidates return `UNKNOWN` with a failed obligation and a concrete
+counterexample when available. `guarded_scalar` / `--c-guarded` brings the same
+proof to canonical counted-for C source while preserving assignment order.
+
+```sh
+python -m llmloop.symbolic_cli examples/guarded_saturation.c \
+  --c-guarded --closed-forms '{"x":"Min(i,limit)"}' \
+  --parameter-bounds '{"limit":[0,null]}'
+python scripts/run_symbolic_experiments.py --output experiments/v014
+```
+
+[Contracts and experiment protocol](docs/GUARDED_RECURRENCES_AND_EXPERIMENTS.md),
+[actual results](experiments/v014/report.md), and
+[implemented fragments versus remaining work](docs/FEATURE_STATUS.md) are
+tracked in the repository. Candidate synthesis, general escaping heaps, and
+unified unbounded C integer/memory verification remain incomplete.

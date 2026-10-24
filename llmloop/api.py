@@ -13,7 +13,7 @@ def analyze_request(request: dict) -> dict:
     try:
         if not isinstance(request, dict):raise SMTGraphError('Request must be an object')
         allowed = {'ir', 'source', 'function', 'parameter_bounds', 'max_unroll',
-                   'max_paths', 'whole_function', 'invariants', 'verify_steps', 'assertion', 'ranking', 'synthesize_ranking', 'frontend', 'int_bits', 'parameter_mins', 'inputs', 'memory_layout', 'abi', 'char_signed'}
+                   'max_paths', 'whole_function', 'invariants', 'verify_steps', 'assertion', 'ranking', 'synthesize_ranking', 'frontend', 'int_bits', 'parameter_mins', 'inputs', 'memory_layout', 'abi', 'char_signed', 'closed_forms'}
         if set(request)-allowed:raise SMTGraphError('Unknown request fields: '+', '.join(sorted(set(request)-allowed)))
         if 'synthesize_ranking' in request and type(request['synthesize_ranking']) is not bool:raise SMTGraphError('synthesize_ranking must be Boolean')
         if ('ir' in request) == ('source' in request):raise SMTGraphError('Provide exactly one of ir or source')
@@ -21,6 +21,7 @@ def analyze_request(request: dict) -> dict:
             from .memory_frontend import translate_memory_c
             if not isinstance(request['source'], str):raise SMTGraphError('source must be a string')
             frontend=request.get('frontend','memory')
+            if 'closed_forms' in request and frontend!='guarded_scalar':raise SMTGraphError('closed_forms requires guarded_scalar frontend')
             if (set(request)&{'abi','char_signed'}) and frontend!='typed_c':raise SMTGraphError('ABI options require typed_c frontend')
             if 'memory_layout' in request and frontend!='sweep_memory':raise SMTGraphError('memory_layout requires sweep_memory frontend')
             if frontend=='typed_c':
@@ -31,6 +32,10 @@ def analyze_request(request: dict) -> dict:
                 if set(request)-{'source','function','frontend','parameter_mins','inputs'}:raise SMTGraphError('Private allocation fold accepts mathematical source/count domains only')
                 from .private_allocations import PrivateAllocations
                 return {'schema_version':1,**PrivateAllocations(request['source'],function=request.get('function'),parameter_mins=request.get('parameter_mins')).report(request.get('inputs'))}
+            elif frontend=='guarded_scalar':
+                if set(request)-{'source','function','frontend','parameter_bounds','closed_forms'}:raise SMTGraphError('Invalid guarded scalar C options')
+                from .periodic_c import analyze_guarded_c
+                return {'schema_version':1,**analyze_guarded_c(request['source'],request.get('closed_forms'),function=request.get('function'),parameter_bounds=request.get('parameter_bounds'))}
             elif frontend=='periodic_scalar':
                 if set(request)-{'source','function','frontend','parameter_bounds','invariants'}:raise SMTGraphError('Invalid periodic scalar C options')
                 from .periodic_c import analyze_periodic_c
@@ -62,12 +67,15 @@ def analyze_request(request: dict) -> dict:
                                          whole_function=request.get('whole_function',True))
             else:raise SMTGraphError('Unsupported source frontend')
         else:
-            if set(request) & {'frontend','int_bits','whole_function','function','parameter_bounds','max_paths','max_unroll','parameter_mins','memory_layout','abi','char_signed'}:raise SMTGraphError('Source translation options cannot be applied to an existing IR')
+            if set(request) & {'frontend','int_bits','whole_function','function','parameter_bounds','max_paths','max_unroll','parameter_mins','memory_layout','abi','char_signed','closed_forms'}:raise SMTGraphError('Source translation options cannot be applied to an existing IR')
             obj = request['ir']
             if not isinstance(obj, dict):raise SMTGraphError('ir must be an object')
         kind=obj.get('kind')
-        if kind in ('counted_memory','affine_recurrence','c_integer_expression','sweep_memory','polynomial_recurrence','c_integer_symbolic','linear_memory_scan','periodic_recurrence'):
+        if kind in ('counted_memory','affine_recurrence','c_integer_expression','sweep_memory','polynomial_recurrence','c_integer_symbolic','linear_memory_scan','periodic_recurrence','guarded_recurrence'):
             if 'ir' in request and set(request)-{'ir','inputs'}:raise SMTGraphError('Special symbolic IR accepts only ir and optional inputs')
+            if kind=='guarded_recurrence':
+                from .guarded_recurrence import summarize_guarded
+                return {'schema_version':1,**summarize_guarded(obj,request.get('inputs'))}
             if kind=='linear_memory_scan':
                 from .linear_scan import LinearScan
                 return {'schema_version':1,**LinearScan(obj).report(request.get('inputs'))}

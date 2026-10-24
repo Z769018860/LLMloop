@@ -83,3 +83,10 @@ handled here. Candidate invariants are supplied by the caller and checked;
 there is no general invariant or eventual-period discovery procedure. General
 state-dependent nonperiodic schedules, escaping heap analysis, and a unified
 unbounded heterogeneous C integer/memory verifier remain unsupported.
+
+## v0.14 nonperiodic candidate mode
+
+Some state-dependent nonperiodic trajectories can now be proved using the
+separate [guarded closed-form candidate verifier](GUARDED_RECURRENCES_AND_EXPERIMENTS.md),
+without a periodic schedule. It checks supplied formulas; arbitrary trajectory
+or closed-form discovery remains unsupported.

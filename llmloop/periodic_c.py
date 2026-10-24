@@ -12,7 +12,7 @@ from .periodic_recurrence import periodic_summary
 from .smt_spath import SMTGraphError
 
 
-def analyze_periodic_c(source, function=None, parameter_bounds=None, invariants=None):
+def _analyze_scalar_c(source, function=None, parameter_bounds=None, invariants=None, closed_forms=None):
     if parameter_bounds is not None and not isinstance(parameter_bounds, dict):
         raise SMTGraphError('parameter_bounds must be an object')
     try:
@@ -125,7 +125,7 @@ def analyze_periodic_c(source, function=None, parameter_bounds=None, invariants=
         return '(' + guard_arithmetic(node) + ' != 0)'
 
     def branch_updates(node):
-        env = dict(names)
+        env = dict(guardenv if closed_forms is not None else names)
         def lower(statement):
             if isinstance(statement, c_ast.Compound):
                 for child in statement.block_items or []:
@@ -164,12 +164,25 @@ def analyze_periodic_c(source, function=None, parameter_bounds=None, invariants=
     phases.append({'guard': path, 'updates': branch_updates(node)})
     obj = {'kind': 'periodic_recurrence', 'name': func.decl.name, 'state': state,
            'parameters': params, 'counter': counter, 'phases': phases}
-    if invariants is not None:
-        obj['phase_invariants'] = invariants
+    if closed_forms is not None:
+        from .guarded_recurrence import summarize_guarded
+        from .closed_forms import parse_closed
+        obj['kind'] = 'guarded_recurrence'
+        obj['branches'] = obj.pop('phases')
+        obj['closed_forms'] = closed_forms
         obj['parameter_bounds'] = parameter_bounds or {}
-    elif parameter_bounds:
-        raise SMTGraphError('Parameter bounds require phase invariants')
-    report, forms = periodic_summary(obj)
+        report = summarize_guarded(obj)
+        if report['status'] == 'UNKNOWN':
+            return {**report, 'source_function':func.decl.name, 'ir':obj}
+        forms = {v:parse_closed(closed_forms[v],{**{p:names[p] for p in params},
+                 counter:s.Symbol(counter,integer=True,nonnegative=True)}) for v in state}
+    else:
+        if invariants is not None:
+            obj['phase_invariants'] = invariants
+            obj['parameter_bounds'] = parameter_bounds or {}
+        elif parameter_bounds:
+            raise SMTGraphError('Parameter bounds require phase invariants')
+        report, forms = periodic_summary(obj)
     count = s.Max(0, stop)
     count_symbol = s.Symbol(counter, integer=True, nonnegative=True)
     post = {names[v]: expression.subs(count_symbol, count) for v, expression in forms.items()}
@@ -179,3 +192,13 @@ def analyze_periodic_c(source, function=None, parameter_bounds=None, invariants=
             'termination_proved': True,
             'termination_scope': 'mathematical integer counted-for semantics; machine integer safety not proved',
             'frontend': 'canonical scalar for/if C; sequential assignments lowered exactly; mathematical integers'}
+
+
+def analyze_periodic_c(source, function=None, parameter_bounds=None, invariants=None):
+    return _analyze_scalar_c(source,function,parameter_bounds,invariants)
+
+
+def analyze_guarded_c(source, closed_forms, function=None, parameter_bounds=None):
+    if not isinstance(closed_forms,dict):
+        raise SMTGraphError('Guarded C requires candidate closed_forms')
+    return _analyze_scalar_c(source,function,parameter_bounds,closed_forms=closed_forms)
