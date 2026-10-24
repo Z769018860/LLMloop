@@ -373,3 +373,20 @@ These modes do not claim arbitrary C verification or universal recurrence solvin
   static locals as fresh state.
 
 See [source syntax, proof obligations, examples and remaining boundaries](docs/TYPED_C_PRIVATE_HEAP_AND_SCANS.md).
+
+## v0.12: certified periodic branch schedules
+
+`periodic_recurrence` now proves that exactly one branch is enabled at each
+counter residue, then combines an induction-certified full-cycle power with the
+correct partial prefix. This gives closed forms for all nonnegative iteration
+counts, including singular cycles, without unrolling. Overlapping or incomplete
+guards and unproved schedules return `UNKNOWN`.
+
+```sh
+python -m llmloop.symbolic_cli examples/periodic_recurrence.json
+```
+
+See [periodic recurrence contracts](docs/PERIODIC_RECURRENCES.md). This mode uses
+mathematical integers and counter/immutable-parameter guards; arbitrary
+state-dependent branching and unified unbounded C integer/memory verification
+remain unsupported.

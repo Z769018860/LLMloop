@@ -62,7 +62,7 @@ def analyze_request(request: dict) -> dict:
             obj = request['ir']
             if not isinstance(obj, dict):raise SMTGraphError('ir must be an object')
         kind=obj.get('kind')
-        if kind in ('counted_memory','affine_recurrence','c_integer_expression','sweep_memory','polynomial_recurrence','c_integer_symbolic','linear_memory_scan'):
+        if kind in ('counted_memory','affine_recurrence','c_integer_expression','sweep_memory','polynomial_recurrence','c_integer_symbolic','linear_memory_scan','periodic_recurrence'):
             if 'ir' in request and set(request)-{'ir','inputs'}:raise SMTGraphError('Special symbolic IR accepts only ir and optional inputs')
             if kind=='linear_memory_scan':
                 from .linear_scan import LinearScan
@@ -80,6 +80,9 @@ def analyze_request(request: dict) -> dict:
             if kind=='polynomial_recurrence':
                 from .polynomial_recurrence import summarize_polynomial
                 return {'schema_version':1,**summarize_polynomial(obj)}
+            if kind=='periodic_recurrence':
+                from .periodic_recurrence import summarize_periodic
+                return {'schema_version':1,**summarize_periodic(obj)}
             if kind=='affine_recurrence':
                 from .recurrence import summarize_recurrence
                 return {'schema_version':1,**summarize_recurrence(obj)}
