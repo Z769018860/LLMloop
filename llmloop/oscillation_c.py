@@ -18,6 +18,8 @@ def translate_oscillation_c(source:str, function:str|None=None)->dict:
     if len(functions)!=1:
         raise AnalysisError('Exactly one C function must be selected')
     func=functions[0]
+    from .c_validation import validate_automatic_locals
+    validate_automatic_locals(func,AnalysisError)
     if not _identifier_type(func.decl):
         raise AnalysisError('Only integer-returning functions are accepted')
     arguments=func.decl.type.args

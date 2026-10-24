@@ -17,7 +17,10 @@ def translate_sweep_c(source,function=None,parameter_bounds=None,memory_layout=N
     except Exception as exc:raise SMTGraphError('C parse failed: '+str(exc)) from exc
     funcs=[f for f in unit.ext if isinstance(f,c_ast.FuncDef) and (function is None or f.decl.name==function)]
     if len(funcs)!=1 or not _is_int_decl(funcs[0].decl):raise SMTGraphError('Expected one selected int function')
-    func=funcs[0];raw=func.decl.type.args.params if func.decl.type.args else []
+    func=funcs[0]
+    from .c_validation import validate_automatic_locals
+    validate_automatic_locals(func,SMTGraphError)
+    raw=func.decl.type.args.params if func.decl.type.args else []
     if len(raw)==1 and isinstance(raw[0],c_ast.Typename):
         t=raw[0].type
         while isinstance(t,c_ast.TypeDecl):t=t.type

@@ -5,7 +5,7 @@ from .bounded import verify_bounded
 
 
 def analyze_request(request: dict) -> dict:
-    """Analyze IR or bounded C memory source; never invokes a remote model.
+    """Analyze supported IR or selected C frontends; never invokes a remote model.
 
     The host owns transport, authentication and process isolation. Errors are
     returned as data. Resource limits are validated by the underlying engines.
@@ -13,7 +13,7 @@ def analyze_request(request: dict) -> dict:
     try:
         if not isinstance(request, dict):raise SMTGraphError('Request must be an object')
         allowed = {'ir', 'source', 'function', 'parameter_bounds', 'max_unroll',
-                   'max_paths', 'whole_function', 'invariants', 'verify_steps', 'assertion', 'ranking', 'synthesize_ranking', 'frontend', 'int_bits', 'parameter_mins', 'inputs', 'memory_layout'}
+                   'max_paths', 'whole_function', 'invariants', 'verify_steps', 'assertion', 'ranking', 'synthesize_ranking', 'frontend', 'int_bits', 'parameter_mins', 'inputs', 'memory_layout', 'abi', 'char_signed'}
         if set(request)-allowed:raise SMTGraphError('Unknown request fields: '+', '.join(sorted(set(request)-allowed)))
         if 'synthesize_ranking' in request and type(request['synthesize_ranking']) is not bool:raise SMTGraphError('synthesize_ranking must be Boolean')
         if ('ir' in request) == ('source' in request):raise SMTGraphError('Provide exactly one of ir or source')
@@ -21,8 +21,21 @@ def analyze_request(request: dict) -> dict:
             from .memory_frontend import translate_memory_c
             if not isinstance(request['source'], str):raise SMTGraphError('source must be a string')
             frontend=request.get('frontend','memory')
+            if (set(request)&{'abi','char_signed'}) and frontend!='typed_c':raise SMTGraphError('ABI options require typed_c frontend')
             if 'memory_layout' in request and frontend!='sweep_memory':raise SMTGraphError('memory_layout requires sweep_memory frontend')
-            if frontend=='ordered_scalar':
+            if frontend=='typed_c':
+                if set(request)-{'source','function','frontend','parameter_bounds','abi','char_signed','max_unroll','max_paths','inputs'}:raise SMTGraphError('Invalid typed C options')
+                from .typed_c import TypedCFunction
+                return {'schema_version':1,**TypedCFunction(request['source'],function=request.get('function'),parameter_bounds=request.get('parameter_bounds'),abi=request.get('abi','LP64'),char_signed=request.get('char_signed',True),max_unroll=request.get('max_unroll',12),max_paths=request.get('max_paths',48)).report(request.get('inputs'))}
+            elif frontend=='private_allocations':
+                if set(request)-{'source','function','frontend','parameter_mins','inputs'}:raise SMTGraphError('Private allocation fold accepts mathematical source/count domains only')
+                from .private_allocations import PrivateAllocations
+                return {'schema_version':1,**PrivateAllocations(request['source'],function=request.get('function'),parameter_mins=request.get('parameter_mins')).report(request.get('inputs'))}
+            elif frontend=='memory_scan':
+                if set(request)-{'source','function','frontend','parameter_bounds','int_bits','inputs'}:raise SMTGraphError('Invalid memory scan options')
+                from .scan_c import translate_scan_c
+                obj=translate_scan_c(request['source'],function=request.get('function'),parameter_bounds=request.get('parameter_bounds'),signed_bits=request.get('int_bits'))
+            elif frontend=='ordered_scalar':
                 if 'whole_function' in request or 'max_unroll' in request:raise SMTGraphError('ordered_scalar supports one while loop, not whole_function or max_unroll')
                 from .ordered_c import translate_ordered_c
                 obj=translate_ordered_c(request['source'],function=request.get('function'),
@@ -43,14 +56,17 @@ def analyze_request(request: dict) -> dict:
                                          max_unroll=request.get('max_unroll',12),
                                          max_paths=request.get('max_paths',48),
                                          whole_function=request.get('whole_function',True))
-            else:raise SMTGraphError('frontend must be memory, ordered_scalar, counted_memory or sweep_memory')
+            else:raise SMTGraphError('Unsupported source frontend')
         else:
-            if set(request) & {'frontend','int_bits','whole_function','function','parameter_bounds','max_paths','max_unroll','parameter_mins','memory_layout'}:raise SMTGraphError('Source translation options cannot be applied to an existing IR')
+            if set(request) & {'frontend','int_bits','whole_function','function','parameter_bounds','max_paths','max_unroll','parameter_mins','memory_layout','abi','char_signed'}:raise SMTGraphError('Source translation options cannot be applied to an existing IR')
             obj = request['ir']
             if not isinstance(obj, dict):raise SMTGraphError('ir must be an object')
         kind=obj.get('kind')
-        if kind in ('counted_memory','affine_recurrence','c_integer_expression','sweep_memory','polynomial_recurrence','c_integer_symbolic'):
+        if kind in ('counted_memory','affine_recurrence','c_integer_expression','sweep_memory','polynomial_recurrence','c_integer_symbolic','linear_memory_scan'):
             if 'ir' in request and set(request)-{'ir','inputs'}:raise SMTGraphError('Special symbolic IR accepts only ir and optional inputs')
+            if kind=='linear_memory_scan':
+                from .linear_scan import LinearScan
+                return {'schema_version':1,**LinearScan(obj).report(request.get('inputs'))}
             if kind=='sweep_memory':
                 from .sweep_memory import SweepMemory
                 return {'schema_version':1,**SweepMemory(obj).report(request.get('inputs'))}

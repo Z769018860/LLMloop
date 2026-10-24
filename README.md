@@ -357,3 +357,19 @@ branching, nonlinear recurrences, dynamic memory or integer syntax remain UNKNOW
 
 See [proof obligations, supported syntax, statuses and reproduction](docs/DYNAMIC_SWEEPS_AND_SYMBOLIC_INTEGERS.md).
 These modes do not claim arbitrary C verification or universal recurrence solving.
+
+
+## v0.11: C typed execution, repeated private allocation and cross-cell scans
+
+- `--c-typed` connects actual mixed-width C scalar declarations, casts and
+  assignments to the typed SMT engine, retaining guarded intermediate checks.
+  Loops are accepted only when exit is proved for the entire input domain
+  within an explicit analysis budget.
+- `--c-private` proves balanced nonescaping calloc/free templates before folding
+  repeated private objects into resettable cells and unbounded counted summaries.
+- `--c-scan` handles backward finite-window cross-cell dependencies through
+  companion-matrix closed forms, with optional single-width source safety checks.
+- Mathematical C frontends reject unmodeled storage/qualifiers instead of treating
+  static locals as fresh state.
+
+See [source syntax, proof obligations, examples and remaining boundaries](docs/TYPED_C_PRIVATE_HEAP_AND_SCANS.md).

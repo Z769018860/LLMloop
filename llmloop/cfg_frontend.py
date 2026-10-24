@@ -161,6 +161,8 @@ def translate_cfg_smt_c(source:str,function:str|None=None,
            (function is None or f.decl.name==function)]
     if len(funcs)!=1:raise SMTGraphError('Expected exactly one selected function')
     func=funcs[0]
+    from .c_validation import validate_automatic_locals
+    validate_automatic_locals(func,SMTGraphError)
     if not _is_int_decl(func.decl):raise SMTGraphError('Only int-returning functions are supported')
     fargs=func.decl.type.args
     raw_params=fargs.params if fargs else []

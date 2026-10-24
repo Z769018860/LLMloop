@@ -354,6 +354,8 @@ def translate_memory_c(source:str,function:str|None=None,parameter_bounds:dict|N
     funcs=[f for f in unit.ext if isinstance(f,c_ast.FuncDef) and (function is None or f.decl.name==function)]
     if len(funcs)!=1:raise SMTGraphError('Expected exactly one selected function')
     func=funcs[0]
+    from .c_validation import validate_automatic_locals
+    validate_automatic_locals(func,SMTGraphError)
     if not _base_int(func.decl):raise SMTGraphError('Only int-returning functions are supported')
     params=[];raw=func.decl.type.args.params if func.decl.type.args else []
     for p in raw:
