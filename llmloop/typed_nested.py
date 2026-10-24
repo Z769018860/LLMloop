@@ -120,7 +120,8 @@ class TypedCNested(TypedCRecurrence):
         old_witness=dict(self.witness);count=z3.FreshInt('typed_nested_'+index);self.witness[index]=count
         state={name:term for name,term in entry.items() if name not in frozen}
         summary=self.summaries[index]
-        if not isinstance(summary,dict) or set(summary)!=set(state) or len(state)>15:raise SMTGraphError('Summary must cover every visible mutable scalar (at most 15)')
+        limit=getattr(self,'max_coordinates',15)
+        if not isinstance(summary,dict) or set(summary)!=set(state) or len(state)>limit:raise SMTGraphError(f'Summary must cover every visible coordinate (at most {limit})')
         immutable={name:entry[name] for name in entry if name in frozen}
         bound=self.evaluate(cond.right,immutable)
         _,bound_cast=self.engine.common(TypedTerm(z3.IntVal(0),itype,z3.BoolVal(True)),bound)

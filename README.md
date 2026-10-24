@@ -467,3 +467,24 @@ named `counter_<index>` by using fresh SMT symbols, with a rejecting regression
 for an incorrect candidate. See [contracts and the correction](docs/COMPOSITIONAL_TYPED_NESTING.md)
 and [the v0.16 experiment report](experiments/v016/report.md). Heap memory,
 arbitrary loop exits and general candidate discovery remain outside this mode.
+
+## v0.17: typed finite memory joined with nested-loop proofs
+
+`typed_memory` / `--c-typed-memory` verifies local integer arrays and fixed-size
+successful malloc/calloc sites with immutable same-type pointer aliases in the
+same ABI-aware compositional loop proof. It checks symbolic address formation,
+bounds, per-cell initialization, alias liveness/free rules and actual typed
+integer intermediates. Scoped private allocation cycles can be composed inside
+nested loops without iteration-count unfolding.
+
+```sh
+python -m llmloop.symbolic_cli examples/typed_memory_loop.c \
+  --c-typed-memory --loop-summaries-file examples/typed_memory_summaries.json \
+  --parameter-bounds '{"n":[-3,1000000000]}' --inputs '{"n":1000000000}'
+```
+
+See [the finite-memory model and assumptions](docs/TYPED_FINITE_MEMORY.md) and
+[the v0.17 experiment report](experiments/v017/report.md). Heap success is assumed,
+leak freedom is not proved, and general escaping/dynamic heaps remain unsupported.
+The report also preserves the observed absence of a sanitizer diagnostic for a
+canceled overflow fixture, rather than treating that absence as proof of safety.
