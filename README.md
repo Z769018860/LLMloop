@@ -322,3 +322,21 @@ RHS/condition evaluations even when a later assignment overwrites them. Short
 circuit and conditional-expression checks follow the evaluated branch. The API
 accepts `frontend: "ordered_scalar"` and `int_bits`; unsupported option combinations
 fail explicitly. See [supported semantics and validation](docs/ORDERED_C.md).
+
+
+## v0.9: unbounded counted memory, general affine powers and typed integer kernel
+
+- Canonical nested `for` loops over static arrays/aliases/fixed calloc objects
+  now have compositional matrix summaries with no iteration-unroll bound,
+  including interleaved outer state updates and affine index-dependent RHSs.
+- General affine recurrence powers can include exponential and coupled effects;
+  base/successor identities are checked, including finite singular transients.
+- A typed concrete C integer reference kernel models promotions, usual arithmetic
+  conversions, literals/casts, division/remainder, shifts and lazy operators for
+  explicit LP64/ILP32/LLP64 ABIs.
+- `llmloop-symbolic` and `analyze_request` expose all three modes.
+
+See [exact support boundaries and reproduction](docs/UNBOUNDED_AND_INTEGER.md).
+The memory/recurrence summaries remain mathematical-integer results; the integer
+reference kernel is not complete symbolic C verification. Unsupported general
+branching, nonlinear recurrences, dynamic memory or integer syntax remain UNKNOWN.

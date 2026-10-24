@@ -13,7 +13,7 @@ def analyze_request(request: dict) -> dict:
     try:
         if not isinstance(request, dict):raise SMTGraphError('Request must be an object')
         allowed = {'ir', 'source', 'function', 'parameter_bounds', 'max_unroll',
-                   'max_paths', 'whole_function', 'invariants', 'verify_steps', 'assertion', 'ranking', 'synthesize_ranking', 'frontend', 'int_bits'}
+                   'max_paths', 'whole_function', 'invariants', 'verify_steps', 'assertion', 'ranking', 'synthesize_ranking', 'frontend', 'int_bits', 'parameter_mins', 'inputs'}
         if set(request)-allowed:raise SMTGraphError('Unknown request fields: '+', '.join(sorted(set(request)-allowed)))
         if 'synthesize_ranking' in request and type(request['synthesize_ranking']) is not bool:raise SMTGraphError('synthesize_ranking must be Boolean')
         if ('ir' in request) == ('source' in request):raise SMTGraphError('Provide exactly one of ir or source')
@@ -27,6 +27,10 @@ def analyze_request(request: dict) -> dict:
                 obj=translate_ordered_c(request['source'],function=request.get('function'),
                                         parameter_bounds=request.get('parameter_bounds'),
                                         bits=request.get('int_bits',32),max_paths=request.get('max_paths',48))
+            elif frontend=='counted_memory':
+                if set(request)-{'source','function','frontend','parameter_mins','inputs'}:raise SMTGraphError('counted_memory accepts only source, function, parameter_mins and inputs')
+                from .counted_c import translate_counted_memory_c
+                obj=translate_counted_memory_c(request['source'],function=request.get('function'),parameter_mins=request.get('parameter_mins'))
             elif frontend=='memory':
                 if 'int_bits' in request:raise SMTGraphError('int_bits requires ordered_scalar frontend')
                 obj = translate_memory_c(request['source'], function=request.get('function'),
@@ -34,11 +38,23 @@ def analyze_request(request: dict) -> dict:
                                          max_unroll=request.get('max_unroll',12),
                                          max_paths=request.get('max_paths',48),
                                          whole_function=request.get('whole_function',True))
-            else:raise SMTGraphError('frontend must be memory or ordered_scalar')
+            else:raise SMTGraphError('frontend must be memory, ordered_scalar or counted_memory')
         else:
-            if set(request) & {'frontend','int_bits','whole_function','function','parameter_bounds','max_paths','max_unroll'}:raise SMTGraphError('Source translation options cannot be applied to an existing IR')
+            if set(request) & {'frontend','int_bits','whole_function','function','parameter_bounds','max_paths','max_unroll','parameter_mins'}:raise SMTGraphError('Source translation options cannot be applied to an existing IR')
             obj = request['ir']
             if not isinstance(obj, dict):raise SMTGraphError('ir must be an object')
+        kind=obj.get('kind')
+        if kind in ('counted_memory','affine_recurrence','c_integer_expression'):
+            if 'ir' in request and set(request)-{'ir','inputs'}:raise SMTGraphError('Special symbolic IR accepts only ir and optional inputs')
+            if kind=='counted_memory':
+                from .unbounded_memory import UnboundedMemory
+                return {'schema_version':1,**UnboundedMemory(obj).report(request.get('inputs'))}
+            if 'inputs' in request:raise SMTGraphError('inputs is supported only for counted_memory or SPath IR')
+            if kind=='affine_recurrence':
+                from .recurrence import summarize_recurrence
+                return {'schema_version':1,**summarize_recurrence(obj)}
+            from .c_integers import evaluate_integer_request
+            return {'schema_version':1,**evaluate_integer_request(obj)}
         graph = SMTPathGraph(obj)
         invariants = request.get('invariants', [])
         if not isinstance(invariants,list) or not all(isinstance(x,str) for x in invariants):
@@ -54,6 +70,7 @@ def analyze_request(request: dict) -> dict:
             from .ranking import verify_ranking, synthesize_ranking
             if 'ranking' in request:report['ranking']=verify_ranking(graph,request['ranking'])
             if request.get('synthesize_ranking'):report['ranking_synthesis']=synthesize_ranking(graph)
+        if 'inputs' in request:report['evaluation']=graph.concrete(request['inputs'])
         return report
-    except (SMTGraphError, ValueError, TypeError, KeyError, AttributeError) as exc:
+    except (SMTGraphError, ValueError, TypeError, KeyError, AttributeError, SyntaxError) as exc:
         return {'status':'UNKNOWN', 'schema_version':1, 'reason':str(exc)}
