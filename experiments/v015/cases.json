@@ -1,0 +1,869 @@
+[
+  {
+    "name": "unbounded_saturation",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            null
+          ]
+        },
+        "branches": [
+          {
+            "guard": "x < n",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": "x >= n",
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "Min(k,n)"
+        }
+      }
+    },
+    "expected_status": "CERTIFIED_GUARDED_RECURRENCE_CLOSED_FORM"
+  },
+  {
+    "name": "billion_iteration_saturation",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            null
+          ]
+        },
+        "branches": [
+          {
+            "guard": "x < n",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": "x >= n",
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "Min(k,n)"
+        }
+      },
+      "inputs": {
+        "n": 1000000000,
+        "k": 1000000001
+      }
+    },
+    "expected_status": "CERTIFIED_GUARDED_RECURRENCE_CLOSED_FORM"
+  },
+  {
+    "name": "fixed_threshold_0",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            0
+          ]
+        },
+        "branches": [
+          {
+            "guard": "x < n",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": "x >= n",
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "Min(k,n)"
+        }
+      }
+    },
+    "expected_status": "CERTIFIED_GUARDED_RECURRENCE_CLOSED_FORM"
+  },
+  {
+    "name": "fixed_threshold_1",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            1,
+            1
+          ]
+        },
+        "branches": [
+          {
+            "guard": "x < n",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": "x >= n",
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "Min(k,n)"
+        }
+      }
+    },
+    "expected_status": "CERTIFIED_GUARDED_RECURRENCE_CLOSED_FORM"
+  },
+  {
+    "name": "fixed_threshold_7",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            7,
+            7
+          ]
+        },
+        "branches": [
+          {
+            "guard": "x < n",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": "x >= n",
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "Min(k,n)"
+        }
+      }
+    },
+    "expected_status": "CERTIFIED_GUARDED_RECURRENCE_CLOSED_FORM"
+  },
+  {
+    "name": "unbounded_countdown",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": "n"
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            null
+          ]
+        },
+        "branches": [
+          {
+            "guard": "x>0",
+            "updates": {
+              "x": "x-1"
+            }
+          },
+          {
+            "guard": "x<=0",
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "Max(n-k,0)"
+        }
+      }
+    },
+    "expected_status": "CERTIFIED_GUARDED_RECURRENCE_CLOSED_FORM"
+  },
+  {
+    "name": "absolute_value_transient",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": "a"
+        },
+        "parameters": [
+          "a"
+        ],
+        "branches": [
+          {
+            "guard": "x<0",
+            "updates": {
+              "x": "-x"
+            }
+          },
+          {
+            "guard": "x>=0",
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "a if k == 0 else Abs(a)"
+        }
+      }
+    },
+    "expected_status": "CERTIFIED_GUARDED_RECURRENCE_CLOSED_FORM"
+  },
+  {
+    "name": "nonperiodic_step_change",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            null
+          ]
+        },
+        "branches": [
+          {
+            "guard": "k<n",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": "k>=n",
+            "updates": {
+              "x": "x+2"
+            }
+          }
+        ],
+        "closed_forms": {
+          "x": "k if k<n else 2*k-n"
+        }
+      }
+    },
+    "expected_status": "CERTIFIED_GUARDED_RECURRENCE_CLOSED_FORM"
+  },
+  {
+    "name": "nonlinear_idempotent",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": "a"
+        },
+        "parameters": [
+          "a"
+        ],
+        "parameter_bounds": {
+          "a": [
+            0,
+            1
+          ]
+        },
+        "branches": [
+          {
+            "guard": true,
+            "updates": {
+              "x": "x*x"
+            }
+          }
+        ],
+        "closed_forms": {
+          "x": "a"
+        }
+      }
+    },
+    "expected_status": "CERTIFIED_GUARDED_RECURRENCE_CLOSED_FORM"
+  },
+  {
+    "name": "modular_reset",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "branches": [
+          {
+            "guard": "x<2",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": "x>=2",
+            "updates": {
+              "x": 0
+            }
+          }
+        ],
+        "closed_forms": {
+          "x": "k%3"
+        }
+      }
+    },
+    "expected_status": "CERTIFIED_GUARDED_RECURRENCE_CLOSED_FORM"
+  },
+  {
+    "name": "wrong_base",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            null
+          ]
+        },
+        "branches": [
+          {
+            "guard": "x < n",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": "x >= n",
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "Min(k,n)+1"
+        }
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "wrong_successor",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            null
+          ]
+        },
+        "branches": [
+          {
+            "guard": "x < n",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": "x >= n",
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "Min(k,n)+k"
+        }
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "late_failure",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            null
+          ]
+        },
+        "branches": [
+          {
+            "guard": "x < n",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": "x >= n",
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "Min(k,n) if k<1000000 else Min(k,n)+1"
+        }
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "overlapping_branches",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            null
+          ]
+        },
+        "branches": [
+          {
+            "guard": "x < n",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": true,
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "Min(k,n)"
+        }
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "missing_branch",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            null
+          ]
+        },
+        "branches": [
+          {
+            "guard": "x < n",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": "x>n",
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "Min(k,n)"
+        }
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "empty_parameter_domain",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            2,
+            1
+          ]
+        },
+        "branches": [
+          {
+            "guard": "x < n",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": "x >= n",
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "Min(k,n)"
+        }
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "partial_division",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            null
+          ]
+        },
+        "branches": [
+          {
+            "guard": "x < n",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": "x >= n",
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "k//k"
+        }
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "unsupported_exponential_candidate",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            null
+          ]
+        },
+        "branches": [
+          {
+            "guard": "x < n",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": "x >= n",
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "2**k"
+        }
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "billion_typed_LP64",
+    "request": {
+      "source": "long typed_loop(int n) {\n    unsigned char byte = 250;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        byte = byte + 1;\n        total = total + 1;\n    }\n    return total + byte;\n}\n",
+      "frontend": "typed_recurrence",
+      "closed_forms": {
+        "byte": "(250+i)%256",
+        "total": "i"
+      },
+      "parameter_bounds": {
+        "n": [
+          -3,
+          1000000000
+        ]
+      },
+      "abi": "LP64",
+      "inputs": {
+        "n": 1000000000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_RECURRENCE"
+  },
+  {
+    "name": "billion_typed_ILP32",
+    "request": {
+      "source": "long typed_loop(int n) {\n    unsigned char byte = 250;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        byte = byte + 1;\n        total = total + 1;\n    }\n    return total + byte;\n}\n",
+      "frontend": "typed_recurrence",
+      "closed_forms": {
+        "byte": "(250+i)%256",
+        "total": "i"
+      },
+      "parameter_bounds": {
+        "n": [
+          -3,
+          1000000000
+        ]
+      },
+      "abi": "ILP32",
+      "inputs": {
+        "n": 1000000000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_RECURRENCE"
+  },
+  {
+    "name": "billion_typed_LLP64",
+    "request": {
+      "source": "long typed_loop(int n) {\n    unsigned char byte = 250;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        byte = byte + 1;\n        total = total + 1;\n    }\n    return total + byte;\n}\n",
+      "frontend": "typed_recurrence",
+      "closed_forms": {
+        "byte": "(250+i)%256",
+        "total": "i"
+      },
+      "parameter_bounds": {
+        "n": [
+          -3,
+          1000000000
+        ]
+      },
+      "abi": "LLP64",
+      "inputs": {
+        "n": 1000000000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_RECURRENCE"
+  },
+  {
+    "name": "negative_count_typed",
+    "request": {
+      "source": "long typed_loop(int n) {\n    unsigned char byte = 250;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        byte = byte + 1;\n        total = total + 1;\n    }\n    return total + byte;\n}\n",
+      "frontend": "typed_recurrence",
+      "closed_forms": {
+        "byte": "(250+i)%256",
+        "total": "i"
+      },
+      "parameter_bounds": {
+        "n": [
+          -3,
+          1000000000
+        ]
+      },
+      "inputs": {
+        "n": -3
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_RECURRENCE"
+  },
+  {
+    "name": "signed_narrow_cast",
+    "request": {
+      "source": "int f(int n){signed char x=-128;for(int i=0;i<n;i++){x++;}return x;}",
+      "frontend": "typed_recurrence",
+      "closed_forms": {
+        "x": "i%256-128"
+      },
+      "inputs": {
+        "n": 1000000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_RECURRENCE"
+  },
+  {
+    "name": "boolean_toggle",
+    "request": {
+      "source": "int f(int n){_Bool x=0;for(int i=0;i<n;i++){x=!x;}return x;}",
+      "frontend": "typed_recurrence",
+      "closed_forms": {
+        "x": "i%2"
+      },
+      "inputs": {
+        "n": 1000000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_RECURRENCE"
+  },
+  {
+    "name": "typed_saturation",
+    "request": {
+      "source": "int f(int n){unsigned char x=0;for(int i=0;i<n;i++){if(x<255){x++;}else{x=x;}}return x;}",
+      "frontend": "typed_recurrence",
+      "closed_forms": {
+        "x": "Min(i,255)"
+      },
+      "inputs": {
+        "n": 1000000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_RECURRENCE"
+  },
+  {
+    "name": "typed_wrong_candidate",
+    "request": {
+      "source": "long typed_loop(int n) {\n    unsigned char byte = 250;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        byte = byte + 1;\n        total = total + 1;\n    }\n    return total + byte;\n}\n",
+      "frontend": "typed_recurrence",
+      "closed_forms": {
+        "byte": "0",
+        "total": "i"
+      },
+      "parameter_bounds": {
+        "n": [
+          -3,
+          1000000000
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "typed_erased_overflow",
+    "request": {
+      "source": "int f(int n){int x=2147483647;for(int i=0;i<n;i++){x=(x+1)-1;}return x;}",
+      "frontend": "typed_recurrence",
+      "closed_forms": {
+        "x": "2147483647"
+      },
+      "parameter_bounds": {
+        "n": [
+          256,
+          256
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "typed_overwritten_division",
+    "request": {
+      "source": "int f(int n){int x=0;for(int i=0;i<n;i++){x=1/0;x=0;}return x;}",
+      "frontend": "typed_recurrence",
+      "closed_forms": {
+        "x": "0"
+      },
+      "parameter_bounds": {
+        "n": [
+          256,
+          256
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "typed_return_overflow",
+    "request": {
+      "source": "int f(int n){int x=2147483647;for(int i=0;i<n;i++){x=x;}return x+1;}",
+      "frontend": "typed_recurrence",
+      "closed_forms": {
+        "x": "2147483647"
+      },
+      "parameter_bounds": {
+        "n": [
+          256,
+          256
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "typed_index_wrap",
+    "request": {
+      "source": "int f(int n){int x=0;for(unsigned char i=0;i<n;i++){x=x;}return x;}",
+      "frontend": "typed_recurrence",
+      "closed_forms": {
+        "x": "0"
+      },
+      "parameter_bounds": {
+        "n": [
+          256,
+          256
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "bounded_typed_billion_no_exit",
+    "request": {
+      "source": "long typed_loop(int n) {\n    unsigned char byte = 250;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        byte = byte + 1;\n        total = total + 1;\n    }\n    return total + byte;\n}\n",
+      "frontend": "typed_c",
+      "parameter_bounds": {
+        "n": [
+          1000000000,
+          1000000000
+        ]
+      },
+      "max_unroll": 2
+    },
+    "expected_status": "UNKNOWN"
+  }
+]

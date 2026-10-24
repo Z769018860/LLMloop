@@ -16,6 +16,7 @@ def main(argv=None):
     source_mode.add_argument('--c-typed',action='store_true')
     source_mode.add_argument('--c-periodic',action='store_true')
     source_mode.add_argument('--c-guarded',action='store_true')
+    source_mode.add_argument('--c-typed-loop',action='store_true')
     parser.add_argument('--closed-forms',help='JSON candidate coordinate formulas for --c-guarded')
     parser.add_argument('--phase-invariants',help='JSON list of inductive predicates in source branch order')
     parser.add_argument('--abi',choices=('LP64','ILP32','LLP64'),default='LP64')
@@ -33,8 +34,12 @@ def main(argv=None):
     try:
         text=args.file.read_text(encoding='utf-8')
         if args.phase_invariants is not None and not args.c_periodic:raise ValueError('--phase-invariants requires --c-periodic')
-        if args.closed_forms is not None and not args.c_guarded:raise ValueError('--closed-forms requires --c-guarded')
-        if args.c_guarded:
+        if args.closed_forms is not None and not (args.c_guarded or args.c_typed_loop):raise ValueError('--closed-forms requires --c-guarded or --c-typed-loop')
+        if args.c_typed_loop:
+            request={'source':text,'frontend':'typed_recurrence','function':args.function,'parameter_bounds':json.loads(args.parameter_bounds),
+                     'closed_forms':json.loads(args.closed_forms) if args.closed_forms is not None else None,
+                     'abi':args.abi,'char_signed':not args.char_unsigned,'max_paths':args.max_paths}
+        elif args.c_guarded:
             request={'source':text,'frontend':'guarded_scalar','function':args.function,'parameter_bounds':json.loads(args.parameter_bounds),
                      'closed_forms':json.loads(args.closed_forms) if args.closed_forms is not None else None}
         elif args.c_periodic:
@@ -57,7 +62,8 @@ def main(argv=None):
             if args.int_bits is not None:request['int_bits']=args.int_bits
         else:request={'ir':json.loads(text)}
         if not (args.c_sweep or args.c_scan) and args.int_bits is not None:raise ValueError('--int-bits requires --c-sweep or --c-scan')
-        if not args.c_typed and (args.abi!='LP64' or args.char_unsigned or args.max_unroll!=12 or args.max_paths!=48):raise ValueError('ABI and bounded typed-execution options require --c-typed')
+        if not (args.c_typed or args.c_typed_loop) and (args.abi!='LP64' or args.char_unsigned or args.max_paths!=48):raise ValueError('ABI and typed path options require --c-typed or --c-typed-loop')
+        if not args.c_typed and args.max_unroll!=12:raise ValueError('--max-unroll requires --c-typed')
         if args.inputs is not None:request['inputs']=json.loads(args.inputs)
         report=analyze_request(request)
     except (ValueError,OSError) as exc:report={'status':'UNKNOWN','reason':str(exc)}
