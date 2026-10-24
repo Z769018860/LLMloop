@@ -41,6 +41,8 @@ def translate_c_spgraph(source:str,control:str,domain:list[int],function:str|Non
            (function is None or x.decl.name==function)]
     if len(funcs)!=1:raise AnalysisError('Expected one selected C function')
     f=funcs[0]
+    from .c_validation import validate_automatic_locals
+    validate_automatic_locals(f,AnalysisError)
     if not _identifier_type(f.decl):raise AnalysisError('Function return must be int')
     arguments=f.decl.type.args
     params=[]

@@ -65,6 +65,8 @@ def translate_c(source:str, function:str|None=None)->dict:
     if function is not None: candidates=[x for x in candidates if x.decl.name==function]
     if len(candidates)!=1: raise AnalysisError("Expected one selected function definition")
     func=candidates[0]
+    from .c_validation import validate_automatic_locals
+    validate_automatic_locals(func,AnalysisError)
     if not _identifier_type(func.decl):
         raise AnalysisError("Only functions returning int are supported")
     ftype=func.decl.type

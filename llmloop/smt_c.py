@@ -28,6 +28,8 @@ def translate_smt_c(source:str,function:str|None=None,control_var:str|None=None,
            (function is None or f.decl.name==function)]
     if len(funcs)!=1:raise SMTGraphError('Expected one selected C function')
     func=funcs[0]
+    from .c_validation import validate_automatic_locals
+    validate_automatic_locals(func,SMTGraphError)
     if not _identifier_type(func.decl):raise SMTGraphError('Function must return int')
     parameters=[]
     fargs=func.decl.type.args

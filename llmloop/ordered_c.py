@@ -21,6 +21,8 @@ def translate_ordered_c(source: str, function: str | None = None,
     funcs=[f for f in unit.ext if isinstance(f,c_ast.FuncDef) and (function is None or f.decl.name==function)]
     if len(funcs)!=1:raise SMTGraphError('Expected exactly one selected function')
     func=funcs[0]
+    from .c_validation import validate_automatic_locals
+    validate_automatic_locals(func,SMTGraphError)
     if not _is_int_decl(func.decl):raise SMTGraphError('Only scalar int functions supported')
     params=[]
     args=func.decl.type.args.params if func.decl.type.args else []
