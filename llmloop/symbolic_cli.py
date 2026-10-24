@@ -18,6 +18,7 @@ def main(argv=None):
     source_mode.add_argument('--c-guarded',action='store_true')
     source_mode.add_argument('--c-typed-loop',action='store_true')
     source_mode.add_argument('--c-typed-nested',action='store_true')
+    source_mode.add_argument('--c-typed-memory',action='store_true')
     summaries=parser.add_mutually_exclusive_group()
     summaries.add_argument('--loop-summaries',help='JSON entry-relative summaries keyed by loop index')
     summaries.add_argument('--loop-summaries-file',type=Path,help='JSON file of entry-relative summaries')
@@ -39,10 +40,10 @@ def main(argv=None):
         text=args.file.read_text(encoding='utf-8')
         if args.phase_invariants is not None and not args.c_periodic:raise ValueError('--phase-invariants requires --c-periodic')
         if args.closed_forms is not None and not (args.c_guarded or args.c_typed_loop):raise ValueError('--closed-forms requires --c-guarded or --c-typed-loop')
-        if (args.loop_summaries is not None or args.loop_summaries_file is not None) and not args.c_typed_nested:raise ValueError('Loop summaries require --c-typed-nested')
-        if args.c_typed_nested:
+        if (args.loop_summaries is not None or args.loop_summaries_file is not None) and not (args.c_typed_nested or args.c_typed_memory):raise ValueError('Loop summaries require --c-typed-nested or --c-typed-memory')
+        if args.c_typed_nested or args.c_typed_memory:
             summaries=json.loads(args.loop_summaries_file.read_text() if args.loop_summaries_file is not None else args.loop_summaries) if args.loop_summaries_file is not None or args.loop_summaries is not None else None
-            request={'source':text,'frontend':'typed_nested','function':args.function,'parameter_bounds':json.loads(args.parameter_bounds),
+            request={'source':text,'frontend':'typed_memory' if args.c_typed_memory else 'typed_nested','function':args.function,'parameter_bounds':json.loads(args.parameter_bounds),
                      'loop_summaries':summaries,'abi':args.abi,'char_signed':not args.char_unsigned,'max_paths':args.max_paths}
         elif args.c_typed_loop:
             request={'source':text,'frontend':'typed_recurrence','function':args.function,'parameter_bounds':json.loads(args.parameter_bounds),
@@ -71,7 +72,7 @@ def main(argv=None):
             if args.int_bits is not None:request['int_bits']=args.int_bits
         else:request={'ir':json.loads(text)}
         if not (args.c_sweep or args.c_scan) and args.int_bits is not None:raise ValueError('--int-bits requires --c-sweep or --c-scan')
-        if not (args.c_typed or args.c_typed_loop or args.c_typed_nested) and (args.abi!='LP64' or args.char_unsigned or args.max_paths!=48):raise ValueError('ABI and typed path options require --c-typed or --c-typed-loop')
+        if not (args.c_typed or args.c_typed_loop or args.c_typed_nested or args.c_typed_memory) and (args.abi!='LP64' or args.char_unsigned or args.max_paths!=48):raise ValueError('ABI and typed path options require --c-typed or --c-typed-loop')
         if not args.c_typed and args.max_unroll!=12:raise ValueError('--max-unroll requires --c-typed')
         if args.inputs is not None:request['inputs']=json.loads(args.inputs)
         report=analyze_request(request)

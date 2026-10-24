@@ -30,13 +30,13 @@ def command(args, timeout=300):
 
 def main(argv=None):
     parser=argparse.ArgumentParser()
-    parser.add_argument('--output',type=Path,default=ROOT/'experiments/v016')
-    parser.add_argument('--fixtures',type=Path,default=ROOT/'experiments/v016/cases.json')
+    parser.add_argument('--output',type=Path,default=ROOT/'experiments/v017')
+    parser.add_argument('--fixtures',type=Path,default=ROOT/'experiments/v017/cases.json')
     args=parser.parse_args(argv)
     args.output.mkdir(parents=True,exist_ok=True)
     version=command(['git','rev-parse','HEAD'])
     manifest={str(path.relative_to(ROOT)):hashlib.sha256(path.read_bytes()).hexdigest()
-              for pattern in ['llmloop/*.py','tests/*.py','scripts/*.py','pyproject.toml','examples/guarded*','examples/typed_unbounded_loop.c','examples/typed_nested*']
+              for pattern in ['llmloop/*.py','tests/*.py','scripts/*.py','pyproject.toml','examples/guarded*','examples/typed_unbounded_loop.c','examples/typed_nested*','examples/typed_memory*']
               for path in sorted(ROOT.glob(pattern)) if path.is_file()}
     evidence={'schema_version':1,'generated_at':datetime.now(timezone(timedelta(hours=8))).isoformat(),
               'source_base_commit':version['stdout'].strip(),'source_sha256':manifest,
@@ -44,7 +44,7 @@ def main(argv=None):
                              'sympy':sympy.__version__,'z3':z3.get_version_string(),'pycparser':pycparser.__version__,
                              'compiler':command(['cc','--version'])['stdout'].splitlines()[0]},
               'protocol':{'proof_domain':'each certificate reported input/count domain and integer semantics; typed candidates checked through actual exit',
-                          'native_samples':'fixed boundary grids and million-iteration cases; not a proof of arbitrary C',
+                          'native_samples':'fixed boundary grids/million-iteration cases plus controlled sanitizer-failure correspondences; not proof of arbitrary C',
                           'scope':'restricted research prototype; no claim that UNKNOWN cases are supported',
                           'performance_claims':False},'suites':[],'guarded_cases':[]}
     suite_commands=[('pytest',[sys.executable,'-m','pytest','-q'])]
@@ -94,10 +94,10 @@ def main(argv=None):
     for case in evidence['guarded_cases']:
         lines.append(f"| {case['name']} | {case['expected_status']} | {case['actual_status']} |")
     lines += ['', '## Interpretation','',
-              'Native checks are finite differential tests. Mathematical recurrence and typed scalar-loop claims come from checked induction obligations within their reported domains, not from the sample count.',
+              'Native checks are finite differential tests; the memory-rejection sanitizer suite counts expected fault correspondences separately in its log, not certified safe executions. Mathematical recurrence and typed scalar-loop claims come from checked induction obligations within their reported domains, not from the sample count.',
               'Negative controls include incorrect base/successor formulas, a failure near iteration one million, ambiguous/missing branches, an empty domain, typed intermediate/return overflow, overwritten division by zero, index wrap, and unsupported expressions. UNKNOWN controls are never counted as supported functionality.',
               'These are controlled examples, not a representative real-world library benchmark. No performance advantage or universal C coverage is claimed.',
-              'General escaping heaps, unified unbounded heterogeneous C integer/memory verification, arbitrary typed CFG loops, and automatic discovery of arbitrary closed forms remain incomplete.','',
+              'General escaping heap shapes, dynamic-size/failed allocations, external pointer layouts, arbitrary typed CFG loops, and automatic discovery of arbitrary closed forms remain incomplete.','',
               f'Reproduce: `python scripts/run_symbolic_experiments.py --fixtures {args.fixtures} --output {args.output}` after `python -m pip install -e ".[test,smt]"`.']
     (args.output/'report.md').write_text('\n'.join(lines)+'\n')
     print(json.dumps(summary),flush=True)
