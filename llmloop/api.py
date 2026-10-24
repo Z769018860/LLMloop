@@ -21,8 +21,8 @@ def analyze_request(request: dict) -> dict:
             from .memory_frontend import translate_memory_c
             if not isinstance(request['source'], str):raise SMTGraphError('source must be a string')
             frontend=request.get('frontend','memory')
-            if 'closed_forms' in request and frontend!='guarded_scalar':raise SMTGraphError('closed_forms requires guarded_scalar frontend')
-            if (set(request)&{'abi','char_signed'}) and frontend!='typed_c':raise SMTGraphError('ABI options require typed_c frontend')
+            if 'closed_forms' in request and frontend not in ('guarded_scalar','typed_recurrence'):raise SMTGraphError('closed_forms requires guarded_scalar or typed_recurrence frontend')
+            if (set(request)&{'abi','char_signed'}) and frontend not in ('typed_c','typed_recurrence'):raise SMTGraphError('ABI options require typed_c or typed_recurrence frontend')
             if 'memory_layout' in request and frontend!='sweep_memory':raise SMTGraphError('memory_layout requires sweep_memory frontend')
             if frontend=='typed_c':
                 if set(request)-{'source','function','frontend','parameter_bounds','abi','char_signed','max_unroll','max_paths','inputs'}:raise SMTGraphError('Invalid typed C options')
@@ -32,6 +32,10 @@ def analyze_request(request: dict) -> dict:
                 if set(request)-{'source','function','frontend','parameter_mins','inputs'}:raise SMTGraphError('Private allocation fold accepts mathematical source/count domains only')
                 from .private_allocations import PrivateAllocations
                 return {'schema_version':1,**PrivateAllocations(request['source'],function=request.get('function'),parameter_mins=request.get('parameter_mins')).report(request.get('inputs'))}
+            elif frontend=='typed_recurrence':
+                if set(request)-{'source','function','frontend','parameter_bounds','closed_forms','abi','char_signed','max_paths','inputs'}:raise SMTGraphError('Invalid typed recurrence options')
+                from .typed_recurrence import TypedCRecurrence
+                return {'schema_version':1,**TypedCRecurrence(request['source'],request.get('closed_forms'),function=request.get('function'),parameter_bounds=request.get('parameter_bounds'),abi=request.get('abi','LP64'),char_signed=request.get('char_signed',True),max_paths=request.get('max_paths',48)).report(request.get('inputs'))}
             elif frontend=='guarded_scalar':
                 if set(request)-{'source','function','frontend','parameter_bounds','closed_forms'}:raise SMTGraphError('Invalid guarded scalar C options')
                 from .periodic_c import analyze_guarded_c

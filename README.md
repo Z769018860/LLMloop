@@ -429,3 +429,22 @@ python scripts/run_symbolic_experiments.py --output experiments/v014
 [implemented fragments versus remaining work](docs/FEATURE_STATUS.md) are
 tracked in the repository. Candidate synthesis, general escaping heaps, and
 unified unbounded C integer/memory verification remain incomplete.
+
+## v0.15: unroll-free heterogeneous C integer loop certificates
+
+`typed_recurrence` / `--c-typed-loop` now verifies supplied scalar loop-state
+candidates using actual ABI-aware C integer semantics. It checks promotions,
+assignment narrowing/wrap, all executed intermediate operations, the index and
+exit condition, and the typed return. Successful reports certify machine integer
+safety and counted-loop termination for the declared domain without unrolling.
+
+```sh
+python -m llmloop.symbolic_cli examples/typed_unbounded_loop.c \
+  --c-typed-loop --closed-forms '{"byte":"(250+i)%256","total":"i"}' \
+  --parameter-bounds '{"n":[-3,1000000000]}' --inputs '{"n":1000000000}'
+```
+
+See [typed-loop proof obligations and limits](docs/TYPED_UNBOUNDED_RECURRENCES.md)
+and [the reproducible v0.15 experiments](experiments/v015/report.md). This is a
+scalar-loop certificate; nested typed loops, arbitrary candidate discovery, and
+unified unbounded typed heap-memory verification remain incomplete.
