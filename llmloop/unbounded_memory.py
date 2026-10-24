@@ -9,7 +9,7 @@ import ast
 import sympy as s
 from .expressions import parse,integer_value
 from .graph_nested import _positive_polynomial
-from .recurrence import affine_matrix,certified_power
+from .recurrence import affine_matrix,certified_power,parse_total
 from .smt_spath import SMTGraphError
 
 
@@ -45,7 +45,7 @@ class UnboundedMemory:
         self.minima=obj.get('parameter_mins',{})
         if set(self.minima)!=set(self.parameters) or any(type(x) is not int for x in self.minima.values()):
             raise SMTGraphError('Supply an integer minimum for every parameter')
-        self.initial=s.Matrix([parse(self.rewrite(v),self.names) for v in self.state.values()]+[1])
+        self.initial=s.Matrix([parse_total(self.rewrite(v),self.names) for v in self.state.values()]+[1])
         if self.initial.free_symbols & {self.names[v] for v in self.variables}:raise SMTGraphError('Initial cells may depend only on parameters')
         self.certificates=[];self.nodes=0
         self.transform=self.compile(obj.get('body',[]),0)
@@ -95,7 +95,7 @@ class UnboundedMemory:
                     updates[cell]=self.rewrite(value)
                 step=affine_matrix(self.variables,self.names,updates)
             elif set(node)=={'repeat','body'}:
-                count=parse(node['repeat'],self.names)
+                count=parse_total(node['repeat'],self.names)
                 if count.free_symbols-{self.names[v] for v in self.parameters} or not _positive_polynomial(count,self.minima):
                     raise SMTGraphError('Repeat count must be a proven nonnegative polynomial in immutable parameters')
                 inner=self.compile(node['body'],depth+1)
@@ -114,7 +114,7 @@ class UnboundedMemory:
                 'scope':'finite initialized objects; static aliases and indices; immutable counted loops; no per-iteration unrolling',
                 'c_overflow_verified':False}
         if 'return_expr' in self.obj:
-            expression=parse(self.rewrite(self.obj['return_expr']),self.names)
+            expression=parse_total(self.rewrite(self.obj['return_expr']),self.names)
             returned=s.simplify(expression.subs({self.names[v]:final[i] for i,v in enumerate(self.variables)},simultaneous=True))
             report['return_expr']=str(returned)
         if inputs is not None:
