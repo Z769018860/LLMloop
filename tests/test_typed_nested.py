@@ -162,3 +162,16 @@ def test_cli_and_summary_option_scope(tmp_path,capsys):
     assert main([str(source),'--c-typed-loop','--loop-summaries','{}'])==2
     capsys.readouterr()
     assert main([str(source),'--c-typed-nested'])==2
+
+
+def test_polynomial_modular_successor_is_invariant_under_source_renaming():
+    for n,m,p,i,j,k in [('height','width','depth','row','col','inner'),('a','b','c','u','v','w')]:
+        source=f'''int f(int {n},int {m},int {p}){{unsigned char x=0;
+            for(int {i}=0;{i}<{n};{i}++){{for(int {j}=0;{j}<{m};{j}++){{
+            for(int {k}=0;{k}<{p};{k}++){{x++;}}}}}}return x;}}'''
+        report=analyze_request({'source':source,'frontend':'typed_nested',
+            'parameter_bounds':{n:[0,100],m:[0,100],p:[0,100]},
+            'loop_summaries':{i:{'x':f'{i}*{m}*{p}%256'},j:{'x':f'(entry("x")+{j}*{p})%256'},k:{'x':f'(entry("x")+{k})%256'}},
+            'inputs':{n:5,m:7,p:9}})
+        assert report['status']=='PROVED_DEFINED_TYPED_C_NESTED',report
+        assert report['evaluation']['value']==315%256

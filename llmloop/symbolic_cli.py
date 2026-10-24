@@ -20,6 +20,7 @@ def main(argv=None):
     source_mode.add_argument('--c-typed-nested',action='store_true')
     source_mode.add_argument('--c-typed-memory',action='store_true')
     summaries=parser.add_mutually_exclusive_group()
+    summaries.add_argument('--auto-summaries',action='store_true',help='Generate candidates and require independent typed source proof')
     summaries.add_argument('--loop-summaries',help='JSON entry-relative summaries keyed by loop index')
     summaries.add_argument('--loop-summaries-file',type=Path,help='JSON file of entry-relative summaries')
     parser.add_argument('--closed-forms',help='JSON candidate coordinate formulas for --c-guarded')
@@ -40,9 +41,9 @@ def main(argv=None):
         text=args.file.read_text(encoding='utf-8')
         if args.phase_invariants is not None and not args.c_periodic:raise ValueError('--phase-invariants requires --c-periodic')
         if args.closed_forms is not None and not (args.c_guarded or args.c_typed_loop):raise ValueError('--closed-forms requires --c-guarded or --c-typed-loop')
-        if (args.loop_summaries is not None or args.loop_summaries_file is not None) and not (args.c_typed_nested or args.c_typed_memory):raise ValueError('Loop summaries require --c-typed-nested or --c-typed-memory')
+        if (args.auto_summaries or args.loop_summaries is not None or args.loop_summaries_file is not None) and not (args.c_typed_nested or args.c_typed_memory):raise ValueError('Loop summaries require --c-typed-nested or --c-typed-memory')
         if args.c_typed_nested or args.c_typed_memory:
-            summaries=json.loads(args.loop_summaries_file.read_text() if args.loop_summaries_file is not None else args.loop_summaries) if args.loop_summaries_file is not None or args.loop_summaries is not None else None
+            summaries='auto' if args.auto_summaries else (json.loads(args.loop_summaries_file.read_text() if args.loop_summaries_file is not None else args.loop_summaries) if args.loop_summaries_file is not None or args.loop_summaries is not None else None)
             request={'source':text,'frontend':'typed_memory' if args.c_typed_memory else 'typed_nested','function':args.function,'parameter_bounds':json.loads(args.parameter_bounds),
                      'loop_summaries':summaries,'abi':args.abi,'char_signed':not args.char_unsigned,'max_paths':args.max_paths}
         elif args.c_typed_loop:
