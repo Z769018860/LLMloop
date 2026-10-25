@@ -1,0 +1,3184 @@
+[
+  {
+    "name": "unbounded_saturation",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            null
+          ]
+        },
+        "branches": [
+          {
+            "guard": "x < n",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": "x >= n",
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "Min(k,n)"
+        }
+      }
+    },
+    "expected_status": "CERTIFIED_GUARDED_RECURRENCE_CLOSED_FORM"
+  },
+  {
+    "name": "billion_iteration_saturation",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            null
+          ]
+        },
+        "branches": [
+          {
+            "guard": "x < n",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": "x >= n",
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "Min(k,n)"
+        }
+      },
+      "inputs": {
+        "n": 1000000000,
+        "k": 1000000001
+      }
+    },
+    "expected_status": "CERTIFIED_GUARDED_RECURRENCE_CLOSED_FORM"
+  },
+  {
+    "name": "fixed_threshold_0",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            0
+          ]
+        },
+        "branches": [
+          {
+            "guard": "x < n",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": "x >= n",
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "Min(k,n)"
+        }
+      }
+    },
+    "expected_status": "CERTIFIED_GUARDED_RECURRENCE_CLOSED_FORM"
+  },
+  {
+    "name": "fixed_threshold_1",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            1,
+            1
+          ]
+        },
+        "branches": [
+          {
+            "guard": "x < n",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": "x >= n",
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "Min(k,n)"
+        }
+      }
+    },
+    "expected_status": "CERTIFIED_GUARDED_RECURRENCE_CLOSED_FORM"
+  },
+  {
+    "name": "fixed_threshold_7",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            7,
+            7
+          ]
+        },
+        "branches": [
+          {
+            "guard": "x < n",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": "x >= n",
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "Min(k,n)"
+        }
+      }
+    },
+    "expected_status": "CERTIFIED_GUARDED_RECURRENCE_CLOSED_FORM"
+  },
+  {
+    "name": "unbounded_countdown",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": "n"
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            null
+          ]
+        },
+        "branches": [
+          {
+            "guard": "x>0",
+            "updates": {
+              "x": "x-1"
+            }
+          },
+          {
+            "guard": "x<=0",
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "Max(n-k,0)"
+        }
+      }
+    },
+    "expected_status": "CERTIFIED_GUARDED_RECURRENCE_CLOSED_FORM"
+  },
+  {
+    "name": "absolute_value_transient",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": "a"
+        },
+        "parameters": [
+          "a"
+        ],
+        "branches": [
+          {
+            "guard": "x<0",
+            "updates": {
+              "x": "-x"
+            }
+          },
+          {
+            "guard": "x>=0",
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "a if k == 0 else Abs(a)"
+        }
+      }
+    },
+    "expected_status": "CERTIFIED_GUARDED_RECURRENCE_CLOSED_FORM"
+  },
+  {
+    "name": "nonperiodic_step_change",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            null
+          ]
+        },
+        "branches": [
+          {
+            "guard": "k<n",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": "k>=n",
+            "updates": {
+              "x": "x+2"
+            }
+          }
+        ],
+        "closed_forms": {
+          "x": "k if k<n else 2*k-n"
+        }
+      }
+    },
+    "expected_status": "CERTIFIED_GUARDED_RECURRENCE_CLOSED_FORM"
+  },
+  {
+    "name": "nonlinear_idempotent",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": "a"
+        },
+        "parameters": [
+          "a"
+        ],
+        "parameter_bounds": {
+          "a": [
+            0,
+            1
+          ]
+        },
+        "branches": [
+          {
+            "guard": true,
+            "updates": {
+              "x": "x*x"
+            }
+          }
+        ],
+        "closed_forms": {
+          "x": "a"
+        }
+      }
+    },
+    "expected_status": "CERTIFIED_GUARDED_RECURRENCE_CLOSED_FORM"
+  },
+  {
+    "name": "modular_reset",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "branches": [
+          {
+            "guard": "x<2",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": "x>=2",
+            "updates": {
+              "x": 0
+            }
+          }
+        ],
+        "closed_forms": {
+          "x": "k%3"
+        }
+      }
+    },
+    "expected_status": "CERTIFIED_GUARDED_RECURRENCE_CLOSED_FORM"
+  },
+  {
+    "name": "wrong_base",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            null
+          ]
+        },
+        "branches": [
+          {
+            "guard": "x < n",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": "x >= n",
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "Min(k,n)+1"
+        }
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "wrong_successor",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            null
+          ]
+        },
+        "branches": [
+          {
+            "guard": "x < n",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": "x >= n",
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "Min(k,n)+k"
+        }
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "late_failure",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            null
+          ]
+        },
+        "branches": [
+          {
+            "guard": "x < n",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": "x >= n",
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "Min(k,n) if k<1000000 else Min(k,n)+1"
+        }
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "overlapping_branches",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            null
+          ]
+        },
+        "branches": [
+          {
+            "guard": "x < n",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": true,
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "Min(k,n)"
+        }
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "missing_branch",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            null
+          ]
+        },
+        "branches": [
+          {
+            "guard": "x < n",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": "x>n",
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "Min(k,n)"
+        }
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "empty_parameter_domain",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            2,
+            1
+          ]
+        },
+        "branches": [
+          {
+            "guard": "x < n",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": "x >= n",
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "Min(k,n)"
+        }
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "partial_division",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            null
+          ]
+        },
+        "branches": [
+          {
+            "guard": "x < n",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": "x >= n",
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "k//k"
+        }
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "unsupported_exponential_candidate",
+    "request": {
+      "ir": {
+        "kind": "guarded_recurrence",
+        "state": {
+          "x": 0
+        },
+        "parameters": [
+          "n"
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            null
+          ]
+        },
+        "branches": [
+          {
+            "guard": "x < n",
+            "updates": {
+              "x": "x+1"
+            }
+          },
+          {
+            "guard": "x >= n",
+            "updates": {}
+          }
+        ],
+        "closed_forms": {
+          "x": "2**k"
+        }
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "billion_typed_LP64",
+    "request": {
+      "source": "long typed_loop(int n) {\n    unsigned char byte = 250;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        byte = byte + 1;\n        total = total + 1;\n    }\n    return total + byte;\n}\n",
+      "frontend": "typed_recurrence",
+      "closed_forms": {
+        "byte": "(250+i)%256",
+        "total": "i"
+      },
+      "parameter_bounds": {
+        "n": [
+          -3,
+          1000000000
+        ]
+      },
+      "abi": "LP64",
+      "inputs": {
+        "n": 1000000000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_RECURRENCE"
+  },
+  {
+    "name": "billion_typed_ILP32",
+    "request": {
+      "source": "long typed_loop(int n) {\n    unsigned char byte = 250;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        byte = byte + 1;\n        total = total + 1;\n    }\n    return total + byte;\n}\n",
+      "frontend": "typed_recurrence",
+      "closed_forms": {
+        "byte": "(250+i)%256",
+        "total": "i"
+      },
+      "parameter_bounds": {
+        "n": [
+          -3,
+          1000000000
+        ]
+      },
+      "abi": "ILP32",
+      "inputs": {
+        "n": 1000000000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_RECURRENCE"
+  },
+  {
+    "name": "billion_typed_LLP64",
+    "request": {
+      "source": "long typed_loop(int n) {\n    unsigned char byte = 250;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        byte = byte + 1;\n        total = total + 1;\n    }\n    return total + byte;\n}\n",
+      "frontend": "typed_recurrence",
+      "closed_forms": {
+        "byte": "(250+i)%256",
+        "total": "i"
+      },
+      "parameter_bounds": {
+        "n": [
+          -3,
+          1000000000
+        ]
+      },
+      "abi": "LLP64",
+      "inputs": {
+        "n": 1000000000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_RECURRENCE"
+  },
+  {
+    "name": "negative_count_typed",
+    "request": {
+      "source": "long typed_loop(int n) {\n    unsigned char byte = 250;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        byte = byte + 1;\n        total = total + 1;\n    }\n    return total + byte;\n}\n",
+      "frontend": "typed_recurrence",
+      "closed_forms": {
+        "byte": "(250+i)%256",
+        "total": "i"
+      },
+      "parameter_bounds": {
+        "n": [
+          -3,
+          1000000000
+        ]
+      },
+      "inputs": {
+        "n": -3
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_RECURRENCE"
+  },
+  {
+    "name": "signed_narrow_cast",
+    "request": {
+      "source": "int f(int n){signed char x=-128;for(int i=0;i<n;i++){x++;}return x;}",
+      "frontend": "typed_recurrence",
+      "closed_forms": {
+        "x": "i%256-128"
+      },
+      "inputs": {
+        "n": 1000000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_RECURRENCE"
+  },
+  {
+    "name": "boolean_toggle",
+    "request": {
+      "source": "int f(int n){_Bool x=0;for(int i=0;i<n;i++){x=!x;}return x;}",
+      "frontend": "typed_recurrence",
+      "closed_forms": {
+        "x": "i%2"
+      },
+      "inputs": {
+        "n": 1000000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_RECURRENCE"
+  },
+  {
+    "name": "typed_saturation",
+    "request": {
+      "source": "int f(int n){unsigned char x=0;for(int i=0;i<n;i++){if(x<255){x++;}else{x=x;}}return x;}",
+      "frontend": "typed_recurrence",
+      "closed_forms": {
+        "x": "Min(i,255)"
+      },
+      "inputs": {
+        "n": 1000000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_RECURRENCE"
+  },
+  {
+    "name": "typed_wrong_candidate",
+    "request": {
+      "source": "long typed_loop(int n) {\n    unsigned char byte = 250;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        byte = byte + 1;\n        total = total + 1;\n    }\n    return total + byte;\n}\n",
+      "frontend": "typed_recurrence",
+      "closed_forms": {
+        "byte": "0",
+        "total": "i"
+      },
+      "parameter_bounds": {
+        "n": [
+          -3,
+          1000000000
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "typed_erased_overflow",
+    "request": {
+      "source": "int f(int n){int x=2147483647;for(int i=0;i<n;i++){x=(x+1)-1;}return x;}",
+      "frontend": "typed_recurrence",
+      "closed_forms": {
+        "x": "2147483647"
+      },
+      "parameter_bounds": {
+        "n": [
+          256,
+          256
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "typed_overwritten_division",
+    "request": {
+      "source": "int f(int n){int x=0;for(int i=0;i<n;i++){x=1/0;x=0;}return x;}",
+      "frontend": "typed_recurrence",
+      "closed_forms": {
+        "x": "0"
+      },
+      "parameter_bounds": {
+        "n": [
+          256,
+          256
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "typed_return_overflow",
+    "request": {
+      "source": "int f(int n){int x=2147483647;for(int i=0;i<n;i++){x=x;}return x+1;}",
+      "frontend": "typed_recurrence",
+      "closed_forms": {
+        "x": "2147483647"
+      },
+      "parameter_bounds": {
+        "n": [
+          256,
+          256
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "typed_index_wrap",
+    "request": {
+      "source": "int f(int n){int x=0;for(unsigned char i=0;i<n;i++){x=x;}return x;}",
+      "frontend": "typed_recurrence",
+      "closed_forms": {
+        "x": "0"
+      },
+      "parameter_bounds": {
+        "n": [
+          256,
+          256
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "bounded_typed_billion_no_exit",
+    "request": {
+      "source": "long typed_loop(int n) {\n    unsigned char byte = 250;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        byte = byte + 1;\n        total = total + 1;\n    }\n    return total + byte;\n}\n",
+      "frontend": "typed_c",
+      "parameter_bounds": {
+        "n": [
+          1000000000,
+          1000000000
+        ]
+      },
+      "max_unroll": 2
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "typed_nested_LP64",
+    "request": {
+      "source": "long nested_typed(int n, int m) {\n    unsigned char byte = 0;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        total = total + 1;\n        for (int j = 0; j < m; j = j + 1) {\n            byte = byte + 1;\n            total = total + 1;\n        }\n        total = total + 2;\n    }\n    return total + byte;\n}\n",
+      "frontend": "typed_nested",
+      "loop_summaries": {
+        "i": {
+          "byte": "(i*m)%256",
+          "total": "i*(m+3)"
+        },
+        "j": {
+          "byte": "(entry(\"byte\")+j)%256",
+          "total": "entry(\"total\")+j"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "m": [
+          0,
+          1000
+        ]
+      },
+      "abi": "LP64",
+      "inputs": {
+        "n": 1000,
+        "m": 1000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "typed_nested_ILP32",
+    "request": {
+      "source": "long nested_typed(int n, int m) {\n    unsigned char byte = 0;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        total = total + 1;\n        for (int j = 0; j < m; j = j + 1) {\n            byte = byte + 1;\n            total = total + 1;\n        }\n        total = total + 2;\n    }\n    return total + byte;\n}\n",
+      "frontend": "typed_nested",
+      "loop_summaries": {
+        "i": {
+          "byte": "(i*m)%256",
+          "total": "i*(m+3)"
+        },
+        "j": {
+          "byte": "(entry(\"byte\")+j)%256",
+          "total": "entry(\"total\")+j"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "m": [
+          0,
+          1000
+        ]
+      },
+      "abi": "ILP32",
+      "inputs": {
+        "n": 1000,
+        "m": 1000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "typed_nested_LLP64",
+    "request": {
+      "source": "long nested_typed(int n, int m) {\n    unsigned char byte = 0;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        total = total + 1;\n        for (int j = 0; j < m; j = j + 1) {\n            byte = byte + 1;\n            total = total + 1;\n        }\n        total = total + 2;\n    }\n    return total + byte;\n}\n",
+      "frontend": "typed_nested",
+      "loop_summaries": {
+        "i": {
+          "byte": "(i*m)%256",
+          "total": "i*(m+3)"
+        },
+        "j": {
+          "byte": "(entry(\"byte\")+j)%256",
+          "total": "entry(\"total\")+j"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "m": [
+          0,
+          1000
+        ]
+      },
+      "abi": "LLP64",
+      "inputs": {
+        "n": 1000,
+        "m": 1000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "outer_index_dependent_inner_bound",
+    "request": {
+      "source": "long f(int n){long x=0;for(int i=0;i<n;i++){\n        for(int j=0;j<2*i+1;j++){x++;}}return x;}",
+      "frontend": "typed_nested",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000
+        ]
+      },
+      "loop_summaries": {
+        "i": {
+          "x": "i*i"
+        },
+        "j": {
+          "x": "entry(\"x\")+j"
+        }
+      },
+      "inputs": {
+        "n": 1000000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "triple_modular_nesting",
+    "request": {
+      "source": "int f(int n,int m,int p){unsigned char x=0;\n        for(int i=0;i<n;i++){for(int j=0;j<m;j++){for(int k=0;k<p;k++){x++;}}}return x;}",
+      "frontend": "typed_nested",
+      "parameter_bounds": {
+        "n": [
+          0,
+          100
+        ],
+        "m": [
+          0,
+          100
+        ],
+        "p": [
+          0,
+          100
+        ]
+      },
+      "loop_summaries": {
+        "i": {
+          "x": "i*m*p%256"
+        },
+        "j": {
+          "x": "(entry(\"x\")+j*p)%256"
+        },
+        "k": {
+          "x": "(entry(\"x\")+k)%256"
+        }
+      },
+      "inputs": {
+        "n": 100,
+        "m": 100,
+        "p": 100
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "sequential_interleaved_state",
+    "request": {
+      "source": "long f(int n,int m){long x=0;for(int i=0;i<n;i++){x++;}\n        x=2*x+3;for(int j=0;j<m;j++){x+=2;}return x;}",
+      "frontend": "typed_nested",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000
+        ],
+        "m": [
+          0,
+          1000000
+        ]
+      },
+      "loop_summaries": {
+        "i": {
+          "x": "entry(\"x\")+i"
+        },
+        "j": {
+          "x": "entry(\"x\")+2*j"
+        }
+      },
+      "inputs": {
+        "n": 1000000,
+        "m": 1000000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "sixteen_typed_levels",
+    "request": {
+      "source": "int f(void){unsigned char x=0;for(int i0=0;i0<1;i0++){for(int i1=0;i1<1;i1++){for(int i2=0;i2<1;i2++){for(int i3=0;i3<1;i3++){for(int i4=0;i4<1;i4++){for(int i5=0;i5<1;i5++){for(int i6=0;i6<1;i6++){for(int i7=0;i7<1;i7++){for(int i8=0;i8<1;i8++){for(int i9=0;i9<1;i9++){for(int i10=0;i10<1;i10++){for(int i11=0;i11<1;i11++){for(int i12=0;i12<1;i12++){for(int i13=0;i13<1;i13++){for(int i14=0;i14<1;i14++){for(int i15=0;i15<1;i15++){x++;}}}}}}}}}}}}}}}}return x;}",
+      "frontend": "typed_nested",
+      "loop_summaries": {
+        "i0": {
+          "x": "(entry(\"x\")+i0)%256"
+        },
+        "i1": {
+          "x": "(entry(\"x\")+i1)%256"
+        },
+        "i2": {
+          "x": "(entry(\"x\")+i2)%256"
+        },
+        "i3": {
+          "x": "(entry(\"x\")+i3)%256"
+        },
+        "i4": {
+          "x": "(entry(\"x\")+i4)%256"
+        },
+        "i5": {
+          "x": "(entry(\"x\")+i5)%256"
+        },
+        "i6": {
+          "x": "(entry(\"x\")+i6)%256"
+        },
+        "i7": {
+          "x": "(entry(\"x\")+i7)%256"
+        },
+        "i8": {
+          "x": "(entry(\"x\")+i8)%256"
+        },
+        "i9": {
+          "x": "(entry(\"x\")+i9)%256"
+        },
+        "i10": {
+          "x": "(entry(\"x\")+i10)%256"
+        },
+        "i11": {
+          "x": "(entry(\"x\")+i11)%256"
+        },
+        "i12": {
+          "x": "(entry(\"x\")+i12)%256"
+        },
+        "i13": {
+          "x": "(entry(\"x\")+i13)%256"
+        },
+        "i14": {
+          "x": "(entry(\"x\")+i14)%256"
+        },
+        "i15": {
+          "x": "(entry(\"x\")+i15)%256"
+        }
+      },
+      "inputs": {}
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "depth_budget_rejection",
+    "request": {
+      "source": "int f(void){unsigned char x=0;for(int i0=0;i0<1;i0++){for(int i1=0;i1<1;i1++){for(int i2=0;i2<1;i2++){for(int i3=0;i3<1;i3++){for(int i4=0;i4<1;i4++){for(int i5=0;i5<1;i5++){for(int i6=0;i6<1;i6++){for(int i7=0;i7<1;i7++){for(int i8=0;i8<1;i8++){for(int i9=0;i9<1;i9++){for(int i10=0;i10<1;i10++){for(int i11=0;i11<1;i11++){for(int i12=0;i12<1;i12++){for(int i13=0;i13<1;i13++){for(int i14=0;i14<1;i14++){for(int i15=0;i15<1;i15++){for(int i16=0;i16<1;i16++){x++;}}}}}}}}}}}}}}}}}return x;}",
+      "frontend": "typed_nested",
+      "loop_summaries": {
+        "i0": {
+          "x": "(entry(\"x\")+i0)%256"
+        },
+        "i1": {
+          "x": "(entry(\"x\")+i1)%256"
+        },
+        "i2": {
+          "x": "(entry(\"x\")+i2)%256"
+        },
+        "i3": {
+          "x": "(entry(\"x\")+i3)%256"
+        },
+        "i4": {
+          "x": "(entry(\"x\")+i4)%256"
+        },
+        "i5": {
+          "x": "(entry(\"x\")+i5)%256"
+        },
+        "i6": {
+          "x": "(entry(\"x\")+i6)%256"
+        },
+        "i7": {
+          "x": "(entry(\"x\")+i7)%256"
+        },
+        "i8": {
+          "x": "(entry(\"x\")+i8)%256"
+        },
+        "i9": {
+          "x": "(entry(\"x\")+i9)%256"
+        },
+        "i10": {
+          "x": "(entry(\"x\")+i10)%256"
+        },
+        "i11": {
+          "x": "(entry(\"x\")+i11)%256"
+        },
+        "i12": {
+          "x": "(entry(\"x\")+i12)%256"
+        },
+        "i13": {
+          "x": "(entry(\"x\")+i13)%256"
+        },
+        "i14": {
+          "x": "(entry(\"x\")+i14)%256"
+        },
+        "i15": {
+          "x": "(entry(\"x\")+i15)%256"
+        },
+        "i16": {
+          "x": "(entry(\"x\")+i16)%256"
+        }
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "counter_namespace_correct",
+    "request": {
+      "source": "int f(int n,int counter_i){int x=0;for(int i=0;i<n;i++){x++;}return x;}",
+      "frontend": "typed_recurrence",
+      "parameter_bounds": {
+        "n": [
+          2,
+          3
+        ],
+        "counter_i": [
+          0,
+          0
+        ]
+      },
+      "closed_forms": {
+        "x": "i"
+      },
+      "inputs": {
+        "n": 3,
+        "counter_i": 0
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_RECURRENCE"
+  },
+  {
+    "name": "counter_namespace_wrong_candidate",
+    "request": {
+      "source": "int f(int n,int counter_i){int x=0;for(int i=0;i<n;i++){x++;}return x;}",
+      "frontend": "typed_recurrence",
+      "parameter_bounds": {
+        "n": [
+          2,
+          3
+        ],
+        "counter_i": [
+          0,
+          0
+        ]
+      },
+      "closed_forms": {
+        "x": "0 if i==0 else 1"
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "wrong_inner_summary",
+    "request": {
+      "source": "long nested_typed(int n, int m) {\n    unsigned char byte = 0;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        total = total + 1;\n        for (int j = 0; j < m; j = j + 1) {\n            byte = byte + 1;\n            total = total + 1;\n        }\n        total = total + 2;\n    }\n    return total + byte;\n}\n",
+      "frontend": "typed_nested",
+      "loop_summaries": {
+        "i": {
+          "byte": "(i*m)%256",
+          "total": "i*(m+3)"
+        },
+        "j": {
+          "byte": "(entry(\"byte\")+j)%256",
+          "total": "entry(\"total\")"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "m": [
+          0,
+          1000
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "inner_undefined_computation",
+    "request": {
+      "source": "long nested_typed(int n, int m) {\n    unsigned char byte = 0;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        total = total + 1;\n        for (int j = 0; j < m; j = j + 1) {\n            byte=1/0;\n            total = total + 1;\n        }\n        total = total + 2;\n    }\n    return total + byte;\n}\n",
+      "frontend": "typed_nested",
+      "loop_summaries": {
+        "i": {
+          "byte": "(i*m)%256",
+          "total": "i*(m+3)"
+        },
+        "j": {
+          "byte": "(entry(\"byte\")+j)%256",
+          "total": "entry(\"total\")+j"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "m": [
+          0,
+          1000
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "modified_outer_index",
+    "request": {
+      "source": "long nested_typed(int n, int m) {\n    unsigned char byte = 0;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        total = total + 1;\n        for (int j = 0; j < m; j = j + 1) {\n            i++;\n            total = total + 1;\n        }\n        total = total + 2;\n    }\n    return total + byte;\n}\n",
+      "frontend": "typed_nested",
+      "loop_summaries": {
+        "i": {
+          "byte": "(i*m)%256",
+          "total": "i*(m+3)"
+        },
+        "j": {
+          "byte": "(entry(\"byte\")+j)%256",
+          "total": "entry(\"total\")+j"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "m": [
+          0,
+          1000
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "early_nested_return",
+    "request": {
+      "source": "long nested_typed(int n, int m) {\n    unsigned char byte = 0;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        total = total + 1;\n        for (int j = 0; j < m; j = j + 1) {\n            return 0;\n            total = total + 1;\n        }\n        total = total + 2;\n    }\n    return total + byte;\n}\n",
+      "frontend": "typed_nested",
+      "loop_summaries": {
+        "i": {
+          "byte": "(i*m)%256",
+          "total": "i*(m+3)"
+        },
+        "j": {
+          "byte": "(entry(\"byte\")+j)%256",
+          "total": "entry(\"total\")+j"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "m": [
+          0,
+          1000
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "unsupported_heap_source",
+    "request": {
+      "source": "long nested_typed(int n, int m) {\n    unsigned char byte = 0;\n    long *total=calloc(1,sizeof(long));\n    for (int i = 0; i < n; i = i + 1) {\n        total = total + 1;\n        for (int j = 0; j < m; j = j + 1) {\n            byte = byte + 1;\n            total = total + 1;\n        }\n        total = total + 2;\n    }\n    return total + byte;\n}\n",
+      "frontend": "typed_nested",
+      "loop_summaries": {
+        "i": {
+          "byte": "(i*m)%256",
+          "total": "i*(m+3)"
+        },
+        "j": {
+          "byte": "(entry(\"byte\")+j)%256",
+          "total": "entry(\"total\")+j"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "m": [
+          0,
+          1000
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "mutable_inner_bound",
+    "request": {
+      "source": "long nested_typed(int n, int m) {\n    unsigned char byte = 0;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        total = total + 1;\n        for (int j = 0; j < total; j = j + 1) {\n            byte = byte + 1;\n            total = total + 1;\n        }\n        total = total + 2;\n    }\n    return total + byte;\n}\n",
+      "frontend": "typed_nested",
+      "loop_summaries": {
+        "i": {
+          "byte": "(i*m)%256",
+          "total": "i*(m+3)"
+        },
+        "j": {
+          "byte": "(entry(\"byte\")+j)%256",
+          "total": "entry(\"total\")+j"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "m": [
+          0,
+          1000
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "invalid_entry_reference",
+    "request": {
+      "source": "long nested_typed(int n, int m) {\n    unsigned char byte = 0;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        total = total + 1;\n        for (int j = 0; j < m; j = j + 1) {\n            byte = byte + 1;\n            total = total + 1;\n        }\n        total = total + 2;\n    }\n    return total + byte;\n}\n",
+      "frontend": "typed_nested",
+      "loop_summaries": {
+        "i": {
+          "byte": "(i*m)%256",
+          "total": "i*(m+3)"
+        },
+        "j": {
+          "byte": "(entry(\"byte\")+j)%256",
+          "total": "entry(\"unknown\")+j"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "m": [
+          0,
+          1000
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "nested_long32_range_overflow",
+    "request": {
+      "source": "long nested_typed(int n, int m) {\n    unsigned char byte = 0;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        total = total + 1;\n        for (int j = 0; j < m; j = j + 1) {\n            byte = byte + 1;\n            total = total + 1;\n        }\n        total = total + 2;\n    }\n    return total + byte;\n}\n",
+      "frontend": "typed_nested",
+      "loop_summaries": {
+        "i": {
+          "byte": "(i*m)%256",
+          "total": "i*(m+3)"
+        },
+        "j": {
+          "byte": "(entry(\"byte\")+j)%256",
+          "total": "entry(\"total\")+j"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000
+        ],
+        "m": [
+          0,
+          1000000
+        ]
+      },
+      "abi": "ILP32"
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "typed_memory_LP64",
+    "request": {
+      "source": "long typed_memory(int n) {\n    unsigned char a[2] = {250, 255};\n    unsigned char *p = a;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        p[0] = p[0] + 1;\n        p[1] = p[1] + 1;\n        total = total + 1;\n    }\n    return total + a[0] + a[1];\n}\n",
+      "frontend": "typed_memory",
+      "loop_summaries": {
+        "i": {
+          "a[0]": "(250+i)%256",
+          "a[1]": "(255+i)%256",
+          "total": "i"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          -3,
+          1000000000
+        ]
+      },
+      "abi": "LP64",
+      "inputs": {
+        "n": 1000000000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_MEMORY"
+  },
+  {
+    "name": "typed_memory_ILP32",
+    "request": {
+      "source": "long typed_memory(int n) {\n    unsigned char a[2] = {250, 255};\n    unsigned char *p = a;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        p[0] = p[0] + 1;\n        p[1] = p[1] + 1;\n        total = total + 1;\n    }\n    return total + a[0] + a[1];\n}\n",
+      "frontend": "typed_memory",
+      "loop_summaries": {
+        "i": {
+          "a[0]": "(250+i)%256",
+          "a[1]": "(255+i)%256",
+          "total": "i"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          -3,
+          1000000000
+        ]
+      },
+      "abi": "ILP32",
+      "inputs": {
+        "n": 1000000000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_MEMORY"
+  },
+  {
+    "name": "typed_memory_LLP64",
+    "request": {
+      "source": "long typed_memory(int n) {\n    unsigned char a[2] = {250, 255};\n    unsigned char *p = a;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        p[0] = p[0] + 1;\n        p[1] = p[1] + 1;\n        total = total + 1;\n    }\n    return total + a[0] + a[1];\n}\n",
+      "frontend": "typed_memory",
+      "loop_summaries": {
+        "i": {
+          "a[0]": "(250+i)%256",
+          "a[1]": "(255+i)%256",
+          "total": "i"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          -3,
+          1000000000
+        ]
+      },
+      "abi": "LLP64",
+      "inputs": {
+        "n": 1000000000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_MEMORY"
+  },
+  {
+    "name": "typed_symbolic_cell_index",
+    "request": {
+      "source": "int f(int n){unsigned char a[2]={0,0};unsigned char *p=a;\n        for(int i=0;i<n;i++){p[i%2]++;}return a[0]+a[1];}",
+      "frontend": "typed_memory",
+      "loop_summaries": {
+        "i": {
+          "a[0]": "((i+1)//2)%256",
+          "a[1]": "(i//2)%256"
+        }
+      },
+      "inputs": {
+        "n": 1000000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_MEMORY"
+  },
+  {
+    "name": "typed_private_calloc_fold",
+    "request": {
+      "source": "long f(int n){long x=0;for(int i=0;i<n;i++){\n        unsigned char *p=calloc(2,sizeof(unsigned char));unsigned char *q=p;\n        p[0]=1;q[1]=255;q[1]++;x=x+p[0]+p[1];free(q);}return x;}",
+      "frontend": "typed_memory",
+      "loop_summaries": {
+        "i": {
+          "x": "i"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000000
+        ]
+      },
+      "inputs": {
+        "n": 1000000000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_MEMORY"
+  },
+  {
+    "name": "typed_malloc_initialized_cell",
+    "request": {
+      "source": "int f(int n){int *p=malloc(2*sizeof(int));int *q=p;p[0]=7;\n        for(int i=0;i<n;i++){q[0]++;}int result=p[0];free(q);return result;}",
+      "frontend": "typed_memory",
+      "loop_summaries": {
+        "i": {
+          "p[0]": "7+i",
+          "p[1]": "entry(\"p[1]\")"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000000
+        ]
+      },
+      "inputs": {
+        "n": 1000000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_MEMORY"
+  },
+  {
+    "name": "typed_nested_memory",
+    "request": {
+      "source": "int f(int n,int m){unsigned char a[1]={0};unsigned char *p=a;\n        for(int i=0;i<n;i++){for(int j=0;j<m;j++){(*p)++;}}return a[0];}",
+      "frontend": "typed_memory",
+      "loop_summaries": {
+        "i": {
+          "a[0]": "i*m%256"
+        },
+        "j": {
+          "a[0]": "(entry(\"a[0]\")+j)%256"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "m": [
+          0,
+          1000
+        ]
+      },
+      "inputs": {
+        "n": 1000,
+        "m": 1000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_MEMORY"
+  },
+  {
+    "name": "typed_first_write_initialization",
+    "request": {
+      "source": "int f(int n){int *p=malloc(sizeof(int));\n        for(int i=0;i<n;i++){p[0]=1;}int result=p[0];free(p);return result;}",
+      "frontend": "typed_memory",
+      "loop_summaries": {
+        "i": {
+          "p[0]": "0 if i==0 else 1",
+          "initialized:p[0]": "0 if i==0 else 1"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          1,
+          1000
+        ]
+      },
+      "inputs": {
+        "n": 1000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_MEMORY"
+  },
+  {
+    "name": "typed_nested_private_heap",
+    "request": {
+      "source": "long f(int n,int m){long x=0;for(int i=0;i<n;i++){\n        for(int j=0;j<m;j++){unsigned char *p=calloc(1,sizeof(unsigned char));p[0]=1;x+=p[0];free(p);}}return x;}",
+      "frontend": "typed_memory",
+      "loop_summaries": {
+        "i": {
+          "x": "i*m"
+        },
+        "j": {
+          "x": "entry(\"x\")+j"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "m": [
+          0,
+          1000
+        ]
+      },
+      "inputs": {
+        "n": 1000,
+        "m": 1000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_MEMORY"
+  },
+  {
+    "name": "typed_guarded_free_and_skipped_load",
+    "request": {
+      "source": "int f(int n){int *p=calloc(1,sizeof(int));int x=0;\n        if(n>=0){free(p);}for(int i=0;i<n;i++){x++;}return n>=0?x:p[0];}",
+      "frontend": "typed_memory",
+      "loop_summaries": {
+        "i": {
+          "p[0]": "0",
+          "x": "i"
+        }
+      },
+      "inputs": {
+        "n": 10
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_MEMORY"
+  },
+  {
+    "name": "typed_oob_load",
+    "request": {
+      "source": "long typed_memory(int n) {\n    unsigned char a[2] = {250, 255};\n    unsigned char *p = a;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        p[0] = p[0] + 1;\n        p[1] = p[1] + 1;\n        total = total + 1;\n    }\n    return a[2];\n}\n",
+      "frontend": "typed_memory",
+      "loop_summaries": {
+        "i": {
+          "a[0]": "(250+i)%256",
+          "a[1]": "(255+i)%256",
+          "total": "i"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          -3,
+          1000000000
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "typed_oob_store",
+    "request": {
+      "source": "long typed_memory(int n) {\n    unsigned char a[2] = {250, 255};\n    unsigned char *p = a;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        p[2]=1;\n        p[1] = p[1] + 1;\n        total = total + 1;\n    }\n    return total + a[0] + a[1];\n}\n",
+      "frontend": "typed_memory",
+      "loop_summaries": {
+        "i": {
+          "a[0]": "(250+i)%256",
+          "a[1]": "(255+i)%256",
+          "total": "i"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          -3,
+          1000000000
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "typed_invalid_formation",
+    "request": {
+      "source": "long typed_memory(int n) {\n    unsigned char a[2] = {250, 255};\n    unsigned char *p=a+3;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        p[0] = p[0] + 1;\n        p[1] = p[1] + 1;\n        total = total + 1;\n    }\n    return total + a[0] + a[1];\n}\n",
+      "frontend": "typed_memory",
+      "loop_summaries": {
+        "i": {
+          "a[0]": "(250+i)%256",
+          "a[1]": "(255+i)%256",
+          "total": "i"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          -3,
+          1000000000
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "typed_cell_intermediate_overflow",
+    "request": {
+      "source": "long typed_memory(int n) {\n    unsigned char a[2] = {250, 255};\n    unsigned char *p = a;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        p[0]=(2147483647+1)-2147483647;\n        p[1] = p[1] + 1;\n        total = total + 1;\n    }\n    return total + a[0] + a[1];\n}\n",
+      "frontend": "typed_memory",
+      "loop_summaries": {
+        "i": {
+          "a[0]": "(250+i)%256",
+          "a[1]": "(255+i)%256",
+          "total": "i"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          -3,
+          1000000000
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "typed_pointer_rebinding_unsupported",
+    "request": {
+      "source": "long typed_memory(int n) {\n    unsigned char a[2] = {250, 255};\n    unsigned char *p = a;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        p=a+1;\n        p[1] = p[1] + 1;\n        total = total + 1;\n    }\n    return total + a[0] + a[1];\n}\n",
+      "frontend": "typed_memory",
+      "loop_summaries": {
+        "i": {
+          "a[0]": "(250+i)%256",
+          "a[1]": "(255+i)%256",
+          "total": "i"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          -3,
+          1000000000
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "typed_use_after_free",
+    "request": {
+      "source": "int f(int n){int *p=malloc(2*sizeof(int));int *q=p;p[0]=7;\n        for(int i=0;i<n;i++){q[0]++;}free(p);return p[0];}",
+      "frontend": "typed_memory",
+      "loop_summaries": {
+        "i": {
+          "p[0]": "7+i",
+          "p[1]": "entry(\"p[1]\")"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000000
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "typed_double_free",
+    "request": {
+      "source": "int f(int n){int *p=malloc(2*sizeof(int));int *q=p;p[0]=7;\n        for(int i=0;i<n;i++){q[0]++;}free(p);free(q);return 0;}",
+      "frontend": "typed_memory",
+      "loop_summaries": {
+        "i": {
+          "p[0]": "7+i",
+          "p[1]": "entry(\"p[1]\")"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000000
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "typed_nonbase_free",
+    "request": {
+      "source": "int f(int n){int *p=malloc(2*sizeof(int));int *q=p;p[0]=7;\n        for(int i=0;i<n;i++){q[0]++;}free(p+1);return 0;}",
+      "frontend": "typed_memory",
+      "loop_summaries": {
+        "i": {
+          "p[0]": "7+i",
+          "p[1]": "entry(\"p[1]\")"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000000
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "typed_uninitialized_cell",
+    "request": {
+      "source": "int f(int n){int *p=malloc(2*sizeof(int));int *q=p;p[0]=7;\n        for(int i=0;i<n;i++){q[0]++;}return p[1];}",
+      "frontend": "typed_memory",
+      "loop_summaries": {
+        "i": {
+          "p[0]": "7+i",
+          "p[1]": "entry(\"p[1]\")"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000000
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "wrong_memory_cell_candidate",
+    "request": {
+      "source": "long typed_memory(int n) {\n    unsigned char a[2] = {250, 255};\n    unsigned char *p = a;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        p[0] = p[0] + 1;\n        p[1] = p[1] + 1;\n        total = total + 1;\n    }\n    return total + a[0] + a[1];\n}\n",
+      "frontend": "typed_memory",
+      "loop_summaries": {
+        "i": {
+          "a[0]": "250",
+          "a[1]": "(255+i)%256",
+          "total": "i"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          -3,
+          1000000000
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "wrong_memory_init_candidate",
+    "request": {
+      "source": "long typed_memory(int n) {\n    unsigned char a[2] = {250, 255};\n    unsigned char *p = a;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        p[0] = p[0] + 1;\n        p[1] = p[1] + 1;\n        total = total + 1;\n    }\n    return total + a[0] + a[1];\n}\n",
+      "frontend": "typed_memory",
+      "loop_summaries": {
+        "i": {
+          "a[0]": "(250+i)%256",
+          "a[1]": "(255+i)%256",
+          "total": "i",
+          "initialized:a[0]": "0"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          -3,
+          1000000000
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "huge_unsigned_pointer_offset",
+    "request": {
+      "source": "int f(int n){int a[2]={1,2};int *p=a+1;\n        unsigned long long k=18446744073709551615ULL;int *q=p+k;\n        for(int i=0;i<n;i++){a[0]=1;}return *q;}",
+      "frontend": "typed_memory",
+      "loop_summaries": {
+        "i": {
+          "a[0]": "1",
+          "a[1]": "2",
+          "k": "18446744073709551615"
+        }
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "external_pointer_layout_unsupported",
+    "request": {
+      "source": "long typed_memory(int n, unsigned char *external) {\n    unsigned char a[2] = {250, 255};\n    unsigned char *p = a;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        p[0] = p[0] + 1;\n        p[1] = p[1] + 1;\n        total = total + 1;\n    }\n    return total + a[0] + a[1];\n}\n",
+      "frontend": "typed_memory",
+      "loop_summaries": {
+        "i": {
+          "a[0]": "(250+i)%256",
+          "a[1]": "(255+i)%256",
+          "total": "i"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          -3,
+          1000000000
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "allocator_shadowing_rejected",
+    "request": {
+      "source": "int free=0;long typed_memory(int n) {\n    unsigned char a[2] = {250, 255};\n    unsigned char *p = a;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        p[0] = p[0] + 1;\n        p[1] = p[1] + 1;\n        total = total + 1;\n    }\n    return total + a[0] + a[1];\n}\n",
+      "frontend": "typed_memory",
+      "loop_summaries": {
+        "i": {
+          "a[0]": "(250+i)%256",
+          "a[1]": "(255+i)%256",
+          "total": "i"
+        }
+      },
+      "parameter_bounds": {
+        "n": [
+          -3,
+          1000000000
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "variable_allocation_size_unsupported",
+    "request": {
+      "source": "int f(int n){int *p=calloc(n,sizeof(int));\n        for(int i=0;i<n;i++){p[0]=0;}return p[0];}",
+      "frontend": "typed_memory",
+      "loop_summaries": {
+        "i": {
+          "p[0]": "0"
+        }
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "auto_memory_LP64",
+    "request": {
+      "source": "long typed_memory(int n) {\n    unsigned char a[2] = {250, 255};\n    unsigned char *p = a;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        p[0] = p[0] + 1;\n        p[1] = p[1] + 1;\n        total = total + 1;\n    }\n    return total + a[0] + a[1];\n}\n",
+      "frontend": "typed_memory",
+      "loop_summaries": "auto",
+      "abi": "LP64",
+      "parameter_bounds": {
+        "n": [
+          -3,
+          1000000000
+        ]
+      },
+      "inputs": {
+        "n": 1000000000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_MEMORY"
+  },
+  {
+    "name": "auto_nested_LP64",
+    "request": {
+      "source": "long nested_typed(int n, int m) {\n    unsigned char byte = 0;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        total = total + 1;\n        for (int j = 0; j < m; j = j + 1) {\n            byte = byte + 1;\n            total = total + 1;\n        }\n        total = total + 2;\n    }\n    return total + byte;\n}\n",
+      "frontend": "typed_nested",
+      "loop_summaries": "auto",
+      "abi": "LP64",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "m": [
+          0,
+          1000
+        ]
+      },
+      "inputs": {
+        "n": 1000,
+        "m": 1000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "auto_memory_ILP32",
+    "request": {
+      "source": "long typed_memory(int n) {\n    unsigned char a[2] = {250, 255};\n    unsigned char *p = a;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        p[0] = p[0] + 1;\n        p[1] = p[1] + 1;\n        total = total + 1;\n    }\n    return total + a[0] + a[1];\n}\n",
+      "frontend": "typed_memory",
+      "loop_summaries": "auto",
+      "abi": "ILP32",
+      "parameter_bounds": {
+        "n": [
+          -3,
+          1000000000
+        ]
+      },
+      "inputs": {
+        "n": 1000000000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_MEMORY"
+  },
+  {
+    "name": "auto_nested_ILP32",
+    "request": {
+      "source": "long nested_typed(int n, int m) {\n    unsigned char byte = 0;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        total = total + 1;\n        for (int j = 0; j < m; j = j + 1) {\n            byte = byte + 1;\n            total = total + 1;\n        }\n        total = total + 2;\n    }\n    return total + byte;\n}\n",
+      "frontend": "typed_nested",
+      "loop_summaries": "auto",
+      "abi": "ILP32",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "m": [
+          0,
+          1000
+        ]
+      },
+      "inputs": {
+        "n": 1000,
+        "m": 1000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "auto_memory_LLP64",
+    "request": {
+      "source": "long typed_memory(int n) {\n    unsigned char a[2] = {250, 255};\n    unsigned char *p = a;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        p[0] = p[0] + 1;\n        p[1] = p[1] + 1;\n        total = total + 1;\n    }\n    return total + a[0] + a[1];\n}\n",
+      "frontend": "typed_memory",
+      "loop_summaries": "auto",
+      "abi": "LLP64",
+      "parameter_bounds": {
+        "n": [
+          -3,
+          1000000000
+        ]
+      },
+      "inputs": {
+        "n": 1000000000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_MEMORY"
+  },
+  {
+    "name": "auto_nested_LLP64",
+    "request": {
+      "source": "long nested_typed(int n, int m) {\n    unsigned char byte = 0;\n    long total = 0;\n    for (int i = 0; i < n; i = i + 1) {\n        total = total + 1;\n        for (int j = 0; j < m; j = j + 1) {\n            byte = byte + 1;\n            total = total + 1;\n        }\n        total = total + 2;\n    }\n    return total + byte;\n}\n",
+      "frontend": "typed_nested",
+      "loop_summaries": "auto",
+      "abi": "LLP64",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "m": [
+          0,
+          1000
+        ]
+      },
+      "inputs": {
+        "n": 1000,
+        "m": 1000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "auto_polynomial_odd_sum",
+    "request": {
+      "source": "long f(int n){long x=0;for(int i=0;i<n;i++){x+=2*i+1;}return x;}",
+      "frontend": "typed_nested",
+      "loop_summaries": "auto",
+      "abi": "LP64",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000
+        ]
+      },
+      "inputs": {
+        "n": 1000000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "auto_private_nested_heap",
+    "request": {
+      "source": "long f(int n,int m){long x=0;for(int i=0;i<n;i++){\n        for(int j=0;j<m;j++){int *p=calloc(1,sizeof(int));p[0]=1;x+=p[0];free(p);}}return x;}",
+      "frontend": "typed_memory",
+      "loop_summaries": "auto",
+      "abi": "LP64",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "m": [
+          0,
+          1000
+        ]
+      },
+      "inputs": {
+        "n": 1000,
+        "m": 1000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_MEMORY"
+  },
+  {
+    "name": "auto_saturation",
+    "request": {
+      "source": "int f(int n){int x=0;for(int i=0;i<n;i++){if(x<10){x++;}else{x=x;}}return x;}",
+      "frontend": "typed_nested",
+      "loop_summaries": "auto",
+      "abi": "LP64",
+      "inputs": {
+        "n": 1000000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "auto_countdown",
+    "request": {
+      "source": "int f(int n){int x=10;for(int i=0;i<n;i++){if(x>0){x--;}else{x=x;}}return x;}",
+      "frontend": "typed_nested",
+      "loop_summaries": "auto",
+      "abi": "LP64",
+      "inputs": {
+        "n": 1000000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "auto_sign_parity",
+    "request": {
+      "source": "int f(int n){int x=1;for(int i=0;i<n;i++){x=-x;}return x;}",
+      "frontend": "typed_nested",
+      "loop_summaries": "auto",
+      "abi": "LP64",
+      "inputs": {
+        "n": 1000001
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "auto_singular_transient",
+    "request": {
+      "source": "long f(int n){long x=0;long y=0;for(int i=0;i<n;i++){y=x;x++;}return y;}",
+      "frontend": "typed_nested",
+      "loop_summaries": "auto",
+      "abi": "LP64",
+      "inputs": {
+        "n": 1000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "auto_manual_mixed",
+    "request": {
+      "source": "long f(int n,int m){long x=0;for(int i=0;i<n;i++){for(int j=0;j<m;j++){x++;}}return x;}",
+      "frontend": "typed_nested",
+      "loop_summaries": {
+        "i": {
+          "x": "i*m"
+        },
+        "j": "auto"
+      },
+      "abi": "LP64",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "m": [
+          0,
+          1000
+        ]
+      },
+      "inputs": {
+        "n": 3,
+        "m": 7
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "auto_initialized_malloc",
+    "request": {
+      "source": "int f(int n){int *p=malloc(2*sizeof(int));p[0]=7;\n        for(int i=0;i<n;i++){p[0]++;}int result=p[0];free(p);return result;}",
+      "frontend": "typed_memory",
+      "loop_summaries": "auto",
+      "abi": "LP64",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000000
+        ]
+      },
+      "inputs": {
+        "n": 1000000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_MEMORY"
+  },
+  {
+    "name": "auto_wrap_feedback_candidate_refuted",
+    "request": {
+      "source": "long f(int n){unsigned char x=0;long sum=0;\n            for(int i=0;i<n;i++){x++;sum+=x;}return sum;}",
+      "frontend": "typed_nested",
+      "loop_summaries": "auto",
+      "abi": "LP64",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "auto_erased_overflow_refuted",
+    "request": {
+      "source": "int f(int n){int x=1;for(int i=0;i<n;i++){x=(x+2147483647)-2147483647;}return x;}",
+      "frontend": "typed_nested",
+      "loop_summaries": "auto",
+      "abi": "LP64",
+      "parameter_bounds": {
+        "n": [
+          1,
+          2
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "auto_private_uninitialized_refuted",
+    "request": {
+      "source": "int f(int n){int x=0;for(int i=0;i<n;i++){\n            int *p=malloc(sizeof(int));x+=p[0];free(p);}return x;}",
+      "frontend": "typed_memory",
+      "loop_summaries": "auto",
+      "abi": "LP64",
+      "parameter_bounds": {
+        "n": [
+          1,
+          2
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "auto_private_uaf_refuted",
+    "request": {
+      "source": "int f(int n){int x=0;for(int i=0;i<n;i++){\n            int *p=calloc(1,sizeof(int));free(p);x+=p[0];}return x;}",
+      "frontend": "typed_memory",
+      "loop_summaries": "auto",
+      "abi": "LP64",
+      "parameter_bounds": {
+        "n": [
+          1,
+          2
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "auto_nonclosing_polynomial_unsupported",
+    "request": {
+      "source": "int f(int n){int x=1;for(int i=0;i<n;i++){x=x*x;}return x;}",
+      "frontend": "typed_nested",
+      "loop_summaries": "auto",
+      "abi": "LP64"
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "auto_exponential_unsupported",
+    "request": {
+      "source": "int f(int n){int x=1;for(int i=0;i<n;i++){x*=2;}return x;}",
+      "frontend": "typed_nested",
+      "loop_summaries": "auto",
+      "abi": "LP64"
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "auto_coupled_swap_now_supported",
+    "request": {
+      "source": "int f(int n){int x=1;int y=2;for(int i=0;i<n;i++){int t=x;x=y;y=t;}return x;}",
+      "frontend": "typed_nested",
+      "loop_summaries": "auto",
+      "abi": "LP64"
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "auto_counter_threshold_now_supported",
+    "request": {
+      "source": "int f(int n){int x=0;for(int i=0;i<n;i++){if(i<2){x++;}else{x+=2;}}return x;}",
+      "frontend": "typed_nested",
+      "loop_summaries": "auto",
+      "abi": "LP64",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000
+        ]
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "auto_dynamic_cell_unsupported",
+    "request": {
+      "source": "int f(int n){int a[2]={0,0};for(int i=0;i<n;i++){a[i%2]++;}return a[0];}",
+      "frontend": "typed_memory",
+      "loop_summaries": "auto",
+      "abi": "LP64",
+      "parameter_bounds": {
+        "n": [
+          0,
+          10
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "auto_init_metadata_not_inferred",
+    "request": {
+      "source": "int f(int n){int *p=malloc(sizeof(int));for(int i=0;i<n;i++){p[0]=1;}\n            int result=p[0];free(p);return result;}",
+      "frontend": "typed_memory",
+      "loop_summaries": "auto",
+      "abi": "LP64",
+      "parameter_bounds": {
+        "n": [
+          1,
+          10
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "auto_parameter_mutation_unsupported",
+    "request": {
+      "source": "int f(int n){int x=0;n=3;for(int i=0;i<n;i++){x++;}return x;}",
+      "frontend": "typed_nested",
+      "loop_summaries": "auto",
+      "abi": "LP64"
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "auto_expansion_budget",
+    "request": {
+      "source": "long f(int n){long x=1;for(int i=0;i<n;i++){x=(x+1)*(x+1);x=(x+1)*(x+1);x=(x+1)*(x+1);x=(x+1)*(x+1);x=(x+1)*(x+1);x=(x+1)*(x+1);x=(x+1)*(x+1);x=(x+1)*(x+1);}return x;}",
+      "frontend": "typed_nested",
+      "loop_summaries": "auto",
+      "abi": "LP64"
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "auto_long32_overflow_refuted",
+    "request": {
+      "source": "long f(int n){long x=0;for(int i=0;i<n;i++){x+=2*i+1;}return x;}",
+      "frontend": "typed_nested",
+      "loop_summaries": "auto",
+      "abi": "ILP32",
+      "parameter_bounds": {
+        "n": [
+          100000,
+          100000
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "auto_nonbase_free_refuted",
+    "request": {
+      "source": "int f(int n){int *p=calloc(2,sizeof(int));for(int i=0;i<n;i++){p[0]=0;free(p+1);}return 0;}",
+      "frontend": "typed_memory",
+      "loop_summaries": "auto",
+      "abi": "LP64",
+      "parameter_bounds": {
+        "n": [
+          1,
+          1
+        ]
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "coupled_rotation_LP64",
+    "request": {
+      "source": "long coupled_rotate(int n) {\n    long x = 1;\n    long y = 2;\n    long total = 0;\n    for (int i = 0; i < n; i++) {\n        long temp = x;\n        x = -y;\n        y = temp;\n        total += x;\n    }\n    return total;\n}\n",
+      "frontend": "typed_nested",
+      "abi": "LP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000
+        ]
+      },
+      "inputs": {
+        "n": 999999
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "coupled_cells_LP64",
+    "request": {
+      "source": "int coupled_cells(int n){int a[3]={1,2,3};for(int i=0;i<n;i++){int t=a[0];a[0]=a[1];a[1]=a[2];a[2]=t;}return a[0];}",
+      "frontend": "typed_memory",
+      "abi": "LP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000
+        ]
+      },
+      "inputs": {
+        "n": 999999
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_MEMORY"
+  },
+  {
+    "name": "coupled_rotation_ILP32",
+    "request": {
+      "source": "long coupled_rotate(int n) {\n    long x = 1;\n    long y = 2;\n    long total = 0;\n    for (int i = 0; i < n; i++) {\n        long temp = x;\n        x = -y;\n        y = temp;\n        total += x;\n    }\n    return total;\n}\n",
+      "frontend": "typed_nested",
+      "abi": "ILP32",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000
+        ]
+      },
+      "inputs": {
+        "n": 999999
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "coupled_cells_ILP32",
+    "request": {
+      "source": "int coupled_cells(int n){int a[3]={1,2,3};for(int i=0;i<n;i++){int t=a[0];a[0]=a[1];a[1]=a[2];a[2]=t;}return a[0];}",
+      "frontend": "typed_memory",
+      "abi": "ILP32",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000
+        ]
+      },
+      "inputs": {
+        "n": 999999
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_MEMORY"
+  },
+  {
+    "name": "coupled_rotation_LLP64",
+    "request": {
+      "source": "long coupled_rotate(int n) {\n    long x = 1;\n    long y = 2;\n    long total = 0;\n    for (int i = 0; i < n; i++) {\n        long temp = x;\n        x = -y;\n        y = temp;\n        total += x;\n    }\n    return total;\n}\n",
+      "frontend": "typed_nested",
+      "abi": "LLP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000
+        ]
+      },
+      "inputs": {
+        "n": 999999
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "coupled_cells_LLP64",
+    "request": {
+      "source": "int coupled_cells(int n){int a[3]={1,2,3};for(int i=0;i<n;i++){int t=a[0];a[0]=a[1];a[1]=a[2];a[2]=t;}return a[0];}",
+      "frontend": "typed_memory",
+      "abi": "LLP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000
+        ]
+      },
+      "inputs": {
+        "n": 999999
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_MEMORY"
+  },
+  {
+    "name": "coupled_accumulator",
+    "request": {
+      "source": "long coupled_accum(int n){long x=1;long y=2;long total=0;for(int i=0;i<n;i++){long t=x;x=y;y=t;total+=x;}return total;}",
+      "frontend": "typed_nested",
+      "abi": "LP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000
+        ]
+      },
+      "inputs": {
+        "n": 999999
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "coupled_polynomial",
+    "request": {
+      "source": "long coupled_poly(int n){long x=1;long y=2;long total=0;for(int i=0;i<n;i++){long t=x;x=y;y=t;total+=x*x;}return total;}",
+      "frontend": "typed_nested",
+      "abi": "LP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000
+        ]
+      },
+      "inputs": {
+        "n": 999999
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "coupled_nested",
+    "request": {
+      "source": "long coupled_nested(int n){long x=1;long y=2;for(int i=0;i<n;i++){for(int j=0;j<3;j++){long t=x;x=-y;y=t;}}return x;}",
+      "frontend": "typed_nested",
+      "abi": "LP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000
+        ]
+      },
+      "inputs": {
+        "n": 999999
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "coupled_cycle_3",
+    "request": {
+      "source": "int coupled_cycle3(int n){int x0=1;int x1=2;int x2=3;for(int i=0;i<n;i++){int t=x0;x0=x1;x1=x2;x2=t;}return x0;}",
+      "frontend": "typed_nested",
+      "abi": "LP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000
+        ]
+      },
+      "inputs": {
+        "n": 999999
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "coupled_cycle_5",
+    "request": {
+      "source": "int coupled_cycle5(int n){int x0=1;int x1=2;int x2=3;int x3=4;int x4=5;for(int i=0;i<n;i++){int t=x0;x0=x1;x1=x2;x2=x3;x3=x4;x4=t;}return x0;}",
+      "frontend": "typed_nested",
+      "abi": "LP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000
+        ]
+      },
+      "inputs": {
+        "n": 999999
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "coupled_cycle_8",
+    "request": {
+      "source": "int coupled_cycle8(int n){int x0=1;int x1=2;int x2=3;int x3=4;int x4=5;int x5=6;int x6=7;int x7=8;for(int i=0;i<n;i++){int t=x0;x0=x1;x1=x2;x2=x3;x3=x4;x4=x5;x5=x6;x6=x7;x7=t;}return x0;}",
+      "frontend": "typed_nested",
+      "abi": "LP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000
+        ]
+      },
+      "inputs": {
+        "n": 999999
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "coupled_period_budget",
+    "request": {
+      "source": "int coupled_cycle9(int n){int x0=1;int x1=2;int x2=3;int x3=4;int x4=5;int x5=6;int x6=7;int x7=8;int x8=9;for(int i=0;i<n;i++){int t=x0;x0=x1;x1=x2;x2=x3;x3=x4;x4=x5;x5=x6;x6=x7;x7=x8;x8=t;}return x0;}",
+      "frontend": "typed_nested",
+      "abi": "LP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000
+        ]
+      },
+      "inputs": {
+        "n": 999999
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "coupled_exponential_fibonacci",
+    "request": {
+      "source": "long coupled_fib(int n){long x=0;long y=1;for(int i=0;i<n;i++){long t=x;x=y;y=t+y;}return x;}",
+      "frontend": "typed_nested",
+      "abi": "LP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000
+        ]
+      },
+      "inputs": {
+        "n": 999999
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "coupled_signed_intermediate_ub",
+    "request": {
+      "source": "int f(int n){int x=2147483647;int y=1;for(int i=0;i<n;i++){int t=x;x=y;y=(t+1)-1;}return x;}",
+      "frontend": "typed_nested",
+      "abi": "LP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          1,
+          1000000
+        ]
+      },
+      "inputs": {
+        "n": 999999
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "coupled_narrow_feedback_refuted",
+    "request": {
+      "source": "long f(int n){unsigned char x=255;unsigned char y=1;long total=0;for(int i=0;i<n;i++){unsigned char t=x;x=y;y=t+1;total+=y;}return total;}",
+      "frontend": "typed_nested",
+      "abi": "LP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000
+        ]
+      },
+      "inputs": {
+        "n": 999999
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "counter_phase_LP64",
+    "request": {
+      "source": "long counter_phases(int n, int threshold) {\n    long total = 0;\n    for (int i = 0; i < n; i++) {\n        total += 3;\n        if (i <= threshold) {\n            total += 2L * i + 1;\n        } else {\n            total += 4L * i + 2;\n        }\n        total -= 1;\n    }\n    return total;\n}\n",
+      "frontend": "typed_nested",
+      "abi": "LP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "threshold": [
+          -1000,
+          1000
+        ]
+      },
+      "inputs": {
+        "n": 10,
+        "threshold": 3
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "counter_phase_cells_LP64",
+    "request": {
+      "source": "int phase_cells(int n,int t){unsigned char a[1]={0};for(int i=0;i<n;i++){if(i<t){a[0]+=1;}else{a[0]+=2;}}return a[0];}",
+      "frontend": "typed_memory",
+      "abi": "LP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "t": [
+          -1000,
+          1000
+        ]
+      },
+      "inputs": {
+        "n": 1000,
+        "t": 500
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_MEMORY"
+  },
+  {
+    "name": "counter_phase_ILP32",
+    "request": {
+      "source": "long counter_phases(int n, int threshold) {\n    long total = 0;\n    for (int i = 0; i < n; i++) {\n        total += 3;\n        if (i <= threshold) {\n            total += 2L * i + 1;\n        } else {\n            total += 4L * i + 2;\n        }\n        total -= 1;\n    }\n    return total;\n}\n",
+      "frontend": "typed_nested",
+      "abi": "ILP32",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "threshold": [
+          -1000,
+          1000
+        ]
+      },
+      "inputs": {
+        "n": 10,
+        "threshold": 3
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "counter_phase_cells_ILP32",
+    "request": {
+      "source": "int phase_cells(int n,int t){unsigned char a[1]={0};for(int i=0;i<n;i++){if(i<t){a[0]+=1;}else{a[0]+=2;}}return a[0];}",
+      "frontend": "typed_memory",
+      "abi": "ILP32",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "t": [
+          -1000,
+          1000
+        ]
+      },
+      "inputs": {
+        "n": 1000,
+        "t": 500
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_MEMORY"
+  },
+  {
+    "name": "counter_phase_LLP64",
+    "request": {
+      "source": "long counter_phases(int n, int threshold) {\n    long total = 0;\n    for (int i = 0; i < n; i++) {\n        total += 3;\n        if (i <= threshold) {\n            total += 2L * i + 1;\n        } else {\n            total += 4L * i + 2;\n        }\n        total -= 1;\n    }\n    return total;\n}\n",
+      "frontend": "typed_nested",
+      "abi": "LLP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "threshold": [
+          -1000,
+          1000
+        ]
+      },
+      "inputs": {
+        "n": 10,
+        "threshold": 3
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "counter_phase_cells_LLP64",
+    "request": {
+      "source": "int phase_cells(int n,int t){unsigned char a[1]={0};for(int i=0;i<n;i++){if(i<t){a[0]+=1;}else{a[0]+=2;}}return a[0];}",
+      "frontend": "typed_memory",
+      "abi": "LLP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "t": [
+          -1000,
+          1000
+        ]
+      },
+      "inputs": {
+        "n": 1000,
+        "t": 500
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_MEMORY"
+  },
+  {
+    "name": "counter_phase_linear",
+    "request": {
+      "source": "long phase_linear(int n,int t){long x=0;for(int i=0;i<n;i++){if(i<t){x+=i;}else{x+=2L*i;}}return x;}",
+      "frontend": "typed_nested",
+      "abi": "LP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "t": [
+          -1000,
+          1000
+        ]
+      },
+      "inputs": {
+        "n": 1000,
+        "t": 500
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "counter_phase_missing_else",
+    "request": {
+      "source": "long phase_optional(int n,int t){long x=0;for(int i=0;i<n;i++){if(i>=t){x+=3;}}return x;}",
+      "frontend": "typed_nested",
+      "abi": "LP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "t": [
+          -1000,
+          1000
+        ]
+      },
+      "inputs": {
+        "n": 1000,
+        "t": 500
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "counter_phase_multiple_coordinates",
+    "request": {
+      "source": "long phase_multi(int n,int t){long x=7;long y=0;for(int i=0;i<n;i++){if(i>t){x+=2;y+=4L*i;}else{x-=1;y+=2L*i;}}return x+y;}",
+      "frontend": "typed_nested",
+      "abi": "LP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "t": [
+          -1000,
+          1000
+        ]
+      },
+      "inputs": {
+        "n": 1000,
+        "t": 500
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "counter_phase_cubic",
+    "request": {
+      "source": "long phase_cubic(int n,int t){long x=0;for(int i=0;i<n;i++){if(i<t){x+=4L*i*i*i;}else{x+=8L*i*i*i;}}return x;}",
+      "frontend": "typed_nested",
+      "abi": "LP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "t": [
+          -1000,
+          1000
+        ]
+      },
+      "inputs": {
+        "n": 1000,
+        "t": 500
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "counter_phase_nested",
+    "request": {
+      "source": "long phase_nested(int n){long x=0;for(int i=0;i<n;i++){for(int j=0;j<4;j++){if(j<2){x+=1;}else{x+=2;}}}return x;}",
+      "frontend": "typed_nested",
+      "abi": "LP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000
+        ]
+      },
+      "inputs": {
+        "n": 1000000
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "counter_phase_fractional_cubic",
+    "request": {
+      "source": "long phase_cubic(int n,int t){long x=0;for(int i=0;i<n;i++){if(i<t){x+=1L*i*i*i;}else{x+=2L*i*i*i;}}return x;}",
+      "frontend": "typed_nested",
+      "abi": "LP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "t": [
+          -1000,
+          1000
+        ]
+      },
+      "inputs": {
+        "n": 1000,
+        "t": 500
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "counter_phase_billion",
+    "request": {
+      "source": "long phase_steps(int n,int t){long x=0;for(int i=0;i<n;i++){if(i<t){x+=1;}else{x+=2;}}return x;}",
+      "frontend": "typed_nested",
+      "abi": "LP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000000
+        ],
+        "t": [
+          -1000000000,
+          1000000000
+        ]
+      },
+      "inputs": {
+        "n": 1000000000,
+        "t": 999999999
+      }
+    },
+    "expected_status": "PROVED_DEFINED_TYPED_C_NESTED"
+  },
+  {
+    "name": "counter_phase_feedback_unsupported",
+    "request": {
+      "source": "long phase_feedback(int n,int t){long x=1;for(int i=0;i<n;i++){if(i<t){x*=2;}else{x++;}}return x;}",
+      "frontend": "typed_nested",
+      "abi": "LP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "t": [
+          -1000,
+          1000
+        ]
+      },
+      "inputs": {
+        "n": 1000,
+        "t": 500
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "counter_phase_cast_guard_refuted",
+    "request": {
+      "source": "long f(int n,int t){long x=0;for(int i=0;i<n;i++){if(i<(unsigned char)t){x+=1;}else{x+=2;}}return x;}",
+      "frontend": "typed_nested",
+      "abi": "LP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "t": [
+          -1000,
+          1000
+        ]
+      },
+      "inputs": {
+        "n": 1000,
+        "t": 500
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "counter_phase_erased_overflow",
+    "request": {
+      "source": "int f(int n,int t){int x=0;for(int i=0;i<n;i++){if(i<t){x+=(i+2147483647)-2147483647;}else{x++;}}return x;}",
+      "frontend": "typed_nested",
+      "abi": "LP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "t": [
+          -1000,
+          1000
+        ]
+      },
+      "inputs": {
+        "n": 1000,
+        "t": 500
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "counter_phase_guard_overflow",
+    "request": {
+      "source": "long f(int n,int t){long x=0;for(int i=0;i<n;i++){if(i<t+2147483647){x++;}else{x+=2;}}return x;}",
+      "frontend": "typed_nested",
+      "abi": "LP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "t": [
+          -1000,
+          1000
+        ]
+      },
+      "inputs": {
+        "n": 1000,
+        "t": 500
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "counter_phase_degree_budget",
+    "request": {
+      "source": "long f(int n,int t){long x=0;for(int i=0;i<n;i++){if(i<t){x+=1L*i*i*i*i;}else{x++;}}return x;}",
+      "frontend": "typed_nested",
+      "abi": "LP64",
+      "loop_summaries": "auto",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000
+        ],
+        "t": [
+          -1000,
+          1000
+        ]
+      },
+      "inputs": {
+        "n": 1000,
+        "t": 500
+      }
+    },
+    "expected_status": "UNKNOWN"
+  }
+]

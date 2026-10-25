@@ -526,3 +526,23 @@ python -m llmloop.symbolic_cli examples/typed_coupled_rotation.c \
 See [the exact block method and remaining limits](docs/PERIODIC_COUPLED_DISCOVERY.md)
 and [v0.19 experiments](experiments/v019/report.md). General coupled/branching
 systems and dynamic escaping heaps remain open.
+
+
+## v0.20: counter-threshold branch summaries
+
+Automatic mode now derives additive polynomial summaries for one counter-based
+threshold branch, including comparison boundaries, missing `else`, interleaved
+statements, multiple coordinates and supported static-cell/nested combinations.
+Polynomial prefix identities are checked, then the original typed C guards,
+intermediates, memory and termination are independently verified.
+
+```sh
+python -m llmloop.symbolic_cli examples/typed_counter_phases.c \
+  --c-typed-nested --auto-summaries \
+  --parameter-bounds '{"n":[0,1000],"threshold":[-1000,1000]}' \
+  --inputs '{"n":10,"threshold":3}'
+```
+
+See [the counter-threshold contract](docs/COUNTER_THRESHOLD_DISCOVERY.md) and
+[v0.20 experiments](experiments/v020/report.md). General state-dependent branching,
+dynamic escaping heaps and arbitrary C control flow remain outstanding.

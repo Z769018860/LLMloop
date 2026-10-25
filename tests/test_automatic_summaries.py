@@ -134,7 +134,7 @@ def test_approximate_private_heap_cannot_hide_free_before_read():
 @pytest.mark.parametrize('source',[
     'int f(int n){int x=1;for(int i=0;i<n;i++){x=x*x;}return x;}',
     'int f(int n){int x=1;for(int i=0;i<n;i++){x=x*2;}return x;}',
-    'int f(int n){int x=0;for(int i=0;i<n;i++){if(i<2){x++;}else{x+=2;}}return x;}',
+    'long f(int n){long x=1;for(int i=0;i<n;i++){if(i<2){x*=2;}else{x++;}}return x;}',
     'int f(int n){int x=0;n=3;for(int i=0;i<n;i++){x++;}return x;}',
 ])
 def test_unsupported_automatic_discovery_is_unknown_without_sampling(source):
