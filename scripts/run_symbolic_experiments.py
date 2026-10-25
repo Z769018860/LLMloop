@@ -30,13 +30,13 @@ def command(args, timeout=300):
 
 def main(argv=None):
     parser=argparse.ArgumentParser()
-    parser.add_argument('--output',type=Path,default=ROOT/'experiments/v018')
-    parser.add_argument('--fixtures',type=Path,default=ROOT/'experiments/v018/cases.json')
+    parser.add_argument('--output',type=Path,default=ROOT/'experiments/v019')
+    parser.add_argument('--fixtures',type=Path,default=ROOT/'experiments/v019/cases.json')
     args=parser.parse_args(argv)
     args.output.mkdir(parents=True,exist_ok=True)
     version=command(['git','rev-parse','HEAD'])
     manifest={str(path.relative_to(ROOT)):hashlib.sha256(path.read_bytes()).hexdigest()
-              for pattern in ['llmloop/*.py','tests/*.py','scripts/*.py','pyproject.toml','examples/guarded*','examples/typed_unbounded_loop.c','examples/typed_nested*','examples/typed_memory*']
+              for pattern in ['llmloop/*.py','tests/*.py','scripts/*.py','pyproject.toml','examples/guarded*','examples/typed_unbounded_loop.c','examples/typed_nested*','examples/typed_memory*','examples/typed_coupled*']
               for path in sorted(ROOT.glob(pattern)) if path.is_file()}
     evidence={'schema_version':1,'generated_at':datetime.now(timezone(timedelta(hours=8))).isoformat(),
               'source_base_commit':version['stdout'].strip(),'source_sha256':manifest,

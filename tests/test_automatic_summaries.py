@@ -186,7 +186,8 @@ def test_candidate_expansion_budget_prevents_repeated_squaring():
     assert report['status']=='UNKNOWN' and 'budget' in report['reason']
 
 
-def test_automatic_coupled_cycles_are_not_silently_approximated():
+def test_automatic_coupled_swap_is_now_independently_proved():
     source='int f(int n){int x=1;int y=2;for(int i=0;i<n;i++){int t=x;x=y;y=t;}return x;}'
     report=automatic(source)
-    assert report['status']=='UNKNOWN'
+    assert report['status']=='PROVED_DEFINED_TYPED_C_NESTED'
+    assert report['summary_synthesis']

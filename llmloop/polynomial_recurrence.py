@@ -57,21 +57,65 @@ def polynomial_orbit(update_map,initial,symbols,k,degree=4,limit=16,triangular_o
     # Each coordinate closure identity is checked as an exact polynomial identity.
     closure=lifted.subs(update_map,simultaneous=True)-matrix*lifted
     if not zero(closure):raise SMTGraphError('Polynomial lift closure identity failed')
-    if triangular_only:
-        if any(matrix[i,i] not in (-1,0,1) for i in range(matrix.rows)):raise SMTGraphError('Automatic lift needs diagonal values in -1,0,1')
-        seen=set();active=set()
-        def visit(i):
-            if i in active:raise SMTGraphError('Automatic lift does not solve cyclic coupled recurrences')
-            if i in seen:return
-            active.add(i)
-            for j in range(matrix.cols):
-                if i!=j and matrix[i,j]!=0:visit(j)
-            active.remove(i);seen.add(i)
-        for i in range(matrix.rows):visit(i)
-    power,certificate=certified_power(matrix,k)
     initial_vector=lifted.subs(initial,simultaneous=True)
-    result=power*initial_vector
+    if triangular_only:
+        result,certificate=periodic_triangular_power(matrix,k,initial_vector=initial_vector)
+    else:
+        power,certificate=certified_power(matrix,k)
+        result=power*initial_vector
     return result,basis,lifted,certificate
+
+
+def triangular_unit_spectrum(matrix):
+    """Whether a coordinate permutation makes this a supported triangular map."""
+    if any(matrix[i,i] not in (-1,0,1) for i in range(matrix.rows)):return False
+    seen=set();active=set()
+    def visit(i):
+        if i in active:return False
+        if i in seen:return True
+        active.add(i)
+        for j in range(matrix.cols):
+            if i!=j and matrix[i,j]!=0 and not visit(j):return False
+        active.remove(i);seen.add(i);return True
+    return all(visit(i) for i in range(matrix.rows))
+
+
+def periodic_triangular_power(matrix,k,max_period=8,initial_vector=None):
+    """Exact residue decomposition, never approximate a cyclic dependency.
+
+    If B=M**p has a supported acyclic dependency graph, certify B**q, then
+    reconstruct M**k=M**r B**floor(k/p). Each residue factor identity is checked;
+    the independent typed-source proof still checks the emitted trajectory.
+    """
+    if triangular_unit_spectrum(matrix):
+        power,proof=certified_power(matrix,k)
+        return (power if initial_vector is None else power*initial_vector),proof
+    # Numeric cyclic lifts only: avoid unconstrained coefficient expansion while
+    # searching for a period. Parameterized DAGs retain the old behavior.
+    if any(not value.is_Integer or abs(int(value)).bit_length()>128 for value in matrix):
+        raise SMTGraphError('Automatic cyclic lift requires bounded integer coefficients')
+    block=s.eye(matrix.rows)
+    for period in range(1,max_period+1):
+        block=block*matrix
+        if any(abs(int(value)).bit_length()>1024 for value in block):
+            raise SMTGraphError('Automatic cyclic coefficient budget exceeded')
+        if period<2 or not triangular_unit_spectrum(block):continue
+        q=s.Dummy('blocks',integer=True,nonnegative=True)
+        power,proof=certified_power(block,q)
+        residues=[matrix**r for r in range(period)]
+        if any(not zero(matrix*residues[r]-residues[r+1]) for r in range(period-1)) or not zero(matrix*residues[-1]-block):
+            raise SMTGraphError('Cyclic residue factor identities failed')
+        # Multiply within each residue before creating Piecewise coordinates.
+        # Summing separate Piecewise matrix entries creates exponential branch
+        # products even though every entry uses the same residue partition.
+        values=[(factor*power*(s.eye(matrix.rows) if initial_vector is None else initial_vector)).subs(q,s.floor(k/period)) for factor in residues]
+        result=s.Matrix(matrix.rows,values[0].cols,lambda i,j:s.Piecewise(*[
+            (values[r][i,j],s.Eq(s.Mod(k,period),r)) for r in range(period-1)],
+            (values[-1][i,j],True)))
+        return result,{'method':'exact residue decomposition of a certified triangular block power',
+                      'period':period,'residue_factor_identities':True,'block_power_certificate':proof,
+                      'domain':'all nonnegative integer repetition counts'}
+    raise SMTGraphError('Automatic cyclic lift has no supported triangular block within period budget')
 
 
 def polynomial_budget(expr,symbols,max_degree,max_terms=128):
