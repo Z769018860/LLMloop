@@ -54,6 +54,9 @@ class TypedCRecurrence(TypedCFunction):
         # separately retained definedness obligations from original C operations.
         premise=z3.simplify(premise,som=True,pull_cheap_ite=True)
         claim=z3.simplify(claim,som=True,pull_cheap_ite=True)
+        from .proof_normalization import normalize_polynomial_floors
+        premise=z3.simplify(normalize_polynomial_floors(premise),som=True,pull_cheap_ite=True)
+        claim=z3.simplify(normalize_polynomial_floors(claim),som=True,pull_cheap_ite=True)
         solver=z3.Solver();solver.set(timeout=5000);solver.add(premise,z3.Not(claim))
         answer=solver.check()
         if answer!=z3.unsat:raise ProofFailure(label,answer,solver,self.witness)

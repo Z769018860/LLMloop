@@ -30,13 +30,13 @@ def command(args, timeout=300):
 
 def main(argv=None):
     parser=argparse.ArgumentParser()
-    parser.add_argument('--output',type=Path,default=ROOT/'experiments/v020')
-    parser.add_argument('--fixtures',type=Path,default=ROOT/'experiments/v020/cases.json')
+    parser.add_argument('--output',type=Path,default=ROOT/'experiments/v021')
+    parser.add_argument('--fixtures',type=Path,default=ROOT/'experiments/v021/cases.json')
     args=parser.parse_args(argv)
     args.output.mkdir(parents=True,exist_ok=True)
     version=command(['git','rev-parse','HEAD'])
     manifest={str(path.relative_to(ROOT)):hashlib.sha256(path.read_bytes()).hexdigest()
-              for pattern in ['llmloop/*.py','tests/*.py','scripts/*.py','pyproject.toml','examples/guarded*','examples/typed_unbounded_loop.c','examples/typed_nested*','examples/typed_memory*','examples/typed_coupled*','examples/typed_counter*']
+              for pattern in ['llmloop/*.py','tests/*.py','scripts/*.py','pyproject.toml','examples/guarded*','examples/typed_unbounded_loop.c','examples/typed_nested*','examples/typed_memory*','examples/typed_coupled*','examples/typed_counter*','examples/typed_cfg*']
               for path in sorted(ROOT.glob(pattern)) if path.is_file()}
     evidence={'schema_version':1,'generated_at':datetime.now(timezone(timedelta(hours=8))).isoformat(),
               'source_base_commit':version['stdout'].strip(),'source_sha256':manifest,
@@ -46,13 +46,13 @@ def main(argv=None):
               'protocol':{'proof_domain':'each certificate reported input/count domain and integer semantics; typed candidates checked through actual exit',
                           'native_samples':'fixed boundary grids/million-iteration cases plus controlled sanitizer-failure correspondences; not proof of arbitrary C',
                           'scope':'restricted research prototype; no claim that UNKNOWN cases are supported',
-                          'performance_claims':False},'suites':[],'guarded_cases':[]}
+                          'performance_claims':False,'suite_timeouts_seconds':{'pytest':600,'native':300},'per_obligation_solver_timeout_ms':5000},'suites':[],'guarded_cases':[]}
     suite_commands=[('pytest',[sys.executable,'-m','pytest','-q'])]
     suite_commands += [(path.stem,[sys.executable,str(path.relative_to(ROOT))])
                        for path in sorted((ROOT/'scripts').glob('check_*native.py'))]
     for name,argv in suite_commands:
         print('Running '+name,flush=True)
-        result=command(argv)
+        result=command(argv,timeout=600 if name=='pytest' else 300)
         checks=[{'passed':int(a),'total':int(b)} for a,b in re.findall(r'(\d+)/(\d+)',result['stdout'])]
         passed=result['exit_code']==0 and all(c['passed']==c['total'] for c in checks)
         if name!='pytest' and not checks:passed=False

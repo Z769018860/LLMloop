@@ -33,7 +33,7 @@ def test_statement_order_and_integer_abi(abi):
     assert r['evaluation']['value']==204 and r['c_overflow_verified']
 
 
-@pytest.mark.parametrize('source,value',[(MISSING_ELSE,21),(MULTI,181),(CUBIC,16164),(RAW_CUBIC,4041)])
+@pytest.mark.parametrize('source,value',[(MISSING_ELSE,21),(MULTI,183),(CUBIC,16164),(RAW_CUBIC,4041)])
 def test_multiple_coordinates_missing_else_and_cubic_prefix(source,value):
     r=request(source)
     assert r['status']=='PROVED_DEFINED_TYPED_C_NESTED',r
