@@ -76,3 +76,5 @@ These controlled examples do not establish representative real-library coverage
 or a performance advantage.
 
 In v0.19, [periodic coupled discovery](PERIODIC_COUPLED_DISCOVERY.md) extends the earlier cycle rejection to supported exact block systems. The v0.18 limits above describe that release; general cycles remain unsupported.
+
+In v0.20, [counter-threshold additive discovery](COUNTER_THRESHOLD_DISCOVERY.md) adds one restricted branch schedule while preserving original typed-source verification.

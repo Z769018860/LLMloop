@@ -90,6 +90,12 @@ class Builder:
             elif term.is_Pow and term.exp.is_Integer and 0<=term.exp<=8:
                 degree=values[0][0]*int(term.exp);terms=values[0][1]**int(term.exp)
             elif term.is_Pow:raise SMTGraphError('Automatic power budget exceeded before expansion')
+            elif term.func in (s.Min,s.Max,s.Abs,s.Mod,s.floor,s.ceiling):
+                # Opaque arithmetic functions do not distribute their argument
+                # terms when an enclosing product is expanded. Arguments have
+                # already been checked recursively; count the function as one
+                # term, while retaining its conservative degree bound.
+                degree=max((d for d,_ in values),default=0);terms=1
             else:degree=max((d for d,_ in values),default=0);terms=sum(t for _,t in values) or 1
             if degree>8 or terms>128:raise SMTGraphError('Automatic polynomial budget exceeded before expansion')
             return degree,terms
@@ -209,6 +215,62 @@ class Builder:
         self.evidence.append({'method':'saturating unit-step candidate','counter':str(k)})
         return result
 
+    def counted_phase(self,loop,env,mutable,k,clock,ancestors):
+        """Untrusted additive candidates for one counter-threshold branch.
+
+        Execute both full statement schedules mathematically, require every
+        carried coordinate delta to be independent of mutable entry state, then
+        sum its polynomial increments over the two exact counter intervals.
+        The original typed-C proof independently checks the real branch guard.
+        """
+        nodes=loop.stmt.block_items or [] if isinstance(loop.stmt,c_ast.Compound) else [loop.stmt]
+        positions=[i for i,node in enumerate(nodes) if isinstance(node,c_ast.If)]
+        if len(positions)!=1:return None
+        position=positions[0];branch=nodes[position];condition=branch.cond
+        if not isinstance(condition,c_ast.BinaryOp) or condition.op not in ('<','<=','>','>='):return None
+        index=loop.init.decls[0].name
+        if not isinstance(condition.left,c_ast.ID) or condition.left.name!=index:return None
+        threshold=self.arithmetic(condition.right,env)
+        state_symbols=set().union(*(env[name].free_symbols for name in mutable))
+        if threshold.free_symbols & (state_symbols|{clock}):
+            raise SMTGraphError('Counter-threshold discovery needs an immutable threshold')
+        if condition.op in ('<=','>'):threshold+=1
+        cutoff=s.Max(0,threshold);split=s.Min(k,cutoff)
+        schedules=[]
+        for arm in (branch.iftrue,branch.iffalse):
+            body=c_ast.Compound(nodes[:position]+([arm] if arm is not None else [])+nodes[position+1:])
+            schedules.append(self.lower(body,dict(env),set(ancestors)|{index}))
+        early,late=schedules if condition.op in ('<','<=') else reversed(schedules)
+        antiderivatives={};q=s.Dummy('prefix_count',integer=True,nonnegative=True)
+        def prefix(expression,count):
+            expression=self.bounded(s.expand(expression))
+            if expression.free_symbols & state_symbols:
+                raise SMTGraphError('Counter-threshold discovery requires state-independent additive increments')
+            if expression not in antiderivatives:
+                try:polynomial=s.Poly(expression,clock)
+                except s.PolynomialError as exc:raise SMTGraphError('Counter-threshold increments must be polynomial') from exc
+                if polynomial.degree()>3:raise SMTGraphError('Counter-threshold increment degree budget is 3')
+                sums=[q,q*(q-1)/2,q*(q-1)*(2*q-1)/6,(q*(q-1)/2)**2]
+                total=sum(coefficient*sums[power[0]] for power,coefficient in polynomial.terms())
+                if s.simplify(total.subs(q,0))!=0 or s.simplify(total.subs(q,q+1)-total-expression.subs(clock,q))!=0:
+                    raise SMTGraphError('Counter-threshold prefix identities not proved')
+                antiderivatives[expression]=total
+            return antiderivatives[expression].subs(q,count)
+        result=dict(env)
+        for name in mutable:
+            first=early[name]-env[name];second=late[name]-env[name]
+            early_value=env[name]+prefix(first,k)
+            late_value=env[name]+prefix(first,cutoff)+prefix(second,k)-prefix(second,cutoff)
+            # Keep the interval choice outside nonlinear powers. This exact
+            # representation lets source-path assumptions simplify each
+            # polynomial successor before nonlinear SMT reasoning.
+            result[name]=self.bounded(s.Piecewise((s.simplify(early_value),k<=cutoff),(s.simplify(late_value),True)))
+        self.evidence.append({'method':'counter-threshold additive polynomial candidate',
+            'counter':index,'split_count':str(split),'increment_degree_limit':3,
+            'prefix_base_and_successor_identities':True,'distinct_increment_polynomials':len(antiderivatives),
+            'candidate_only':True,'original_branch_proof_required':True})
+        return result
+
     def orbit(self,loop,entry,ancestors):
         index=loop.init.decls[0].name;k=s.Symbol(index,integer=True,nonnegative=True)
         frozen=set(self.parameters)|set(ancestors);mutable=[name for name in entry if name not in frozen]
@@ -219,6 +281,10 @@ class Builder:
         if saturated is not None:
             replacements={basis[name]:entry[name] for name in mutable}
             return {name:s.simplify(saturated[name].subs(replacements,simultaneous=True)) if name in mutable else value for name,value in entry.items()},k
+        phased=self.counted_phase(loop,env,mutable,k,clock,ancestors)
+        if phased is not None:
+            replacements={basis[name]:entry[name] for name in mutable}
+            return {name:s.simplify(phased[name].subs(replacements,simultaneous=True)) if name in mutable else value for name,value in entry.items()},k
         after=self.lower(loop.stmt,dict(env),set(ancestors)|{index})
         changed=[name for name in mutable if s.simplify(after[name]-basis[name])!=0]
         fixed={basis[name]:entry[name] for name in mutable if name not in changed}

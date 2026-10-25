@@ -1,4 +1,4 @@
-# Feature status after v0.19
+# Feature status after v0.20
 
 This inventory distinguishes certified capabilities from outstanding general
 requirements. The project remains a restricted research prototype.
@@ -7,7 +7,7 @@ requirements. The project remains a restricted research prototype.
 | --- | --- | --- |
 | Nested loop summaries | Counted finite-cell affine summaries, immutable parameter bounds, interleaved outer scalar updates; compositional typed scalar for-loop trajectories up to 16 levels | Arbitrary data-dependent nested CFGs and escaping heap interactions |
 | Arrays/pointers/heap | Finite layouts, aliases/lifetimes, dynamic pointwise sweeps, finite-window backward scans, repeated private fixed calloc/free folds; unified typed finite local arrays/fixed malloc/calloc sites with per-cell initialization and alias lifetimes | General escaping heap shapes, external pointer layouts, variable-size allocation/realloc, allocation failure and physical capacity |
-| General recurrences | Affine induction-certified matrix powers, finite polynomial lifts, periodic schedules, inductive state-dependent phases, supplied nonperiodic Piecewise candidates; automatic triangular finite-polynomial, isolated saturation, parity/transient and static-cell and periodic coupled block candidates independently verified against typed source | Automatic discovery of arbitrary coupled/branching nonperiodic trajectories or closed forms; unsupported symbolic exponentials in candidate SMT mode |
+| General recurrences | Affine induction-certified matrix powers, finite polynomial lifts, periodic schedules, inductive state-dependent phases, supplied nonperiodic Piecewise candidates; automatic triangular finite-polynomial, isolated saturation, parity/transient and static-cell, periodic coupled block and counter-threshold additive polynomial candidates independently verified against typed source | Automatic discovery of arbitrary coupled/branching nonperiodic trajectories or closed forms; unsupported symbolic exponentials in candidate SMT mode |
 | C integer semantics | ABI-aware concrete and symbolic typed expressions, bounded typed scalar function execution, unroll-free heterogeneous single/nested scalar loop certificates from supplied state candidates, typed finite local memory composed with nested scalar loop certificates; restricted single-width dynamic memory safety proofs | General typed heap shapes, external pointer layouts, arbitrary calls/side effects |
 | Execution validity | Bounded reachable-state checks, ranking certificates, counted-loop termination in mathematical frontends and certified typed scalar trajectories | General termination and feasibility for arbitrary C CFG loops and early exits |
 | Experiments | Full local regressions, native C/UBSan oracles, positive and negative proof controls, reproducible manifests/results | Representative real-library coverage and independent external benchmarks |
@@ -19,7 +19,7 @@ particular exit condition terminates. `UNKNOWN` is an explicit unsupported or
 unproved result, not a valid summary.
 
 See [v0.14 recurrence and experiment contracts](GUARDED_RECURRENCES_AND_EXPERIMENTS.md)
-and the committed [latest experiment report](../experiments/v019/report.md).
+and the committed [latest experiment report](../experiments/v020/report.md).
 
 See [unroll-free typed scalar C contracts](TYPED_UNBOUNDED_RECURRENCES.md) for the new machine-integer certificate. It does not certify general heap memory.
 
@@ -30,3 +30,5 @@ See [typed finite local memory](TYPED_FINITE_MEMORY.md). Successful heap certifi
 See [automatic candidates and separate original-source proofs](AUTOMATIC_VERIFIED_SUMMARIES.md). Candidate generation does not establish safety; successful typed source obligations do.
 
 See [periodic coupled discovery](PERIODIC_COUPLED_DISCOVERY.md) for certified block powers, residue reconstruction and source validation. General coupled systems remain open.
+
+See [counter-threshold discovery](COUNTER_THRESHOLD_DISCOVERY.md) for one counter-based branch with additive polynomial increments and original-source guard verification. General state-dependent schedules remain open.
