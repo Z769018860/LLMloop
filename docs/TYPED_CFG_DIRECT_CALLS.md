@@ -94,3 +94,5 @@ Separate ASan/UBSan subprocesses confirm callee-free UAF and a discarded callee
 intermediate overflow. These are deliberate fault correspondences, not safe
 executions. Source proofs include LP64, ILP32 and LLP64; native runs use LP64.
 No performance or universal-C claim is made.
+
+In v0.23, [opt-in bounded recursion and matched internal prototypes](BOUNDED_RECURSIVE_CALLS.md) extend the earlier cycle/prototype restrictions. Default recursive rejection remains unchanged.

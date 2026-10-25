@@ -5,6 +5,7 @@ parameter/return conversions remain typed declarations/assignments. Heap object
 identity survives helper frames; automatic objects expire on return edges.
 """
 import copy
+import z3
 from pycparser import c_ast,c_parser,c_generator
 from .typed_cfg_heap import TypedCFGHeap
 from .smt_spath import SMTGraphError
@@ -37,24 +38,45 @@ def declaration(name,t,init):
     return c_ast.Decl(name=name,quals=[],align=[],storage=[],funcspec=[],type=declarator_name(copy.deepcopy(t),name),init=init,bitsize=None)
 
 
+def signature_key(decl):
+    """Conservative prototype matching, ignoring parameter names only."""
+    signature=copy.deepcopy(decl.type)
+    if not isinstance(signature,c_ast.FuncDecl):raise SMTGraphError('Function prototype required')
+    declarator_name(signature.type,'__function_signature')
+    if signature.args:
+        parameters=[]
+        for i,param in enumerate(signature.args.params):
+            if isinstance(param,c_ast.EllipsisParam):parameters.append(param);continue
+            if not isinstance(param,(c_ast.Decl,c_ast.Typename)):raise SMTGraphError('Unsupported prototype parameter')
+            parameters.append(declaration('__parameter_'+str(i),param.type,None))
+        signature.args.params=parameters
+    canonical=c_ast.Decl(name='__function_signature',quals=[],align=[],storage=[],funcspec=[],type=signature,init=None,bitsize=None)
+    return c_generator.CGenerator().visit(canonical)
+
+
 class CallExpansion:
-    def __init__(self,source,function=None,max_call_depth=3):
+    def __init__(self,source,function=None,max_call_depth=3,allow_recursion=False):
         if type(max_call_depth) is not int or not 1<=max_call_depth<=8:raise SMTGraphError('max_call_depth must be 1..8')
+        if type(allow_recursion) is not bool:raise SMTGraphError('allow_recursion must be Boolean')
         if len(source)>200000:raise SMTGraphError('Call source size budget exceeded')
         try:unit=c_parser.CParser().parse(source)
         except Exception as exc:raise SMTGraphError('C parse failed: '+str(exc)) from exc
-        if any(not isinstance(item,c_ast.FuncDef) for item in unit.ext):raise SMTGraphError('Call frontend requires function definitions without globals/prototypes')
+        prototypes=[item for item in unit.ext if isinstance(item,c_ast.Decl) and isinstance(item.type,c_ast.FuncDecl)]
+        if any(not isinstance(item,c_ast.FuncDef) and item not in prototypes for item in unit.ext):raise SMTGraphError('Call frontend requires definitions and matched prototypes without globals')
         self.functions={}
         for item in unit.ext:
+            if not isinstance(item,c_ast.FuncDef):continue
             name=item.decl.name
             if name in self.functions or name in BUILTINS:raise SMTGraphError('Duplicate/reserved function definition')
             self.functions[name]=item
+        for prototype in prototypes:
+            if prototype.name not in self.functions or signature_key(prototype)!=signature_key(self.functions[prototype.name].decl):raise SMTGraphError('Prototype must match an available definition')
         if not 1<=len(self.functions)<=16:raise SMTGraphError('Call frontend supports 1..16 function definitions')
         if function is None:
             if len(self.functions)!=1:raise SMTGraphError('Select the entry function for a multi-function source')
             function=next(iter(self.functions))
         if function not in self.functions:raise SMTGraphError('Unknown entry function')
-        self.entry=function;self.max_call_depth=max_call_depth;self.events=[];self.used=set();self.serial=0
+        self.entry=function;self.max_call_depth=max_call_depth;self.allow_recursion=allow_recursion;self.frontiers=[];self.events=[];self.used=set();self.serial=0
         pending=[(unit,0)];count=0
         while pending:
             node,depth=pending.pop();count+=1
@@ -127,9 +149,7 @@ class CallExpansion:
 
     def call(self,node,stack,need_value):
         name=node.name.name
-        if name in stack:raise SMTGraphError('Recursive direct calls unsupported')
-        if len(stack)>self.max_call_depth:raise SMTGraphError('Call depth budget exceeded')
-        if len(self.events)>=16:raise SMTGraphError('Expanded call-site budget is 16')
+        if name in stack and not self.allow_recursion:raise SMTGraphError('Recursive direct calls require allow_recursion')
         function=copy.deepcopy(self.functions[name]);signature=function.decl.type
         if not isinstance(signature,c_ast.FuncDecl) or function.param_decls:raise SMTGraphError('Prototype-style direct functions required')
         formals=signature.args.params if signature.args else []
@@ -144,6 +164,10 @@ class CallExpansion:
                 shape=shape.type
             elif isinstance(shape,c_ast.PtrDecl):shape=shape.type
             if not isinstance(shape,c_ast.TypeDecl) or not isinstance(shape.type,c_ast.IdentifierType):raise SMTGraphError('Only scalar/integer-pointer helper parameters supported')
+        if len(stack)>self.max_call_depth:
+            if not self.allow_recursion:raise SMTGraphError('Call depth budget exceeded')
+            return self.frontier(signature.type,name,stack,need_value)
+        if len(self.events)>=16:raise SMTGraphError('Expanded call-site budget is 16')
         mapping={};labels={}
         for formal in formals:mapping[formal.name]=self.fresh('arg')
         class Names(c_ast.NodeVisitor):
@@ -177,7 +201,7 @@ class CallExpansion:
         if not is_void:
             result=self.fresh('result');flag=self.fresh('returned')
             prefix=[declaration(result,ret,c_ast.Constant('int','0')),declaration(flag,c_ast.TypeDecl(None,[],None,c_ast.IdentifierType(['int'])),c_ast.Constant('int','0'))]
-        self.events.append({'callee':name,'depth':len(stack),'parameter_count':len(formals),'pointer_return':isinstance(ret,c_ast.PtrDecl),'void_return':is_void,'exit_label':label})
+        self.events.append({'callee':name,'depth':len(stack),'recursive_edge':name in stack,'parameter_count':len(formals),'pointer_return':isinstance(ret,c_ast.PtrDecl),'void_return':is_void,'exit_label':label})
         body=self.compound(function.body,stack+(name,),(result,flag,label,is_void))
         frame=c_ast.Compound(parameters+[body,c_ast.Label(label,c_ast.EmptyStatement())]);prefix.append(frame)
         if not is_void:
@@ -188,17 +212,43 @@ class CallExpansion:
         return prefix,c_ast.ID(result) if result else None
 
 
+    def frontier(self,ret,name,stack,need_value):
+        if len(self.frontiers)>=32:raise SMTGraphError('Call frontier budget is 32')
+        is_void=isinstance(ret,c_ast.TypeDecl) and isinstance(ret.type,c_ast.IdentifierType) and ret.type.names==['void']
+        if is_void and need_value:raise SMTGraphError('Void helper used as a value')
+        marker=self.fresh('depth_frontier')
+        self.frontiers.append({'marker':marker,'callee':name,'depth':len(stack),'recursive_edge':name in stack})
+        # This failing guard is an analysis frontier, never an assumed safe
+        # return. A successful certificate requires this entire statement to
+        # be unreachable. The base heap verifier also fails closed on it.
+        items=[declaration(marker,c_ast.TypeDecl(None,[],None,c_ast.IdentifierType(['int'])),c_ast.BinaryOp('/',c_ast.Constant('int','1'),c_ast.Constant('int','0')))]
+        result=None
+        if not is_void:
+            result=self.fresh('frontier_result');items.append(declaration(result,ret,c_ast.Constant('int','0')))
+        return items,c_ast.ID(result) if result else None
+
+
 class TypedCFGCalls(TypedCFGHeap):
-    def __init__(self,source,function=None,max_call_depth=3,**options):
-        self.expansion=CallExpansion(source,function,max_call_depth)
+    def __init__(self,source,function=None,max_call_depth=3,allow_recursion=False,**options):
+        self.expansion=CallExpansion(source,function,max_call_depth,allow_recursion)
+        self.frontier_names={item['marker'] for item in self.expansion.frontiers}
         super().__init__(self.expansion.source,function=self.expansion.entry,**options)
+
+    def atom(self,node,states):
+        if isinstance(node,c_ast.Decl) and node.name in self.frontier_names:
+            for guard,_,_ in states:self.check('call depth frontier unreachable: '+node.name,z3.And(self.domain,guard),z3.BoolVal(False))
+        return super().atom(node,states)
 
     def report(self,inputs=None):
         result=super().report(inputs)
         if result['status']=='PROVED_DEFINED_TYPED_C_CFG_HEAP':result['status']='PROVED_DEFINED_TYPED_C_CFG_CALLS'
         result['call_model']={'method':'hygienic sequenced direct-call expansion with typed parameters/returns and frame lifetime edges',
                               'expanded_sites':self.expansion.events,'max_depth':self.expansion.max_call_depth,
-                              'recursion_supported':False,'external_calls_supported':False,'pointer_return_supported':True,
+                              'recursion_supported':self.expansion.allow_recursion,'bounded_recursion_enabled':self.expansion.allow_recursion,
+                              'depth_frontiers':self.expansion.frontiers,
+                              'all_frontiers_proved_unreachable':result['status']=='PROVED_DEFINED_TYPED_C_CFG_CALLS',
+                              'external_calls_supported':False,'pointer_return_supported':True,
                               'nonvoid_return_marker_checked':True}
-        result['scope']='bounded direct calls with shared integer-element heap, pointer arguments/returns and callee stack lifetime; no recursion, external pointers, structs, pointer cells or general closed-form synthesis'
+        if result.get('failed_obligation','').startswith('call depth frontier'):result['analysis_limit']='call_depth_frontier'
+        result['scope']='bounded direct/recursive calls with shared integer-element heap, pointer arguments/returns and callee stack lifetime; no unbounded recursion proof, external pointers, structs, pointer cells or general closed-form synthesis'
         return result

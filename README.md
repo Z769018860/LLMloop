@@ -589,3 +589,23 @@ python -m llmloop.symbolic_cli examples/typed_cfg_calls.c \
 See [call positions, frame semantics and limits](docs/TYPED_CFG_DIRECT_CALLS.md)
 and [v0.22 experiments](experiments/v022/report.md). This supports bounded direct
 call escape, not arbitrary recursion, linked heap graphs or unbounded proof.
+
+
+## v0.23: bounded recursive closure
+
+`--allow-recursion` enables direct/self/mutual recursion in the typed call
+frontend. Unexpanded calls become failing depth-frontier obligations. A
+certificate requires every frontier to be proved unreachable and every actual
+execution to return safely within the shared budgets; a cutoff never supplies
+a safe return value. Matching internal forward prototypes are now accepted.
+
+```sh
+python -m llmloop.symbolic_cli examples/typed_recursive_calls.c \
+  --c-typed-cfg-calls --function recursive_heap --allow-recursion \
+  --max-call-depth 4 --max-steps 512 --max-paths 64 \
+  --parameter-bounds '{"n":[0,3]}' --inputs '{"n":3}'
+```
+
+See [bounded recursive closure and remaining limits](docs/BOUNDED_RECURSIVE_CALLS.md)
+and [v0.23 evidence](experiments/v023/report.md). General recursive summaries,
+linked heap graphs and arbitrary unbounded proofs remain open.
