@@ -1,4 +1,4 @@
-# Feature status after v0.23
+# Feature status after v0.24
 
 This inventory distinguishes certified capabilities from outstanding general
 requirements. The project remains a restricted research prototype.
@@ -19,7 +19,7 @@ particular exit condition terminates. `UNKNOWN` is an explicit unsupported or
 unproved result, not a valid summary.
 
 See [v0.14 recurrence and experiment contracts](GUARDED_RECURRENCES_AND_EXPERIMENTS.md)
-and the committed [latest experiment report](../experiments/v023/report.md).
+and the committed [latest experiment report](../experiments/v024/report.md).
 
 See [unroll-free typed scalar C contracts](TYPED_UNBOUNDED_RECURRENCES.md) for the new machine-integer certificate. It does not certify general heap memory.
 
@@ -38,3 +38,5 @@ See [bounded original CFG and dynamic heap verification](TYPED_CFG_DYNAMIC_HEAP.
 See [bounded direct calls and interprocedural heap return](TYPED_CFG_DIRECT_CALLS.md). Direct helper frames share known objects and preserve parameter/return conversions; recursive/external calls and arbitrary heap graphs remain unsupported.
 
 See [closed bounded recursion](BOUNDED_RECURSIVE_CALLS.md). Recursive calls can be certified only after excluding every expansion frontier in the declared domain; this is not general recursive induction or an inferred closed form.
+
+See [single eager call expressions](EAGER_CALL_EXPRESSIONS.md) for bounded arithmetic/condition calls with stable scalar siblings. Lazy, nested and multiple expression calls remain open.

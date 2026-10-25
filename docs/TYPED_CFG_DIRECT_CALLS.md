@@ -96,3 +96,7 @@ executions. Source proofs include LP64, ILP32 and LLP64; native runs use LP64.
 No performance or universal-C claim is made.
 
 In v0.23, [opt-in bounded recursion and matched internal prototypes](BOUNDED_RECURSIVE_CALLS.md) extend the earlier cycle/prototype restrictions. Default recursive rejection remains unchanged.
+
+## v0.24 expression extension
+
+A single eager call can now occur in arithmetic, return/initializer/assignment expressions and if/switch conditions under the [stable scalar operand contract](EAGER_CALL_EXPRESSIONS.md). Earlier whole-statement-only restrictions are superseded only for that fragment.

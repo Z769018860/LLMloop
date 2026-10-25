@@ -1,6 +1,6 @@
 """Hygienic bounded direct-call expansion for the typed CFG/heap verifier.
 
-Only explicitly sequenced whole-statement call sites are expanded. Scalar
+Whole statements and single eager calls with stable scalar operands are expanded. Scalar
 parameter/return conversions remain typed declarations/assignments. Heap object
 identity survives helper frames; automatic objects expire on return edges.
 """
@@ -77,14 +77,18 @@ class CallExpansion:
             function=next(iter(self.functions))
         if function not in self.functions:raise SMTGraphError('Unknown entry function')
         self.entry=function;self.max_call_depth=max_call_depth;self.allow_recursion=allow_recursion;self.frontiers=[];self.events=[];self.used=set();self.serial=0
+        self.scalar_names=set();non_scalar=set()
         pending=[(unit,0)];count=0
         while pending:
             node,depth=pending.pop();count+=1
             if count>8192 or depth>64:raise SMTGraphError('Call source AST budget exceeded')
+            if isinstance(node,c_ast.Decl) and not isinstance(node.type,c_ast.FuncDecl):
+                (self.scalar_names if isinstance(node.type,c_ast.TypeDecl) else non_scalar).add(node.name)
             if isinstance(node,c_ast.Decl) and not isinstance(node.type,c_ast.FuncDecl) and node.name in self.functions:
                 raise SMTGraphError('Local/parameter shadowing of function names unsupported')
             if isinstance(node,(c_ast.ID,c_ast.Decl,c_ast.Label,c_ast.Goto)) and getattr(node,'name',None):self.used.add(node.name)
             pending.extend((child,depth+1) for _,child in node.children())
+        self.scalar_names-=non_scalar
         root=copy.deepcopy(self.functions[function]);root.body=self.compound(root.body,(function,),None)
         class RemainingCalls(c_ast.NodeVisitor):
             def visit_FuncCall(self,node):
@@ -102,6 +106,41 @@ class CallExpansion:
     def user_call(self,node):
         return isinstance(node,c_ast.FuncCall) and isinstance(node.name,c_ast.ID) and node.name.name in self.functions
 
+    def expression(self,node,stack):
+        """Move one eager call before an expression, only across stable operands.
+
+        No globals or scalar addresses are admitted by the underlying frontend.
+        Thus literal/scalar local reads cannot change across the callee. Memory
+        reads, pointer operations, lazy contexts and sibling calls are rejected.
+        """
+        calls=[]
+        class Calls(c_ast.NodeVisitor):
+            def visit_FuncCall(self,n):calls.append(n);self.generic_visit(n)
+        if node is None:return [],node
+        Calls().visit(node)
+        if not calls:return [],node
+        if len(calls)!=1 or not self.user_call(calls[0]):
+            # Keep builtin whole expressions for the memory frontend.
+            if isinstance(node,c_ast.FuncCall) and len(calls)==1:return [],node
+            raise SMTGraphError('Expression requires one eager direct call and stable scalar operands')
+        selected=calls[0]
+        def admitted(n):
+            if n is selected:return
+            if isinstance(n,c_ast.ID) and n.name in self.scalar_names:return
+            if isinstance(n,c_ast.Constant) and n.type in ('int','long','unsigned int','unsigned long','char'):return
+            if isinstance(n,c_ast.UnaryOp) and n.op in ('+','-','~','!'):admitted(n.expr);return
+            if isinstance(n,c_ast.BinaryOp) and n.op not in ('&&','||'):
+                admitted(n.left);admitted(n.right);return
+            raise SMTGraphError('Call expression crosses lazy evaluation or unstable/non-scalar operand')
+        admitted(node)
+        prefix,value=self.call(selected,stack,need_value=True)
+        def replace(n):
+            if n is selected:return value
+            if isinstance(n,c_ast.UnaryOp):n.expr=replace(n.expr)
+            if isinstance(n,c_ast.BinaryOp):n.left=replace(n.left);n.right=replace(n.right)
+            return n
+        return prefix,replace(node)
+
     def compound(self,node,stack,target):
         return c_ast.Compound([item for child in node.block_items or [] for item in self.statement(child,stack,target)])
 
@@ -109,9 +148,10 @@ class CallExpansion:
         if node is None:return []
         if isinstance(node,c_ast.Compound):return [self.compound(node,stack,target)]
         if isinstance(node,c_ast.If):
+            prefix,node.cond=self.expression(node.cond,stack)
             node.iftrue=self.as_statement(self.statement(node.iftrue,stack,target))
             node.iffalse=self.as_statement(self.statement(node.iffalse,stack,target)) if node.iffalse is not None else None
-            return [node]
+            return prefix+[node]
         if isinstance(node,(c_ast.While,c_ast.DoWhile,c_ast.For)):
             prefix=[]
             if isinstance(node,c_ast.For) and isinstance(node.init,c_ast.DeclList):
@@ -121,14 +161,14 @@ class CallExpansion:
             node.stmt=self.as_statement(self.statement(node.stmt,stack,target))
             return [c_ast.Compound(prefix+[node])] if prefix else [node]
         if isinstance(node,c_ast.Switch):
-            node.stmt=self.as_statement(self.statement(node.stmt,stack,target));return [node]
+            prefix,node.cond=self.expression(node.cond,stack)
+            node.stmt=self.as_statement(self.statement(node.stmt,stack,target));return prefix+[node]
         if isinstance(node,(c_ast.Case,c_ast.Default)):
             node.stmts=[item for child in node.stmts or [] for item in self.statement(child,stack,target)];return [node]
         if isinstance(node,c_ast.Label):
             node.stmt=self.as_statement(self.statement(node.stmt,stack,target));return [node]
         if isinstance(node,c_ast.Return):
-            prefix=[];expression=node.expr
-            if self.user_call(expression):prefix,expression=self.call(expression,stack,need_value=True)
+            prefix,expression=self.expression(node.expr,stack)
             if target is None:node.expr=expression;return prefix+[node]
             result,flag,label,is_void=target
             if is_void:
@@ -136,11 +176,12 @@ class CallExpansion:
                 return prefix+[c_ast.Goto(label)]
             if expression is None:raise SMTGraphError('Nonvoid helper requires a return value')
             return prefix+[c_ast.Assignment('=',c_ast.ID(result),expression),c_ast.Assignment('=',c_ast.ID(flag),c_ast.Constant('int','1')),c_ast.Goto(label)]
-        if isinstance(node,c_ast.Decl) and self.user_call(node.init):
-            prefix,value=self.call(node.init,stack,need_value=True);node.init=value;return prefix+[node]
-        if isinstance(node,c_ast.Assignment) and self.user_call(node.rvalue):
-            if node.op!='=' or not isinstance(node.lvalue,c_ast.ID):raise SMTGraphError('Call assignment needs a simple scalar/pointer target and =')
-            prefix,value=self.call(node.rvalue,stack,need_value=True);node.rvalue=value;return prefix+[node]
+        if isinstance(node,c_ast.Decl):
+            prefix,node.init=self.expression(node.init,stack);return prefix+[node]
+        if isinstance(node,c_ast.Assignment):
+            prefix,value=self.expression(node.rvalue,stack)
+            if prefix and (node.op!='=' or not isinstance(node.lvalue,c_ast.ID)):raise SMTGraphError('Call assignment needs a simple scalar/pointer target and =')
+            node.rvalue=value;return prefix+[node]
         if self.user_call(node):return self.call(node,stack,need_value=False)[0]
         return [node]
 
@@ -169,12 +210,16 @@ class CallExpansion:
             return self.frontier(signature.type,name,stack,need_value)
         if len(self.events)>=16:raise SMTGraphError('Expanded call-site budget is 16')
         mapping={};labels={}
-        for formal in formals:mapping[formal.name]=self.fresh('arg')
+        for formal in formals:
+            mapping[formal.name]=self.fresh('arg')
+            if isinstance(formal.type,c_ast.TypeDecl):self.scalar_names.add(mapping[formal.name])
         class Names(c_ast.NodeVisitor):
             def visit_Decl(visitor,n):
                 if n.name in mapping:raise SMTGraphError('Helper local shadowing/reuse unsupported')
                 if isinstance(n.type,c_ast.FuncDecl):raise SMTGraphError('Block function declarations unsupported')
-                mapping[n.name]=self.fresh('local');visitor.generic_visit(n)
+                mapping[n.name]=self.fresh('local')
+                if isinstance(n.type,c_ast.TypeDecl):self.scalar_names.add(mapping[n.name])
+                visitor.generic_visit(n)
             def visit_Label(visitor,n):
                 if n.name in labels:raise SMTGraphError('Duplicate helper label')
                 labels[n.name]=self.fresh('label');visitor.generic_visit(n)
@@ -243,6 +288,7 @@ class TypedCFGCalls(TypedCFGHeap):
         result=super().report(inputs)
         if result['status']=='PROVED_DEFINED_TYPED_C_CFG_HEAP':result['status']='PROVED_DEFINED_TYPED_C_CFG_CALLS'
         result['call_model']={'method':'hygienic sequenced direct-call expansion with typed parameters/returns and frame lifetime edges',
+                              'eager_single_call_expressions':True,'stable_scalar_operands_only':True,
                               'expanded_sites':self.expansion.events,'max_depth':self.expansion.max_call_depth,
                               'recursion_supported':self.expansion.allow_recursion,'bounded_recursion_enabled':self.expansion.allow_recursion,
                               'depth_frontiers':self.expansion.frontiers,
