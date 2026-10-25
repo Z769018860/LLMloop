@@ -609,3 +609,12 @@ python -m llmloop.symbolic_cli examples/typed_recursive_calls.c \
 See [bounded recursive closure and remaining limits](docs/BOUNDED_RECURSIVE_CALLS.md)
 and [v0.23 evidence](experiments/v023/report.md). General recursive summaries,
 linked heap graphs and arbitrary unbounded proofs remain open.
+
+## v0.24: single eager direct-call expressions
+
+The typed call frontend now accepts expressions such as
+`return n * factorial(n - 1)` and calls in `if`/`switch` conditions when surrounding
+operands are stable scalars. Typed return conversions and intermediate overflow
+checks are preserved. Multiple calls, lazy contexts and sibling memory reads
+remain unsupported. See the [expression contract](docs/EAGER_CALL_EXPRESSIONS.md)
+and [v0.24 experiment report](experiments/v024/report.md).

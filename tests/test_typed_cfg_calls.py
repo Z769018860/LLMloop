@@ -79,7 +79,6 @@ def test_callee_original_safety_lifetime_and_return_obligations_retained(source)
     'int recur(int n){return recur(n);} int entry(int n){return recur(n);}',
     'int leaf(int n){return n;} int entry(int n){return leaf(leaf(n));}',
     'int leaf(int n){return n;} int entry(int n){return leaf(n++);}',
-    'int leaf(int n){return n;} int entry(int n){if(leaf(n)){return 1;}return 0;}',
     'int leaf(int n,int p[n++]){return n;} int entry(int n){int a[1]={0};return leaf(n,a);}',
     'int leaf(int p[static 3]){return p[0];} int entry(void){int a[1]={0};return leaf(a);}',
     'int f(int n){return n;} int entry(void){int (*f)(int)=0;return 0;}',

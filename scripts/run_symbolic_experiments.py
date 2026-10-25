@@ -30,8 +30,8 @@ def command(args, timeout=300):
 
 def main(argv=None):
     parser=argparse.ArgumentParser()
-    parser.add_argument('--output',type=Path,default=ROOT/'experiments/v023')
-    parser.add_argument('--fixtures',type=Path,default=ROOT/'experiments/v023/cases.json')
+    parser.add_argument('--output',type=Path,default=ROOT/'experiments/v024')
+    parser.add_argument('--fixtures',type=Path,default=ROOT/'experiments/v024/cases.json')
     args=parser.parse_args(argv)
     args.output.mkdir(parents=True,exist_ok=True)
     version=command(['git','rev-parse','HEAD'])
