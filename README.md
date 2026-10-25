@@ -546,3 +546,27 @@ python -m llmloop.symbolic_cli examples/typed_counter_phases.c \
 See [the counter-threshold contract](docs/COUNTER_THRESHOLD_DISCOVERY.md) and
 [v0.20 experiments](experiments/v020/report.md). General state-dependent branching,
 dynamic escaping heaps and arbitrary C control flow remain outstanding.
+
+
+## v0.21: original CFG and failure-aware dynamic finite heaps
+
+`--c-typed-cfg-heap` (API `frontend: "typed_cfg_heap"`) adds a separate bounded
+complete-exit verifier for state-dependent branching, while/do/for, early return,
+break/continue, switch fallthrough and goto. Variable-length allocations,
+mutable pointer aliases, repeated allocation instances and heap escape across
+local blocks share the original typed integer/memory proof. Allocation failure
+is modeled by default.
+
+```sh
+python -m llmloop.symbolic_cli examples/typed_cfg_heap.c \
+  --c-typed-cfg-heap --parameter-bounds '{"n":[1,3],"select":[0,2]}' \
+  --max-steps 128 --inputs '{"n":3,"select":1}'
+```
+
+A certificate requires every declared-domain execution to return within budgets;
+unfinished paths yield `UNKNOWN`. This is distinct from unbounded closed-form
+certificates. See [semantics, failure policy and finite limits](docs/TYPED_CFG_DYNAMIC_HEAP.md)
+and [v0.21 experiments](experiments/v021/report.md). General branch closed forms,
+linked heap graphs, interprocedural escape and arbitrary unbounded C remain open.
+
+This release also stabilizes fractional-prefix SMT obligations by exact integral/residual floor normalization; original C intermediate safety predicates remain checked.
