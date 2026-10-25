@@ -74,3 +74,5 @@ See the [v0.18 experiment report](../experiments/v018/report.md) for full local
 regressions, native C/UBSan comparisons, ABI cases and rejecting controls.
 These controlled examples do not establish representative real-library coverage
 or a performance advantage.
+
+In v0.19, [periodic coupled discovery](PERIODIC_COUPLED_DISCOVERY.md) extends the earlier cycle rejection to supported exact block systems. The v0.18 limits above describe that release; general cycles remain unsupported.

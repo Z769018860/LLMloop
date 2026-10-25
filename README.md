@@ -508,3 +508,21 @@ See [discovery scope and proof separation](docs/AUTOMATIC_VERIFIED_SUMMARIES.md)
 and [v0.18 experiments](experiments/v018/report.md). General coupled/branching
 trajectory discovery, escaping dynamic heaps and arbitrary C control flow remain
 outstanding. Unsupported or unproved cases return `UNKNOWN`.
+
+
+## v0.19: periodic coupled automatic summaries
+
+Automatic mode now handles coupled swaps/rotations, drifting accumulators and
+supported finite polynomial or static-cell permutations. It searches for a
+triangular matrix block, certifies its power and reconstructs residue-class
+trajectories. Every candidate still requires the original typed-C proof.
+
+```sh
+python -m llmloop.symbolic_cli examples/typed_coupled_rotation.c \
+  --c-typed-nested --auto-summaries \
+  --parameter-bounds '{"n":[0,1000000]}' --inputs '{"n":999999}'
+```
+
+See [the exact block method and remaining limits](docs/PERIODIC_COUPLED_DISCOVERY.md)
+and [v0.19 experiments](experiments/v019/report.md). General coupled/branching
+systems and dynamic escaping heaps remain open.
