@@ -32,6 +32,7 @@ def main(argv=None):
     parser.add_argument('--max-unroll',type=int,default=12)
     parser.add_argument('--max-steps',type=int,default=128)
     parser.add_argument('--max-call-depth',type=int,default=3)
+    parser.add_argument('--allow-recursion',action='store_true')
     parser.add_argument('--assume-allocation-success',action='store_true')
     parser.add_argument('--max-paths',type=int,default=48)
     parser.add_argument('--parameter-bounds',default='{}')
@@ -48,11 +49,11 @@ def main(argv=None):
         if args.closed_forms is not None and not (args.c_guarded or args.c_typed_loop):raise ValueError('--closed-forms requires --c-guarded or --c-typed-loop')
         if (args.auto_summaries or args.loop_summaries is not None or args.loop_summaries_file is not None) and not (args.c_typed_nested or args.c_typed_memory):raise ValueError('Loop summaries require --c-typed-nested or --c-typed-memory')
         if (args.max_steps!=128 or args.assume_allocation_success) and not (args.c_typed_cfg_heap or args.c_typed_cfg_calls):raise ValueError('Heap/step options require a typed CFG frontend')
-        if args.max_call_depth!=3 and not args.c_typed_cfg_calls:raise ValueError('Call depth requires --c-typed-cfg-calls')
+        if (args.max_call_depth!=3 or args.allow_recursion) and not args.c_typed_cfg_calls:raise ValueError('Call depth requires --c-typed-cfg-calls')
         if args.c_typed_cfg_heap or args.c_typed_cfg_calls:
             request={'source':text,'frontend':'typed_cfg_calls' if args.c_typed_cfg_calls else 'typed_cfg_heap','function':args.function,'parameter_bounds':json.loads(args.parameter_bounds),
                      'abi':args.abi,'char_signed':not args.char_unsigned,'max_steps':args.max_steps,'max_paths':args.max_paths,'allocation_failure':not args.assume_allocation_success}
-            if args.c_typed_cfg_calls:request['max_call_depth']=args.max_call_depth
+            if args.c_typed_cfg_calls:request.update(max_call_depth=args.max_call_depth,allow_recursion=args.allow_recursion)
         elif args.c_typed_nested or args.c_typed_memory:
             summaries='auto' if args.auto_summaries else (json.loads(args.loop_summaries_file.read_text() if args.loop_summaries_file is not None else args.loop_summaries) if args.loop_summaries_file is not None or args.loop_summaries is not None else None)
             request={'source':text,'frontend':'typed_memory' if args.c_typed_memory else 'typed_nested','function':args.function,'parameter_bounds':json.loads(args.parameter_bounds),
