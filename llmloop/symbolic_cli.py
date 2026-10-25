@@ -20,6 +20,7 @@ def main(argv=None):
     source_mode.add_argument('--c-typed-nested',action='store_true')
     source_mode.add_argument('--c-typed-memory',action='store_true')
     source_mode.add_argument('--c-typed-cfg-heap',action='store_true')
+    source_mode.add_argument('--c-typed-cfg-calls',action='store_true')
     summaries=parser.add_mutually_exclusive_group()
     summaries.add_argument('--auto-summaries',action='store_true',help='Generate candidates and require independent typed source proof')
     summaries.add_argument('--loop-summaries',help='JSON entry-relative summaries keyed by loop index')
@@ -30,6 +31,7 @@ def main(argv=None):
     parser.add_argument('--char-unsigned',action='store_true')
     parser.add_argument('--max-unroll',type=int,default=12)
     parser.add_argument('--max-steps',type=int,default=128)
+    parser.add_argument('--max-call-depth',type=int,default=3)
     parser.add_argument('--assume-allocation-success',action='store_true')
     parser.add_argument('--max-paths',type=int,default=48)
     parser.add_argument('--parameter-bounds',default='{}')
@@ -45,10 +47,12 @@ def main(argv=None):
         if args.phase_invariants is not None and not args.c_periodic:raise ValueError('--phase-invariants requires --c-periodic')
         if args.closed_forms is not None and not (args.c_guarded or args.c_typed_loop):raise ValueError('--closed-forms requires --c-guarded or --c-typed-loop')
         if (args.auto_summaries or args.loop_summaries is not None or args.loop_summaries_file is not None) and not (args.c_typed_nested or args.c_typed_memory):raise ValueError('Loop summaries require --c-typed-nested or --c-typed-memory')
-        if (args.max_steps!=128 or args.assume_allocation_success) and not args.c_typed_cfg_heap:raise ValueError('Heap/step options require --c-typed-cfg-heap')
-        if args.c_typed_cfg_heap:
-            request={'source':text,'frontend':'typed_cfg_heap','function':args.function,'parameter_bounds':json.loads(args.parameter_bounds),
+        if (args.max_steps!=128 or args.assume_allocation_success) and not (args.c_typed_cfg_heap or args.c_typed_cfg_calls):raise ValueError('Heap/step options require a typed CFG frontend')
+        if args.max_call_depth!=3 and not args.c_typed_cfg_calls:raise ValueError('Call depth requires --c-typed-cfg-calls')
+        if args.c_typed_cfg_heap or args.c_typed_cfg_calls:
+            request={'source':text,'frontend':'typed_cfg_calls' if args.c_typed_cfg_calls else 'typed_cfg_heap','function':args.function,'parameter_bounds':json.loads(args.parameter_bounds),
                      'abi':args.abi,'char_signed':not args.char_unsigned,'max_steps':args.max_steps,'max_paths':args.max_paths,'allocation_failure':not args.assume_allocation_success}
+            if args.c_typed_cfg_calls:request['max_call_depth']=args.max_call_depth
         elif args.c_typed_nested or args.c_typed_memory:
             summaries='auto' if args.auto_summaries else (json.loads(args.loop_summaries_file.read_text() if args.loop_summaries_file is not None else args.loop_summaries) if args.loop_summaries_file is not None or args.loop_summaries is not None else None)
             request={'source':text,'frontend':'typed_memory' if args.c_typed_memory else 'typed_nested','function':args.function,'parameter_bounds':json.loads(args.parameter_bounds),
@@ -80,7 +84,7 @@ def main(argv=None):
             if args.int_bits is not None:request['int_bits']=args.int_bits
         else:request={'ir':json.loads(text)}
         if not (args.c_sweep or args.c_scan) and args.int_bits is not None:raise ValueError('--int-bits requires --c-sweep or --c-scan')
-        if not (args.c_typed or args.c_typed_loop or args.c_typed_nested or args.c_typed_memory or args.c_typed_cfg_heap) and (args.abi!='LP64' or args.char_unsigned or args.max_paths!=48):raise ValueError('ABI and typed path options require --c-typed or --c-typed-loop')
+        if not (args.c_typed or args.c_typed_loop or args.c_typed_nested or args.c_typed_memory or args.c_typed_cfg_heap or args.c_typed_cfg_calls) and (args.abi!='LP64' or args.char_unsigned or args.max_paths!=48):raise ValueError('ABI and typed path options require --c-typed or --c-typed-loop')
         if not args.c_typed and args.max_unroll!=12:raise ValueError('--max-unroll requires --c-typed')
         if args.inputs is not None:request['inputs']=json.loads(args.inputs)
         report=analyze_request(request)

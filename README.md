@@ -570,3 +570,22 @@ and [v0.21 experiments](experiments/v021/report.md). General branch closed forms
 linked heap graphs, interprocedural escape and arbitrary unbounded C remain open.
 
 This release also stabilizes fractional-prefix SMT obligations by exact integral/residual floor normalization; original C intermediate safety predicates remain checked.
+
+
+## v0.22: direct calls and interprocedural heap escape
+
+`--c-typed-cfg-calls` (API `typed_cfg_calls`) adds bounded, explicitly sequenced
+helper calls with typed parameter/return conversions, shared heap aliases and
+pointer returns. Callee stack objects expire at frame exit; heap pointers can
+survive and be read/freed by callers. Allocation failure remains enabled by
+default, including null pointers returned by helpers.
+
+```sh
+python -m llmloop.symbolic_cli examples/typed_cfg_calls.c \
+  --c-typed-cfg-calls --function calls_heap \
+  --parameter-bounds '{"n":[1,3]}' --max-steps 256 --inputs '{"n":3}'
+```
+
+See [call positions, frame semantics and limits](docs/TYPED_CFG_DIRECT_CALLS.md)
+and [v0.22 experiments](experiments/v022/report.md). This supports bounded direct
+call escape, not arbitrary recursion, linked heap graphs or unbounded proof.
