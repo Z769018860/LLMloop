@@ -30,13 +30,13 @@ def command(args, timeout=300):
 
 def main(argv=None):
     parser=argparse.ArgumentParser()
-    parser.add_argument('--output',type=Path,default=ROOT/'experiments/v027')
-    parser.add_argument('--fixtures',type=Path,default=ROOT/'experiments/v027/cases.json')
+    parser.add_argument('--output',type=Path,default=ROOT/'experiments/v028')
+    parser.add_argument('--fixtures',type=Path,default=ROOT/'experiments/v028/cases.json')
     args=parser.parse_args(argv)
     args.output.mkdir(parents=True,exist_ok=True)
     version=command(['git','rev-parse','HEAD'])
     manifest={str(path.relative_to(ROOT)):hashlib.sha256(path.read_bytes()).hexdigest()
-              for pattern in ['llmloop/*.py','tests/*.py','scripts/*.py','pyproject.toml','examples/guarded*','examples/typed_unbounded_loop.c','examples/typed_nested*','examples/typed_memory*','examples/typed_coupled*','examples/typed_counter*','examples/typed_cfg*','examples/typed_recursive*','examples/typed_pointer*','examples/typed_struct*','examples/clang_project/*']
+              for pattern in ['llmloop/*.py','tests/*.py','scripts/*.py','pyproject.toml','examples/guarded*','examples/typed_unbounded_loop.c','examples/typed_nested*','examples/typed_memory*','examples/typed_coupled*','examples/typed_counter*','examples/typed_cfg*','examples/typed_recursive*','examples/typed_pointer*','examples/typed_struct*','examples/clang_project/*','examples/clang_proof_project/*']
               for path in sorted(ROOT.glob(pattern)) if path.is_file()}
     evidence={'schema_version':1,'generated_at':datetime.now(timezone(timedelta(hours=8))).isoformat(),
               'source_base_commit':version['stdout'].strip(),'source_sha256':manifest,
@@ -46,13 +46,13 @@ def main(argv=None):
               'protocol':{'proof_domain':'each certificate reported input/count domain and integer semantics; typed candidates checked through actual exit',
                           'native_samples':'fixed boundary grids/million-iteration cases plus controlled sanitizer-failure correspondences; not proof of arbitrary C',
                           'scope':'restricted research prototype; no claim that UNKNOWN cases are supported',
-                          'performance_claims':False,'suite_timeouts_seconds':{'pytest':600,'native':300},'per_obligation_solver_timeout_ms':5000},'suites':[],'guarded_cases':[]}
-    suite_commands=[('pytest',[sys.executable,'-m','pytest','-q'])]
+                          'performance_claims':False,'suite_timeouts_seconds':{'pytest':1200,'native':300,'api_case':60},'solver_timeouts_ms':{'typed_obligations':5000,'legacy_graph_queries':10000},'pytest_isolation':'fresh forked process per test; original assertions and query budgets unchanged','api_case_isolation':'fresh interpreter/SMT context per request; timeout never becomes a proof'},'suites':[],'guarded_cases':[]}
+    suite_commands=[('pytest',[sys.executable,'-m','pytest','--forked','-q'])]
     suite_commands += [(path.stem,[sys.executable,str(path.relative_to(ROOT))])
                        for path in sorted((ROOT/'scripts').glob('check_*native.py'))]
     for name,argv in suite_commands:
         print('Running '+name,flush=True)
-        result=command(argv,timeout=600 if name=='pytest' else 300)
+        result=command(argv,timeout=1200 if name=='pytest' else 300)
         checks=[{'passed':int(a),'total':int(b)} for a,b in re.findall(r'(\d+)/(\d+)',result['stdout'])]
         passed=result['exit_code']==0 and all(c['passed']==c['total'] for c in checks)
         if name!='pytest' and not checks:passed=False
@@ -63,11 +63,15 @@ def main(argv=None):
     fixtures=json.loads(args.fixtures.read_text())
     evidence['fixtures_sha256']=hashlib.sha256(args.fixtures.read_bytes()).hexdigest()
     for fixture in fixtures:
-        report=analyze_request(fixture['request'])
+        try:
+            isolated=subprocess.run([sys.executable,str(ROOT/'scripts/analyze_experiment_case.py')],input=json.dumps(fixture['request']),cwd=ROOT,text=True,capture_output=True,timeout=60)
+            report=json.loads(isolated.stdout) if isolated.returncode==0 else {'status':'UNKNOWN','reason':'isolated case process failed: '+isolated.stderr[-2000:]}
+        except subprocess.TimeoutExpired:report={'status':'UNKNOWN','reason':'isolated experiment case timed out','analysis_limit':'experiment_case_timeout'}
+        except ValueError:report={'status':'UNKNOWN','reason':'invalid isolated experiment report'}
         matched=report['status']==fixture['expected_status']
         evidence['guarded_cases'].append({'name':fixture['name'],'expected_status':fixture['expected_status'],
-            'actual_status':report['status'],'matched':matched,'frontend_only':fixture['request'].get('frontend')=='clang',
-            **{k:report[k] for k in ['failed_obligation','counterexample','evaluation','reason','c_overflow_verified'] if k in report},
+            'actual_status':report['status'],'matched':matched,'frontend_only':fixture['request'].get('frontend')=='clang','clang_proof':fixture['request'].get('frontend')=='clang_proof',
+            **{k:report[k] for k in ['failed_obligation','counterexample','evaluation','reason','analysis_limit','c_overflow_verified'] if k in report},
             'proved_obligations':len(report.get('certificate',{}).get('obligations',report.get('proved_obligations',[]))),
             'synthesized_candidates':len(report.get('summary_synthesis',[]))})
         print(fixture['name']+': '+('PASS' if matched else 'FAIL'),flush=True)
@@ -77,7 +81,7 @@ def main(argv=None):
              'suites_total':len(evidence['suites']),
              'native_passed':sum(c['passed'] for c in native),'native_total':sum(c['total'] for c in native),
              'guarded_expectations_matched':sum(case['matched'] for case in evidence['guarded_cases']),
-             'guarded_cases_total':len(fixtures),'clang_frontend_cases':sum(case['frontend_only'] for case in evidence['guarded_cases']),'clang_frontend_ready':sum(case['actual_status']=='CLANG_FRONTEND_READY' for case in evidence['guarded_cases'])}
+             'guarded_cases_total':len(fixtures),'clang_frontend_cases':sum(case['frontend_only'] for case in evidence['guarded_cases']),'clang_frontend_ready':sum(case['actual_status']=='CLANG_FRONTEND_READY' for case in evidence['guarded_cases']),'clang_proof_cases':sum(case['clang_proof'] for case in evidence['guarded_cases']),'clang_proof_certified':sum(case['actual_status'].startswith('PROVED_DEFINED_CLANG_') for case in evidence['guarded_cases'])}
     evidence['summary']=summary
     evidence['passed']=all(suite['passed'] for suite in evidence['suites']) and all(case['matched'] for case in evidence['guarded_cases'])
     (args.output/'results.json').write_text(json.dumps(evidence,indent=2)+'\n')
@@ -95,7 +99,8 @@ def main(argv=None):
     for case in evidence['guarded_cases']:
         lines.append(f"| {case['name']} | {case['expected_status']} | {case['actual_status']} |")
     lines += ['', '## Interpretation','',
-              'CLANG_FRONTEND_READY is compiler AST/layout/LLVM ingestion, never a safety/termination certificate. Clang acceptance cases are counted separately in results.json; compiling deliberate UB does not prove it safe. The adapter has not yet lowered general LLVM instruction semantics into the LLMloop proof engine or run KLEE.',
+              'Unit tests run in fresh forked processes and each API fixture runs in a fresh interpreter/SMT context. Assertions and per-query solver budgets are unchanged; the aggregate pytest budget is 1200 seconds for the larger isolated suite. A timeout is UNKNOWN and never a proof. This protocol does not claim sequence-independent solver performance in a long-lived service.',
+              'CLANG_FRONTEND_READY is compiler AST/layout/LLVM ingestion, never a safety/termination certificate. Clang acceptance cases are counted separately in results.json; compiling deliberate UB does not prove it safe. The scalar Clang AST proof bridge uses explicit trusted normalization and existing typed proof kernels; general LLVM instruction semantics and KLEE execution remain unsupported.',
               'Native checks are finite differential tests; the memory-rejection sanitizer suite counts expected fault correspondences separately in its log, not certified safe executions. Mathematical recurrence and typed scalar-loop claims come from checked induction obligations within their reported domains, not from the sample count.',
               'Negative controls include incorrect base/successor formulas, a failure near iteration one million, ambiguous/missing branches, an empty domain, typed intermediate/return overflow, overwritten division by zero, index wrap, and unsupported expressions. UNKNOWN controls are never counted as supported functionality.',
               'These are controlled examples, not a representative real-world library benchmark. No performance advantage or universal C coverage is claimed.',

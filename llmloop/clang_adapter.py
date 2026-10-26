@@ -194,10 +194,11 @@ class ClangAdapter:
                 raw=self.run([*common,'-fsyntax-only','-Xclang','-ast-dump=json',str(path)],directory,'ast',workspace,timeout)
                 try:ast=json.loads(raw)
                 except (ValueError,RecursionError) as exc:raise SMTGraphError('Invalid/over-deep Clang JSON AST') from exc
-                nodes=[ast];count=0;definitions=[]
+                nodes=[ast];count=0;definitions=[];typedefs=[]
                 while nodes:
                     node=nodes.pop();count+=1
                     if count>250000:raise SMTGraphError('Clang AST node budget exceeded')
+                    if node.get('kind')=='TypedefDecl':typedefs.append({'name':node.get('name'),'type':node.get('type',{}),'location':node.get('loc')})
                     if node.get('kind')=='FunctionDecl' and any(child.get('kind')=='CompoundStmt' for child in node.get('inner',[])):definitions.append(node)
                     nodes.extend(reversed(node.get('inner',[])))
                 selected=[n for n in definitions if self.function is None or n.get('name')==self.function]
@@ -211,5 +212,5 @@ class ClangAdapter:
                 if not triple or not layout:raise SMTGraphError('LLVM target metadata missing')
                 if path.read_bytes()!=before:raise SMTGraphError('Source changed during Clang ingestion')
                 functions=[{'name':n.get('name'),'linkage_name':n.get('mangledName',n.get('name')),'type':n.get('type'),'location':n.get('loc'),'range':n.get('range'),**({'ast':n} if cfg.get('include_ast',True) else {})} for n in selected]
-                return {**base,'status':'CLANG_FRONTEND_READY','source_compiles':True,'compiler':self.compiler,'source':{'path':str(path) if self.source_file else '<inline>','sha256':digest(before)},'compilation_database':database,'effective_flags':[*flags,*optimization,*debug,*ir_flags],'ignored_build_flags':ignored,'target':{'triple':triple[1],'data_layout':layout[1]},'functions':functions,'ast_nodes':count,'record_layouts':layouts_from_dump(layout_text),'record_layout_dump':layout_text,'llvm_ir':ir,'llvm_ir_sha256':digest(ir.encode()),'llvm_cfg':llvm_cfg(ir),'ubsan_instrumentation_requested':sanitize,'proof_boundary':'Clang semantics/AST/IR ingestion only; no LLMloop proof or KLEE execution; LLVM blocks include sanitizer branches and are not source MEMS counts','input_consistency':'main source checked unchanged; included headers/environment must remain stable across compiler stages'}
+                return {**base,'status':'CLANG_FRONTEND_READY','source_compiles':True,'compiler':self.compiler,'source':{'path':str(path) if self.source_file else '<inline>','sha256':digest(before)},'compilation_database':database,'effective_flags':[*flags,*optimization,*debug,*ir_flags],'ignored_build_flags':ignored,'target':{'triple':triple[1],'data_layout':layout[1]},'functions':functions,'typedefs':typedefs,'ast_nodes':count,'record_layouts':layouts_from_dump(layout_text),'record_layout_dump':layout_text,'llvm_ir':ir,'llvm_ir_sha256':digest(ir.encode()),'llvm_cfg':llvm_cfg(ir),'ubsan_instrumentation_requested':sanitize,'proof_boundary':'Clang semantics/AST/IR ingestion only; no LLMloop proof or KLEE execution; LLVM blocks include sanitizer branches and are not source MEMS counts','input_consistency':'main source checked unchanged; included headers/environment must remain stable across compiler stages'}
         except (SMTGraphError,OSError,ValueError,TypeError,RecursionError) as exc:return {**base,'reason':str(exc),**({'compiler':self.compiler} if self.compiler else {})}

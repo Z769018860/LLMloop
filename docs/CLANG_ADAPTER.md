@@ -143,3 +143,11 @@ recursive/branching closed-form proofs remain incomplete.
 References: [Clang tooling interfaces](https://clang.llvm.org/docs/Tooling.html),
 [compilation databases](https://clang.llvm.org/docs/JSONCompilationDatabase.html),
 [Clang UBSan](https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html).
+
+## v0.28 proof connection
+
+An admitted scalar typed-AST fragment now connects to the existing typed CFG and
+inductive summary kernels via [clang_proof](CLANG_SCALAR_PROOF.md). The compiler-only
+frontend still returns readiness, not proof. General LLVM/memory semantics and KLEE
+execution remain pending. Typedef metadata is also exported for canonical return
+and local type resolution.
