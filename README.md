@@ -652,3 +652,16 @@ than proof; existing proof frontends are unchanged. See the
 [adapter guide](docs/CLANG_ADAPTER.md), [sample project](examples/clang_project/demo.c),
 [actual export](experiments/v027/clang_demo.json) and
 [experiment report](experiments/v027/report.md).
+
+## v0.28: Clang scalar proof bridge
+
+`--c-clang-proof` / API `frontend:"clang_proof"` now normalize an admitted typed
+scalar Clang AST into existing CFG, nested-loop or recurrence proof kernels.
+Macros/typedefs/project headers are resolved by Clang; shadowed locals use declaration
+identity; intermediate UB and wrong formulas remain proof failures. Million-count
+and nested/modular examples can use induction without iteration unfolding.
+The compiler/normalizer are trusted frontend components, not a verified compiler
+or general LLVM/KLEE backend. See the [contract](docs/CLANG_SCALAR_PROOF.md),
+[project](examples/clang_proof_project/count.c),
+[actual proof](experiments/v028/clang_proof_demo.json) and
+[experiments](experiments/v028/report.md).

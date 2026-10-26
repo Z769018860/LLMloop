@@ -94,6 +94,7 @@ class ScalarNormalizer:
             return self.expr(children[0])+' '+n['opcode']+' '+self.expr(children[1])
         if kind=='UnaryOperator' and n.get('opcode') in ('++','--') and len(children)==1 and children[0].get('kind')=='DeclRefExpr':
             value=self.expr(children[0]);return value+n['opcode'] if n.get('isPostfix') else n['opcode']+value
+        # No nested assignment/increment, comma side effects, calls or memory reads.
         return self.expr(n)
 
     def decl(self,n):

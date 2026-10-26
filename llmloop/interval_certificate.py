@@ -86,6 +86,7 @@ def prove_interval(premise,claim):
                 if lo is not None and hi is not None and lo>hi:return None
                 if (lo,hi)!=old:bounds[key]=(lo,hi);variables[key]=target;changed=True
         if not changed:break
+    # Partial bounds are useful for propagation only once both endpoints exist.
     bounds={k:v for k,v in bounds.items() if None not in v}
     def valid(n):
         if z3.is_true(n):return True
