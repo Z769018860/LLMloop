@@ -62,6 +62,12 @@ class TypedCRecurrence(TypedCFunction):
             enclosure=prove_interval(premise,claim)
             if enclosure is not None:
                 self.checks.append({'obligation':label,'proved':True,'certificate':enclosure});return
+        controlled=any(e.get('method')=='finite state-dependent control orbit with polynomial accumulator prefixes' for record in getattr(self,'synthesis_records',[]) for e in record.get('mathematical_derivations',[]))
+        if controlled and 'successor' in label:
+            from .residue_certificate import prove_residues
+            residues=prove_residues(premise,claim,self.witness)
+            if residues is not None:
+                self.checks.append({'obligation':label,'proved':True,'certificate':residues});return
         solver=z3.Solver();solver.set(timeout=5000);solver.add(premise,z3.Not(claim))
         answer=solver.check()
         if answer!=z3.unsat:raise ProofFailure(label,answer,solver,self.witness)

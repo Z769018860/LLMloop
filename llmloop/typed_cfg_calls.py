@@ -130,6 +130,7 @@ class CallExpansion:
             if isinstance(n,c_ast.ID) and n.name in self.scalar_names:return
             if isinstance(n,c_ast.Constant) and n.type in ('int','long','unsigned int','unsigned long','char'):return
             if isinstance(n,c_ast.UnaryOp) and n.op in ('+','-','~','!'):admitted(n.expr);return
+            if isinstance(n,c_ast.Cast) and isinstance(n.to_type.type,c_ast.TypeDecl) and isinstance(n.to_type.type.type,c_ast.IdentifierType):admitted(n.expr);return
             if isinstance(n,c_ast.BinaryOp) and n.op not in ('&&','||'):
                 admitted(n.left);admitted(n.right);return
             raise SMTGraphError('Call expression crosses lazy evaluation or unstable/non-scalar operand')
@@ -138,6 +139,7 @@ class CallExpansion:
         def replace(n):
             if n is selected:return value
             if isinstance(n,c_ast.UnaryOp):n.expr=replace(n.expr)
+            if isinstance(n,c_ast.Cast):n.expr=replace(n.expr)
             if isinstance(n,c_ast.BinaryOp):n.left=replace(n.left);n.right=replace(n.right)
             return n
         return prefix,replace(node)

@@ -58,10 +58,16 @@ def test_memory_wrap_and_nested_composition():
 @pytest.mark.parametrize('source',[
     FEEDBACK,
     'long f(int n,int t){long x=0;for(int i=0;i<n;i++){if(i<t){x+=1L*i*i*i*i;}else{x++;}}return x;}',
-    'long f(int n,int t){long x=0;for(int i=0;i<n;i++){if(i<t){x++;}if(i<3){x++;}}return x;}',
 ])
 def test_unsupported_schedules_remain_unknown(source):
     assert request(source)['status']=='UNKNOWN'
+
+
+def test_sequential_threshold_branches_now_have_inductively_checked_prefixes():
+    source='long f(int n,int t){long x=0;for(int i=0;i<n;i++){if(i<t){x++;}if(i<3){x++;}}return x;}'
+    r=request(source)
+    assert r['status']=='PROVED_DEFINED_TYPED_C_NESTED',r
+    assert r['evaluation']['value']==6
 
 
 @pytest.mark.parametrize('source',[

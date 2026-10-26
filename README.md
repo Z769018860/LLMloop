@@ -665,3 +665,18 @@ or general LLVM/KLEE backend. See the [contract](docs/CLANG_SCALAR_PROOF.md),
 [project](examples/clang_proof_project/count.c),
 [actual proof](experiments/v028/clang_proof_demo.json) and
 [experiments](experiments/v028/report.md).
+
+## v0.29: Clang memory/calls, escaping-list induction and branch discovery
+
+`clang_proof` adds `memory`, `calls`, `memory_nested` and `heap_summary` routes.
+Compiler-typed arrays, pointers, standard allocators, natural named records and
+reachable direct-call definitions connect to the existing checked kernels.
+The separate owned-list constructor/consumer route proves a dynamically escaping
+list by length induction, including every allocation-failure prefix, without
+unfolding its heap instances. Counter Boolean/residue schedules and finite
+state-dependent control orbits propose independently checked polynomial prefixes.
+
+See [contracts, limits and examples](docs/CLANG_MEMORY_AND_HEAP_SUMMARIES.md) and
+[v0.29 experiments](experiments/v029/report.md). General shared/cyclic heap
+summaries, indirect/lazy/multiple calls and arbitrary branching closed-form
+synthesis remain incomplete. KLEE is intentionally not integrated in this phase.

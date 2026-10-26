@@ -30,13 +30,13 @@ def command(args, timeout=300):
 
 def main(argv=None):
     parser=argparse.ArgumentParser()
-    parser.add_argument('--output',type=Path,default=ROOT/'experiments/v028')
-    parser.add_argument('--fixtures',type=Path,default=ROOT/'experiments/v028/cases.json')
+    parser.add_argument('--output',type=Path,default=ROOT/'experiments/v029')
+    parser.add_argument('--fixtures',type=Path,default=ROOT/'experiments/v029/cases.json')
     args=parser.parse_args(argv)
     args.output.mkdir(parents=True,exist_ok=True)
     version=command(['git','rev-parse','HEAD'])
     manifest={str(path.relative_to(ROOT)):hashlib.sha256(path.read_bytes()).hexdigest()
-              for pattern in ['llmloop/*.py','tests/*.py','scripts/*.py','pyproject.toml','examples/guarded*','examples/typed_unbounded_loop.c','examples/typed_nested*','examples/typed_memory*','examples/typed_coupled*','examples/typed_counter*','examples/typed_cfg*','examples/typed_recursive*','examples/typed_pointer*','examples/typed_struct*','examples/clang_project/*','examples/clang_proof_project/*']
+              for pattern in ['llmloop/*.py','tests/*.py','scripts/*.py','pyproject.toml','examples/guarded*','examples/typed_unbounded_loop.c','examples/typed_nested*','examples/typed_memory*','examples/typed_coupled*','examples/typed_counter*','examples/typed_cfg*','examples/typed_recursive*','examples/typed_pointer*','examples/typed_struct*','examples/clang_project/*','examples/clang_proof_project/*','examples/clang_memory_project/*']
               for path in sorted(ROOT.glob(pattern)) if path.is_file()}
     evidence={'schema_version':1,'generated_at':datetime.now(timezone(timedelta(hours=8))).isoformat(),
               'source_base_commit':version['stdout'].strip(),'source_sha256':manifest,
@@ -46,7 +46,7 @@ def main(argv=None):
               'protocol':{'proof_domain':'each certificate reported input/count domain and integer semantics; typed candidates checked through actual exit',
                           'native_samples':'fixed boundary grids/million-iteration cases plus controlled sanitizer-failure correspondences; not proof of arbitrary C',
                           'scope':'restricted research prototype; no claim that UNKNOWN cases are supported',
-                          'performance_claims':False,'suite_timeouts_seconds':{'pytest':1200,'native':300,'api_case':60},'solver_timeouts_ms':{'typed_obligations':5000,'legacy_graph_queries':10000},'pytest_isolation':'fresh forked process per test; original assertions and query budgets unchanged','api_case_isolation':'fresh interpreter/SMT context per request; timeout never becomes a proof'},'suites':[],'guarded_cases':[]}
+                          'performance_claims':False,'suite_timeouts_seconds':{'pytest':1200,'native':300,'api_case':60},'solver_timeouts_ms':{'typed_obligations':5000,'legacy_graph_queries':10000,'finite_control_residue_subqueries':5000,'residue_cases_maximum':8},'pytest_isolation':'fresh forked process per test; original assertions and query budgets unchanged','api_case_isolation':'fresh interpreter/SMT context per request; timeout never becomes a proof','clang_memory_native_isolation':'fresh interpreter per example; each original/normalized scenario checked with ASan/UBSan and live-object accounting; LeakSanitizer disabled because /proc task scanning is unavailable'},'suites':[],'guarded_cases':[]}
     suite_commands=[('pytest',[sys.executable,'-m','pytest','--forked','-q'])]
     suite_commands += [(path.stem,[sys.executable,str(path.relative_to(ROOT))])
                        for path in sorted((ROOT/'scripts').glob('check_*native.py'))]
@@ -81,7 +81,7 @@ def main(argv=None):
              'suites_total':len(evidence['suites']),
              'native_passed':sum(c['passed'] for c in native),'native_total':sum(c['total'] for c in native),
              'guarded_expectations_matched':sum(case['matched'] for case in evidence['guarded_cases']),
-             'guarded_cases_total':len(fixtures),'clang_frontend_cases':sum(case['frontend_only'] for case in evidence['guarded_cases']),'clang_frontend_ready':sum(case['actual_status']=='CLANG_FRONTEND_READY' for case in evidence['guarded_cases']),'clang_proof_cases':sum(case['clang_proof'] for case in evidence['guarded_cases']),'clang_proof_certified':sum(case['actual_status'].startswith('PROVED_DEFINED_CLANG_') for case in evidence['guarded_cases'])}
+             'guarded_cases_total':len(fixtures),'clang_frontend_cases':sum(case['frontend_only'] for case in evidence['guarded_cases']),'clang_frontend_ready':sum(case['actual_status']=='CLANG_FRONTEND_READY' for case in evidence['guarded_cases']),'clang_proof_cases':sum(case['clang_proof'] for case in evidence['guarded_cases']),'clang_proof_certified':sum(case['actual_status'].startswith('PROVED_DEFINED_CLANG_') for case in evidence['guarded_cases']),'owned_list_certified':sum(case['actual_status']=='PROVED_DEFINED_CLANG_OWNED_LIST_SUMMARY' for case in evidence['guarded_cases'])}
     evidence['summary']=summary
     evidence['passed']=all(suite['passed'] for suite in evidence['suites']) and all(case['matched'] for case in evidence['guarded_cases'])
     (args.output/'results.json').write_text(json.dumps(evidence,indent=2)+'\n')
@@ -104,7 +104,10 @@ def main(argv=None):
               'Native checks are finite differential tests; the memory-rejection sanitizer suite counts expected fault correspondences separately in its log, not certified safe executions. Mathematical recurrence and typed scalar-loop claims come from checked induction obligations within their reported domains, not from the sample count.',
               'Negative controls include incorrect base/successor formulas, a failure near iteration one million, ambiguous/missing branches, an empty domain, typed intermediate/return overflow, overwritten division by zero, index wrap, and unsupported expressions. UNKNOWN controls are never counted as supported functionality.',
               'These are controlled examples, not a representative real-world library benchmark. No performance advantage or universal C coverage is claimed.',
-              'General escaping heap shapes, dynamic-size/failed allocations, external pointer layouts, arbitrary typed CFG loops, and arbitrary coupled/branching closed-form discovery remain incomplete; automatic candidates are accepted only after original typed-source proof.','',
+              'Compiler-typed finite memory and bounded direct/recursive calls now normalize into existing checked kernels. A separate exact owned-list constructor/consumer recognizer proves escaping lists without heap-instance unfolding, including every partial allocation-failure prefix. Its shape rules and standard allocator axioms are trusted; typed counter and reverse payload-fold proofs are retained. It does not prove arbitrary heap shapes or physical capacity.',
+              'Automatic branch discovery handles admitted Boolean counter intervals/residues and finite control-state lassos with polynomial accumulators. Candidate exploration is never proof: original typed base, ranges, executed intermediates, coverage and every successor must pass. Finite-control successors may split into at most eight exhaustive integer residues, each with a 5000 ms SMT budget.',
+              'The new original/normalized/model native checks use ASan/UBSan, forced allocation-failure budgets and explicit live-object counts. LeakSanitizer is disabled because this environment cannot perform its /proc task scan. Intentional sanitizer faults are separate rejection correspondences, not safe executions.',
+              'General shared/cyclic escaping heap summaries, external pointers, realloc, indirect/lazy/multiple calls, arbitrary CFG termination, and arbitrary coupled/branching closed-form discovery remain incomplete. No KLEE integration or execution is included.','',
               f'Reproduce: `python scripts/run_symbolic_experiments.py --fixtures {args.fixtures} --output {args.output}` after `python -m pip install -e ".[test,smt]"`.']
     (args.output/'report.md').write_text('\n'.join(lines)+'\n')
     print(json.dumps(summary),flush=True)
