@@ -641,3 +641,14 @@ layouts are reported. Record arrays/by-value records and unbounded heap-shape
 summaries remain unsupported. See the [contract](docs/BOUNDED_STRUCT_HEAP.md),
 [list example](examples/typed_struct_list.c) and
 [v0.26 experiments](experiments/v026/report.md).
+
+## v0.27: real Clang adapter
+
+`--c-clang` / API `frontend:"clang"` now ingest inline C or project files through a
+real Clang compiler, including compilation databases, macros/headers, typed AST,
+implicit conversions, compiler-owned record layouts and LLVM CFG/IR with optional
+UBSan instrumentation. `CLANG_FRONTEND_READY` explicitly means ingestion rather
+than proof; existing proof frontends are unchanged. See the
+[adapter guide](docs/CLANG_ADAPTER.md), [sample project](examples/clang_project/demo.c),
+[actual export](experiments/v027/clang_demo.json) and
+[experiment report](experiments/v027/report.md).
