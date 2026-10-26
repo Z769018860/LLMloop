@@ -12,10 +12,15 @@ def analyze_request(request: dict) -> dict:
     """
     try:
         if not isinstance(request, dict):raise SMTGraphError('Request must be an object')
-        allowed = {'ir', 'source', 'source_file', 'clang', 'function', 'parameter_bounds', 'max_unroll',
+        allowed = {'ir', 'source', 'source_file', 'clang', 'proof', 'function', 'parameter_bounds', 'max_unroll',
                    'max_paths', 'whole_function', 'invariants', 'verify_steps', 'assertion', 'ranking', 'synthesize_ranking', 'frontend', 'int_bits', 'parameter_mins', 'inputs', 'memory_layout', 'abi', 'char_signed', 'closed_forms', 'loop_summaries', 'max_steps', 'allocation_failure', 'max_call_depth', 'allow_recursion'}
         if set(request)-allowed:raise SMTGraphError('Unknown request fields: '+', '.join(sorted(set(request)-allowed)))
         if 'synthesize_ranking' in request and type(request['synthesize_ranking']) is not bool:raise SMTGraphError('synthesize_ranking must be Boolean')
+        if request.get('frontend')=='clang_proof':
+            if ('source' in request)==('source_file' in request) or set(request)-{'source','source_file','frontend','clang','function','proof'}:raise SMTGraphError('Invalid clang_proof request')
+            from .clang_proof import prove_clang
+            return {'schema_version':1,**prove_clang(source=request.get('source'),source_file=request.get('source_file'),function=request.get('function'),clang=request.get('clang'),proof=request.get('proof'))}
+        if 'proof' in request:raise SMTGraphError('proof options require clang_proof')
         if request.get('frontend')=='clang':
             if ('source' in request)==('source_file' in request):raise SMTGraphError('Clang requires exactly one source or source_file')
             if set(request)-{'source','source_file','frontend','clang','function'}:raise SMTGraphError('Invalid Clang frontend options')
