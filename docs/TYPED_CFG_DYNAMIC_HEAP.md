@@ -117,3 +117,10 @@ cover the transformation. Conservative degree, term, denominator, AST and bit
 budgets skip normalization when the fragment is unsupported. Original C safety
 conditions are constructed first and remain in the obligations. No timeout is
 waived and no overflow semantics are changed by this logical normalization.
+
+## v0.25 pointer storage extension
+
+The bounded frontend now also admits finite typed pointer cells and up to three
+levels of integer-pointer indirection. Earlier integer-element-only restrictions
+are superseded for the [pointer-cell fragment](TYPED_POINTER_CELLS.md). Structs,
+external roots and general heap shapes remain unsupported.

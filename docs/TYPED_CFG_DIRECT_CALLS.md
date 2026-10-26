@@ -100,3 +100,10 @@ In v0.23, [opt-in bounded recursion and matched internal prototypes](BOUNDED_REC
 ## v0.24 expression extension
 
 A single eager call can now occur in arithmetic, return/initializer/assignment expressions and if/switch conditions under the [stable scalar operand contract](EAGER_CALL_EXPRESSIONS.md). Earlier whole-statement-only restrictions are superseded only for that fragment.
+
+## v0.25 pointer-cell helpers
+
+Internal helpers can take and return integer pointers up to depth three, including
+pointer tables and arrays of pointer formals. Heap identity and frame lifetime
+checks are shared with the [finite pointer-cell verifier](TYPED_POINTER_CELLS.md).
+This does not admit external root pointer parameters or struct graphs.

@@ -23,6 +23,16 @@ class Pointer:
     element_type: object
 
 
+@dataclass(frozen=True)
+class PointerElement:
+    """A stored pointer type; never an integer arithmetic coordinate."""
+    target: object
+    bits: int
+
+    @property
+    def name(self):return self.target.name+' *'
+
+
 class CFG:
     def __init__(self,body):
         self.nodes=[];self.labels={};self.gotos=[];self.locals={};self.scopes=0;self.depth=0
@@ -172,6 +182,41 @@ class TypedCFGHeap(TypedCMemory):
             for name in self.cfg.locals[scope]:new.pop(name,None)
         return new
 
+    def memory_type(self,node,depth=0):
+        if depth>3:raise SMTGraphError('Pointer indirection depth budget is 3')
+        if getattr(node,'quals',None):raise SMTGraphError('Qualified pointer cells unsupported')
+        if isinstance(node,c_ast.PtrDecl):
+            bits=32 if self.engine.abi.model=='ILP32' else 64
+            return PointerElement(self.memory_type(node.type,depth+1),bits)
+        return c_type(node,self.engine.abi)
+
+    def element_type(self,decl):
+        node=decl
+        while node is not None:
+            if getattr(node,'storage',None) or getattr(node,'quals',None) or getattr(node,'dim_quals',None):raise SMTGraphError('Memory declarations must be unqualified automatic objects')
+            node=getattr(node,'type',None)
+        return self.memory_type(decl.type.type,1)
+
+    def pointer_cell(self,node):
+        target=node.name if isinstance(node,c_ast.ArrayRef) else node.expr if isinstance(node,c_ast.UnaryOp) and node.op=='*' else None
+        return target is not None and isinstance(self.pointee_type(target),PointerElement)
+
+    def load_pointer_cases(self,node,env,guard):
+        obj,offset=self.location(node,env)
+        self.check('pointer-cell load location defined',z3.And(self.domain,guard),offset.safe)
+        if obj is None or not isinstance(obj.type,PointerElement):raise SMTGraphError('Pointer-cell load requires pointer storage')
+        self.check('pointer-cell load represented',z3.And(self.domain,guard),z3.Or(*[offset.value==i for i in range(len(obj.cells))]))
+        out=[]
+        for i,(cell,flag) in enumerate(zip(obj.cells,obj.initialized)):
+            selected=z3.And(guard,offset.value==i)
+            if not self.reachable(selected):continue
+            initialized=env[flag]
+            self.check('pointer-cell initialized before load',z3.And(self.domain,selected),z3.And(initialized.safe,initialized.value!=0))
+            p=env[cell]
+            if not isinstance(p,Pointer):raise SMTGraphError('Pointer storage type mismatch')
+            out.append((selected,p))
+        return out
+
     def make_object(self,node,t,length,capacity,heap,zeroed,env):
         old=env.get(node.name)
         if not heap and isinstance(old,Pointer) and old.obj is not None and getattr(old.obj,'site',None)==id(node):return old.obj
@@ -182,9 +227,13 @@ class TypedCFGHeap(TypedCMemory):
         obj.scope=None if heap else self.current_scope[-1];obj.site=id(node);self.objects[len(self.objects)]=obj;return obj
 
     def is_pointer(self,node):
-        return isinstance(node,c_ast.ID) and node.name in self.pointer_types or isinstance(node,c_ast.UnaryOp) and node.op=='&' or isinstance(node,c_ast.BinaryOp) and node.op in ('+','-') and self.is_pointer(node.left)
+        return self.pointer_cell(node) or isinstance(node,c_ast.ID) and node.name in self.pointer_types or isinstance(node,c_ast.UnaryOp) and node.op=='&' or isinstance(node,c_ast.BinaryOp) and node.op in ('+','-') and self.is_pointer(node.left)
 
     def pointee_type(self,node):
+        if isinstance(node,c_ast.ArrayRef) or isinstance(node,c_ast.UnaryOp) and node.op=='*':
+            target=node.name if isinstance(node,c_ast.ArrayRef) else node.expr
+            t=self.pointee_type(target)
+            return t.target if isinstance(t,PointerElement) else None
         if isinstance(node,c_ast.ID):return self.pointer_types.get(node.name)
         if isinstance(node,c_ast.BinaryOp) and node.op in ('+','-'):return self.pointee_type(node.left)
         if isinstance(node,c_ast.UnaryOp) and node.op=='&' and isinstance(node.expr,c_ast.ArrayRef):return self.pointee_type(node.expr.name)
@@ -192,6 +241,13 @@ class TypedCFGHeap(TypedCMemory):
 
     def pointer(self,node,env,depth=0):
         if depth>32:raise SMTGraphError('Pointer expression depth budget exceeded')
+        if self.pointer_cell(node):
+            obj,offset=self.location(node,env)
+            index=z3.simplify(offset.value)
+            if obj is None or not z3.is_int_value(index) or not 0<=index.as_long()<len(obj.cells):raise SMTGraphError('Use an explicit pointer temporary for dynamic pointer-cell loads')
+            i=index.as_long();p=env[obj.cells[i]];flag=env[obj.initialized[i]]
+            safe=z3.And(offset.safe,flag.safe,flag.value!=0,p.offset.safe,self.object_live(p.obj,env) if p.obj is not None else z3.BoolVal(True))
+            return p.obj,TypedTerm(p.offset.value,p.offset.type,safe)
         if _lit(node)==0:return None,TypedTerm(z3.IntVal(0),self.engine.abi.types['long long'],z3.BoolVal(True))
         if isinstance(node,c_ast.ID) and isinstance(env.get(node.name),Pointer):
             p=env[node.name];safe=p.offset.safe if p.obj is None else z3.And(p.offset.safe,self.object_live(p.obj,env))
@@ -220,6 +276,7 @@ class TypedCFGHeap(TypedCMemory):
             t=self.pointee_type(target)
             if t is None:raise SMTGraphError('Dereference requires a typed pointer')
             return TypedTerm(z3.IntVal(0),t,z3.BoolVal(False))
+        if isinstance(obj.type,PointerElement):raise SMTGraphError('Pointer cells cannot be read as integers')
         value=z3.IntVal(0);selected=z3.BoolVal(False)
         for i in reversed(range(len(obj.cells))):
             cell,flag=env[obj.cells[i]],env[obj.initialized[i]]
@@ -236,6 +293,10 @@ class TypedCFGHeap(TypedCMemory):
         return self.expression_tree(node)
 
     def expression_tree(self,node):
+        if isinstance(node,c_ast.UnaryOp) and node.op=='sizeof' and isinstance(node.expr,c_ast.Typename) and isinstance(node.expr.type,c_ast.PtrDecl):
+            t=self.memory_type(node.expr.type)
+            size_type='unsigned long' if self.engine.abi.model=='LP64' else 'unsigned int' if self.engine.abi.model=='ILP32' else 'unsigned long long'
+            return {'value':t.bits//8,'type':size_type}
         if isinstance(node,c_ast.BinaryOp) and node.op in ('&&','||'):return {'op':node.op,'args':[self.condition_tree(node.left),self.condition_tree(node.right)]}
         if isinstance(node,c_ast.UnaryOp) and node.op=='!':return {'op':'!','args':[self.condition_tree(node.expr)]}
         if isinstance(node,c_ast.BinaryOp) and node.op in ('==','!=') and (self.is_pointer(node.left) or self.is_pointer(node.right)):
@@ -255,6 +316,17 @@ class TypedCFGHeap(TypedCMemory):
         return super().expression_tree(node)
 
     def initialize(self,obj,env,initial=None):
+        if isinstance(obj.type,PointerElement):
+            new=dict(env);boolean=self.engine.abi.types['_Bool'];new[obj.alive]=TypedTerm(z3.IntVal(1),boolean,z3.BoolVal(True))
+            for i,(cell,flag) in enumerate(zip(obj.cells,obj.initialized)):
+                expr=initial[i] if initial is not None and i<len(initial) else c_ast.Constant('int','0')
+                if self.pointee_type(expr) is not None and self.pointee_type(expr)!=obj.type.target:raise SMTGraphError('Pointer initializer element types must agree')
+                target,offset=self.pointer(expr,env)
+                if target is not None and target.type!=obj.type.target:raise SMTGraphError('Pointer initializer target type mismatch')
+                new[cell]=Pointer(target,offset,obj.type.target)
+                # calloc guarantees zero bytes, not the C null-pointer representation.
+                new[flag]=TypedTerm(z3.IntVal(int(not obj.heap and obj.zeroed)),boolean,z3.BoolVal(True))
+            return new
         new=dict(env);boolean=self.engine.abi.types['_Bool'];new[obj.alive]=TypedTerm(z3.IntVal(1),boolean,z3.BoolVal(True))
         for i,(cell,flag) in enumerate(zip(obj.cells,obj.initialized)):
             new[cell]=self.engine.convert(self.evaluate(initial[i],env),obj.type) if initial is not None and i<len(initial) else TypedTerm(z3.IntVal(0),obj.type,z3.BoolVal(True))
@@ -262,7 +334,15 @@ class TypedCFGHeap(TypedCMemory):
         return new
 
     def bind(self,node,t,guard,env):
-        init=node.init;out=[];allocation=isinstance(init,c_ast.FuncCall) and isinstance(init.name,c_ast.ID) and init.name.name in ('malloc','calloc')
+        init=node.init;out=[]
+        if self.pointer_cell(init):
+            if self.pointee_type(init)!=t:raise SMTGraphError('Pointer element types must agree')
+            for selected,p in self.load_pointer_cases(init,env,guard):
+                safe=z3.And(p.offset.safe,self.object_live(p.obj,env) if p.obj is not None else z3.BoolVal(True))
+                value=Pointer(p.obj,TypedTerm(p.offset.value,p.offset.type,safe),t)
+                self.observe(selected,value.offset);new=dict(env);new[node.name]=value;out.append((selected,new,None))
+            return out
+        allocation=isinstance(init,c_ast.FuncCall) and isinstance(init.name,c_ast.ID) and init.name.name in ('malloc','calloc')
         if allocation:
             args=init.args.exprs if init.args else [];size_type=self.engine.abi.types['unsigned long' if self.engine.abi.model=='LP64' else 'unsigned int' if self.engine.abi.model=='ILP32' else 'unsigned long long']
             if len(args)!=(2 if init.name.name=='calloc' else 1):raise SMTGraphError('Invalid allocator arguments')
@@ -270,7 +350,7 @@ class TypedCFGHeap(TypedCMemory):
             zeroed=init.name.name=='calloc';unit=max(1,t.bits//8)
             if zeroed:
                 size=self.engine.convert(self.evaluate(args[1],env),size_type);self.observe(guard,size)
-                self.check('calloc integer element size',z3.And(self.domain,guard),size.value==unit)
+                self.check('calloc typed element size',z3.And(self.domain,guard),size.value==unit)
                 length=count.value;valid=count.value*size.value<=size_type.maximum
             else:length=count.value/unit;valid=z3.BoolVal(True)
             choice=z3.FreshBool('allocation_success') if self.allocation_failure else z3.BoolVal(True)
@@ -304,7 +384,7 @@ class TypedCFGHeap(TypedCMemory):
                 if len(initial)>length:raise SMTGraphError('Excess initializers')
                 for guard,env,_ in states:
                     obj=self.make_object(node,t,z3.IntVal(length),length,False,node.init is not None,env);new=self.initialize(obj,env,initial)
-                    for cell in obj.cells:self.observe(guard,new[cell])
+                    for cell in obj.cells:self.observe(guard,new[cell].offset if isinstance(new[cell],Pointer) else new[cell])
                     new[node.name]=Pointer(obj,TypedTerm(z3.IntVal(0),self.engine.abi.types['long long'],z3.BoolVal(True)),t);out.append((guard,new,None))
             return out
         if isinstance(node,c_ast.Assignment):return self.assign(node,states)
@@ -353,6 +433,18 @@ class TypedCFGHeap(TypedCMemory):
         for guard,env,_ in states:
             obj,offset=self.location(node.lvalue,env)
             if obj is None:self.observe(guard,TypedTerm(z3.IntVal(0),self.engine.abi.types['int'],z3.BoolVal(False)));out.append((guard,env,None));continue
+            if isinstance(obj.type,PointerElement):
+                if node.op!='=':raise SMTGraphError('Pointer-cell stores require simple =')
+                self.check('pointer-cell store location defined',z3.And(self.domain,guard),offset.safe)
+                self.check('pointer-cell store represented',z3.And(self.domain,guard),z3.Or(*[offset.value==i for i in range(len(obj.cells))]))
+                if isinstance(node.rvalue,c_ast.FuncCall):raise SMTGraphError('Use an allocation temporary before a pointer-cell store')
+                key=self.fresh();synthetic=c_ast.Decl(name=key,quals=[],align=[],storage=[],funcspec=[],type=None,init=node.rvalue,bitsize=None)
+                for rhs_guard,rhs_env,_ in self.bind(synthetic,obj.type.target,guard,env):
+                    for i,(cell,flag) in enumerate(zip(obj.cells,obj.initialized)):
+                        selected=z3.And(rhs_guard,offset.value==i)
+                        if not self.reachable(selected):continue
+                        new=dict(rhs_env);new[cell]=new.pop(key);new[flag]=TypedTerm(z3.IntVal(1),env[flag].type,z3.BoolVal(True));out.append((selected,new,None))
+                continue
             rhs=node.rvalue if node.op=='=' else c_ast.BinaryOp(op=node.op[:-1],left=node.lvalue,right=node.rvalue)
             value=self.engine.convert(self.evaluate(rhs,env),obj.type);safe=z3.And(offset.safe,value.safe);self.obligations.append(z3.Implies(guard,safe));new=dict(env)
             for i,(cell,flag) in enumerate(zip(obj.cells,obj.initialized)):
@@ -379,9 +471,10 @@ class TypedCFGHeap(TypedCMemory):
             'memory_model':{'pointer_rebinding_supported':True,'block_escape_supported':True,'dynamic_lengths_supported':True,
                             'max_object_instances':8,'max_cells_per_object':8,'max_total_cells':64,
                             'adjacent_distinct_object_boundary_comparisons':'unsupported',
-                            'external_pointer_parameters_supported':False,'pointer_cells_or_structs_supported':False},
-            'implementation_choices':{'signed_cast':'two-complement modular','signed_right_shift':'arithmetic'},
-            'scope':'bounded scalar/integer-element heap CFG; 8 allocation instances, 8 cells per object, 64 total cells; no structs, external pointers, recursion or general closed-form synthesis'}
+                            'external_pointer_parameters_supported':False,'pointer_cells_supported':True,'structs_supported':False,
+                            'max_pointer_indirection':3,'calloc_pointer_cells_implicitly_null':False},
+            'implementation_choices':{'signed_cast':'two-complement modular','signed_right_shift':'arithmetic','pointer_width_bits':32 if self.engine.abi.model=='ILP32' else 64},
+            'scope':'bounded scalar/integer/pointer-cell heap CFG; 8 instances, 8 cells per object, 64 total cells; explicit temporaries for dynamic pointer-cell loads; no structs, external pointers, recursion or general closed-form synthesis'}
         if not success:
             result.update(failed_obligation=self.failure.label,reason=self.failure.reason)
             if self.failure.witness is not None:result['counterexample']=self.failure.witness

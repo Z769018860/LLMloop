@@ -204,7 +204,11 @@ class CallExpansion:
                 if shape.dim_quals or shape.dim is not None and (_lit(shape.dim) is None or _lit(shape.dim)<=0):raise SMTGraphError('Only unqualified literal/unsized array parameters supported')
                 shape=shape.type
             elif isinstance(shape,c_ast.PtrDecl):shape=shape.type
-            if not isinstance(shape,c_ast.TypeDecl) or not isinstance(shape.type,c_ast.IdentifierType):raise SMTGraphError('Only scalar/integer-pointer helper parameters supported')
+            depth=1 if isinstance(formal.type,(c_ast.ArrayDecl,c_ast.PtrDecl)) else 0
+            while isinstance(shape,c_ast.PtrDecl):
+                if shape.quals:raise SMTGraphError('Qualified helper pointer parameters unsupported')
+                depth+=1;shape=shape.type
+            if depth>3 or not isinstance(shape,c_ast.TypeDecl) or not isinstance(shape.type,c_ast.IdentifierType):raise SMTGraphError('Only scalar/integer-pointer helper parameters up to depth 3 supported')
         if len(stack)>self.max_call_depth:
             if not self.allow_recursion:raise SMTGraphError('Call depth budget exceeded')
             return self.frontier(signature.type,name,stack,need_value)
@@ -296,5 +300,5 @@ class TypedCFGCalls(TypedCFGHeap):
                               'external_calls_supported':False,'pointer_return_supported':True,
                               'nonvoid_return_marker_checked':True}
         if result.get('failed_obligation','').startswith('call depth frontier'):result['analysis_limit']='call_depth_frontier'
-        result['scope']='bounded direct/recursive calls with shared integer-element heap, pointer arguments/returns and callee stack lifetime; no unbounded recursion proof, external pointers, structs, pointer cells or general closed-form synthesis'
+        result['scope']='bounded direct/recursive calls with shared integer/pointer-cell heap, pointer arguments/returns and callee stack lifetime; no unbounded recursion proof, external pointers, structs or general closed-form synthesis'
         return result

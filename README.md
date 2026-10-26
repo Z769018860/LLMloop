@@ -618,3 +618,15 @@ operands are stable scalars. Typed return conversions and intermediate overflow
 checks are preserved. Multiple calls, lazy contexts and sibling memory reads
 remain unsupported. See the [expression contract](docs/EAGER_CALL_EXPRESSIONS.md)
 and [v0.24 experiment report](experiments/v024/report.md).
+
+## v0.25: finite typed pointer cells
+
+The bounded CFG and call frontends can now store pointers in local arrays and
+heap tables, select/update cells by dynamic indices, and preserve object identity
+through typed helper parameters and pointer returns. Up to three levels of
+indirection are admitted; pointer-cell initialization, target/storage lifetime,
+null, bounds and double-free checks remain mandatory. `calloc` zero bytes are
+not silently treated as typed null pointers. See the
+[pointer-cell contract](docs/TYPED_POINTER_CELLS.md),
+[example](examples/typed_pointer_cells.c) and
+[v0.25 experiments](experiments/v025/report.md).
