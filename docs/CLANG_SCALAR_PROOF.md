@@ -151,3 +151,7 @@ negative controls refuse certificates. Original source definedness, base,
 successor and exit obligations are retained. No solver timeout is reclassified as
 proof. The interval routine is an additional trusted proof component, not a
 machine-verified theorem prover.
+
+## v0.29 additional routes
+
+The scalar cfg/nested/recurrence boundaries above remain in place. Dedicated memory, calls, memory_nested and heap_summary routes now connect additional compiler-typed constructs and owned-list induction; see [the separate contracts](CLANG_MEMORY_AND_HEAP_SUMMARIES.md). Nested auto candidate discovery additionally admits disjoint Boolean counter schedules and finite control-state orbits, always with original-source induction. General LLVM/heap/call semantics and arbitrary closed-form discovery remain incomplete; KLEE is deferred.

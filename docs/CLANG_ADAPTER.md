@@ -78,7 +78,7 @@ complete source-MEMS-to-LLVM cost mapping.
 ## Compilation options
 
 `clang` options are `executable`, `args`, `compilation_database`, `command_index`,
-`working_directory`, `target`, `standard`, `timeout`, `include_ast` and `sanitize`.
+`working_directory`, `target`, `standard`, `timeout`, `include_ast`, `include_dependencies` and `sanitize`.
 The database supplies the working directory, so do not combine it with an
 explicit `working_directory`. Inline includes have the selected working directory
 added as a quote-include fallback; use `source_file` for project-accurate file
@@ -151,3 +151,7 @@ inductive summary kernels via [clang_proof](CLANG_SCALAR_PROOF.md). The compiler
 frontend still returns readiness, not proof. General LLVM/memory semantics and KLEE
 execution remain pending. Typedef metadata is also exported for canonical return
 and local type resolution.
+
+## v0.29 dependency export and memory/call connection
+
+`include_dependencies:true` exports complete record declarations and function definitions from the same AST invocation (up to 128 each, requires include_ast). The proof bridge selects the direct reachable closure and admitted records. See [Clang memory and owned-list contracts](CLANG_MEMORY_AND_HEAP_SUMMARIES.md); this is not general LLVM interpretation or KLEE integration.

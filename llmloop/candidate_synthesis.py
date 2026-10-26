@@ -34,6 +34,13 @@ def render(expr,entries):
     if expr in entries:return 'entry('+json.dumps(entries[expr])+')'
     if expr.is_Integer:return str(int(expr))
     if expr.is_Symbol:return str(expr)
+    if expr.func in (s.floor,s.ceiling):
+        numerator,denominator=s.fraction(s.together(expr.args[0]))
+        if denominator.is_Integer and denominator>0:
+            if denominator==1:return render(numerator,entries)
+            value=render(s.expand(numerator),entries)
+            return '(('+value+')//'+str(denominator)+')' if expr.func==s.floor else '(-((-('+value+'))//'+str(denominator)+'))'
+        raise SMTGraphError('Automatic floor/ceiling requires a positive integer denominator')
     if expr.func==s.KroneckerDelta:
         return '(1 if '+render(expr.args[0],entries)+' == '+render(expr.args[1],entries)+' else 0)'
     if isinstance(expr,s.Piecewise):
@@ -281,6 +288,16 @@ class Builder:
         if saturated is not None:
             replacements={basis[name]:entry[name] for name in mutable}
             return {name:s.simplify(saturated[name].subs(replacements,simultaneous=True)) if name in mutable else value for name,value in entry.items()},k
+        from .finite_control import discover as discover_control
+        controlled=discover_control(self,loop,env,mutable,k,clock,ancestors)
+        if controlled is not None:
+            replacements={basis[name]:entry[name] for name in mutable}
+            return {name:controlled[name].subs(replacements,simultaneous=True) if name in mutable else value for name,value in entry.items()},k
+        from .branch_prefix import discover
+        branched=discover(self,loop,env,mutable,k,clock,ancestors)
+        if branched is not None:
+            replacements={basis[name]:entry[name] for name in mutable}
+            return {name:branched[name].subs(replacements,simultaneous=True) if name in mutable else value for name,value in entry.items()},k
         phased=self.counted_phase(loop,env,mutable,k,clock,ancestors)
         if phased is not None:
             replacements={basis[name]:entry[name] for name in mutable}
@@ -309,6 +326,8 @@ def synthesize(loop,state,parameters,live,abi,nonnegative,aliases=None):
     entries={s.Dummy('entry',integer=True):name for name in state}
     ghosts={name:symbol for symbol,name in entries.items()}
     builder=Builder(abi,parameters,live,nonnegative,aliases)
+    import z3
+    builder.initial_constants={name:z3.simplify(term.value).as_long() for name,term in state.items() if z3.is_int_value(z3.simplify(term.value))}
     values,k=builder.orbit(loop,{**names,**ghosts},{name for name,_,_ in live})
     formulas={}
     for name,term in state.items():
@@ -316,7 +335,8 @@ def synthesize(loop,state,parameters,live,abi,nonnegative,aliases=None):
         if t.name=='_Bool':value=s.Piecewise((0,s.Eq(value,0)),(1,True))
         elif not t.signed:value=s.Mod(value,1<<t.bits)
         elif t.rank<abi.types['int'].rank:value=s.Mod(value-t.minimum,1<<t.bits)+t.minimum
-        formulas[name]=render(s.simplify(value),entries)
+        branched=any(e.get('method') in ('disjoint Boolean branch interval/residue prefix candidate','finite state-dependent control orbit with polynomial accumulator prefixes') for e in builder.evidence)
+        formulas[name]=render(value if branched else s.simplify(value),entries)
     return formulas,{'index':loop.init.decls[0].name,'candidates':formulas,'candidate_only':True,
                      'requires_separate_source_proof':True,'mathematical_derivations':builder.evidence,
                      'limitations':'candidate extraction approximates casts, intermediate safety and memory initialization/lifetimes; typed source proof is mandatory'}

@@ -91,11 +91,23 @@ class ScalarNormalizer:
             if children[0].get('kind')!='DeclRefExpr':raise SMTGraphError('Clang scalar assignment requires a local identifier')
             if kind=='CompoundAssignOperator':
                 self.type(n['computeLHSType']);self.type(n['computeResultType'])
-            return self.expr(children[0])+' '+n['opcode']+' '+self.expr(children[1])
+            return self.expr(children[0])+' '+n['opcode']+' '+self.expr(self.assignment_value(n))
         if kind=='UnaryOperator' and n.get('opcode') in ('++','--') and len(children)==1 and children[0].get('kind')=='DeclRefExpr':
             value=self.expr(children[0]);return value+n['opcode'] if n.get('isPostfix') else n['opcode']+value
         # No nested assignment/increment, comma side effects, calls or memory reads.
         return self.expr(n)
+
+    def assignment_value(self,n):
+        """Let the identical C assignment/common-type context do its conversion.
+
+        Explicit casts are always retained. In a compound assignment Clang's
+        computeResultType is the same common arithmetic type inferred by the
+        typed kernel; an outer implicit RHS cast to it is redundant.
+        """
+        children=n['inner'];rhs=children[1]
+        expected=n.get('computeResultType') if n['kind']=='CompoundAssignOperator' else children[0].get('type')
+        if rhs.get('kind')=='ImplicitCastExpr' and rhs.get('castKind') in ('IntegralCast','IntegralToBoolean') and len(rhs.get('inner',[]))==1 and expected is not None and self.type(rhs['type'])==self.type(expected):return rhs['inner'][0]
+        return rhs
 
     def decl(self,n):
         if n.get('kind')!='VarDecl' or n.get('storageClass') or n.get('tls'):raise SMTGraphError('Only automatic Clang scalar declarations supported')
@@ -112,7 +124,12 @@ class ScalarNormalizer:
         kind=n.get('kind');c=n.get('inner',[])
         if kind=='CompoundStmt':return '{\n'+'\n'.join(self.stmt(v) for v in c)+'\n}'
         if kind=='DeclStmt':
-            return '\n'.join(self.decl(v)+';' if v.get('kind')=='VarDecl' else '' if v.get('kind')=='TypedefDecl' else self.unsupported(v) for v in c)
+            parts=[]
+            for v in c:
+                if v.get('kind')=='VarDecl':parts.append(self.decl(v)+';')
+                elif v.get('kind')=='TypedefDecl':self.type(v['type'])
+                else:self.unsupported(v)
+            return '\n'.join(parts)
         if kind=='ReturnStmt' and len(c)==1:return 'return '+self.expr(c[0])+';'
         if kind=='IfStmt' and len(c) in (2,3):return 'if ('+self.expr(c[0])+') '+self.stmt(c[1])+(' else '+self.stmt(c[2]) if len(c)==3 else '')
         if kind=='WhileStmt' and len(c)==2:return 'while ('+self.expr(c[0])+') '+self.stmt(c[1])
@@ -153,33 +170,45 @@ class ScalarNormalizer:
 
 def prove_clang(source=None,source_file=None,function=None,clang=None,proof=None):
     if proof is None:proof={}
-    if not isinstance(proof,dict) or set(proof)-{'backend','parameter_bounds','inputs','max_steps','max_paths','closed_forms','loop_summaries'}:return {'status':'UNKNOWN','reason':'Invalid Clang proof options'}
+    if not isinstance(proof,dict) or set(proof)-{'backend','parameter_bounds','inputs','max_steps','max_paths','closed_forms','loop_summaries','allocation_failure','max_call_depth','allow_recursion'}:return {'status':'UNKNOWN','reason':'Invalid Clang proof options'}
     options={} if clang is None else dict(clang) if isinstance(clang,dict) else clang
     if isinstance(options,dict) and options.get('include_ast') is False:return {'status':'UNKNOWN','reason':'Clang proof requires include_ast=true'}
+    memory_backend=proof.get('backend') in ('memory','calls','memory_nested','heap_summary')
+    if memory_backend and isinstance(options,dict):options['include_dependencies']=True
     front=ClangAdapter(source,source_file,function,options).report()
     if front['status']!='CLANG_FRONTEND_READY':return front
     failure={'status':'UNKNOWN','frontend':'clang_proof','c_overflow_verified':False,'memory_safety_verified':False,'termination_proved':False,'clang_frontend':front}
     try:
         backend=proof.get('backend','cfg')
-        if backend not in ('cfg','nested','recurrence'):raise SMTGraphError('Clang proof backend must be cfg/nested/recurrence')
+        if backend not in ('cfg','nested','recurrence','memory','calls','memory_nested','heap_summary'):raise SMTGraphError('Unsupported Clang proof backend')
         triple=front['target']['triple']
         linux=triple.endswith(('linux-gnu','linux-musl'))
         windows='-windows-gnu' in triple or '-windows-msvc' in triple
         if triple.startswith('x86_64-') and (linux or windows):abi='LLP64' if windows else 'LP64'
         elif re.match(r'i[3-6]86-',triple) and linux:abi='ILP32'
         else:raise SMTGraphError('Clang proof target not covered by the current x86 ABI contract (including x32)')
-        normalizer=ScalarNormalizer(front);normalized=normalizer.source()
-        if backend!='cfg' and normalizer.renamed:raise SMTGraphError('Summary backends require unambiguous source scalar names')
+        if memory_backend:
+            from .clang_memory import normalize_program
+            normalized,normalizers,roots=normalize_program(front,with_calls=backend in ('calls','heap_summary'))
+            normalizer=normalizers[0];renamed=[v for n in normalizers for v in n.renamed]
+        else:
+            normalizer=ScalarNormalizer(front);normalized=normalizer.source();roots=normalizer.root;renamed=normalizer.renamed
+        if backend in ('nested','recurrence','memory_nested') and renamed:raise SMTGraphError('Summary backends require unambiguous source scalar names')
         char_signed=True
         for flag in front['effective_flags']:
             if flag in ('-funsigned-char','-fsigned-char'):char_signed=flag=='-fsigned-char'
-        request={'source':normalized,'function':front['functions'][0]['name'],'frontend':{'cfg':'typed_cfg_heap','nested':'typed_nested','recurrence':'typed_recurrence'}[backend],'abi':abi,'char_signed':char_signed}
+        if backend=='heap_summary':
+            if set(proof)-{'backend','parameter_bounds','inputs','max_paths','allocation_failure'}:raise SMTGraphError('Invalid owned list summary options')
+            from .list_heap_summary import prove_list_heap
+            result=prove_list_heap(normalized,front['functions'][0]['name'],proof.get('parameter_bounds'),abi,char_signed,proof.get('allocation_failure',True),proof.get('inputs'),proof.get('max_paths',48))
+            return {**result,'frontend':'clang_proof','clang_frontend':front,'normalization':{'source':normalized,'source_sha256':hashlib.sha256(normalized.encode()).hexdigest(),'ast_sha256':hashlib.sha256(json.dumps(roots,sort_keys=True).encode()).hexdigest(),'alpha_renamed':renamed,'backend':backend,'abi':abi,'char_signed':char_signed,'compiler_equivalence_machine_proved':False,'unsupported_constructs_rejected':True}}
+        request={'source':normalized,'function':front['functions'][0]['name'],'frontend':{'cfg':'typed_cfg_heap','nested':'typed_nested','recurrence':'typed_recurrence','memory':'typed_cfg_heap','calls':'typed_cfg_calls','memory_nested':'typed_memory'}[backend],'abi':abi,'char_signed':char_signed}
         for key,value in proof.items():
             if key!='backend':request[key]=value
-        if backend=='nested' and 'loop_summaries' not in proof:request['loop_summaries']='auto'
+        if backend in ('nested','memory_nested') and 'loop_summaries' not in proof:request['loop_summaries']='auto'
         from .api import analyze_request
         result=analyze_request(request)
         success=result['status'].startswith('PROVED_DEFINED_TYPED_C_')
-        if success:result['status']={'cfg':'PROVED_DEFINED_CLANG_SCALAR_CFG','nested':'PROVED_DEFINED_CLANG_SCALAR_NESTED','recurrence':'PROVED_DEFINED_CLANG_SCALAR_RECURRENCE'}[backend]
-        return {**result,'frontend':'clang_proof','clang_frontend':front,'normalization':{'method':'structural scalar Clang AST to typed C; Clang + normalizer are trusted frontend components','source':normalized,'source_sha256':hashlib.sha256(normalized.encode()).hexdigest(),'ast_sha256':hashlib.sha256(json.dumps(normalizer.root,sort_keys=True).encode()).hexdigest(),'alpha_renamed':normalizer.renamed,'backend':backend,'abi':abi,'char_signed':char_signed,'compiler_equivalence_machine_proved':False,'unsupported_constructs_rejected':True},'scope':'declared scalar input domain and backend certificate; no pointer/array/record/call proof, no general LLVM semantics or KLEE execution'}
+        if success:result['status']={'cfg':'PROVED_DEFINED_CLANG_SCALAR_CFG','nested':'PROVED_DEFINED_CLANG_SCALAR_NESTED','recurrence':'PROVED_DEFINED_CLANG_SCALAR_RECURRENCE','memory':'PROVED_DEFINED_CLANG_MEMORY_CFG','calls':'PROVED_DEFINED_CLANG_MEMORY_CALLS','memory_nested':'PROVED_DEFINED_CLANG_MEMORY_NESTED'}[backend]
+        return {**result,'frontend':'clang_proof','clang_frontend':front,'normalization':{'method':'structural typed Clang AST to typed C; Clang + normalizer are trusted frontend components','source':normalized,'source_sha256':hashlib.sha256(normalized.encode()).hexdigest(),'ast_sha256':hashlib.sha256(json.dumps(roots,sort_keys=True).encode()).hexdigest(),'alpha_renamed':renamed,'backend':backend,'abi':abi,'char_signed':char_signed,'compiler_equivalence_machine_proved':False,'unsupported_constructs_rejected':True},'scope':'declared input domain and selected kernel certificate; memory/calls only for explicit memory backends; no general LLVM semantics or KLEE execution'}
     except (SMTGraphError,ValueError,TypeError,KeyError,RecursionError) as exc:return {**failure,'reason':str(exc)}
