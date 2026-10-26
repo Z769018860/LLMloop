@@ -7684,5 +7684,119 @@
       }
     },
     "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "clang_declarator_reject_vla_parameter",
+    "request": {
+      "source": "int helper(int n,int a[n++]){return n;}int entry(int n){int a[8]={0};return helper(n,a);}",
+      "frontend": "clang_proof",
+      "function": "entry",
+      "clang": {},
+      "proof": {
+        "backend": "calls",
+        "parameter_bounds": {
+          "n": [
+            1,
+            2
+          ]
+        }
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "clang_declarator_reject_macro_parameter",
+    "request": {
+      "source": "#define PARAM int a[(n++,1)]\nint helper(int n,PARAM){return n;}int entry(int n){int a[8]={0};return helper(n,a);}",
+      "frontend": "clang_proof",
+      "function": "entry",
+      "clang": {},
+      "proof": {
+        "backend": "calls",
+        "parameter_bounds": {
+          "n": [
+            1,
+            2
+          ]
+        }
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "clang_declarator_reject_static_minimum",
+    "request": {
+      "source": "int helper(int a[static 4]){return a[0];}int entry(int n){int a[1]={n};return helper(a);}",
+      "frontend": "clang_proof",
+      "function": "entry",
+      "clang": {},
+      "proof": {
+        "backend": "calls",
+        "parameter_bounds": {
+          "n": [
+            1,
+            2
+          ]
+        }
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "clang_declarator_reject_vla_typedef",
+    "request": {
+      "source": "int entry(int n){typedef int V[n++];return n;}",
+      "frontend": "clang_proof",
+      "function": "entry",
+      "clang": {},
+      "proof": {
+        "backend": "calls",
+        "parameter_bounds": {
+          "n": [
+            1,
+            2
+          ]
+        }
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "clang_declarator_reject_aligned_alias",
+    "request": {
+      "source": "typedef int I __attribute__((aligned(64)));typedef I J;int entry(int n){J a[1]={n};return a[0];}",
+      "frontend": "clang_proof",
+      "function": "entry",
+      "clang": {},
+      "proof": {
+        "backend": "calls",
+        "parameter_bounds": {
+          "n": [
+            1,
+            2
+          ]
+        }
+      }
+    },
+    "expected_status": "UNKNOWN"
+  },
+  {
+    "name": "clang_declarator_reject_aligned_record",
+    "request": {
+      "source": "typedef int I __attribute__((aligned(16)));struct R{char c;I x;};int entry(int n){return sizeof(struct R);}",
+      "frontend": "clang_proof",
+      "function": "entry",
+      "clang": {},
+      "proof": {
+        "backend": "calls",
+        "parameter_bounds": {
+          "n": [
+            1,
+            2
+          ]
+        }
+      }
+    },
+    "expected_status": "UNKNOWN"
   }
 ]

@@ -124,7 +124,12 @@ class ScalarNormalizer:
         kind=n.get('kind');c=n.get('inner',[])
         if kind=='CompoundStmt':return '{\n'+'\n'.join(self.stmt(v) for v in c)+'\n}'
         if kind=='DeclStmt':
-            return '\n'.join(self.decl(v)+';' if v.get('kind')=='VarDecl' else '' if v.get('kind')=='TypedefDecl' else self.unsupported(v) for v in c)
+            parts=[]
+            for v in c:
+                if v.get('kind')=='VarDecl':parts.append(self.decl(v)+';')
+                elif v.get('kind')=='TypedefDecl':self.type(v['type'])
+                else:self.unsupported(v)
+            return '\n'.join(parts)
         if kind=='ReturnStmt' and len(c)==1:return 'return '+self.expr(c[0])+';'
         if kind=='IfStmt' and len(c) in (2,3):return 'if ('+self.expr(c[0])+') '+self.stmt(c[1])+(' else '+self.stmt(c[2]) if len(c)==3 else '')
         if kind=='WhileStmt' and len(c)==2:return 'while ('+self.expr(c[0])+') '+self.stmt(c[1])

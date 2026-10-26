@@ -99,6 +99,34 @@ def layouts_from_dump(text):
     return records
 
 
+def function_declarators(text,names):
+    """Read original parameter declarators from Clang's own AST pretty-printer.
+
+    JSON ParmVarDecl types have already lost array/static/VLA spelling and
+    evaluation. Only complete top-level definition headers are admitted here.
+    Strings/comments are lexically replaced before scanning braces, never parsed
+    as source tokens or executed. Unrecognized headers fail closed.
+    """
+    clean=re.sub(r'/\*[\s\S]*?\*/|//[^\n]*|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'', ' ',text)
+    depth=0;header=[];result={}
+    for char in clean:
+        if depth==0:
+            if char=='{':
+                prefix=''.join(header);matches=[name for name in names if re.search(r'\b'+re.escape(name)+r'\s*\(',prefix)]
+                if matches:
+                    if len(matches)!=1 or prefix.count('(')!=prefix.count(')'):raise SMTGraphError('Unsupported embedded function parameter declarator')
+                    name=matches[0]
+                    if name in result:raise SMTGraphError('Ambiguous printed function declarator')
+                    result[name]=prefix.strip()
+                depth=1;header=[]
+            elif char==';':header=[]
+            else:header.append(char)
+        elif char=='{':depth+=1
+        elif char=='}':depth-=1
+    if set(result)!=set(names):raise SMTGraphError('Clang original function declarators missing/ambiguous')
+    return result
+
+
 def llvm_cfg(text):
     functions=[];current=None;block=None
     for line in text.splitlines():
@@ -198,7 +226,7 @@ class ClangAdapter:
                 while nodes:
                     node=nodes.pop();count+=1
                     if count>250000:raise SMTGraphError('Clang AST node budget exceeded')
-                    if node.get('kind')=='TypedefDecl':typedefs.append({'name':node.get('name'),'type':node.get('type',{}),'location':node.get('loc')})
+                    if node.get('kind')=='TypedefDecl':typedefs.append({'name':node.get('name'),'type':node.get('type',{}),'location':node.get('loc'),'attributes':[v.get('kind') for v in node.get('inner',[]) if v.get('kind','').endswith('Attr')]})
                     if node.get('kind')=='RecordDecl' and node.get('completeDefinition'):records.append(node)
                     if node.get('kind')=='FunctionDecl' and any(child.get('kind')=='CompoundStmt' for child in node.get('inner',[])):definitions.append(node)
                     nodes.extend(reversed(node.get('inner',[])))
@@ -217,6 +245,9 @@ class ClangAdapter:
                 if cfg.get('include_dependencies'):
                     if not cfg.get('include_ast',True):raise SMTGraphError('Dependency export requires include_ast=true')
                     if len(definitions)>128 or len(records)>128:raise SMTGraphError('Dependency definition export budget exceeded')
-                    dependencies={'dependencies':{'functions':definitions,'records':records}}
+                    printed=self.run([*common,'-fsyntax-only','-Xclang','-ast-print',str(path)],directory,'declarators',workspace,timeout)
+                    declarators=function_declarators(printed,[n['name'] for n in definitions])
+                    if path.read_bytes()!=before:raise SMTGraphError('Source changed during Clang declaration ingestion')
+                    dependencies={'dependencies':{'functions':definitions,'records':records,'function_declarators':declarators}}
                 return {**base,'status':'CLANG_FRONTEND_READY','source_compiles':True,'compiler':self.compiler,'source':{'path':str(path) if self.source_file else '<inline>','sha256':digest(before)},'compilation_database':database,'effective_flags':[*flags,*optimization,*debug,*ir_flags],'ignored_build_flags':ignored,'target':{'triple':triple[1],'data_layout':layout[1]},'functions':functions,**dependencies,'typedefs':typedefs,'ast_nodes':count,'record_layouts':layouts_from_dump(layout_text),'record_layout_dump':layout_text,'llvm_ir':ir,'llvm_ir_sha256':digest(ir.encode()),'llvm_cfg':llvm_cfg(ir),'ubsan_instrumentation_requested':sanitize,'proof_boundary':'Clang semantics/AST/IR ingestion only; no LLMloop proof or KLEE execution; LLVM blocks include sanitizer branches and are not source MEMS counts','input_consistency':'main source checked unchanged; included headers/environment must remain stable across compiler stages'}
         except (SMTGraphError,OSError,ValueError,TypeError,RecursionError) as exc:return {**base,'reason':str(exc),**({'compiler':self.compiler} if self.compiler else {})}

@@ -57,7 +57,7 @@ def main():
     for name,source in [('control',CONTROL),('transient',TRANSIENT)]:specs.append((name,source,'nested',{'n':[0,1000000]},[{'n':n} for n in [0,1,2,3,7,1000000]],{}))
     selected=sys.argv[1] if len(sys.argv)>1 else None
     if selected is None:
-        for name in [row[0] for row in specs]+['owned_list','faults']:
+        for name in [row[0] for row in specs]+['owned_list','faults','declarator_controls']:
             subprocess.run([sys.executable,__file__,name],check=True)
         return
     specs=[row for row in specs if row[0]==selected]
@@ -99,6 +99,16 @@ def main():
                 translated=compile_and_run(path,'list_normalized',r['normalization']['source'],scenarios,opt)
                 assert original==translated==expected,(opt,original,translated,expected)
                 print(f'escaping owned list with partial allocation failure / reverse fold / all objects freed {opt}: {len(expected)}/{len(expected)} matched',flush=True)
+        if selected=='declarator_controls':
+            controls=[('vla_parameter','int helper(int n,int a[n++]){return n;}int entry(int n){int a[8]={0};return helper(n,a);}',3),
+                      ('vla_typedef','int entry(int n){typedef int V[n++];return n;}',3),
+                      ('aligned_record','typedef int I __attribute__((aligned(16)));struct R{char c;I x;};int entry(int n){return sizeof(struct R);}',32)]
+            for opt in ['-O0','-O2']:
+                for name,source,expected in controls:
+                    r=analyze_request({'source':source,'frontend':'clang_proof','function':'entry','proof':{'backend':'calls','parameter_bounds':{'n':[1,2]}}})
+                    assert r['status']=='UNKNOWN',r
+                    assert compile_and_run(path,name,source,[({'n':2},-1)],opt)==[(expected,0,0)]
+                print(f'unsupported original declarator behavior retained as proof rejection {opt}: {len(controls)}/{len(controls)} matched',flush=True)
         if selected=='faults':
             faults=[('heap_uaf',ALLOC+'int entry(int n){int *p=malloc(sizeof(int));if(!p){return 0;}p[0]=n;free(p);return p[0];}','heap-use-after-free'),
                     ('stack_oob','int entry(int n){int a[2]={0};return a[n+1];}','out of bounds')]

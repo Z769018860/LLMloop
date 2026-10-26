@@ -59,7 +59,13 @@ Memory routes request `clang.include_dependencies:true` automatically. The adapt
 exports function definitions and complete record declarations from the **same AST
 invocation** as the selected entry. Export budgets are 128 functions/128 records;
 the proof normalizer follows only direct reachable definitions, up to 16 functions,
-and emits matching prototypes and needed named records. Unrelated global objects
+and emits matching prototypes and needed named records. A supplementary Clang
+AST pretty-print stage retains original definition parameter declarators: JSON
+ParmVarDecl pointer types alone hide array/VLA evaluation and static minimum
+contracts. Written array parameters are rejected; ordinary pointer parameters
+remain supported. Parameter attributes, variably modified local typedefs and
+attributed memory typedef aliases are refused. Natural record size, alignment and
+field offsets must exactly match the compiler layout, including typedef alignment. Unrelated global objects
 are not modeled; a reference to any global is rejected.
 
 Declaration IDs resolve lexical locals independently in each function. Types are

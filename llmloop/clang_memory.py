@@ -27,8 +27,16 @@ class MemoryNormalizer(ScalarNormalizer):
         selected=frontend['functions'][0]['ast'] if root is None else root
         super().__init__({**frontend,'functions':[{'ast':selected}]})
         self.functions=functions or {};self.required_records=set();self.builtins=set()
+        self.attributed_aliases={n['name'] for n in frontend.get('typedefs',[]) if n.get('attributes')}
+        for _ in range(32):
+            before=set(self.attributed_aliases)
+            for alias in frontend.get('typedefs',[]):
+                if set(re.findall(r'[A-Za-z_][A-Za-z0-9_]*',alias['type'].get('qualType',''))) & self.attributed_aliases:self.attributed_aliases.add(alias['name'])
+            if before==self.attributed_aliases:break
 
     def type(self,t):
+        spelling=t.get('qualType','') if isinstance(t,dict) else t
+        if isinstance(spelling,str) and set(re.findall(r'[A-Za-z_][A-Za-z0-9_]*',spelling)) & self.attributed_aliases:raise SMTGraphError('Attributed typedef memory types unsupported')
         text=t.get('desugaredQualType',t.get('qualType','')) if isinstance(t,dict) else t
         if not isinstance(text,str):raise SMTGraphError('Clang memory type missing')
         text=' '.join(text.split());seen=set()
@@ -148,10 +156,14 @@ class MemoryNormalizer(ScalarNormalizer):
     def source(self):
         # Reuse all structural body checks, but pointer returns/parameters need
         # C declarators; array parameters have already decayed in Clang's type.
+        header=self.frontend.get('dependencies',{}).get('function_declarators',{}).get(self.root['name'])
+        if header is None or '[' in header:raise SMTGraphError('Written array/VLA/static-minimum function parameters unsupported; use ordinary pointer parameters')
+        if any(n.get('inner') for n in self.root.get('inner',[]) if n.get('kind')=='ParmVarDecl'):raise SMTGraphError('Parameter attributes/embedded declarations unsupported')
         return super().source()
 
 
 def normalize_program(frontend,with_calls=False):
+    if len(frontend['functions'])!=1:raise SMTGraphError('Select one defined Clang entry function')
     root=frontend['functions'][0]['ast'];entry=root['name']
     definitions=frontend.get('dependencies',{}).get('functions',[])
     funcs={}
@@ -188,6 +200,22 @@ def normalize_program(frontend,with_calls=False):
         for member in r.get('inner',[]):
             if member.get('kind')!='FieldDecl' or member.get('isBitfield') or member.get('inner') or not IDENT.fullmatch(member.get('name','')):raise SMTGraphError('Only natural unqualified non-bitfield records supported')
             fields.append(n.declarator(member['type'],member['name'])+';')
+        # Canonical types must preserve the compiler's actual record geometry,
+        # including alignment carried by an otherwise desugared typedef.
+        triple=frontend['target']['triple'];pointer_size=4 if re.match(r'i[3-6]86-',triple) else 8
+        offset=0;alignment=1;expected=[]
+        for member in r.get('inner',[]):
+            t=n.type(member['type'])
+            if '[' in t or t.startswith('struct ') and '*' not in t:raise SMTGraphError('Array/by-value record fields unsupported')
+            size=pointer_size if '*' in t else 1 if t=='_Bool' or 'char' in t.split() else 2 if 'short' in t.split() else 8 if t.split().count('long')==2 else (8 if '-windows-' not in triple and pointer_size==8 else 4) if 'long' in t.split() else 4
+            align=min(size,pointer_size);offset=(offset+align-1)//align*align
+            expected.append((offset,member['name']));offset+=size;alignment=max(alignment,align)
+        size=(offset+alignment-1)//alignment*alignment
+        layouts=[v for v in frontend['record_layouts'] if v['name']=='struct '+name]
+        if len(layouts)!=1:raise SMTGraphError('Unique Clang record layout required')
+        layout=layouts[0]
+        actual=[(v['offset_bytes'],v['declaration'].split()[-1]) for v in layout['members'] if 'bit_range' not in v]
+        if layout['size_bytes']!=size or layout['alignment_bytes']!=alignment or actual!=expected:raise SMTGraphError('Clang record layout differs from the natural typed heap model')
         emitted[name]='struct '+name+' {'+' '.join(fields)+'};'
         required.update(n.required_records)
         if len(required)>8:raise SMTGraphError('Record budget is 8')

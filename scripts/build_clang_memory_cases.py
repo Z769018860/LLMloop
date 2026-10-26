@@ -48,6 +48,14 @@ def cases():
         add('clang_owned_list_reject_'+name,LIST.replace(old,new),'heap_summary',{'n':[0,1000000]},expected='UNKNOWN')
     for name,body in [('feedback','if(x<t){x+=2;}else{x+=3;}'),('negative_remainder','if((-i)%2==1){x+=2;}else{x+=3;}'),('nonlinear_guard','if(i*i<t){x+=2;}else{x+=3;}')]:
         add('clang_branch_reject_'+name,'long long entry(int n,int t){long long x=0;for(int i=0;i<n;i++){'+body+'}return x;}','nested',{'n':[0,100],'t':[0,10]},expected='UNKNOWN')
+    for name,source in [
+        ('vla_parameter','int helper(int n,int a[n++]){return n;}int entry(int n){int a[8]={0};return helper(n,a);}'),
+        ('macro_parameter','#define PARAM int a[(n++,1)]\nint helper(int n,PARAM){return n;}int entry(int n){int a[8]={0};return helper(n,a);}'),
+        ('static_minimum','int helper(int a[static 4]){return a[0];}int entry(int n){int a[1]={n};return helper(a);}'),
+        ('vla_typedef','int entry(int n){typedef int V[n++];return n;}'),
+        ('aligned_alias','typedef int I __attribute__((aligned(64)));typedef I J;int entry(int n){J a[1]={n};return a[0];}'),
+        ('aligned_record','typedef int I __attribute__((aligned(16)));struct R{char c;I x;};int entry(int n){return sizeof(struct R);}')]:
+        add('clang_declarator_reject_'+name,source,'calls',{'n':[1,2]},expected='UNKNOWN')
     return rows
 
 if __name__=='__main__':

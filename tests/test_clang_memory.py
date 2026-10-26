@@ -124,3 +124,29 @@ def test_pointer_partial_initializer_null_and_memory_increment(clang):
     r=analyze('int entry(int n){int a[1]={2};int *p[2]={a};a[0]++;if(p[1]){return 99;}return p[0][0];}',inputs={'n':1})
     assert r['status']=='PROVED_DEFINED_CLANG_MEMORY_CFG',r
     assert r['evaluation']['value']==3
+
+
+@pytest.mark.parametrize('source',[
+ 'int helper(int n,int a[n++]){return n;}int entry(int n){int a[8]={0};return helper(n,a);}',
+ '#define PARAM int a[(n++,1)]\nint helper(int n,PARAM){return n;}int entry(int n){int a[8]={0};return helper(n,a);}',
+ 'int helper(int a[static 4]){return a[0];}int entry(int n){int a[1]={n};return helper(a);}',
+ '#pragma clang diagnostic ignored "-Wvla"\nint helper(int n,int a[n++]){return n;}int entry(int n){int a[8]={0};return helper(n,a);}',
+ 'int entry(int n){typedef int V[n++];return n;}',
+ 'typedef int I __attribute__((aligned(64)));typedef I J;int entry(int n){J a[1]={n};return a[0];}',
+ 'typedef int I __attribute__((aligned(16)));struct R{char c;I x;};int entry(int n){return sizeof(struct R);}',
+])
+def test_hidden_array_parameter_effects_typedef_evaluation_and_alignment_are_refused(clang,source):
+    r=analyze(source,'calls',bounds={'n':[1,2]})
+    assert r['status']=='UNKNOWN',r
+    assert not r.get('memory_safety_verified',False)
+
+
+def test_scalar_bridge_cannot_erase_vla_typedef_side_effect(clang):
+    r=analyze('int entry(int n){typedef int V[n++];return n;}','cfg',bounds={'n':[1,2]})
+    assert r['status']=='UNKNOWN',r
+
+
+def test_missing_or_ambiguous_memory_entry_is_unknown(clang):
+    for source in ['typedef int I;','int f(void){return 1;}int g(void){return 2;}']:
+        r=analyze_request({'source':source,'frontend':'clang_proof','proof':{'backend':'memory'}})
+        assert r['status']=='UNKNOWN',r
