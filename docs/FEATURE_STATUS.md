@@ -1,4 +1,4 @@
-# Feature status after v0.26
+# Feature status after v0.27
 
 This inventory distinguishes certified capabilities from outstanding general
 requirements. The project remains a restricted research prototype.
@@ -19,7 +19,7 @@ particular exit condition terminates. `UNKNOWN` is an explicit unsupported or
 unproved result, not a valid summary.
 
 See [v0.14 recurrence and experiment contracts](GUARDED_RECURRENCES_AND_EXPERIMENTS.md)
-and the committed [latest experiment report](../experiments/v026/report.md).
+and the committed [latest experiment report](../experiments/v027/report.md).
 
 See [unroll-free typed scalar C contracts](TYPED_UNBOUNDED_RECURRENCES.md) for the new machine-integer certificate. It does not certify general heap memory.
 
@@ -44,3 +44,5 @@ See [single eager call expressions](EAGER_CALL_EXPRESSIONS.md) for bounded arith
 See [finite typed pointer cells](TYPED_POINTER_CELLS.md) for initialization, guarded identity selection and interprocedural table escape. Unbounded struct-linked and cyclic heap summaries remain open.
 
 See [bounded named record graphs](BOUNDED_STRUCT_HEAP.md) for linked/cyclic object identity, per-member safety and explicit ABI layout choices. General unbounded shape summaries remain open.
+
+See [Clang ingestion](CLANG_ADAPTER.md) for compiler-owned syntax/types/layouts and real-project compilation commands. CLANG_FRONTEND_READY is not proof; general Clang AST/LLVM normalization into the proof engine and KLEE execution are still pending.

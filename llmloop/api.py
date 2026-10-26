@@ -12,10 +12,16 @@ def analyze_request(request: dict) -> dict:
     """
     try:
         if not isinstance(request, dict):raise SMTGraphError('Request must be an object')
-        allowed = {'ir', 'source', 'function', 'parameter_bounds', 'max_unroll',
+        allowed = {'ir', 'source', 'source_file', 'clang', 'function', 'parameter_bounds', 'max_unroll',
                    'max_paths', 'whole_function', 'invariants', 'verify_steps', 'assertion', 'ranking', 'synthesize_ranking', 'frontend', 'int_bits', 'parameter_mins', 'inputs', 'memory_layout', 'abi', 'char_signed', 'closed_forms', 'loop_summaries', 'max_steps', 'allocation_failure', 'max_call_depth', 'allow_recursion'}
         if set(request)-allowed:raise SMTGraphError('Unknown request fields: '+', '.join(sorted(set(request)-allowed)))
         if 'synthesize_ranking' in request and type(request['synthesize_ranking']) is not bool:raise SMTGraphError('synthesize_ranking must be Boolean')
+        if request.get('frontend')=='clang':
+            if ('source' in request)==('source_file' in request):raise SMTGraphError('Clang requires exactly one source or source_file')
+            if set(request)-{'source','source_file','frontend','clang','function'}:raise SMTGraphError('Invalid Clang frontend options')
+            from .clang_adapter import ClangAdapter
+            return {'schema_version':1,**ClangAdapter(source=request.get('source'),source_file=request.get('source_file'),function=request.get('function'),options=request.get('clang')).report()}
+        if set(request)&{'source_file','clang'}:raise SMTGraphError('source_file/clang options require frontend clang')
         if ('ir' in request) == ('source' in request):raise SMTGraphError('Provide exactly one of ir or source')
         if 'source' in request:
             from .memory_frontend import translate_memory_c

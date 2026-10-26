@@ -30,13 +30,13 @@ def command(args, timeout=300):
 
 def main(argv=None):
     parser=argparse.ArgumentParser()
-    parser.add_argument('--output',type=Path,default=ROOT/'experiments/v026')
-    parser.add_argument('--fixtures',type=Path,default=ROOT/'experiments/v026/cases.json')
+    parser.add_argument('--output',type=Path,default=ROOT/'experiments/v027')
+    parser.add_argument('--fixtures',type=Path,default=ROOT/'experiments/v027/cases.json')
     args=parser.parse_args(argv)
     args.output.mkdir(parents=True,exist_ok=True)
     version=command(['git','rev-parse','HEAD'])
     manifest={str(path.relative_to(ROOT)):hashlib.sha256(path.read_bytes()).hexdigest()
-              for pattern in ['llmloop/*.py','tests/*.py','scripts/*.py','pyproject.toml','examples/guarded*','examples/typed_unbounded_loop.c','examples/typed_nested*','examples/typed_memory*','examples/typed_coupled*','examples/typed_counter*','examples/typed_cfg*','examples/typed_recursive*','examples/typed_pointer*','examples/typed_struct*']
+              for pattern in ['llmloop/*.py','tests/*.py','scripts/*.py','pyproject.toml','examples/guarded*','examples/typed_unbounded_loop.c','examples/typed_nested*','examples/typed_memory*','examples/typed_coupled*','examples/typed_counter*','examples/typed_cfg*','examples/typed_recursive*','examples/typed_pointer*','examples/typed_struct*','examples/clang_project/*']
               for path in sorted(ROOT.glob(pattern)) if path.is_file()}
     evidence={'schema_version':1,'generated_at':datetime.now(timezone(timedelta(hours=8))).isoformat(),
               'source_base_commit':version['stdout'].strip(),'source_sha256':manifest,
@@ -66,7 +66,7 @@ def main(argv=None):
         report=analyze_request(fixture['request'])
         matched=report['status']==fixture['expected_status']
         evidence['guarded_cases'].append({'name':fixture['name'],'expected_status':fixture['expected_status'],
-            'actual_status':report['status'],'matched':matched,
+            'actual_status':report['status'],'matched':matched,'frontend_only':fixture['request'].get('frontend')=='clang',
             **{k:report[k] for k in ['failed_obligation','counterexample','evaluation','reason','c_overflow_verified'] if k in report},
             'proved_obligations':len(report.get('certificate',{}).get('obligations',report.get('proved_obligations',[]))),
             'synthesized_candidates':len(report.get('summary_synthesis',[]))})
@@ -77,7 +77,7 @@ def main(argv=None):
              'suites_total':len(evidence['suites']),
              'native_passed':sum(c['passed'] for c in native),'native_total':sum(c['total'] for c in native),
              'guarded_expectations_matched':sum(case['matched'] for case in evidence['guarded_cases']),
-             'guarded_cases_total':len(fixtures)}
+             'guarded_cases_total':len(fixtures),'clang_frontend_cases':sum(case['frontend_only'] for case in evidence['guarded_cases']),'clang_frontend_ready':sum(case['actual_status']=='CLANG_FRONTEND_READY' for case in evidence['guarded_cases'])}
     evidence['summary']=summary
     evidence['passed']=all(suite['passed'] for suite in evidence['suites']) and all(case['matched'] for case in evidence['guarded_cases'])
     (args.output/'results.json').write_text(json.dumps(evidence,indent=2)+'\n')
@@ -90,11 +90,12 @@ def main(argv=None):
            'Generated: '+evidence['generated_at'],'',
            'Base commit: `'+evidence['source_base_commit']+'`. Exact source SHA-256 manifest, commands, versions, logs and counterexamples are in `results.json`.',
            '',f"Unit regressions: {summary['unit_tests_passed']} passed.",'',*rows,'',f"Native comparisons: {summary['native_passed']}/{summary['native_total']}.",
-           f"Proof/control expectations: {summary['guarded_expectations_matched']}/{summary['guarded_cases_total']}.",'',
+           f"Analysis/frontend/control expectations: {summary['guarded_expectations_matched']}/{summary['guarded_cases_total']}.",'',
            '| Case | Expected | Actual |','| --- | --- | --- |']
     for case in evidence['guarded_cases']:
         lines.append(f"| {case['name']} | {case['expected_status']} | {case['actual_status']} |")
     lines += ['', '## Interpretation','',
+              'CLANG_FRONTEND_READY is compiler AST/layout/LLVM ingestion, never a safety/termination certificate. Clang acceptance cases are counted separately in results.json; compiling deliberate UB does not prove it safe. The adapter has not yet lowered general LLVM instruction semantics into the LLMloop proof engine or run KLEE.',
               'Native checks are finite differential tests; the memory-rejection sanitizer suite counts expected fault correspondences separately in its log, not certified safe executions. Mathematical recurrence and typed scalar-loop claims come from checked induction obligations within their reported domains, not from the sample count.',
               'Negative controls include incorrect base/successor formulas, a failure near iteration one million, ambiguous/missing branches, an empty domain, typed intermediate/return overflow, overwritten division by zero, index wrap, and unsupported expressions. UNKNOWN controls are never counted as supported functionality.',
               'These are controlled examples, not a representative real-world library benchmark. No performance advantage or universal C coverage is claimed.',

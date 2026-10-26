@@ -9,6 +9,10 @@ def main(argv=None):
     parser=argparse.ArgumentParser(prog='llmloop-symbolic')
     parser.add_argument('file',type=Path)
     source_mode=parser.add_mutually_exclusive_group()
+    source_mode.add_argument('--c-clang',action='store_true',help='Clang AST/LLVM ingestion; frontend readiness is not a proof')
+    clang_options=parser.add_mutually_exclusive_group()
+    clang_options.add_argument('--clang-config',help='JSON Clang executable/args/target/compilation_database options')
+    clang_options.add_argument('--clang-config-file',type=Path)
     source_mode.add_argument('--c-counted',action='store_true')
     source_mode.add_argument('--c-sweep',action='store_true')
     source_mode.add_argument('--c-private',action='store_true')
@@ -45,12 +49,17 @@ def main(argv=None):
     args=parser.parse_args(argv)
     try:
         text=args.file.read_text(encoding='utf-8')
+        if (args.clang_config is not None or args.clang_config_file is not None) and not args.c_clang:raise ValueError('Clang options require --c-clang')
+        if args.c_clang and (args.inputs is not None or args.parameter_bounds!='{}' or args.memory_layout!='{}' or args.parameter_mins!='{}'):raise ValueError('Clang ingestion does not accept proof inputs/bounds')
         if args.phase_invariants is not None and not args.c_periodic:raise ValueError('--phase-invariants requires --c-periodic')
         if args.closed_forms is not None and not (args.c_guarded or args.c_typed_loop):raise ValueError('--closed-forms requires --c-guarded or --c-typed-loop')
         if (args.auto_summaries or args.loop_summaries is not None or args.loop_summaries_file is not None) and not (args.c_typed_nested or args.c_typed_memory):raise ValueError('Loop summaries require --c-typed-nested or --c-typed-memory')
         if (args.max_steps!=128 or args.assume_allocation_success) and not (args.c_typed_cfg_heap or args.c_typed_cfg_calls):raise ValueError('Heap/step options require a typed CFG frontend')
         if (args.max_call_depth!=3 or args.allow_recursion) and not args.c_typed_cfg_calls:raise ValueError('Call depth requires --c-typed-cfg-calls')
-        if args.c_typed_cfg_heap or args.c_typed_cfg_calls:
+        if args.c_clang:
+            config=json.loads(args.clang_config_file.read_text() if args.clang_config_file else args.clang_config) if args.clang_config_file or args.clang_config else {}
+            request={'source_file':str(args.file.resolve()),'frontend':'clang','function':args.function,'clang':config}
+        elif args.c_typed_cfg_heap or args.c_typed_cfg_calls:
             request={'source':text,'frontend':'typed_cfg_calls' if args.c_typed_cfg_calls else 'typed_cfg_heap','function':args.function,'parameter_bounds':json.loads(args.parameter_bounds),
                      'abi':args.abi,'char_signed':not args.char_unsigned,'max_steps':args.max_steps,'max_paths':args.max_paths,'allocation_failure':not args.assume_allocation_success}
             if args.c_typed_cfg_calls:request.update(max_call_depth=args.max_call_depth,allow_recursion=args.allow_recursion)
