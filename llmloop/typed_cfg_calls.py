@@ -61,8 +61,9 @@ class CallExpansion:
         if len(source)>200000:raise SMTGraphError('Call source size budget exceeded')
         try:unit=c_parser.CParser().parse(source)
         except Exception as exc:raise SMTGraphError('C parse failed: '+str(exc)) from exc
+        records=[item for item in unit.ext if isinstance(item,c_ast.Decl) and item.name is None and isinstance(item.type,c_ast.Struct)]
         prototypes=[item for item in unit.ext if isinstance(item,c_ast.Decl) and isinstance(item.type,c_ast.FuncDecl)]
-        if any(not isinstance(item,c_ast.FuncDef) and item not in prototypes for item in unit.ext):raise SMTGraphError('Call frontend requires definitions and matched prototypes without globals')
+        if any(not isinstance(item,c_ast.FuncDef) and item not in prototypes and item not in records for item in unit.ext):raise SMTGraphError('Call frontend requires definitions and matched prototypes without globals')
         self.functions={}
         for item in unit.ext:
             if not isinstance(item,c_ast.FuncDef):continue
@@ -95,7 +96,7 @@ class CallExpansion:
                 if not isinstance(node.name,c_ast.ID) or node.name.name not in BUILTINS:raise SMTGraphError('Calls in conditions/complex expressions require explicit statement temporaries')
                 self.generic_visit(node)
         RemainingCalls().visit(root.body)
-        self.source=c_generator.CGenerator().visit(c_ast.FileAST([root]))
+        self.source=c_generator.CGenerator().visit(c_ast.FileAST(records+[root]))
         if len(self.source)>200000:raise SMTGraphError('Expanded call source size budget exceeded')
 
     def fresh(self,tag):
@@ -208,7 +209,7 @@ class CallExpansion:
             while isinstance(shape,c_ast.PtrDecl):
                 if shape.quals:raise SMTGraphError('Qualified helper pointer parameters unsupported')
                 depth+=1;shape=shape.type
-            if depth>3 or not isinstance(shape,c_ast.TypeDecl) or not isinstance(shape.type,c_ast.IdentifierType):raise SMTGraphError('Only scalar/integer-pointer helper parameters up to depth 3 supported')
+            if depth>3 or not isinstance(shape,c_ast.TypeDecl) or not isinstance(shape.type,(c_ast.IdentifierType,c_ast.Struct)) or isinstance(shape.type,c_ast.Struct) and (depth==0 or shape.type.decls is not None):raise SMTGraphError('Only scalars and integer/record pointers up to depth 3 supported')
         if len(stack)>self.max_call_depth:
             if not self.allow_recursion:raise SMTGraphError('Call depth budget exceeded')
             return self.frontier(signature.type,name,stack,need_value)
@@ -229,6 +230,7 @@ class CallExpansion:
                 labels[n.name]=self.fresh('label');visitor.generic_visit(n)
         Names().visit(function.body)
         class Rename(c_ast.NodeVisitor):
+            def visit_StructRef(self,n):self.visit(n.name)
             def visit_ID(self,n):
                 if n.name in mapping:n.name=mapping[n.name]
             def visit_Decl(self,n):
@@ -300,5 +302,5 @@ class TypedCFGCalls(TypedCFGHeap):
                               'external_calls_supported':False,'pointer_return_supported':True,
                               'nonvoid_return_marker_checked':True}
         if result.get('failed_obligation','').startswith('call depth frontier'):result['analysis_limit']='call_depth_frontier'
-        result['scope']='bounded direct/recursive calls with shared integer/pointer-cell heap, pointer arguments/returns and callee stack lifetime; no unbounded recursion proof, external pointers, structs or general closed-form synthesis'
+        result['scope']='bounded direct/recursive calls with shared integer/pointer-cell/record heap, pointer arguments/returns and callee stack lifetime; no unbounded recursion proof, external pointers, by-value structs or general closed-form synthesis'
         return result

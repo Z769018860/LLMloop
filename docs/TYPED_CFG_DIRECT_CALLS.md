@@ -107,3 +107,10 @@ Internal helpers can take and return integer pointers up to depth three, includi
 pointer tables and arrays of pointer formals. Heap identity and frame lifetime
 checks are shared with the [finite pointer-cell verifier](TYPED_POINTER_CELLS.md).
 This does not admit external root pointer parameters or struct graphs.
+
+## v0.26 named record pointers
+
+Named top-level record definitions are retained through call expansion. Helpers
+can accept and return record pointers, and member names are preserved separately
+from renamed locals/parameters. See [bounded record graphs](BOUNDED_STRUCT_HEAP.md)
+for supported fields, layouts, initialization and limits.

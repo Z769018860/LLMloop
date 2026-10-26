@@ -124,3 +124,9 @@ The bounded frontend now also admits finite typed pointer cells and up to three
 levels of integer-pointer indirection. Earlier integer-element-only restrictions
 are superseded for the [pointer-cell fragment](TYPED_POINTER_CELLS.md). Structs,
 external roots and general heap shapes remain unsupported.
+
+## v0.26 record graph extension
+
+The bounded heap model now admits allocated single named records with typed
+integer/pointer members and finite linked/cyclic graphs. Earlier blanket struct
+restrictions are superseded only for [this fragment](BOUNDED_STRUCT_HEAP.md).
