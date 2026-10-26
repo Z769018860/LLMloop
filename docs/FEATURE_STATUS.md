@@ -1,4 +1,4 @@
-# Feature status after v0.25
+# Feature status after v0.26
 
 This inventory distinguishes certified capabilities from outstanding general
 requirements. The project remains a restricted research prototype.
@@ -6,7 +6,7 @@ requirements. The project remains a restricted research prototype.
 | Requirement | Implemented certified fragment | Outstanding general cases |
 | --- | --- | --- |
 | Nested loop summaries | Counted finite-cell affine summaries, immutable parameter bounds, interleaved outer scalar updates; compositional typed scalar for-loop trajectories up to 16 levels | Arbitrary data-dependent nested CFGs and escaping heap interactions |
-| Arrays/pointers/heap | Finite layouts, aliases/lifetimes, dynamic pointwise sweeps, finite-window backward scans, repeated private fixed calloc/free folds; unified typed finite local arrays/fixed malloc/calloc sites with per-cell initialization and alias lifetimes; independent bounded CFG route for variable-size allocation/failure, mutable aliases, cross-block heap escape and bounded direct-call pointer arguments/returns; finite pointer-valued arrays/heap tables with dynamic cell choices and up to three levels of typed indirection | General linked/escaping heap shapes, external pointer layouts, realloc and physical capacity |
+| Arrays/pointers/heap | Finite layouts, aliases/lifetimes, dynamic pointwise sweeps, finite-window backward scans, repeated private fixed calloc/free folds; unified typed finite local arrays/fixed malloc/calloc sites with per-cell initialization and alias lifetimes; independent bounded CFG route for variable-size allocation/failure, mutable aliases, cross-block heap escape and bounded direct-call pointer arguments/returns; finite pointer-valued arrays/heap tables with dynamic cell choices and up to three levels of typed indirection; single named allocated records with typed fields and bounded linked/cyclic graph execution | General unbounded linked/escaping heap summaries, external pointer layouts, realloc and physical capacity |
 | General recurrences | Affine induction-certified matrix powers, finite polynomial lifts, periodic schedules, inductive state-dependent phases, supplied nonperiodic Piecewise candidates; automatic triangular finite-polynomial, isolated saturation, parity/transient and static-cell, periodic coupled block and counter-threshold additive polynomial candidates independently verified against typed source; exact bounded state-branch execution without closed-form synthesis | Automatic discovery of arbitrary coupled/branching nonperiodic trajectories or closed forms; unsupported symbolic exponentials in candidate SMT mode |
 | C integer semantics | ABI-aware concrete and symbolic typed expressions, bounded typed scalar function execution, unroll-free heterogeneous single/nested scalar loop certificates from supplied state candidates, typed finite local memory composed with nested scalar loop certificates; restricted single-width dynamic memory safety proofs; independent failure-aware finite dynamic heap CFG verification | General typed heap shapes, external pointer layouts, arbitrary calls/side effects |
 | Execution validity | Bounded reachable-state checks, ranking certificates, counted-loop termination in mathematical frontends and certified typed scalar trajectories; bounded complete-exit CFG with break/continue, goto, switch, early exits and typed direct-call frames and opt-in recursive closure with unreachable depth frontiers | General unbounded termination and feasibility for arbitrary C CFG loops |
@@ -19,7 +19,7 @@ particular exit condition terminates. `UNKNOWN` is an explicit unsupported or
 unproved result, not a valid summary.
 
 See [v0.14 recurrence and experiment contracts](GUARDED_RECURRENCES_AND_EXPERIMENTS.md)
-and the committed [latest experiment report](../experiments/v025/report.md).
+and the committed [latest experiment report](../experiments/v026/report.md).
 
 See [unroll-free typed scalar C contracts](TYPED_UNBOUNDED_RECURRENCES.md) for the new machine-integer certificate. It does not certify general heap memory.
 
@@ -41,4 +41,6 @@ See [closed bounded recursion](BOUNDED_RECURSIVE_CALLS.md). Recursive calls can 
 
 See [single eager call expressions](EAGER_CALL_EXPRESSIONS.md) for bounded arithmetic/condition calls with stable scalar siblings. Lazy, nested and multiple expression calls remain open.
 
-See [finite typed pointer cells](TYPED_POINTER_CELLS.md) for initialization, guarded identity selection and interprocedural table escape. Struct-linked and cyclic general heap shapes remain open.
+See [finite typed pointer cells](TYPED_POINTER_CELLS.md) for initialization, guarded identity selection and interprocedural table escape. Unbounded struct-linked and cyclic heap summaries remain open.
+
+See [bounded named record graphs](BOUNDED_STRUCT_HEAP.md) for linked/cyclic object identity, per-member safety and explicit ABI layout choices. General unbounded shape summaries remain open.

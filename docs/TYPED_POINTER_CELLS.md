@@ -91,3 +91,10 @@ See [v0.25 results](../experiments/v025/report.md) and the exact source manifest
 `results.json`. Struct-linked/cyclic heap shapes, external roots, realloc, leak
 freedom, arbitrary branching closed-form synthesis and unbounded CFG/recursion
 proofs remain outstanding.
+
+## v0.26 record member extension
+
+The bounded frontends also support pointer cells as members of named allocated
+records, including self/mutually referring edges and finite cyclic graphs. Earlier
+struct restrictions are superseded only for the [bounded record fragment](BOUNDED_STRUCT_HEAP.md).
+General unbounded shape summaries remain open.

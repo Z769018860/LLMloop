@@ -630,3 +630,14 @@ not silently treated as typed null pointers. See the
 [pointer-cell contract](docs/TYPED_POINTER_CELLS.md),
 [example](examples/typed_pointer_cells.c) and
 [v0.25 experiments](experiments/v025/report.md).
+
+## v0.26: bounded struct-linked heap graphs
+
+Named allocated records now support typed integer and pointer members, linked
+lists, finite cycles and cross-helper ownership/alias updates in the bounded CFG
+frontends. Original member operations retain initialization, overflow and lifetime
+checks; all allocation outcomes and complete exits must be proved. Concrete ABI
+layouts are reported. Record arrays/by-value records and unbounded heap-shape
+summaries remain unsupported. See the [contract](docs/BOUNDED_STRUCT_HEAP.md),
+[list example](examples/typed_struct_list.c) and
+[v0.26 experiments](experiments/v026/report.md).
