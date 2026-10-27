@@ -77,7 +77,6 @@ def test_callee_original_safety_lifetime_and_return_obligations_retained(source)
 
 @pytest.mark.parametrize('source',[
     'int recur(int n){return recur(n);} int entry(int n){return recur(n);}',
-    'int leaf(int n){return n;} int entry(int n){return leaf(leaf(n));}',
     'int leaf(int n){return n;} int entry(int n){return leaf(n++);}',
     'int leaf(int n,int p[n++]){return n;} int entry(int n){int a[1]={0};return leaf(n,a);}',
     'int leaf(int p[static 3]){return p[0];} int entry(void){int a[1]={0};return leaf(a);}',
@@ -86,6 +85,11 @@ def test_callee_original_safety_lifetime_and_return_obligations_retained(source)
 ])
 def test_unsequenced_recursive_or_unsupported_calls_rejected(source):
     with pytest.raises(SMTGraphError):engine(source,parameter_bounds={'n':[0,1]} if 'entry(int n)' in source else {})
+
+def test_nested_scalar_call_keeps_both_parameter_frames():
+    e=engine('int leaf(int n){return n;}int entry(int n){return leaf(leaf(n));}',parameter_bounds={'n':[0,1]})
+    assert e.report({'n':1})['evaluation']['value']==1
+    assert len(e.expansion.events)==2
 
 
 def test_depth_budget_and_fresh_name_hygiene():

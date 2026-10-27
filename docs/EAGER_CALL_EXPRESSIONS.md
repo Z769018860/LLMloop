@@ -1,5 +1,10 @@
 # Single eager direct-call expressions (v0.24)
 
+This records the original v0.24 contract. The v0.33
+[sequenced expression extension](SEQUENCED_CALL_EXPRESSIONS.md) supersedes the
+lazy/nested/multiple-call, cast, comma and loop-header exclusions below under its
+explicit sequencing, purity and bounded-complete-exit conditions.
+
 The `typed_cfg_calls` frontend accepts a single direct helper call inside an
 arithmetic/comparison expression used by a return, declaration initializer,
 simple `=` assignment, `if` condition or `switch` selector. For example:

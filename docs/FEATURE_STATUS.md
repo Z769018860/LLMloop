@@ -1,4 +1,4 @@
-# Feature status after v0.32
+# Feature status after v0.33
 
 This inventory distinguishes certified capabilities from outstanding general
 requirements. The project remains a restricted research prototype.
@@ -19,7 +19,7 @@ particular exit condition terminates. `UNKNOWN` is an explicit unsupported or
 unproved result, not a valid summary.
 
 See [v0.14 recurrence and experiment contracts](GUARDED_RECURRENCES_AND_EXPERIMENTS.md)
-and the committed [latest experiment report](../experiments/v032/report.md).
+and the committed [latest experiment report](../experiments/v033/report.md).
 
 See [unroll-free typed scalar C contracts](TYPED_UNBOUNDED_RECURRENCES.md) for the new machine-integer certificate. It does not certify general heap memory.
 
@@ -39,7 +39,12 @@ See [bounded direct calls and interprocedural heap return](TYPED_CFG_DIRECT_CALL
 
 See [closed bounded recursion](BOUNDED_RECURSIVE_CALLS.md). Recursive calls can be certified only after excluding every expansion frontier in the declared domain; this is not general recursive induction or an inferred closed form.
 
-See [single eager call expressions](EAGER_CALL_EXPRESSIONS.md) for bounded arithmetic/condition calls with stable scalar siblings. Lazy, nested and multiple expression calls remain open.
+See [single eager call expressions](EAGER_CALL_EXPRESSIONS.md) for the original
+contract and [sequenced call expressions](SEQUENCED_CALL_EXPRESSIONS.md) for the
+current extension: short-circuit/conditional/comma execution, nested arguments,
+loop-header calls, discarded expressions and independent pure sibling calls.
+Observable unordered sibling effects and arbitrary call-expression semantics
+remain open; every bounded execution still needs complete-exit proof.
 
 See [finite typed pointer cells](TYPED_POINTER_CELLS.md) for initialization, guarded identity selection and interprocedural table escape. Unbounded struct-linked and cyclic heap summaries remain open.
 

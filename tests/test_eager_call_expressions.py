@@ -19,10 +19,15 @@ def test_if_switch_initializer_and_assignment():
     e=check(s,{'n':[0,3]})
     assert [e.report({'n':n})['evaluation']['value'] for n in range(4)]==[102,5,18,21]
 
-@pytest.mark.parametrize('expr', ['f(n)+f(n)','n && f(n)','n ? f(n) : 0','a[0]+f(n)','*p+f(n)','sizeof(f(n))','f(f(n))','f(n++)'])
-def test_unsequenced_lazy_memory_and_unevaluated_contexts_rejected(expr):
+@pytest.mark.parametrize('expr', ['a[0]+f(n)','*p+f(n)','sizeof(f(n))','f(n++)'])
+def test_unstable_memory_side_effects_and_unevaluated_contexts_rejected(expr):
     s='int f(int n){return n;} int entry(int n){int a[1]={1};int *p=a;return '+expr+';}'
     with pytest.raises(SMTGraphError):check(s,{'n':[0,1]})
+
+@pytest.mark.parametrize('expr,values',[('f(n)+f(n)',[0,2]),('n && f(n)',[0,1]),('n ? f(n) : 0',[0,1]),('f(f(n))',[0,1])])
+def test_sequenced_nested_and_independent_pure_calls_now_supported(expr,values):
+    e=check('int f(int n){return n;}int entry(int n){return '+expr+';}',{'n':[0,1]})
+    assert [e.report({'n':n})['evaluation']['value'] for n in (0,1)]==values
 
 def test_memory_effect_is_not_reordered_across_sibling_read():
     s='int change(int *p){p[0]=9;return 1;}int entry(void){int a[1]={3};return a[0]+change(a);}'

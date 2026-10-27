@@ -79,6 +79,10 @@ class MemoryNormalizer(ScalarNormalizer):
     def expr(self, node):
         kind = node.get('kind')
         children = node.get('inner', [])
+        if kind == 'CStyleCastExpr' and len(children) == 1 and node.get('castKind') == 'ToVoid' and node.get('type', {}).get('qualType') == 'void':
+            return '((void)(' + self.expr(children[0]) + '))'
+        if kind == 'BinaryOperator' and node.get('opcode') == ',' and len(children) == 2:
+            return '(' + self.expr(children[0]) + ', ' + self.expr(children[1]) + ')'
         if kind == 'ImplicitValueInitExpr' and '*' in node.get('type', {}).get('qualType', ''):
             return '0'
         if kind == 'DeclRefExpr':
@@ -223,6 +227,8 @@ class MemoryNormalizer(ScalarNormalizer):
         if node.get('kind') == 'ReturnStmt' and not node.get('inner'):
             return 'return;'
         if node.get('kind') == 'CallExpr':
+            return self.expr(node) + ';'
+        if node.get('kind') in ('ConditionalOperator', 'CStyleCastExpr'):
             return self.expr(node) + ';'
         return super().stmt(node)
 

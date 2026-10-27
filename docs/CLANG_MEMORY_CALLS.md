@@ -63,9 +63,12 @@ intermediates are retained; algebraic cancellation does not remove overflow.
 
 The call backend collects up to 16 reachable direct definitions, emits matching
 prototypes, and uses the existing hygienic frame expander. Its existing eager
-call-expression and argument restrictions still apply. Lazy/multiple/nested
-side-effecting calls, external functions without contracts, function pointers
-and external pointer layouts are refused. `max_steps`, `max_paths`,
+call-frame and finite-heap restrictions still apply. The
+[sequenced expression extension](SEQUENCED_CALL_EXPRESSIONS.md) now admits lazy
+branches, comma evaluation, nested argument calls, loop headers and independent
+pure sibling calls. Unordered observable sibling effects, arbitrary nested
+assignment/increment expressions, external functions without contracts,
+function pointers and external pointer layouts are refused. `max_steps`, `max_paths`,
 `max_call_depth` and `allow_recursion` are proof options. Recursion needs explicit
 opt-in and every depth frontier must be proved unreachable.
 

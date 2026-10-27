@@ -707,6 +707,25 @@ distinguish compiler acceptance, normalization, safety proofs and closed forms.
 General shapes, arbitrary interprocedural aliases and general branch synthesis
 remain open; KLEE is intentionally not integrated.
 
+## v0.33: sequenced calls in expressions and loop headers
+
+The `calls` Clang proof backend and `typed_cfg_calls` now retain calls inside
+short-circuit `&&`/`||`, conditional expressions, sequenced comma expressions,
+nested arguments and loop conditions/increments. Discarded values and integer
+casts retain their original operation checks. Loop continuation labels preserve
+`for` increments, `do` conditions and the nearest enclosing loop's `continue`.
+
+Multiple calls in operands without a specified order require a checked
+scalar-only pure call graph and stable arguments; observable sibling effects
+remain UNKNOWN. Purity never replaces arithmetic, lifetime, complete-exit or
+recursion-frontier checks. Original, Clang-normalized and expanded C are compared
+with the typed model, including independent unsafe UBSan controls.
+See the [example](examples/clang_sequenced_calls.c),
+[source contract](docs/SEQUENCED_CALL_EXPRESSIONS.md) and
+[v0.33 experiments](experiments/v033/report.md). Finite heap/CFG/call limits
+remain explicit; this does not establish general C/LLVM semantics or arbitrary
+heap/branch summaries. KLEE is not integrated.
+
 ### Independent sequential threshold branches
 
 Automatic typed-loop summaries also propose closed forms for two or three
