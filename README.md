@@ -665,3 +665,11 @@ or general LLVM/KLEE backend. See the [contract](docs/CLANG_SCALAR_PROOF.md),
 [project](examples/clang_proof_project/count.c),
 [actual proof](experiments/v028/clang_proof_demo.json) and
 [experiments](experiments/v028/report.md).
+
+### Independent sequential threshold branches
+
+Automatic typed-loop summaries also propose closed forms for two or three
+independent additive counter-threshold `if` statements in a single loop. All
+branch combinations must pass an algebraic independence check, and the original
+typed-C verifier still checks every source operation. Interacting branches and
+unproved cases remain `UNKNOWN`. See the [contract and native regression](docs/COUNTER_THRESHOLD_DISCOVERY.md).

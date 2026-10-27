@@ -271,6 +271,70 @@ class Builder:
             'candidate_only':True,'original_branch_proof_required':True})
         return result
 
+    def multiple_counted_phases(self,loop,env,mutable,k,clock,ancestors):
+        """Propose sums for independent additive threshold branches; never certify C."""
+        from itertools import product
+        nodes=loop.stmt.block_items or [] if isinstance(loop.stmt,c_ast.Compound) else [loop.stmt]
+        positions=[i for i,node in enumerate(nodes) if isinstance(node,c_ast.If)]
+        if not 2<=len(positions)<=3:return None
+        index=loop.init.decls[0].name
+        state_symbols=set().union(*(env[name].free_symbols for name in mutable))
+        branches=[]
+        for position in positions:
+            node=nodes[position];cond=node.cond
+            if not isinstance(cond,c_ast.BinaryOp) or cond.op not in ('<','<=','>','>=') or not isinstance(cond.left,c_ast.ID) or cond.left.name!=index:return None
+            threshold=self.arithmetic(cond.right,env)
+            if threshold.free_symbols & (state_symbols|{clock}):raise SMTGraphError('Counter-threshold discovery needs an immutable threshold')
+            if cond.op in ('<=','>'):threshold+=1
+            branches.append((node,s.Max(0,threshold),cond.op in ('<','<=')))
+        schedules={}
+        for choices in product((False,True),repeat=len(branches)):
+            replacements=dict(zip(positions,choices));body=[]
+            for pos,node in enumerate(nodes):
+                if pos in replacements:
+                    arm=node.iftrue if replacements[pos] else node.iffalse
+                    if arm is not None:body.append(arm)
+                else:body.append(node)
+            schedules[choices]=self.lower(c_ast.Compound(body),dict(env),set(ancestors)|{index})
+        zero=(False,)*len(branches);base=schedules[zero]
+        deltas={}
+        for name in mutable:
+            base_delta=s.expand(base[name]-env[name])
+            effects=[]
+            for j in range(len(branches)):
+                choice=tuple(i==j for i in range(len(branches)))
+                effects.append(s.expand(schedules[choice][name]-base[name]))
+            for choices,values in schedules.items():
+                if s.simplify(values[name]-base[name]-sum((effects[j] for j,v in enumerate(choices) if v),s.Integer(0)))!=0:
+                    raise SMTGraphError('Counter-threshold branches interact; independent additive synthesis refused')
+            if any(expr.free_symbols & state_symbols for expr in [base_delta,*effects]):
+                raise SMTGraphError('Counter-threshold discovery requires state-independent additive increments')
+            deltas[name]=(base_delta,effects)
+        q=s.Dummy('prefix_count',integer=True,nonnegative=True);cache={}
+        def prefix(expr,count):
+            expr=self.bounded(s.expand(expr))
+            if expr not in cache:
+                try:poly=s.Poly(expr,clock)
+                except s.PolynomialError as exc:raise SMTGraphError('Counter-threshold increments must be polynomial') from exc
+                if poly.degree()>3:raise SMTGraphError('Counter-threshold increment degree budget is 3')
+                sums=[q,q*(q-1)/2,q*(q-1)*(2*q-1)/6,(q*(q-1)/2)**2]
+                total=sum(coefficient*sums[power[0]] for power,coefficient in poly.terms())
+                if s.simplify(total.subs(q,0))!=0 or s.simplify(total.subs(q,q+1)-total-expr.subs(clock,q))!=0:raise SMTGraphError('Counter-threshold prefix identities not proved')
+                cache[expr]=total
+            return cache[expr].subs(q,count)
+        result=dict(env)
+        for name,(base_delta,effects) in deltas.items():
+            value=env[name]+prefix(base_delta,k)
+            for effect,(_,cutoff,early) in zip(effects,branches):
+                pre=prefix(effect,k)
+                split=s.Piecewise((pre,k<=cutoff),(prefix(effect,cutoff),True))
+                value+=split if early else pre-split
+            result[name]=self.bounded(s.simplify(value))
+        self.evidence.append({'method':'independent counter-threshold additive polynomial candidates','counter':index,
+            'branches':len(branches),'schedules_checked':len(schedules),'prefix_base_and_successor_identities':True,
+            'candidate_only':True,'original_branch_proof_required':True})
+        return result
+
     def orbit(self,loop,entry,ancestors):
         index=loop.init.decls[0].name;k=s.Symbol(index,integer=True,nonnegative=True)
         frozen=set(self.parameters)|set(ancestors);mutable=[name for name in entry if name not in frozen]
@@ -282,6 +346,7 @@ class Builder:
             replacements={basis[name]:entry[name] for name in mutable}
             return {name:s.simplify(saturated[name].subs(replacements,simultaneous=True)) if name in mutable else value for name,value in entry.items()},k
         phased=self.counted_phase(loop,env,mutable,k,clock,ancestors)
+        if phased is None:phased=self.multiple_counted_phases(loop,env,mutable,k,clock,ancestors)
         if phased is not None:
             replacements={basis[name]:entry[name] for name in mutable}
             return {name:s.simplify(phased[name].subs(replacements,simultaneous=True)) if name in mutable else value for name,value in entry.items()},k

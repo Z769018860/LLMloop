@@ -1,5 +1,25 @@
 # Counter-threshold additive discovery (v0.20)
 
+## Extension: several independent threshold branches
+
+Automatic discovery also admits two or three top-level threshold `if` statements
+in the same counted loop. It symbolically executes all four or eight branch-arm
+combinations in source order, then requires their effects to decompose exactly
+into a baseline plus independent, state-independent additive effects. Thresholds
+must be immutable and the increment polynomials remain limited to degree three.
+The prefix identities are checked before generating a candidate; the existing
+typed C verifier separately checks all original guards, arithmetic, memory and
+termination obligations. An interacting branch, unsupported syntax or an
+unproved obligation still yields `UNKNOWN`. This is neither general state-dependent
+branch synthesis nor a proof by sampling.
+
+Run `python scripts/check_multiple_thresholds.py` for a native differential check
+of two fixtures over their declared domains using GCC `-O0` and `-O2`.
+The 2026-10-27 run produced 2,184 matching results; this is regression evidence,
+not a universal source-to-source equivalence proof.
+
+## Original single-branch fragment
+
 Automatic summaries now handle one top-level counter-threshold branch inside a
 canonical counted loop. Conditions have the form `i < t`, `i <= t`, `i > t` or
 `i >= t`, where `i` is the current index and `t` is an expression over immutable

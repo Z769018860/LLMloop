@@ -58,10 +58,44 @@ def test_memory_wrap_and_nested_composition():
 @pytest.mark.parametrize('source',[
     FEEDBACK,
     'long f(int n,int t){long x=0;for(int i=0;i<n;i++){if(i<t){x+=1L*i*i*i*i;}else{x++;}}return x;}',
-    'long f(int n,int t){long x=0;for(int i=0;i<n;i++){if(i<t){x++;}if(i<3){x++;}}return x;}',
 ])
 def test_unsupported_schedules_remain_unknown(source):
     assert request(source)['status']=='UNKNOWN'
+
+
+def test_independent_sequential_threshold_branches():
+    source='long f(int n,int t){long x=0;for(int i=0;i<n;i++){if(i<t){x++;}if(i<3){x++;}}return x;}'
+    engine=TypedCNested(source,'auto',parameter_bounds={'n':[0,20],'t':[-5,20]})
+    result=engine.report()
+    assert result['status']=='PROVED_DEFINED_TYPED_C_NESTED',result
+    evidence=result['summary_synthesis'][0]['mathematical_derivations'][0]
+    assert evidence['schedules_checked']==4 and evidence['original_branch_proof_required']
+    for n in [0,1,3,10,20]:
+        for t in [-5,0,1,3,10,20]:
+            assert engine.report({'n':n,'t':t})['evaluation']['value']==sum((i<t)+(i<3) for i in range(n))
+
+
+def test_interacting_threshold_branches_remain_unknown():
+    source='long f(int n,int t){long x=1;for(int i=0;i<n;i++){if(i<t){x++;}if(i<3){x*=2;}}return x;}'
+    assert request(source)['status']=='UNKNOWN'
+
+
+def test_three_thresholds_comparisons_and_else():
+    source='long f(int n,int t){long x=0;for(int i=0;i<n;i++){if(i<=t){x+=2;}else{x+=1;}if(i>3){x+=3;}if(i>=5){x+=4;}}return x;}'
+    engine=TypedCNested(source,'auto',parameter_bounds={'n':[0,20],'t':[-5,20]})
+    result=engine.report()
+    assert result['status']=='PROVED_DEFINED_TYPED_C_NESTED',result
+    assert result['summary_synthesis'][0]['mathematical_derivations'][0]['schedules_checked']==8
+    for n in [0,1,3,5,10,20]:
+        for t in [-5,0,3,10,20]:
+            expected=sum((2 if i<=t else 1)+3*(i>3)+4*(i>=5) for i in range(n))
+            assert engine.report({'n':n,'t':t})['evaluation']['value']==expected
+
+
+def test_multiple_thresholds_preserve_original_overflow_check():
+    source='int f(int n,int t){int x=0;for(int i=0;i<n;i++){if(i<t){x+=(i+2147483647)-2147483647;}if(i<3){x++;}}return x;}'
+    r=request(source,bounds={'n':[0,4],'t':[0,4]},inputs={'n':3,'t':3})
+    assert r['status']=='UNKNOWN' and not r.get('c_overflow_verified',False)
 
 
 @pytest.mark.parametrize('source',[
