@@ -10,7 +10,7 @@ def main(argv=None):
     parser.add_argument('file',type=Path)
     source_mode=parser.add_mutually_exclusive_group()
     source_mode.add_argument('--c-clang',action='store_true',help='Clang AST/LLVM ingestion; frontend readiness is not a proof')
-    source_mode.add_argument('--c-clang-proof',action='store_true',help='Normalize admitted scalar Clang AST and run typed proof backend')
+    source_mode.add_argument('--c-clang-proof',action='store_true',help='Normalize admitted Clang AST and run scalar, memory or direct-call typed proof backend')
     parser.add_argument('--clang-proof-config',help='JSON proof backend/bounds/summaries options')
     clang_options=parser.add_mutually_exclusive_group()
     clang_options.add_argument('--clang-config',help='JSON Clang executable/args/target/compilation_database options')

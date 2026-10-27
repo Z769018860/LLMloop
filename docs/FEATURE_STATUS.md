@@ -1,4 +1,4 @@
-# Feature status after v0.28
+# Feature status after v0.30
 
 This inventory distinguishes certified capabilities from outstanding general
 requirements. The project remains a restricted research prototype.
@@ -19,7 +19,7 @@ particular exit condition terminates. `UNKNOWN` is an explicit unsupported or
 unproved result, not a valid summary.
 
 See [v0.14 recurrence and experiment contracts](GUARDED_RECURRENCES_AND_EXPERIMENTS.md)
-and the committed [latest experiment report](../experiments/v028/report.md).
+and the committed [latest experiment report](../experiments/v030/report.md).
 
 See [unroll-free typed scalar C contracts](TYPED_UNBOUNDED_RECURRENCES.md) for the new machine-integer certificate. It does not certify general heap memory.
 
@@ -48,3 +48,11 @@ See [bounded named record graphs](BOUNDED_STRUCT_HEAP.md) for linked/cyclic obje
 See [Clang ingestion](CLANG_ADAPTER.md) for compiler-owned syntax/types/layouts and real-project compilation commands. CLANG_FRONTEND_READY is not proof; general Clang AST/LLVM normalization into the proof engine and KLEE execution are still pending.
 
 See [Clang scalar proof normalization](CLANG_SCALAR_PROOF.md) for the admitted compiler-typed scalar fragment connected to CFG/inductive kernels. This trusted frontend connection is implemented; general LLVM/memory/call normalization and KLEE execution remain open.
+
+See [Clang memory/call normalization](CLANG_MEMORY_CALLS.md) for admitted static
+arrays, typed pointer cells, direct helpers and finite linked-record heaps.
+The scalar, finite-memory induction and bounded-call kernels are now connected
+to compiler-resolved ASTs; record layouts are compared before success. General
+LLVM normalization, unbounded escaping heap summaries and arbitrary branch
+closed-form synthesis remain open. Independent sequential threshold branches
+are also supported under the [additive independence contract](COUNTER_THRESHOLD_DISCOVERY.md).

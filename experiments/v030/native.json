@@ -1,0 +1,1024 @@
+{
+  "compiler": "cc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0",
+  "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+  "correspondences": 36,
+  "cases": [
+    {
+      "name": "million_array",
+      "source": "int entry(int n){int a[2]={1,2};int *p=a;for(int i=0;i<n;i++){p[0]+=2;}return a[0]+a[1];}",
+      "source_sha256": "0549abf2287a95f9bb1751ca6bc8bd3100fa375531132a27e41b26e39c710300",
+      "backend": "memory",
+      "bounds": {
+        "n": [
+          0,
+          1000000
+        ]
+      },
+      "samples": [
+        {
+          "inputs": {
+            "n": 0
+          },
+          "fail_at_allocation": 0
+        },
+        {
+          "inputs": {
+            "n": 1
+          },
+          "fail_at_allocation": 0
+        },
+        {
+          "inputs": {
+            "n": 7
+          },
+          "fail_at_allocation": 0
+        },
+        {
+          "inputs": {
+            "n": 1000000
+          },
+          "fail_at_allocation": 0
+        }
+      ],
+      "status": "PROVED_DEFINED_CLANG_FINITE_MEMORY",
+      "normalization": {
+        "method": "structural admitted Clang AST to typed C; Clang + normalizer are trusted frontend components",
+        "source": "int entry(int n) {\nint a[2] = {1, 2};\nint * p = a;\nfor (int i = 0; (i < n); i++) {\n(p)[0] += 2;\n}\nreturn ((a)[0] + (a)[1]);\n}\n",
+        "source_sha256": "f0f41fb0f870b435df76c9d341d11e7cdcd7d6e968aab6c22d5277f3b609899b",
+        "ast_sha256": "4300a059f8e27b640eaf2925cfd7fffb39afccba6e048fb179ced0fa49d7d4f4",
+        "type_environment_sha256": "f276faed1d63be783f5619b15ec701e260e16561823d611efa5a2d0998fcd953",
+        "alpha_renamed": [],
+        "functions": [
+          "entry"
+        ],
+        "backend": "memory",
+        "abi": "LP64",
+        "char_signed": true,
+        "record_layout_correspondence": {},
+        "compiler_equivalence_machine_proved": false,
+        "unsupported_constructs_rejected": true
+      },
+      "runs": [
+        {
+          "optimization": "-O0",
+          "original": [
+            3,
+            5,
+            17,
+            2000003
+          ],
+          "normalized": [
+            3,
+            5,
+            17,
+            2000003
+          ],
+          "model": [
+            3,
+            5,
+            17,
+            2000003
+          ]
+        },
+        {
+          "optimization": "-O2",
+          "original": [
+            3,
+            5,
+            17,
+            2000003
+          ],
+          "normalized": [
+            3,
+            5,
+            17,
+            2000003
+          ],
+          "model": [
+            3,
+            5,
+            17,
+            2000003
+          ]
+        }
+      ],
+      "certificate": {
+        "method": "compositional nested trajectory induction",
+        "obligations": [
+          {
+            "obligation": "i entry and bound defined",
+            "proved": true
+          },
+          {
+            "obligation": "i counter representable",
+            "proved": true
+          },
+          {
+            "obligation": "i __typed_memory_9 range",
+            "proved": true,
+            "certificate": {
+              "method": "exact rational interval enclosure",
+              "bounds": {
+                "typed_nested_i!43": [
+                  "0",
+                  "1000000"
+                ],
+                "typed_loop_n!0": [
+                  "0",
+                  "1000000"
+                ]
+              }
+            }
+          },
+          {
+            "obligation": "i __typed_memory_9 base",
+            "proved": true
+          },
+          {
+            "obligation": "i __typed_memory_5 range",
+            "proved": true,
+            "certificate": {
+              "method": "exact rational interval enclosure",
+              "bounds": {
+                "typed_nested_i!43": [
+                  "0",
+                  "1000000"
+                ],
+                "typed_loop_n!0": [
+                  "0",
+                  "1000000"
+                ]
+              }
+            }
+          },
+          {
+            "obligation": "i __typed_memory_5 base",
+            "proved": true
+          },
+          {
+            "obligation": "i __typed_memory_7 range",
+            "proved": true,
+            "certificate": {
+              "method": "exact rational interval enclosure",
+              "bounds": {
+                "typed_nested_i!43": [
+                  "0",
+                  "1000000"
+                ],
+                "typed_loop_n!0": [
+                  "0",
+                  "1000000"
+                ]
+              }
+            }
+          },
+          {
+            "obligation": "i __typed_memory_7 base",
+            "proved": true
+          },
+          {
+            "obligation": "i __typed_memory_6 range",
+            "proved": true,
+            "certificate": {
+              "method": "exact rational interval enclosure",
+              "bounds": {
+                "typed_nested_i!43": [
+                  "0",
+                  "1000000"
+                ],
+                "typed_loop_n!0": [
+                  "0",
+                  "1000000"
+                ]
+              }
+            }
+          },
+          {
+            "obligation": "i __typed_memory_6 base",
+            "proved": true
+          },
+          {
+            "obligation": "i __typed_memory_8 range",
+            "proved": true,
+            "certificate": {
+              "method": "exact rational interval enclosure",
+              "bounds": {
+                "typed_nested_i!43": [
+                  "0",
+                  "1000000"
+                ],
+                "typed_loop_n!0": [
+                  "0",
+                  "1000000"
+                ]
+              }
+            }
+          },
+          {
+            "obligation": "i __typed_memory_8 base",
+            "proved": true
+          },
+          {
+            "obligation": "i __typed_memory_10 range",
+            "proved": true,
+            "certificate": {
+              "method": "exact rational interval enclosure",
+              "bounds": {
+                "typed_nested_i!43": [
+                  "0",
+                  "1000000"
+                ],
+                "typed_loop_n!0": [
+                  "0",
+                  "1000000"
+                ]
+              }
+            }
+          },
+          {
+            "obligation": "i __typed_memory_10 base",
+            "proved": true
+          },
+          {
+            "obligation": "i condition and exit",
+            "proved": true
+          },
+          {
+            "obligation": "i executed operations defined",
+            "proved": true
+          },
+          {
+            "obligation": "i step paths cover domain",
+            "proved": true
+          },
+          {
+            "obligation": "i path 0 successor",
+            "proved": true
+          },
+          {
+            "obligation": "function prefix and conditions defined",
+            "proved": true
+          },
+          {
+            "obligation": "function paths cover domain",
+            "proved": true
+          },
+          {
+            "obligation": "function return 0 defined",
+            "proved": true
+          }
+        ],
+        "loops": [
+          {
+            "index": "i",
+            "nesting_depth": 1,
+            "formulas": {
+              "__typed_memory_9": "entry(\"__typed_memory_9\")",
+              "__typed_memory_5": "2 * i + entry('__typed_memory_5')",
+              "__typed_memory_7": "entry(\"__typed_memory_7\")",
+              "__typed_memory_6": "entry('__typed_memory_6')",
+              "__typed_memory_8": "entry(\"__typed_memory_8\")",
+              "__typed_memory_10": "entry(\"__typed_memory_10\")"
+            },
+            "entry_domain_smt2": "(and (>= typed_loop_n!0 0) (<= typed_loop_n!0 1000000) true)",
+            "iterations_smt2": "(ite (<= typed_loop_n!0 0) 0 typed_loop_n!0)",
+            "step_obligations_including_children": 3,
+            "definedness_proved": true,
+            "termination_proved": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "semantic_filler",
+      "source": "int entry(void){int a[4]={[2]=7};return a[0]+a[1]+a[2]+a[3];}",
+      "source_sha256": "08887cc8e750c37b49b921278151a66b7dcde2e8b0ef627e471289cbab465074",
+      "backend": "calls",
+      "bounds": {},
+      "samples": [
+        {
+          "inputs": {},
+          "fail_at_allocation": 0
+        }
+      ],
+      "status": "PROVED_DEFINED_CLANG_CFG_CALLS",
+      "normalization": {
+        "method": "structural admitted Clang AST to typed C; Clang + normalizer are trusted frontend components",
+        "source": "int entry(void);\nint entry(void) {\nint a[4] = {((int)0), ((int)0), 7};\nreturn ((((a)[0] + (a)[1]) + (a)[2]) + (a)[3]);\n}\n",
+        "source_sha256": "a3665e21cfc2015bf75d385e99e008119668c49753c60b6920ef60dc26a7748e",
+        "ast_sha256": "e34bb9397b1574533249f52fc4edd0263ec9f91e3b1f6adb2e7902fa99fab706",
+        "type_environment_sha256": "47c1973c26480a3965c4b8f36274d3c6bada5654d565aa38900debd17e38ab9a",
+        "alpha_renamed": [],
+        "functions": [
+          "entry"
+        ],
+        "backend": "calls",
+        "abi": "LP64",
+        "char_signed": true,
+        "record_layout_correspondence": {},
+        "compiler_equivalence_machine_proved": false,
+        "unsupported_constructs_rejected": true
+      },
+      "runs": [
+        {
+          "optimization": "-O0",
+          "original": [
+            7
+          ],
+          "normalized": [
+            7
+          ],
+          "model": [
+            7
+          ]
+        },
+        {
+          "optimization": "-O2",
+          "original": [
+            7
+          ],
+          "normalized": [
+            7
+          ],
+          "model": [
+            7
+          ]
+        }
+      ],
+      "certificate": {
+        "method": "exhaustive original CFG execution with proved complete exit for declared domain",
+        "obligations": [
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "all original executed operations defined",
+            "proved": true
+          },
+          {
+            "obligation": "returned paths cover parameter and allocation domain",
+            "proved": true
+          }
+        ],
+        "executed_cfg_nodes": 2,
+        "max_steps_per_path": 256,
+        "max_paths": 48,
+        "represented_object_instances": 1
+      }
+    },
+    {
+      "name": "helper_alias",
+      "source": "int *move(int *p){p[0]+=1;return p+1;}int entry(void){int a[3]={3,5,7};int *q=move(a);q[0]=11;return a[0]+a[1]+a[2];}",
+      "source_sha256": "17b2f8b60c7947462fb5ac2c536669e40383e83f3e403c3b0969b275b1ef18cd",
+      "backend": "calls",
+      "bounds": {},
+      "samples": [
+        {
+          "inputs": {},
+          "fail_at_allocation": 0
+        }
+      ],
+      "status": "PROVED_DEFINED_CLANG_CFG_CALLS",
+      "normalization": {
+        "method": "structural admitted Clang AST to typed C; Clang + normalizer are trusted frontend components",
+        "source": "int entry(void);\nint * move(int * p);\nint entry(void) {\nint a[3] = {3, 5, 7};\nint * q = move(a);\n(q)[0] = 11;\nreturn (((a)[0] + (a)[1]) + (a)[2]);\n}\n\nint * move(int * p) {\n(p)[0] += 1;\nreturn (p+1);\n}\n",
+        "source_sha256": "5ff9a5e31e61b9c9085724f32e017610a3ddf3b0fb37f1afd5e266fc8934bdd5",
+        "ast_sha256": "005255f4e451f3131ab87a308e1aa57c4c3031eb6d89480f5405d5c9a92979d0",
+        "type_environment_sha256": "fe505eee0bf7839cb1238c9d66042084c784e7822e70a14bd874b2518dc10a3c",
+        "alpha_renamed": [],
+        "functions": [
+          "entry",
+          "move"
+        ],
+        "backend": "calls",
+        "abi": "LP64",
+        "char_signed": true,
+        "record_layout_correspondence": {},
+        "compiler_equivalence_machine_proved": false,
+        "unsupported_constructs_rejected": true
+      },
+      "runs": [
+        {
+          "optimization": "-O0",
+          "original": [
+            22
+          ],
+          "normalized": [
+            22
+          ],
+          "model": [
+            22
+          ]
+        },
+        {
+          "optimization": "-O2",
+          "original": [
+            22
+          ],
+          "normalized": [
+            22
+          ],
+          "model": [
+            22
+          ]
+        }
+      ],
+      "certificate": {
+        "method": "exhaustive original CFG execution with proved complete exit for declared domain",
+        "obligations": [
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "all original executed operations defined",
+            "proved": true
+          },
+          {
+            "obligation": "returned paths cover parameter and allocation domain",
+            "proved": true
+          }
+        ],
+        "executed_cfg_nodes": 14,
+        "max_steps_per_path": 256,
+        "max_paths": 48,
+        "represented_object_instances": 1
+      }
+    },
+    {
+      "name": "linked_heap",
+      "source": "#include <stdlib.h>\n\nstruct Node {\n    long value;\n    struct Node *next;\n};\n\nstruct Node *make(long value) {\n    struct Node *p = calloc(1, sizeof(struct Node));\n    if (!p) {\n        return 0;\n    }\n    p->value = value;\n    p->next = 0;\n    return p;\n}\n\nlong entry(int n) {\n    struct Node *head = make(n);\n    if (!head) {\n        return -1;\n    }\n    struct Node *tail = make(n + 1);\n    if (!tail) {\n        free(head);\n        return -2;\n    }\n    head->next = tail;\n    struct Node *next = head->next;\n    long result = head->value + next->value;\n    free(tail);\n    free(head);\n    return result;\n}\n",
+      "source_sha256": "e585bcaeaf299d7a559c1b138ef6dc8523c4f40e778c6a9ea458edc1732f9674",
+      "backend": "calls",
+      "bounds": {
+        "n": [
+          0,
+          100
+        ]
+      },
+      "samples": [
+        {
+          "inputs": {
+            "n": 0
+          },
+          "fail_at_allocation": 0
+        },
+        {
+          "inputs": {
+            "n": 1
+          },
+          "fail_at_allocation": 0
+        },
+        {
+          "inputs": {
+            "n": 7
+          },
+          "fail_at_allocation": 0
+        },
+        {
+          "inputs": {
+            "n": 100
+          },
+          "fail_at_allocation": 0
+        },
+        {
+          "inputs": {
+            "n": 0
+          },
+          "fail_at_allocation": 1
+        },
+        {
+          "inputs": {
+            "n": 1
+          },
+          "fail_at_allocation": 1
+        },
+        {
+          "inputs": {
+            "n": 7
+          },
+          "fail_at_allocation": 1
+        },
+        {
+          "inputs": {
+            "n": 100
+          },
+          "fail_at_allocation": 1
+        },
+        {
+          "inputs": {
+            "n": 0
+          },
+          "fail_at_allocation": 2
+        },
+        {
+          "inputs": {
+            "n": 1
+          },
+          "fail_at_allocation": 2
+        },
+        {
+          "inputs": {
+            "n": 7
+          },
+          "fail_at_allocation": 2
+        },
+        {
+          "inputs": {
+            "n": 100
+          },
+          "fail_at_allocation": 2
+        }
+      ],
+      "status": "PROVED_DEFINED_CLANG_CFG_CALLS",
+      "normalization": {
+        "method": "structural admitted Clang AST to typed C; Clang + normalizer are trusted frontend components",
+        "source": "struct Node {long value; struct Node * next;};\nlong entry(int n);\nstruct Node * make(long value);\nlong entry(int n) {\nstruct Node * head = make(((long)(n)));\nif ((!(head))) {\nreturn ((long)((-(1))));\n}\nstruct Node * tail = make(((long)((n + 1))));\nif ((!(tail))) {\nfree(head);\nreturn ((long)((-(2))));\n}\n(head)->next = tail;\nstruct Node * next = (head)->next;\nlong result = ((head)->value + (next)->value);\nfree(tail);\nfree(head);\nreturn result;\n}\n\nstruct Node * make(long value) {\nstruct Node * p = calloc(((unsigned long)(1)), sizeof(struct Node));\nif ((!(p))) {\nreturn 0;\n}\n(p)->value = value;\n(p)->next = 0;\nreturn p;\n}\n",
+        "source_sha256": "b0db55b7ad9664da1769ed1736d9cf51103752f1147832ff663a7cc38758a446",
+        "ast_sha256": "0d33c7c96da083d2b01009484992f67187cc6520a11d6c013bdbe4212917f558",
+        "type_environment_sha256": "a91e1c98e9ebecc7e5134fa9889d2da7203ae30994baa6491e86d8cae82c9abb",
+        "alpha_renamed": [],
+        "functions": [
+          "entry",
+          "make"
+        ],
+        "backend": "calls",
+        "abi": "LP64",
+        "char_signed": true,
+        "record_layout_correspondence": {
+          "Node": {
+            "size_bytes": 16,
+            "alignment_bytes": 8,
+            "member_offsets": [
+              [
+                "value",
+                0
+              ],
+              [
+                "next",
+                8
+              ]
+            ]
+          }
+        },
+        "compiler_equivalence_machine_proved": false,
+        "unsupported_constructs_rejected": true
+      },
+      "runs": [
+        {
+          "optimization": "-O0",
+          "original": [
+            1,
+            3,
+            15,
+            201,
+            -1,
+            -1,
+            -1,
+            -1,
+            -2,
+            -2,
+            -2,
+            -2
+          ],
+          "normalized": [
+            1,
+            3,
+            15,
+            201,
+            -1,
+            -1,
+            -1,
+            -1,
+            -2,
+            -2,
+            -2,
+            -2
+          ],
+          "model": [
+            1,
+            3,
+            15,
+            201,
+            -1,
+            -1,
+            -1,
+            -1,
+            -2,
+            -2,
+            -2,
+            -2
+          ]
+        },
+        {
+          "optimization": "-O2",
+          "original": [
+            1,
+            3,
+            15,
+            201,
+            -1,
+            -1,
+            -1,
+            -1,
+            -2,
+            -2,
+            -2,
+            -2
+          ],
+          "normalized": [
+            1,
+            3,
+            15,
+            201,
+            -1,
+            -1,
+            -1,
+            -1,
+            -2,
+            -2,
+            -2,
+            -2
+          ],
+          "model": [
+            1,
+            3,
+            15,
+            201,
+            -1,
+            -1,
+            -1,
+            -1,
+            -2,
+            -2,
+            -2,
+            -2
+          ]
+        }
+      ],
+      "certificate": {
+        "method": "exhaustive original CFG execution with proved complete exit for declared domain",
+        "obligations": [
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "calloc typed element size",
+            "proved": true
+          },
+          {
+            "obligation": "allocation capacity budget",
+            "proved": true
+          },
+          {
+            "obligation": "struct allocation contains exactly one record",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "pointer-cell store location defined",
+            "proved": true
+          },
+          {
+            "obligation": "pointer-cell store represented",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "calloc typed element size",
+            "proved": true
+          },
+          {
+            "obligation": "allocation capacity budget",
+            "proved": true
+          },
+          {
+            "obligation": "struct allocation contains exactly one record",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "pointer-cell store location defined",
+            "proved": true
+          },
+          {
+            "obligation": "pointer-cell store represented",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "pointer-cell store location defined",
+            "proved": true
+          },
+          {
+            "obligation": "pointer-cell store represented",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "pointer-cell load location defined",
+            "proved": true
+          },
+          {
+            "obligation": "pointer-cell load represented",
+            "proved": true
+          },
+          {
+            "obligation": "pointer-cell initialized before load",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "control-flow step budget",
+            "proved": true
+          },
+          {
+            "obligation": "all original executed operations defined",
+            "proved": true
+          },
+          {
+            "obligation": "returned paths cover parameter and allocation domain",
+            "proved": true
+          }
+        ],
+        "executed_cfg_nodes": 57,
+        "max_steps_per_path": 256,
+        "max_paths": 48,
+        "represented_object_instances": 2
+      }
+    }
+  ],
+  "passed": true
+}

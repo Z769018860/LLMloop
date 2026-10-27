@@ -1,5 +1,8 @@
 # Clang scalar AST to typed proof kernels (v0.28)
 
+The original scalar contracts below remain in force. The additional `memory`
+and `calls` backends are documented in [Clang memory/call normalization](CLANG_MEMORY_CALLS.md).
+
 The `clang_proof` frontend goes beyond compiler readiness. It consumes one real
 Clang function AST, normalizes an admitted scalar fragment to typed C, then runs
 an existing independent typed proof kernel. It does not interpret LLVM instruction

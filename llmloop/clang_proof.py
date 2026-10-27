@@ -153,33 +153,51 @@ class ScalarNormalizer:
 
 def prove_clang(source=None,source_file=None,function=None,clang=None,proof=None):
     if proof is None:proof={}
-    if not isinstance(proof,dict) or set(proof)-{'backend','parameter_bounds','inputs','max_steps','max_paths','closed_forms','loop_summaries'}:return {'status':'UNKNOWN','reason':'Invalid Clang proof options'}
+    if not isinstance(proof,dict) or set(proof)-{'backend','parameter_bounds','inputs','max_steps','max_paths','closed_forms','loop_summaries','allocation_failure','max_call_depth','allow_recursion'}:return {'status':'UNKNOWN','reason':'Invalid Clang proof options'}
     options={} if clang is None else dict(clang) if isinstance(clang,dict) else clang
     if isinstance(options,dict) and options.get('include_ast') is False:return {'status':'UNKNOWN','reason':'Clang proof requires include_ast=true'}
-    front=ClangAdapter(source,source_file,function,options).report()
+    backend=proof.get('backend','cfg')
+    front=ClangAdapter(source,source_file,None if backend=='calls' else function,options).report()
     if front['status']!='CLANG_FRONTEND_READY':return front
     failure={'status':'UNKNOWN','frontend':'clang_proof','c_overflow_verified':False,'memory_safety_verified':False,'termination_proved':False,'clang_frontend':front}
     try:
-        backend=proof.get('backend','cfg')
-        if backend not in ('cfg','nested','recurrence'):raise SMTGraphError('Clang proof backend must be cfg/nested/recurrence')
+        if backend not in ('cfg','nested','recurrence','memory','calls'):raise SMTGraphError('Clang proof backend must be cfg/nested/recurrence/memory/calls')
         triple=front['target']['triple']
         linux=triple.endswith(('linux-gnu','linux-musl'))
         windows='-windows-gnu' in triple or '-windows-msvc' in triple
         if triple.startswith('x86_64-') and (linux or windows):abi='LLP64' if windows else 'LP64'
         elif re.match(r'i[3-6]86-',triple) and linux:abi='ILP32'
         else:raise SMTGraphError('Clang proof target not covered by the current x86 ABI contract (including x32)')
-        normalizer=ScalarNormalizer(front);normalized=normalizer.source()
-        if backend!='cfg' and normalizer.renamed:raise SMTGraphError('Summary backends require unambiguous source scalar names')
+        if backend=='calls':
+            from .clang_memory_proof import normalize_calls
+            normalized,normalizers,entry=normalize_calls(front,function)
+        else:
+            if backend=='memory':
+                from .clang_memory_proof import MemoryNormalizer
+                normalizer=MemoryNormalizer(front)
+            else:normalizer=ScalarNormalizer(front)
+            normalized=normalizer.source();normalizers=[normalizer];entry=front['functions'][0]['name']
+        renamed=[item for normalizer in normalizers for item in normalizer.renamed]
+        if backend in ('nested','recurrence','memory') and renamed:raise SMTGraphError('Summary backends require unambiguous source scalar names')
+        record_tags=set();layout_correspondence={}
+        if backend in ('memory','calls'):
+            from .clang_memory_proof import record_source
+            records,record_tags=record_source(normalizers)
+            if record_tags:normalized=records+'\n'+normalized
         char_signed=True
         for flag in front['effective_flags']:
             if flag in ('-funsigned-char','-fsigned-char'):char_signed=flag=='-fsigned-char'
-        request={'source':normalized,'function':front['functions'][0]['name'],'frontend':{'cfg':'typed_cfg_heap','nested':'typed_nested','recurrence':'typed_recurrence'}[backend],'abi':abi,'char_signed':char_signed}
+        request={'source':normalized,'function':entry,'frontend':{'cfg':'typed_cfg_heap','nested':'typed_nested','recurrence':'typed_recurrence','memory':'typed_memory','calls':'typed_cfg_calls'}[backend],'abi':abi,'char_signed':char_signed}
         for key,value in proof.items():
             if key!='backend':request[key]=value
-        if backend=='nested' and 'loop_summaries' not in proof:request['loop_summaries']='auto'
+        if backend in ('nested','memory') and 'loop_summaries' not in proof:request['loop_summaries']='auto'
         from .api import analyze_request
         result=analyze_request(request)
         success=result['status'].startswith('PROVED_DEFINED_TYPED_C_')
-        if success:result['status']={'cfg':'PROVED_DEFINED_CLANG_SCALAR_CFG','nested':'PROVED_DEFINED_CLANG_SCALAR_NESTED','recurrence':'PROVED_DEFINED_CLANG_SCALAR_RECURRENCE'}[backend]
-        return {**result,'frontend':'clang_proof','clang_frontend':front,'normalization':{'method':'structural scalar Clang AST to typed C; Clang + normalizer are trusted frontend components','source':normalized,'source_sha256':hashlib.sha256(normalized.encode()).hexdigest(),'ast_sha256':hashlib.sha256(json.dumps(normalizer.root,sort_keys=True).encode()).hexdigest(),'alpha_renamed':normalizer.renamed,'backend':backend,'abi':abi,'char_signed':char_signed,'compiler_equivalence_machine_proved':False,'unsupported_constructs_rejected':True},'scope':'declared scalar input domain and backend certificate; no pointer/array/record/call proof, no general LLVM semantics or KLEE execution'}
+        if success and record_tags:
+            from .clang_memory_proof import check_record_layouts
+            layout_correspondence=check_record_layouts(front,result,record_tags)
+        statuses={'cfg':'PROVED_DEFINED_CLANG_SCALAR_CFG','nested':'PROVED_DEFINED_CLANG_SCALAR_NESTED','recurrence':'PROVED_DEFINED_CLANG_SCALAR_RECURRENCE','memory':'PROVED_DEFINED_CLANG_FINITE_MEMORY','calls':'PROVED_DEFINED_CLANG_CFG_CALLS'}
+        if success:result['status']=statuses[backend]
+        return {**result,'frontend':'clang_proof','clang_frontend':front,'normalization':{'method':'structural admitted Clang AST to typed C; Clang + normalizer are trusted frontend components','source':normalized,'source_sha256':hashlib.sha256(normalized.encode()).hexdigest(),'ast_sha256':hashlib.sha256(json.dumps([n.root for n in normalizers],sort_keys=True).encode()).hexdigest(),'type_environment_sha256':hashlib.sha256(json.dumps({key:front.get(key,[]) for key in ('typedefs','record_definitions','modeled_function_declarations','function_parameter_declarations')},sort_keys=True).encode()).hexdigest(),'alpha_renamed':renamed,'functions':[n.root['name'] for n in normalizers],'backend':backend,'abi':abi,'char_signed':char_signed,'record_layout_correspondence':layout_correspondence,'compiler_equivalence_machine_proved':False,'unsupported_constructs_rejected':True},'scope':'declared scalar input domain and selected typed backend contract; finite memory/call budgets and allocation assumptions remain explicit; no general LLVM semantics or KLEE execution'}
     except (SMTGraphError,ValueError,TypeError,KeyError,RecursionError) as exc:return {**failure,'reason':str(exc)}

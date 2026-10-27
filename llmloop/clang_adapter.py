@@ -194,11 +194,14 @@ class ClangAdapter:
                 raw=self.run([*common,'-fsyntax-only','-Xclang','-ast-dump=json',str(path)],directory,'ast',workspace,timeout)
                 try:ast=json.loads(raw)
                 except (ValueError,RecursionError) as exc:raise SMTGraphError('Invalid/over-deep Clang JSON AST') from exc
-                nodes=[ast];count=0;definitions=[];typedefs=[]
+                nodes=[ast];count=0;definitions=[];typedefs=[];modeled_declarations=[];record_definitions=[];function_declarations=[]
                 while nodes:
                     node=nodes.pop();count+=1
                     if count>250000:raise SMTGraphError('Clang AST node budget exceeded')
                     if node.get('kind')=='TypedefDecl':typedefs.append({'name':node.get('name'),'type':node.get('type',{}),'location':node.get('loc')})
+                    if node.get('kind')=='FunctionDecl' and node.get('name') in ('malloc','calloc','free'):modeled_declarations.append(node)
+                    if node.get('kind')=='RecordDecl' and node.get('completeDefinition'):record_definitions.append(node)
+                    if node.get('kind')=='FunctionDecl':function_declarations.append(node)
                     if node.get('kind')=='FunctionDecl' and any(child.get('kind')=='CompoundStmt' for child in node.get('inner',[])):definitions.append(node)
                     nodes.extend(reversed(node.get('inner',[])))
                 selected=[n for n in definitions if self.function is None or n.get('name')==self.function]
@@ -211,6 +214,27 @@ class ClangAdapter:
                 ir=ir_file.read_text();triple=re.search(r'^target triple = "([^"]+)"',ir,re.M);layout=re.search(r'^target datalayout = "([^"]+)"',ir,re.M)
                 if not triple or not layout:raise SMTGraphError('LLVM target metadata missing')
                 if path.read_bytes()!=before:raise SMTGraphError('Source changed during Clang ingestion')
-                functions=[{'name':n.get('name'),'linkage_name':n.get('mangledName',n.get('name')),'type':n.get('type'),'location':n.get('loc'),'range':n.get('range'),**({'ast':n} if cfg.get('include_ast',True) else {})} for n in selected]
-                return {**base,'status':'CLANG_FRONTEND_READY','source_compiles':True,'compiler':self.compiler,'source':{'path':str(path) if self.source_file else '<inline>','sha256':digest(before)},'compilation_database':database,'effective_flags':[*flags,*optimization,*debug,*ir_flags],'ignored_build_flags':ignored,'target':{'triple':triple[1],'data_layout':layout[1]},'functions':functions,'typedefs':typedefs,'ast_nodes':count,'record_layouts':layouts_from_dump(layout_text),'record_layout_dump':layout_text,'llvm_ir':ir,'llvm_ir_sha256':digest(ir.encode()),'llvm_cfg':llvm_cfg(ir),'ubsan_instrumentation_requested':sanitize,'proof_boundary':'Clang semantics/AST/IR ingestion only; no LLMloop proof or KLEE execution; LLVM blocks include sanitizer branches and are not source MEMS counts','input_consistency':'main source checked unchanged; included headers/environment must remain stable across compiler stages'}
+                def parameter_spellings(function_node):
+                    # Adjusted Clang parameter types omit array/VLA declarators.
+                    # Capture only literal main-file spellings, never guess through
+                    # macro locations or header offsets. Proof normalizers can
+                    # refuse syntax whose entry effects are no longer in the AST.
+                    location=function_node.get('loc',{})
+                    if 'includedFrom' in location or 'spellingLoc' in location or 'expansionLoc' in location:return {}
+                    if location.get('file') and Path(location['file']).resolve()!=path:return {}
+                    offset=location.get('offset');name=function_node.get('name','').encode()
+                    if type(offset) is not int or before[offset:offset+len(name)]!=name:return {}
+                    result={}
+                    for parameter in function_node.get('inner',[]):
+                        if parameter.get('kind')!='ParmVarDecl':continue
+                        start=parameter.get('range',{}).get('begin',{});end=parameter.get('range',{}).get('end',{})
+                        if any(key in loc for loc in (start,end) for key in ('spellingLoc','expansionLoc','includedFrom')):continue
+                        if type(start.get('offset')) is not int or type(end.get('offset')) is not int:continue
+                        a,b=start['offset'],end['offset']+end.get('tokLen',0)
+                        if 0<=a<b<=len(before):result[parameter['id']]=before[a:b].decode(errors='strict')
+                    return result
+                functions=[{'name':n.get('name'),'linkage_name':n.get('mangledName',n.get('name')),'type':n.get('type'),'location':n.get('loc'),'range':n.get('range'),'parameter_spellings':parameter_spellings(n),**({'ast':n} if cfg.get('include_ast',True) else {})} for n in selected]
+                selected_names={n['name'] for n in selected}
+                parameter_declarations=[{'id':n['id'],'name':n['name'],'parameters':[p for p in n.get('inner',[]) if p.get('kind')=='ParmVarDecl'],'parameter_spellings':parameter_spellings(n)} for n in function_declarations if n.get('name') in selected_names]
+                return {**base,'status':'CLANG_FRONTEND_READY','source_compiles':True,'compiler':self.compiler,'source':{'path':str(path) if self.source_file else '<inline>','sha256':digest(before)},'compilation_database':database,'effective_flags':[*flags,*optimization,*debug,*ir_flags],'ignored_build_flags':ignored,'target':{'triple':triple[1],'data_layout':layout[1]},'functions':functions,'typedefs':typedefs,'modeled_function_declarations':modeled_declarations,'record_definitions':record_definitions,'function_parameter_declarations':parameter_declarations,'ast_nodes':count,'record_layouts':layouts_from_dump(layout_text),'record_layout_dump':layout_text,'llvm_ir':ir,'llvm_ir_sha256':digest(ir.encode()),'llvm_cfg':llvm_cfg(ir),'ubsan_instrumentation_requested':sanitize,'proof_boundary':'Clang semantics/AST/IR ingestion only; no LLMloop proof or KLEE execution; LLVM blocks include sanitizer branches and are not source MEMS counts','input_consistency':'main source checked unchanged; included headers/environment must remain stable across compiler stages'}
         except (SMTGraphError,OSError,ValueError,TypeError,RecursionError) as exc:return {**base,'reason':str(exc),**({'compiler':self.compiler} if self.compiler else {})}

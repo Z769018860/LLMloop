@@ -666,6 +666,18 @@ or general LLVM/KLEE backend. See the [contract](docs/CLANG_SCALAR_PROOF.md),
 [actual proof](experiments/v028/clang_proof_demo.json) and
 [experiments](experiments/v028/report.md).
 
+## v0.30: Clang finite-memory and direct-call proofs
+
+The Clang proof bridge now connects admitted arrays/pointers to the finite-memory
+induction kernel, and direct helpers/finite linked-record heaps to the bounded
+call kernel. Allocation failure, frame lifetimes, source integer intermediates
+and recursion frontiers retain their existing checks. Compiler-owned record
+layouts must match the proof model before success. Unsupported adjusted array
+parameters, physical pointer casts and packed/bitfield records fail closed.
+See [contracts and examples](docs/CLANG_MEMORY_CALLS.md) and
+[local experiments](experiments/v030/report.md). This does not complete general
+C normalization, arbitrary branching closed forms or unbounded escaping heaps.
+
 ### Independent sequential threshold branches
 
 Automatic typed-loop summaries also propose closed forms for two or three
