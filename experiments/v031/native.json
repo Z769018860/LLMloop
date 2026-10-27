@@ -1,0 +1,2740 @@
+{
+  "passed": true,
+  "correspondences": 104,
+  "cases": [
+    {
+      "mode": "fold_free",
+      "source": "#include <stdlib.h>\n\nstruct Node {\n    int value;\n    struct Node *next;\n};\n\nlong long entry(int n) {\n    struct Node *head = 0;\n    for (int i = 0; i < n; i++) {\n        struct Node *p = calloc(1, sizeof(struct Node));\n        if (!p) {\n            break;\n        }\n        p->value = i;\n        p->next = head;\n        head = p;\n    }\n    long long total = 0;\n    while (head) {\n        struct Node *next = head->next;\n        total += head->value;\n        free(head);\n        head = next;\n    }\n    return total;\n}\n",
+      "source_sha256": "15ea600e2cdd3653ff2e6585b8cc70952a585ba1e689fc2e9035cd025b432c2c",
+      "normalization": {
+        "method": "structural admitted Clang AST to typed C; Clang + normalizer are trusted frontend components",
+        "source": "struct Node {int value; struct Node * next;};\nlong long entry(int n) {\nstruct Node * head = 0;\nfor (int i = 0; (i < n); i++) {\nstruct Node * p = calloc(((unsigned long)(1)), sizeof(struct Node));\nif ((!(p))) {\nbreak;\n}\n(p)->value = i;\n(p)->next = head;\nhead = p;\n}\nlong long total = 0;\nwhile (head) {\nstruct Node * next = (head)->next;\ntotal += ((long long)((head)->value));\nfree(head);\nhead = next;\n}\nreturn total;\n}\n",
+        "source_sha256": "a4a1c21b6399fdfe95f97be9106680dda4935b51795ff8153d04a2810d66dda3",
+        "ast_sha256": "7563aacd21af9add3ce63385771114a0f3d99a1385fcb5d4cc9088d233bbdff7",
+        "type_environment_sha256": "e8ef61e694dcfe56ab444cedb1b0b7c7b2846d1e84c01d1c6de67beb75195957",
+        "alpha_renamed": [],
+        "functions": [
+          "entry"
+        ],
+        "backend": "list",
+        "abi": "LP64",
+        "char_signed": true,
+        "record_layout_correspondence": {
+          "Node": {
+            "size_bytes": 16,
+            "alignment_bytes": 8,
+            "member_offsets": [
+              [
+                "value",
+                0
+              ],
+              [
+                "next",
+                8
+              ]
+            ]
+          }
+        },
+        "compiler_equivalence_machine_proved": false,
+        "unsupported_constructs_rejected": true
+      },
+      "certificate": {
+        "method": "checked C list normal form + universal shape induction + typed scalar loop proofs",
+        "source_contract": {
+          "record": "Node",
+          "payload_field": "value",
+          "next_field": "next",
+          "head_initially_null": true,
+          "fresh_allocation_before_each_publish": true,
+          "both_fields_initialized_before_publish": true,
+          "null_failure_exits_before_memory_writes": true,
+          "no_external_aliases_or_pointer_identity_observations": true,
+          "saved_next_before_free": true
+        },
+        "shape": {
+          "method": "universal fresh-token/live-prefix and reverse traversal induction",
+          "abstract_identities_not_addresses": true,
+          "represented_object_cutoff": null,
+          "obligations": [
+            {
+              "obligation": "empty base has no live nodes",
+              "proved": true,
+              "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun list_node () Int)\n(assert\n true)\n(assert\n (let (($x605 (not (and (>= list_node 1) (<= list_node 0)))))\n(not $x605)))\n(check-sat)\n"
+            },
+            {
+              "obligation": "successful allocation is a fresh nonnull token",
+              "proved": true,
+              "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun list_k () Int)\n(assert\n (>= list_k 0))\n(assert\n (let (($x293 (not (and (>= (+ list_k 1) 1) (<= (+ list_k 1) list_k)))))\n(let (($x302 (and (> (+ list_k 1) 0) $x293)))\n(not $x302))))\n(check-sat)\n"
+            },
+            {
+              "obligation": "old head is null or live",
+              "proved": true,
+              "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun list_k () Int)\n(assert\n (>= list_k 0))\n(assert\n (let (($x5 (= list_k 0)))\n(let (($x38 (or $x5 (and (>= list_k 1) (<= list_k list_k)))))\n(not $x38))))\n(check-sat)\n"
+            },
+            {
+              "obligation": "prepend extends exactly the live prefix",
+              "proved": true,
+              "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun list_k () Int)\n(declare-fun list_node () Int)\n(assert\n (>= list_k 0))\n(assert\n (let (($x291 (or (and (>= list_node 1) (<= list_node list_k)) (= list_node (+ list_k 1)))))\n(let (($x175 (= $x291 (and (>= list_node 1) (<= list_node (+ list_k 1))))))\n(not $x175))))\n(check-sat)\n"
+            },
+            {
+              "obligation": "new and preserved links are initialized live tails",
+              "proved": true,
+              "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun list_k () Int)\n(declare-fun list_node () Int)\n(assert\n (let (($x46 (>= list_k 0)))\n (and $x46 (and (>= list_node 1) (<= list_node (+ list_k 1))))))\n(assert\n (let ((?x159 (+ list_k 1)))\n(let ((?x271 (- list_node 1)))\n(let ((?x120 (ite (= list_node ?x159) list_k ?x271)))\n(let (($x113 (and (= ?x120 ?x271) (>= ?x120 0) (< ?x120 list_node) (or (= ?x120 0) (and (>= ?x120 1) (<= ?x120 ?x159))))))\n(not $x113))))))\n(check-sat)\n"
+            },
+            {
+              "obligation": "every live payload has an initialized builder index",
+              "proved": true,
+              "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun list_length () Int)\n(declare-fun list_node () Int)\n(assert\n (let (($x165 (>= list_length 0)))\n (and $x165 (and (>= list_node 1) (<= list_node list_length)))))\n(assert\n (let (($x110 (and (>= (- list_node 1) 0) (< (- list_node 1) list_length))))\n(not $x110)))\n(check-sat)\n"
+            },
+            {
+              "obligation": "head trajectory base",
+              "proved": true,
+              "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun list_length () Int)\n(assert\n (>= list_length 0))\n(assert\n (let (($x115 (= (- list_length 0) list_length)))\n(not $x115)))\n(check-sat)\n"
+            },
+            {
+              "obligation": "head trajectory follows next at each live step",
+              "proved": true,
+              "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun list_length () Int)\n(declare-fun list_step () Int)\n(assert\n (let (($x80 (>= list_step 0)))\n (let (($x165 (>= list_length 0)))\n (and $x165 $x80 (< list_step list_length)))))\n(assert\n (let (($x19 (= (- (- list_length list_step) 1) (- list_length (+ list_step 1)))))\n(let (($x50 (and (>= (- list_length list_step) 1) (<= (- list_length list_step) list_length))))\n(let (($x54 (and $x50 $x19)))\n(not $x54)))))\n(check-sat)\n"
+            },
+            {
+              "obligation": "trajectory reaches null exactly after length steps",
+              "proved": true,
+              "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun list_length () Int)\n(declare-fun list_step () Int)\n(assert\n (let (($x80 (>= list_step 0)))\n (let (($x165 (>= list_length 0)))\n (and $x165 $x80 (<= list_step list_length)))))\n(assert\n (let (($x198 (= list_step list_length)))\n(let (($x17 (= (= (- list_length list_step) 0) $x198)))\n(not $x17))))\n(check-sat)\n"
+            },
+            {
+              "obligation": "every live node is on the head trajectory",
+              "proved": true,
+              "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun list_length () Int)\n(declare-fun list_node () Int)\n(assert\n (let (($x165 (>= list_length 0)))\n (and $x165 (and (>= list_node 1) (<= list_node list_length)))))\n(assert\n (let (($x574 (and (>= (- list_length list_node) 0) (< (- list_length list_node) list_length) (= (- list_length (- list_length list_node)) list_node))))\n(not $x574)))\n(check-sat)\n"
+            },
+            {
+              "obligation": "free consumes exactly the current head",
+              "proved": true,
+              "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun list_remaining () Int)\n(declare-fun list_node () Int)\n(assert\n (> list_remaining 0))\n(assert\n (let (($x14 (>= list_node 1)))\n(let (($x115 (and (and $x14 (<= list_node list_remaining)) (and (distinct list_node list_remaining) true))))\n(let (($x54 (= $x115 (and $x14 (<= list_node (- list_remaining 1))))))\n(not $x54)))))\n(check-sat)\n"
+            },
+            {
+              "obligation": "saved next is live or null before and after free",
+              "proved": true,
+              "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun list_remaining () Int)\n(assert\n (> list_remaining 0))\n(assert\n (let (($x50 (and (>= (- list_remaining 1) 1) (<= (- list_remaining 1) (- list_remaining 1)))))\n(let (($x114 (and (and (>= list_remaining 1) (<= list_remaining list_remaining)) (or (= (- list_remaining 1) 0) $x50))))\n(not $x114))))\n(check-sat)\n"
+            },
+            {
+              "obligation": "consumption has a natural strictly decreasing rank",
+              "proved": true,
+              "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun list_remaining () Int)\n(assert\n (> list_remaining 0))\n(assert\n (let (($x59 (and (>= (- list_remaining 1) 0) (< (- list_remaining 1) list_remaining))))\n(not $x59)))\n(check-sat)\n"
+            },
+            {
+              "obligation": "freed and live nodes partition all allocations",
+              "proved": true,
+              "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun list_remaining () Int)\n(declare-fun list_length () Int)\n(declare-fun list_node () Int)\n(assert\n (let (($x137 (>= list_remaining 0)))\n (and (>= list_length list_remaining) $x137)))\n(assert\n (let (($x198 (<= list_node list_length)))\n(let (($x12 (> list_node list_remaining)))\n(let (($x135 (<= list_node list_remaining)))\n(let (($x605 (>= list_node 1)))\n(let (($x258 (and $x605 $x135)))\n(let (($x29 (and (= (or $x258 (and $x12 $x198)) (and $x605 $x198)) (not (and $x258 $x12 $x198)))))\n(not $x29))))))))\n(check-sat)\n"
+            }
+          ]
+        },
+        "payload_source": "int __list_payload_check(int n){int __list_dummy=0;for (int i = 0; i < n; i++)\n{\n  int __list_payload = i;\n}\n return __list_dummy;}",
+        "payload_proof": {
+          "abi": "LP64",
+          "function": "__list_payload_check",
+          "domain_smt2": "(and (>= typed_loop_n!0 (- 3)) (<= typed_loop_n!0 1000000))",
+          "parameter_types": {
+            "n": "signed int"
+          },
+          "semantics": "typed C integer semantics with explicit implementation choices",
+          "implementation_choices": {
+            "signed_cast": "two-complement modular",
+            "signed_right_shift": "arithmetic"
+          },
+          "summary_synthesis": [],
+          "certificate": {
+            "method": "compositional nested trajectory induction",
+            "obligations": [
+              {
+                "obligation": "i entry and bound defined",
+                "proved": true
+              },
+              {
+                "obligation": "i counter representable",
+                "proved": true
+              },
+              {
+                "obligation": "i __list_dummy range",
+                "proved": true,
+                "certificate": {
+                  "method": "exact rational interval enclosure",
+                  "bounds": {
+                    "typed_nested_i!44": [
+                      "0",
+                      "1000000"
+                    ],
+                    "typed_loop_n!0": [
+                      "-3",
+                      "1000000"
+                    ]
+                  }
+                }
+              },
+              {
+                "obligation": "i __list_dummy base",
+                "proved": true
+              },
+              {
+                "obligation": "i condition and exit",
+                "proved": true
+              },
+              {
+                "obligation": "i executed operations defined",
+                "proved": true
+              },
+              {
+                "obligation": "i step paths cover domain",
+                "proved": true
+              },
+              {
+                "obligation": "i path 0 successor",
+                "proved": true
+              },
+              {
+                "obligation": "function prefix and conditions defined",
+                "proved": true
+              },
+              {
+                "obligation": "function paths cover domain",
+                "proved": true
+              },
+              {
+                "obligation": "function return 0 defined",
+                "proved": true
+              }
+            ],
+            "loops": [
+              {
+                "index": "i",
+                "nesting_depth": 1,
+                "formulas": {
+                  "__list_dummy": "entry(\"__list_dummy\")"
+                },
+                "entry_domain_smt2": "(and (>= typed_loop_n!0 (- 3)) (<= typed_loop_n!0 1000000) true)",
+                "iterations_smt2": "(ite (<= typed_loop_n!0 0) 0 typed_loop_n!0)",
+                "step_obligations_including_children": 3,
+                "definedness_proved": true,
+                "termination_proved": true
+              }
+            ]
+          },
+          "scope": "canonical scalar for loops at nesting depth up to 16, with supplied entry-relative state formulas; no memory or general loop exits",
+          "status": "PROVED_DEFINED_TYPED_C_NESTED",
+          "c_overflow_verified": true,
+          "termination_proved": true,
+          "return_smt2": "0"
+        },
+        "fold_source": "signed long long __list_fold_check(int n, int __list_length){long long total = 0;for(int __list_scan=0;__list_scan<__list_length;__list_scan++){int __list_loaded=(__list_length - 1) - __list_scan;total += (long long) __list_loaded;}return total;}",
+        "fold_proof": {
+          "abi": "LP64",
+          "function": "__list_fold_check",
+          "domain_smt2": "(and (>= typed_loop_n!49 (- 3))\n     (<= typed_loop_n!49 1000000)\n     (>= typed_loop___list_length!50 0)\n     (<= typed_loop___list_length!50 1000000))",
+          "parameter_types": {
+            "n": "signed int",
+            "__list_length": "signed int"
+          },
+          "semantics": "typed C integer semantics with explicit implementation choices",
+          "implementation_choices": {
+            "signed_cast": "two-complement modular",
+            "signed_right_shift": "arithmetic"
+          },
+          "summary_synthesis": [
+            {
+              "index": "__list_scan",
+              "candidates": {
+                "total": "(((-1 * __list_scan) + (-1 * (__list_scan)**2) + (2 * entry(\"total\")) + (2 * __list_length * __list_scan)))//2"
+              },
+              "candidate_only": true,
+              "requires_separate_source_proof": true,
+              "mathematical_derivations": [
+                {
+                  "method": "finite exact polynomial lift",
+                  "counter": "__list_scan",
+                  "dimension": 3,
+                  "closure_identities": true,
+                  "power_certificate": {
+                    "base_identity": true,
+                    "successor_identity": true,
+                    "method": "symbolic matrix power with exact induction identities",
+                    "domain": "all nonnegative integer repetition counts",
+                    "successor_proof": "universal_successor_identity",
+                    "finite_prefix_length": 0,
+                    "counter": "_k",
+                    "power": [
+                      [
+                        "1",
+                        "0",
+                        "0"
+                      ],
+                      [
+                        "-_k*(_k - 1)/2 + _k*(__list_length - 1)",
+                        "1",
+                        "-_k"
+                      ],
+                      [
+                        "_k",
+                        "0",
+                        "1"
+                      ]
+                    ]
+                  }
+                }
+              ],
+              "limitations": "candidate extraction approximates casts, intermediate safety and memory initialization/lifetimes; typed source proof is mandatory"
+            }
+          ],
+          "certificate": {
+            "method": "compositional nested trajectory induction",
+            "obligations": [
+              {
+                "obligation": "__list_scan entry and bound defined",
+                "proved": true
+              },
+              {
+                "obligation": "__list_scan counter representable",
+                "proved": true
+              },
+              {
+                "obligation": "__list_scan total range",
+                "proved": true,
+                "certificate": {
+                  "method": "exact rational interval enclosure",
+                  "bounds": {
+                    "typed_nested___list_scan!51": [
+                      "0",
+                      "1000000"
+                    ],
+                    "typed_loop___list_length!50": [
+                      "0",
+                      "1000000"
+                    ],
+                    "typed_loop_n!49": [
+                      "-3",
+                      "1000000"
+                    ]
+                  }
+                }
+              },
+              {
+                "obligation": "__list_scan total base",
+                "proved": true
+              },
+              {
+                "obligation": "__list_scan condition and exit",
+                "proved": true
+              },
+              {
+                "obligation": "__list_scan executed operations defined",
+                "proved": true
+              },
+              {
+                "obligation": "__list_scan step paths cover domain",
+                "proved": true
+              },
+              {
+                "obligation": "__list_scan path 0 successor",
+                "proved": true
+              },
+              {
+                "obligation": "function prefix and conditions defined",
+                "proved": true
+              },
+              {
+                "obligation": "function paths cover domain",
+                "proved": true
+              },
+              {
+                "obligation": "function return 0 defined",
+                "proved": true
+              }
+            ],
+            "loops": [
+              {
+                "index": "__list_scan",
+                "nesting_depth": 1,
+                "formulas": {
+                  "total": "(((-1 * __list_scan) + (-1 * (__list_scan)**2) + (2 * entry(\"total\")) + (2 * __list_length * __list_scan)))//2"
+                },
+                "entry_domain_smt2": "(and (>= typed_loop_n!49 (- 3))\n     (<= typed_loop_n!49 1000000)\n     (>= typed_loop___list_length!50 0)\n     (<= typed_loop___list_length!50 1000000)\n     true)",
+                "iterations_smt2": "(ite (<= typed_loop___list_length!50 0) 0 typed_loop___list_length!50)",
+                "step_obligations_including_children": 3,
+                "definedness_proved": true,
+                "termination_proved": true
+              }
+            ]
+          },
+          "scope": "canonical scalar for loops at nesting depth up to 16, with supplied entry-relative state formulas; no memory or general loop exits",
+          "status": "PROVED_DEFINED_TYPED_C_NESTED",
+          "c_overflow_verified": true,
+          "termination_proved": true,
+          "return_smt2": "(let ((a!1 (* (- (/ 1.0 2.0))\n              (to_real (ite (<= typed_loop___list_length!50 0)\n                            0\n                            typed_loop___list_length!50))))\n      (a!2 (* (- (/ 1.0 2.0))\n              (to_real (ite (<= typed_loop___list_length!50 0)\n                            0\n                            typed_loop___list_length!50))\n              (to_real (ite (<= typed_loop___list_length!50 0)\n                            0\n                            typed_loop___list_length!50)))))\n(let ((a!3 (+ 9223372036854775808\n              (* typed_loop___list_length!50\n                 (ite (<= typed_loop___list_length!50 0)\n                      0\n                      typed_loop___list_length!50))\n              (to_int (+ a!1 a!2)))))\n  (+ (- 9223372036854775808) (mod a!3 18446744073709551616))))"
+        },
+        "fold_domain_overapproximates_all_failure_prefix_lengths": true
+      },
+      "samples": [
+        {
+          "n": -3,
+          "successful_allocations": 0
+        },
+        {
+          "n": 0,
+          "successful_allocations": 0
+        },
+        {
+          "n": 1,
+          "successful_allocations": 0
+        },
+        {
+          "n": 1,
+          "successful_allocations": 1
+        },
+        {
+          "n": 2,
+          "successful_allocations": 0
+        },
+        {
+          "n": 2,
+          "successful_allocations": 1
+        },
+        {
+          "n": 2,
+          "successful_allocations": 2
+        },
+        {
+          "n": 8,
+          "successful_allocations": 0
+        },
+        {
+          "n": 8,
+          "successful_allocations": 1
+        },
+        {
+          "n": 8,
+          "successful_allocations": 4
+        },
+        {
+          "n": 8,
+          "successful_allocations": 8
+        },
+        {
+          "n": 100,
+          "successful_allocations": 0
+        },
+        {
+          "n": 100,
+          "successful_allocations": 1
+        },
+        {
+          "n": 100,
+          "successful_allocations": 17
+        },
+        {
+          "n": 100,
+          "successful_allocations": 50
+        },
+        {
+          "n": 100,
+          "successful_allocations": 100
+        },
+        {
+          "n": 1000,
+          "successful_allocations": 0
+        },
+        {
+          "n": 1000,
+          "successful_allocations": 1
+        },
+        {
+          "n": 1000,
+          "successful_allocations": 17
+        },
+        {
+          "n": 1000,
+          "successful_allocations": 500
+        },
+        {
+          "n": 1000,
+          "successful_allocations": 1000
+        },
+        {
+          "n": 1000000,
+          "successful_allocations": 0
+        },
+        {
+          "n": 1000000,
+          "successful_allocations": 1
+        },
+        {
+          "n": 1000000,
+          "successful_allocations": 17
+        },
+        {
+          "n": 1000000,
+          "successful_allocations": 500000
+        },
+        {
+          "n": 1000000,
+          "successful_allocations": 1000000
+        }
+      ],
+      "output_columns": [
+        "value_or_payload_sum",
+        "successful_allocations",
+        "live_nodes_after_entry",
+        "allocation_attempts"
+      ],
+      "runs": [
+        {
+          "optimization": "-O0",
+          "original": [
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              1,
+              2,
+              0,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              6,
+              4,
+              0,
+              5
+            ],
+            [
+              28,
+              8,
+              0,
+              8
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              136,
+              17,
+              0,
+              18
+            ],
+            [
+              1225,
+              50,
+              0,
+              51
+            ],
+            [
+              4950,
+              100,
+              0,
+              100
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              136,
+              17,
+              0,
+              18
+            ],
+            [
+              124750,
+              500,
+              0,
+              501
+            ],
+            [
+              499500,
+              1000,
+              0,
+              1000
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              136,
+              17,
+              0,
+              18
+            ],
+            [
+              124999750000,
+              500000,
+              0,
+              500001
+            ],
+            [
+              499999500000,
+              1000000,
+              0,
+              1000000
+            ]
+          ],
+          "normalized": [
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              1,
+              2,
+              0,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              6,
+              4,
+              0,
+              5
+            ],
+            [
+              28,
+              8,
+              0,
+              8
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              136,
+              17,
+              0,
+              18
+            ],
+            [
+              1225,
+              50,
+              0,
+              51
+            ],
+            [
+              4950,
+              100,
+              0,
+              100
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              136,
+              17,
+              0,
+              18
+            ],
+            [
+              124750,
+              500,
+              0,
+              501
+            ],
+            [
+              499500,
+              1000,
+              0,
+              1000
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              136,
+              17,
+              0,
+              18
+            ],
+            [
+              124999750000,
+              500000,
+              0,
+              500001
+            ],
+            [
+              499999500000,
+              1000000,
+              0,
+              1000000
+            ]
+          ],
+          "model": [
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              1,
+              2,
+              0,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              6,
+              4,
+              0,
+              5
+            ],
+            [
+              28,
+              8,
+              0,
+              8
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              136,
+              17,
+              0,
+              18
+            ],
+            [
+              1225,
+              50,
+              0,
+              51
+            ],
+            [
+              4950,
+              100,
+              0,
+              100
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              136,
+              17,
+              0,
+              18
+            ],
+            [
+              124750,
+              500,
+              0,
+              501
+            ],
+            [
+              499500,
+              1000,
+              0,
+              1000
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              136,
+              17,
+              0,
+              18
+            ],
+            [
+              124999750000,
+              500000,
+              0,
+              500001
+            ],
+            [
+              499999500000,
+              1000000,
+              0,
+              1000000
+            ]
+          ]
+        },
+        {
+          "optimization": "-O2",
+          "original": [
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              1,
+              2,
+              0,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              6,
+              4,
+              0,
+              5
+            ],
+            [
+              28,
+              8,
+              0,
+              8
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              136,
+              17,
+              0,
+              18
+            ],
+            [
+              1225,
+              50,
+              0,
+              51
+            ],
+            [
+              4950,
+              100,
+              0,
+              100
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              136,
+              17,
+              0,
+              18
+            ],
+            [
+              124750,
+              500,
+              0,
+              501
+            ],
+            [
+              499500,
+              1000,
+              0,
+              1000
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              136,
+              17,
+              0,
+              18
+            ],
+            [
+              124999750000,
+              500000,
+              0,
+              500001
+            ],
+            [
+              499999500000,
+              1000000,
+              0,
+              1000000
+            ]
+          ],
+          "normalized": [
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              1,
+              2,
+              0,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              6,
+              4,
+              0,
+              5
+            ],
+            [
+              28,
+              8,
+              0,
+              8
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              136,
+              17,
+              0,
+              18
+            ],
+            [
+              1225,
+              50,
+              0,
+              51
+            ],
+            [
+              4950,
+              100,
+              0,
+              100
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              136,
+              17,
+              0,
+              18
+            ],
+            [
+              124750,
+              500,
+              0,
+              501
+            ],
+            [
+              499500,
+              1000,
+              0,
+              1000
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              136,
+              17,
+              0,
+              18
+            ],
+            [
+              124999750000,
+              500000,
+              0,
+              500001
+            ],
+            [
+              499999500000,
+              1000000,
+              0,
+              1000000
+            ]
+          ],
+          "model": [
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              1,
+              2,
+              0,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              6,
+              4,
+              0,
+              5
+            ],
+            [
+              28,
+              8,
+              0,
+              8
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              136,
+              17,
+              0,
+              18
+            ],
+            [
+              1225,
+              50,
+              0,
+              51
+            ],
+            [
+              4950,
+              100,
+              0,
+              100
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              136,
+              17,
+              0,
+              18
+            ],
+            [
+              124750,
+              500,
+              0,
+              501
+            ],
+            [
+              499500,
+              1000,
+              0,
+              1000
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              0,
+              2
+            ],
+            [
+              136,
+              17,
+              0,
+              18
+            ],
+            [
+              124999750000,
+              500000,
+              0,
+              500001
+            ],
+            [
+              499999500000,
+              1000000,
+              0,
+              1000000
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "escape",
+      "source": "#include <stdlib.h>\n\nstruct Node {\n    int value;\n    struct Node *next;\n};\n\nstruct Node *entry(int n) {\n    struct Node *head = 0;\n    for (int i = 0; i < n; i++) {\n        struct Node *p = calloc(1, sizeof(struct Node));\n        if (!p) {\n            return head;\n        }\n        p->value = i;\n        p->next = head;\n        head = p;\n    }\n    return head;\n}\n",
+      "source_sha256": "001595b8db9c4773bf683c2717719e51c11533f63d135040d0a5489f42535c16",
+      "normalization": {
+        "method": "structural admitted Clang AST to typed C; Clang + normalizer are trusted frontend components",
+        "source": "struct Node {int value; struct Node * next;};\nstruct Node * entry(int n) {\nstruct Node * head = 0;\nfor (int i = 0; (i < n); i++) {\nstruct Node * p = calloc(((unsigned long)(1)), sizeof(struct Node));\nif ((!(p))) {\nreturn head;\n}\n(p)->value = i;\n(p)->next = head;\nhead = p;\n}\nreturn head;\n}\n",
+        "source_sha256": "2d53bf7b8e1f00863e6851c1c4e0c791b78b8c86497ef7a4df23b687779dc7ff",
+        "ast_sha256": "59aec1b98f6f8cb76e656433bfd32ff8320f1647a421e11def16fa9cfad0f1d9",
+        "type_environment_sha256": "3dce1fd6cd693b315583f847b904c5539ad67c23e7b95ed574225cadb40ba10d",
+        "alpha_renamed": [],
+        "functions": [
+          "entry"
+        ],
+        "backend": "list",
+        "abi": "LP64",
+        "char_signed": true,
+        "record_layout_correspondence": {
+          "Node": {
+            "size_bytes": 16,
+            "alignment_bytes": 8,
+            "member_offsets": [
+              [
+                "value",
+                0
+              ],
+              [
+                "next",
+                8
+              ]
+            ]
+          }
+        },
+        "compiler_equivalence_machine_proved": false,
+        "unsupported_constructs_rejected": true
+      },
+      "certificate": {
+        "method": "checked C list normal form + universal shape induction + typed scalar loop proofs",
+        "source_contract": {
+          "record": "Node",
+          "payload_field": "value",
+          "next_field": "next",
+          "head_initially_null": true,
+          "fresh_allocation_before_each_publish": true,
+          "both_fields_initialized_before_publish": true,
+          "null_failure_exits_before_memory_writes": true,
+          "no_external_aliases_or_pointer_identity_observations": true,
+          "saved_next_before_free": false
+        },
+        "shape": {
+          "method": "universal fresh-token/live-prefix and reverse traversal induction",
+          "abstract_identities_not_addresses": true,
+          "represented_object_cutoff": null,
+          "obligations": [
+            {
+              "obligation": "empty base has no live nodes",
+              "proved": true,
+              "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun list_node () Int)\n(assert\n true)\n(assert\n (let (($x624 (not (and (>= list_node 1) (<= list_node 0)))))\n(not $x624)))\n(check-sat)\n"
+            },
+            {
+              "obligation": "successful allocation is a fresh nonnull token",
+              "proved": true,
+              "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun list_k () Int)\n(assert\n (>= list_k 0))\n(assert\n (let (($x27 (not (and (>= (+ list_k 1) 1) (<= (+ list_k 1) list_k)))))\n(let (($x249 (and (> (+ list_k 1) 0) $x27)))\n(not $x249))))\n(check-sat)\n"
+            },
+            {
+              "obligation": "old head is null or live",
+              "proved": true,
+              "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun list_k () Int)\n(assert\n (>= list_k 0))\n(assert\n (let (($x668 (= list_k 0)))\n(let (($x58 (or $x668 (and (>= list_k 1) (<= list_k list_k)))))\n(not $x58))))\n(check-sat)\n"
+            },
+            {
+              "obligation": "prepend extends exactly the live prefix",
+              "proved": true,
+              "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun list_k () Int)\n(declare-fun list_node () Int)\n(assert\n (>= list_k 0))\n(assert\n (let (($x100 (or (and (>= list_node 1) (<= list_node list_k)) (= list_node (+ list_k 1)))))\n(let (($x492 (= $x100 (and (>= list_node 1) (<= list_node (+ list_k 1))))))\n(not $x492))))\n(check-sat)\n"
+            },
+            {
+              "obligation": "new and preserved links are initialized live tails",
+              "proved": true,
+              "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun list_k () Int)\n(declare-fun list_node () Int)\n(assert\n (let (($x588 (>= list_k 0)))\n (and $x588 (and (>= list_node 1) (<= list_node (+ list_k 1))))))\n(assert\n (let ((?x485 (+ list_k 1)))\n(let ((?x592 (- list_node 1)))\n(let ((?x320 (ite (= list_node ?x485) list_k ?x592)))\n(let (($x26 (and (= ?x320 ?x592) (>= ?x320 0) (< ?x320 list_node) (or (= ?x320 0) (and (>= ?x320 1) (<= ?x320 ?x485))))))\n(not $x26))))))\n(check-sat)\n"
+            },
+            {
+              "obligation": "every live payload has an initialized builder index",
+              "proved": true,
+              "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun list_length () Int)\n(declare-fun list_node () Int)\n(assert\n (let (($x83 (>= list_length 0)))\n (and $x83 (and (>= list_node 1) (<= list_node list_length)))))\n(assert\n (let (($x442 (and (>= (- list_node 1) 0) (< (- list_node 1) list_length))))\n(not $x442)))\n(check-sat)\n"
+            },
+            {
+              "obligation": "head trajectory base",
+              "proved": true,
+              "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun list_length () Int)\n(assert\n (>= list_length 0))\n(assert\n (let (($x138 (= (- list_length 0) list_length)))\n(not $x138)))\n(check-sat)\n"
+            },
+            {
+              "obligation": "head trajectory follows next at each live step",
+              "proved": true,
+              "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun list_length () Int)\n(declare-fun list_step () Int)\n(assert\n (let (($x543 (>= list_step 0)))\n (let (($x83 (>= list_length 0)))\n (and $x83 $x543 (< list_step list_length)))))\n(assert\n (let (($x293 (= (- (- list_length list_step) 1) (- list_length (+ list_step 1)))))\n(let (($x533 (and (>= (- list_length list_step) 1) (<= (- list_length list_step) list_length))))\n(let (($x569 (and $x533 $x293)))\n(not $x569)))))\n(check-sat)\n"
+            },
+            {
+              "obligation": "trajectory reaches null exactly after length steps",
+              "proved": true,
+              "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun list_length () Int)\n(declare-fun list_step () Int)\n(assert\n (let (($x543 (>= list_step 0)))\n (let (($x83 (>= list_length 0)))\n (and $x83 $x543 (<= list_step list_length)))))\n(assert\n (let (($x50 (= list_step list_length)))\n(let (($x186 (= (= (- list_length list_step) 0) $x50)))\n(not $x186))))\n(check-sat)\n"
+            },
+            {
+              "obligation": "every live node is on the head trajectory",
+              "proved": true,
+              "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun list_length () Int)\n(declare-fun list_node () Int)\n(assert\n (let (($x83 (>= list_length 0)))\n (and $x83 (and (>= list_node 1) (<= list_node list_length)))))\n(assert\n (let (($x601 (and (>= (- list_length list_node) 0) (< (- list_length list_node) list_length) (= (- list_length (- list_length list_node)) list_node))))\n(not $x601)))\n(check-sat)\n"
+            },
+            {
+              "obligation": "free consumes exactly the current head",
+              "proved": true,
+              "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun list_remaining () Int)\n(declare-fun list_node () Int)\n(assert\n (> list_remaining 0))\n(assert\n (let (($x46 (>= list_node 1)))\n(let (($x138 (and (and $x46 (<= list_node list_remaining)) (and (distinct list_node list_remaining) true))))\n(let (($x569 (= $x138 (and $x46 (<= list_node (- list_remaining 1))))))\n(not $x569)))))\n(check-sat)\n"
+            },
+            {
+              "obligation": "saved next is live or null before and after free",
+              "proved": true,
+              "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun list_remaining () Int)\n(assert\n (> list_remaining 0))\n(assert\n (let (($x533 (and (>= (- list_remaining 1) 1) (<= (- list_remaining 1) (- list_remaining 1)))))\n(let (($x510 (and (and (>= list_remaining 1) (<= list_remaining list_remaining)) (or (= (- list_remaining 1) 0) $x533))))\n(not $x510))))\n(check-sat)\n"
+            },
+            {
+              "obligation": "consumption has a natural strictly decreasing rank",
+              "proved": true,
+              "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun list_remaining () Int)\n(assert\n (> list_remaining 0))\n(assert\n (let (($x58 (and (>= (- list_remaining 1) 0) (< (- list_remaining 1) list_remaining))))\n(not $x58)))\n(check-sat)\n"
+            },
+            {
+              "obligation": "freed and live nodes partition all allocations",
+              "proved": true,
+              "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun list_remaining () Int)\n(declare-fun list_length () Int)\n(declare-fun list_node () Int)\n(assert\n (let (($x270 (>= list_remaining 0)))\n (and (>= list_length list_remaining) $x270)))\n(assert\n (let (($x603 (<= list_node list_length)))\n(let (($x688 (> list_node list_remaining)))\n(let (($x261 (<= list_node list_remaining)))\n(let (($x189 (>= list_node 1)))\n(let (($x346 (and $x189 $x261)))\n(let (($x344 (and (= (or $x346 (and $x688 $x603)) (and $x189 $x603)) (not (and $x346 $x688 $x603)))))\n(not $x344))))))))\n(check-sat)\n"
+            }
+          ]
+        },
+        "payload_source": "int __list_payload_check(int n){int __list_dummy=0;for (int i = 0; i < n; i++)\n{\n  int __list_payload = i;\n}\n return __list_dummy;}",
+        "payload_proof": {
+          "abi": "LP64",
+          "function": "__list_payload_check",
+          "domain_smt2": "(and (>= typed_loop_n!114 (- 3)) (<= typed_loop_n!114 1000000))",
+          "parameter_types": {
+            "n": "signed int"
+          },
+          "semantics": "typed C integer semantics with explicit implementation choices",
+          "implementation_choices": {
+            "signed_cast": "two-complement modular",
+            "signed_right_shift": "arithmetic"
+          },
+          "summary_synthesis": [],
+          "certificate": {
+            "method": "compositional nested trajectory induction",
+            "obligations": [
+              {
+                "obligation": "i entry and bound defined",
+                "proved": true
+              },
+              {
+                "obligation": "i counter representable",
+                "proved": true
+              },
+              {
+                "obligation": "i __list_dummy range",
+                "proved": true,
+                "certificate": {
+                  "method": "exact rational interval enclosure",
+                  "bounds": {
+                    "typed_nested_i!158": [
+                      "0",
+                      "1000000"
+                    ],
+                    "typed_loop_n!114": [
+                      "-3",
+                      "1000000"
+                    ]
+                  }
+                }
+              },
+              {
+                "obligation": "i __list_dummy base",
+                "proved": true
+              },
+              {
+                "obligation": "i condition and exit",
+                "proved": true
+              },
+              {
+                "obligation": "i executed operations defined",
+                "proved": true
+              },
+              {
+                "obligation": "i step paths cover domain",
+                "proved": true
+              },
+              {
+                "obligation": "i path 0 successor",
+                "proved": true
+              },
+              {
+                "obligation": "function prefix and conditions defined",
+                "proved": true
+              },
+              {
+                "obligation": "function paths cover domain",
+                "proved": true
+              },
+              {
+                "obligation": "function return 0 defined",
+                "proved": true
+              }
+            ],
+            "loops": [
+              {
+                "index": "i",
+                "nesting_depth": 1,
+                "formulas": {
+                  "__list_dummy": "entry(\"__list_dummy\")"
+                },
+                "entry_domain_smt2": "(and (>= typed_loop_n!114 (- 3)) (<= typed_loop_n!114 1000000) true)",
+                "iterations_smt2": "(ite (<= typed_loop_n!114 0) 0 typed_loop_n!114)",
+                "step_obligations_including_children": 3,
+                "definedness_proved": true,
+                "termination_proved": true
+              }
+            ]
+          },
+          "scope": "canonical scalar for loops at nesting depth up to 16, with supplied entry-relative state formulas; no memory or general loop exits",
+          "status": "PROVED_DEFINED_TYPED_C_NESTED",
+          "c_overflow_verified": true,
+          "termination_proved": true,
+          "return_smt2": "0"
+        },
+        "fold_source": null,
+        "fold_proof": null,
+        "fold_domain_overapproximates_all_failure_prefix_lengths": null
+      },
+      "samples": [
+        {
+          "n": -3,
+          "successful_allocations": 0
+        },
+        {
+          "n": 0,
+          "successful_allocations": 0
+        },
+        {
+          "n": 1,
+          "successful_allocations": 0
+        },
+        {
+          "n": 1,
+          "successful_allocations": 1
+        },
+        {
+          "n": 2,
+          "successful_allocations": 0
+        },
+        {
+          "n": 2,
+          "successful_allocations": 1
+        },
+        {
+          "n": 2,
+          "successful_allocations": 2
+        },
+        {
+          "n": 8,
+          "successful_allocations": 0
+        },
+        {
+          "n": 8,
+          "successful_allocations": 1
+        },
+        {
+          "n": 8,
+          "successful_allocations": 4
+        },
+        {
+          "n": 8,
+          "successful_allocations": 8
+        },
+        {
+          "n": 100,
+          "successful_allocations": 0
+        },
+        {
+          "n": 100,
+          "successful_allocations": 1
+        },
+        {
+          "n": 100,
+          "successful_allocations": 17
+        },
+        {
+          "n": 100,
+          "successful_allocations": 50
+        },
+        {
+          "n": 100,
+          "successful_allocations": 100
+        },
+        {
+          "n": 1000,
+          "successful_allocations": 0
+        },
+        {
+          "n": 1000,
+          "successful_allocations": 1
+        },
+        {
+          "n": 1000,
+          "successful_allocations": 17
+        },
+        {
+          "n": 1000,
+          "successful_allocations": 500
+        },
+        {
+          "n": 1000,
+          "successful_allocations": 1000
+        },
+        {
+          "n": 1000000,
+          "successful_allocations": 0
+        },
+        {
+          "n": 1000000,
+          "successful_allocations": 1
+        },
+        {
+          "n": 1000000,
+          "successful_allocations": 17
+        },
+        {
+          "n": 1000000,
+          "successful_allocations": 500000
+        },
+        {
+          "n": 1000000,
+          "successful_allocations": 1000000
+        }
+      ],
+      "output_columns": [
+        "value_or_payload_sum",
+        "successful_allocations",
+        "live_nodes_after_entry",
+        "allocation_attempts"
+      ],
+      "runs": [
+        {
+          "optimization": "-O0",
+          "original": [
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              1,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              6,
+              4,
+              4,
+              5
+            ],
+            [
+              28,
+              8,
+              8,
+              8
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              136,
+              17,
+              17,
+              18
+            ],
+            [
+              1225,
+              50,
+              50,
+              51
+            ],
+            [
+              4950,
+              100,
+              100,
+              100
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              136,
+              17,
+              17,
+              18
+            ],
+            [
+              124750,
+              500,
+              500,
+              501
+            ],
+            [
+              499500,
+              1000,
+              1000,
+              1000
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              136,
+              17,
+              17,
+              18
+            ],
+            [
+              124999750000,
+              500000,
+              500000,
+              500001
+            ],
+            [
+              499999500000,
+              1000000,
+              1000000,
+              1000000
+            ]
+          ],
+          "normalized": [
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              1,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              6,
+              4,
+              4,
+              5
+            ],
+            [
+              28,
+              8,
+              8,
+              8
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              136,
+              17,
+              17,
+              18
+            ],
+            [
+              1225,
+              50,
+              50,
+              51
+            ],
+            [
+              4950,
+              100,
+              100,
+              100
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              136,
+              17,
+              17,
+              18
+            ],
+            [
+              124750,
+              500,
+              500,
+              501
+            ],
+            [
+              499500,
+              1000,
+              1000,
+              1000
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              136,
+              17,
+              17,
+              18
+            ],
+            [
+              124999750000,
+              500000,
+              500000,
+              500001
+            ],
+            [
+              499999500000,
+              1000000,
+              1000000,
+              1000000
+            ]
+          ],
+          "model": [
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              1,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              6,
+              4,
+              4,
+              5
+            ],
+            [
+              28,
+              8,
+              8,
+              8
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              136,
+              17,
+              17,
+              18
+            ],
+            [
+              1225,
+              50,
+              50,
+              51
+            ],
+            [
+              4950,
+              100,
+              100,
+              100
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              136,
+              17,
+              17,
+              18
+            ],
+            [
+              124750,
+              500,
+              500,
+              501
+            ],
+            [
+              499500,
+              1000,
+              1000,
+              1000
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              136,
+              17,
+              17,
+              18
+            ],
+            [
+              124999750000,
+              500000,
+              500000,
+              500001
+            ],
+            [
+              499999500000,
+              1000000,
+              1000000,
+              1000000
+            ]
+          ]
+        },
+        {
+          "optimization": "-O2",
+          "original": [
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              1,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              6,
+              4,
+              4,
+              5
+            ],
+            [
+              28,
+              8,
+              8,
+              8
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              136,
+              17,
+              17,
+              18
+            ],
+            [
+              1225,
+              50,
+              50,
+              51
+            ],
+            [
+              4950,
+              100,
+              100,
+              100
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              136,
+              17,
+              17,
+              18
+            ],
+            [
+              124750,
+              500,
+              500,
+              501
+            ],
+            [
+              499500,
+              1000,
+              1000,
+              1000
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              136,
+              17,
+              17,
+              18
+            ],
+            [
+              124999750000,
+              500000,
+              500000,
+              500001
+            ],
+            [
+              499999500000,
+              1000000,
+              1000000,
+              1000000
+            ]
+          ],
+          "normalized": [
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              1,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              6,
+              4,
+              4,
+              5
+            ],
+            [
+              28,
+              8,
+              8,
+              8
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              136,
+              17,
+              17,
+              18
+            ],
+            [
+              1225,
+              50,
+              50,
+              51
+            ],
+            [
+              4950,
+              100,
+              100,
+              100
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              136,
+              17,
+              17,
+              18
+            ],
+            [
+              124750,
+              500,
+              500,
+              501
+            ],
+            [
+              499500,
+              1000,
+              1000,
+              1000
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              136,
+              17,
+              17,
+              18
+            ],
+            [
+              124999750000,
+              500000,
+              500000,
+              500001
+            ],
+            [
+              499999500000,
+              1000000,
+              1000000,
+              1000000
+            ]
+          ],
+          "model": [
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              1,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              6,
+              4,
+              4,
+              5
+            ],
+            [
+              28,
+              8,
+              8,
+              8
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              136,
+              17,
+              17,
+              18
+            ],
+            [
+              1225,
+              50,
+              50,
+              51
+            ],
+            [
+              4950,
+              100,
+              100,
+              100
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              136,
+              17,
+              17,
+              18
+            ],
+            [
+              124750,
+              500,
+              500,
+              501
+            ],
+            [
+              499500,
+              1000,
+              1000,
+              1000
+            ],
+            [
+              0,
+              0,
+              0,
+              1
+            ],
+            [
+              0,
+              1,
+              1,
+              2
+            ],
+            [
+              136,
+              17,
+              17,
+              18
+            ],
+            [
+              124999750000,
+              500000,
+              500000,
+              500001
+            ],
+            [
+              499999500000,
+              1000000,
+              1000000,
+              1000000
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "compiler": "cc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0"
+}

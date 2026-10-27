@@ -1,5 +1,9 @@
 # Clang memory and direct-call proof bridge (v0.30)
 
+The finite-kernel contracts below remain unchanged. A separate `list` backend
+adds [inductive fresh-list summaries](UNBOUNDED_LIST_HEAP.md) without the finite
+represented-object cutoff for its admitted builder/fold/free normal form.
+
 The `clang_proof` API adds two backends to the existing scalar bridge. The
 compiler resolves macros, headers, typedefs, implicit integer conversions and
 record layouts. A structural normalizer then emits admitted typed C for an

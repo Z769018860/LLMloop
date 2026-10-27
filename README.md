@@ -678,6 +678,18 @@ See [contracts and examples](docs/CLANG_MEMORY_CALLS.md) and
 [local experiments](experiments/v030/report.md). This does not complete general
 C normalization, arbitrary branching closed forms or unbounded escaping heaps.
 
+## v0.31: inductive escaping-list heap summaries
+
+`--c-clang-proof --clang-proof-config '{"backend":"list"}'` now proves an
+admitted fresh prepend-list builder, either returning the live head or folding
+and freeing the constructed chain. An indexed shape summary replaces per-node
+materialization; allocation failures are modeled as every possible successful
+prefix. Original typed payload, accumulator and index operations are checked,
+including million-count examples and integer/heap negative controls.
+See [contracts and examples](docs/UNBOUNDED_LIST_HEAP.md) and
+[experiments](experiments/v031/report.md). General heap shapes, arbitrary caller
+composition and general branching closed-form synthesis remain unsupported.
+
 ### Independent sequential threshold branches
 
 Automatic typed-loop summaries also propose closed forms for two or three

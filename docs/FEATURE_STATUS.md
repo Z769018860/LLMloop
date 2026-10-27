@@ -1,4 +1,4 @@
-# Feature status after v0.30
+# Feature status after v0.31
 
 This inventory distinguishes certified capabilities from outstanding general
 requirements. The project remains a restricted research prototype.
@@ -19,7 +19,7 @@ particular exit condition terminates. `UNKNOWN` is an explicit unsupported or
 unproved result, not a valid summary.
 
 See [v0.14 recurrence and experiment contracts](GUARDED_RECURRENCES_AND_EXPERIMENTS.md)
-and the committed [latest experiment report](../experiments/v030/report.md).
+and the committed [latest experiment report](../experiments/v031/report.md).
 
 See [unroll-free typed scalar C contracts](TYPED_UNBOUNDED_RECURRENCES.md) for the new machine-integer certificate. It does not certify general heap memory.
 
@@ -56,3 +56,10 @@ to compiler-resolved ASTs; record layouts are compared before success. General
 LLVM normalization, unbounded escaping heap summaries and arbitrary branch
 closed-form synthesis remain open. Independent sequential threshold branches
 are also supported under the [additive independence contract](COUNTER_THRESHOLD_DISCOVERY.md).
+
+See [inductive escaping-list summaries](UNBOUNDED_LIST_HEAP.md) for a first
+unroll-free shape fragment: fresh acyclic prepend chains with typed payloads,
+failure-prefix outcomes, live-head returns or checked additive fold/free.
+This removes the finite represented-object cutoff only for that recognized
+fragment; arbitrary linked/escaping heaps and interprocedural shape composition
+remain open.
