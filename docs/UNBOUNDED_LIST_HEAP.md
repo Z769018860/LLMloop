@@ -64,7 +64,9 @@ after the chain is exhausted.
 Mutation of old nodes, cycles, aliases from external inputs, payload memory
 reads, helper/indirect calls, append/doubly-linked/tree/graph updates, non-prefix
 allocation failures and arbitrary early exits are unsupported. The general
-caller does not yet compose an escaped shape contract with arbitrary callees.
+caller does not compose an escaped shape contract with arbitrary callees.
+A separate [list_calls backend](INTERPROCEDURAL_LIST_HEAP.md) now admits a
+checked builder/caller/consumer ownership chain for this same shape fragment.
 The backend rejects finite-CFG `max_steps`, recursion and success-only allocation
 options; it does not silently change its contract to fit those budgets.
 
@@ -121,6 +123,6 @@ GCC `-O0`/`-O2` with UBSan. It independently injects allocation failure, checks
 each escaped payload in list order, counts successful allocations and live
 objects, and releases the caller-owned result. See [results](../experiments/v031/report.md).
 
-General unbounded escaping heap shapes, interprocedural shape composition,
+General unbounded escaping heap shapes, arbitrary interprocedural shape composition,
 arbitrary state-dependent branch closed forms and unrestricted C/LLVM semantics
 remain open. This backend does not use KLEE.

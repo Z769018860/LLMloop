@@ -690,6 +690,23 @@ See [contracts and examples](docs/UNBOUNDED_LIST_HEAP.md) and
 [experiments](experiments/v031/report.md). General heap shapes, arbitrary caller
 composition and general branching closed-form synthesis remain unsupported.
 
+## v0.32: interprocedural fresh-list ownership summaries
+
+`--c-clang-proof --clang-proof-config '{"backend":"list_calls"}'` connects a
+checked list-building helper to its unique caller owner. The caller can return
+the live head, fold/free it locally, or transfer it to a checked consumer helper.
+Every allocation-failure prefix is preserved without per-node expansion.
+Scalar bindings require identical types; helper locals are renamed and callee
+return conversions are applied before caller conversions.
+
+See [three-function example](examples/clang_list_calls.c),
+[composition contract](docs/INTERPROCEDURAL_LIST_HEAP.md) and
+[v0.32 experiments](experiments/v032/report.md). Clang ingestion does not imply
+complete C verification: the [coverage and remaining requirements](docs/C_COVERAGE.md)
+distinguish compiler acceptance, normalization, safety proofs and closed forms.
+General shapes, arbitrary interprocedural aliases and general branch synthesis
+remain open; KLEE is intentionally not integrated.
+
 ### Independent sequential threshold branches
 
 Automatic typed-loop summaries also propose closed forms for two or three

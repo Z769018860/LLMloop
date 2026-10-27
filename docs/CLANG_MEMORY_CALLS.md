@@ -3,6 +3,9 @@
 The finite-kernel contracts below remain unchanged. A separate `list` backend
 adds [inductive fresh-list summaries](UNBOUNDED_LIST_HEAP.md) without the finite
 represented-object cutoff for its admitted builder/fold/free normal form.
+A separate `list_calls` backend adds
+[checked builder/caller/consumer ownership composition](INTERPROCEDURAL_LIST_HEAP.md)
+for that shape fragment; it does not relax the finite `calls` backend's limits.
 
 The `clang_proof` API adds two backends to the existing scalar bridge. The
 compiler resolves macros, headers, typedefs, implicit integer conversions and

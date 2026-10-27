@@ -1,4 +1,4 @@
-# Feature status after v0.31
+# Feature status after v0.32
 
 This inventory distinguishes certified capabilities from outstanding general
 requirements. The project remains a restricted research prototype.
@@ -6,7 +6,7 @@ requirements. The project remains a restricted research prototype.
 | Requirement | Implemented certified fragment | Outstanding general cases |
 | --- | --- | --- |
 | Nested loop summaries | Counted finite-cell affine summaries, immutable parameter bounds, interleaved outer scalar updates; compositional typed scalar for-loop trajectories up to 16 levels | Arbitrary data-dependent nested CFGs and escaping heap interactions |
-| Arrays/pointers/heap | Finite layouts, aliases/lifetimes, dynamic pointwise sweeps, finite-window backward scans, repeated private fixed calloc/free folds; unified typed finite local arrays/fixed malloc/calloc sites with per-cell initialization and alias lifetimes; independent bounded CFG route for variable-size allocation/failure, mutable aliases, cross-block heap escape and bounded direct-call pointer arguments/returns; finite pointer-valued arrays/heap tables with dynamic cell choices and up to three levels of typed indirection; single named allocated records with typed fields and bounded linked/cyclic graph execution | General unbounded linked/escaping heap summaries, external pointer layouts, realloc and physical capacity |
+| Arrays/pointers/heap | Finite layouts, aliases/lifetimes, dynamic pointwise sweeps, finite-window backward scans, repeated private fixed calloc/free folds; unified typed finite local arrays/fixed malloc/calloc sites with per-cell initialization and alias lifetimes; failure-aware bounded CFG/direct-call pointer arguments/returns; finite pointer-valued tables and bounded linked/cyclic record graphs; inductive fresh prepend-chain summaries without represented-node expansion, including returned ownership and checked builder/caller/consumer composition | General unbounded graphs and arbitrary ownership/alias composition, external pointer layouts, realloc and physical capacity |
 | General recurrences | Affine induction-certified matrix powers, finite polynomial lifts, periodic schedules, inductive state-dependent phases, supplied nonperiodic Piecewise candidates; automatic triangular finite-polynomial, isolated saturation, parity/transient and static-cell, periodic coupled block and counter-threshold additive polynomial candidates independently verified against typed source; exact bounded state-branch execution without closed-form synthesis | Automatic discovery of arbitrary coupled/branching nonperiodic trajectories or closed forms; unsupported symbolic exponentials in candidate SMT mode |
 | C integer semantics | ABI-aware concrete and symbolic typed expressions, bounded typed scalar function execution, unroll-free heterogeneous single/nested scalar loop certificates from supplied state candidates, typed finite local memory composed with nested scalar loop certificates; restricted single-width dynamic memory safety proofs; independent failure-aware finite dynamic heap CFG verification | General typed heap shapes, external pointer layouts, arbitrary calls/side effects |
 | Execution validity | Bounded reachable-state checks, ranking certificates, counted-loop termination in mathematical frontends and certified typed scalar trajectories; bounded complete-exit CFG with break/continue, goto, switch, early exits and typed direct-call frames and opt-in recursive closure with unreachable depth frontiers | General unbounded termination and feasibility for arbitrary C CFG loops |
@@ -19,7 +19,7 @@ particular exit condition terminates. `UNKNOWN` is an explicit unsupported or
 unproved result, not a valid summary.
 
 See [v0.14 recurrence and experiment contracts](GUARDED_RECURRENCES_AND_EXPERIMENTS.md)
-and the committed [latest experiment report](../experiments/v031/report.md).
+and the committed [latest experiment report](../experiments/v032/report.md).
 
 See [unroll-free typed scalar C contracts](TYPED_UNBOUNDED_RECURRENCES.md) for the new machine-integer certificate. It does not certify general heap memory.
 
@@ -45,15 +45,15 @@ See [finite typed pointer cells](TYPED_POINTER_CELLS.md) for initialization, gua
 
 See [bounded named record graphs](BOUNDED_STRUCT_HEAP.md) for linked/cyclic object identity, per-member safety and explicit ABI layout choices. General unbounded shape summaries remain open.
 
-See [Clang ingestion](CLANG_ADAPTER.md) for compiler-owned syntax/types/layouts and real-project compilation commands. CLANG_FRONTEND_READY is not proof; general Clang AST/LLVM normalization into the proof engine and KLEE execution are still pending.
+See [Clang ingestion](CLANG_ADAPTER.md) for compiler-owned syntax/types/layouts and real-project compilation commands. CLANG_FRONTEND_READY is not proof; admitted AST normalization is implemented, while general C/LLVM semantics remain open. KLEE is intentionally not integrated.
 
-See [Clang scalar proof normalization](CLANG_SCALAR_PROOF.md) for the admitted compiler-typed scalar fragment connected to CFG/inductive kernels. This trusted frontend connection is implemented; general LLVM/memory/call normalization and KLEE execution remain open.
+See [Clang scalar proof normalization](CLANG_SCALAR_PROOF.md) for the admitted compiler-typed scalar fragment connected to CFG/inductive kernels. This trusted frontend connection is implemented; general LLVM/memory/call normalization remains open.
 
 See [Clang memory/call normalization](CLANG_MEMORY_CALLS.md) for admitted static
 arrays, typed pointer cells, direct helpers and finite linked-record heaps.
 The scalar, finite-memory induction and bounded-call kernels are now connected
 to compiler-resolved ASTs; record layouts are compared before success. General
-LLVM normalization, unbounded escaping heap summaries and arbitrary branch
+LLVM normalization, general unbounded escaping heap summaries and arbitrary branch
 closed-form synthesis remain open. Independent sequential threshold branches
 are also supported under the [additive independence contract](COUNTER_THRESHOLD_DISCOVERY.md).
 
@@ -61,5 +61,11 @@ See [inductive escaping-list summaries](UNBOUNDED_LIST_HEAP.md) for a first
 unroll-free shape fragment: fresh acyclic prepend chains with typed payloads,
 failure-prefix outcomes, live-head returns or checked additive fold/free.
 This removes the finite represented-object cutoff only for that recognized
-fragment; arbitrary linked/escaping heaps and interprocedural shape composition
-remain open.
+fragment; arbitrary linked/escaping heaps remain open. The new
+[interprocedural list contract](INTERPROCEDURAL_LIST_HEAP.md) composes a builder,
+its unique caller owner and optionally one fold/free helper. Arbitrary shape
+contracts, aliasing calls and recursive heap induction remain open.
+
+See [C coverage and remaining requirements](C_COVERAGE.md) for the distinction
+between compiler ingestion and whole-language verification, and the acceptance
+criteria for the remaining work.
