@@ -1,0 +1,115 @@
+{
+  "base_commit": "377857a787cb8e32f35b8e00cbe2f6fe14fd102e",
+  "tested_commit": "d73bb8be7ece23e826a2efc3b0f82b00bc58dbd5",
+  "validation_origin": "local restored execution environment; isolated pytest workers and native UBSan",
+  "environment": {
+    "python": "3.12.14",
+    "platform": "Linux-6.18.55-x86_64-with-glibc2.39",
+    "pytest": "9.1.1",
+    "sympy": "1.14.0",
+    "z3": "5.3.2",
+    "pycparser": "3.11",
+    "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+    "compiler": "cc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0"
+  },
+  "full_pytest": {
+    "command": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "--forked"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 279.15,
+    "log": "pytest.txt",
+    "passed": 1160,
+    "expected_passed": 1160,
+    "skipped": 0
+  },
+  "new_payload_map_tests": {
+    "passed": 58,
+    "included_in_full_suite": true
+  },
+  "native": {
+    "payload_maps": {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_list_payload_maps_native.py",
+        "--output",
+        "experiments/v035/native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 16.21,
+      "log": "payload_maps.txt",
+      "correspondences": 510,
+      "negative_native_runs": 8
+    },
+    "reversal_regression": {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_list_reversal_native.py",
+        "--output",
+        "experiments/v035/reversal_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 13.21,
+      "log": "reversal_regression.txt",
+      "correspondences": 372,
+      "negative_native_runs": 4
+    }
+  },
+  "cli_demo": {
+    "command": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+      "-m",
+      "llmloop.symbolic_cli",
+      "examples/clang_list_payload_map.c",
+      "--c-clang-proof",
+      "--function",
+      "entry",
+      "--clang-proof-config",
+      "{\"backend\": \"list_calls\", \"allocation_count\": 100}",
+      "--parameter-bounds",
+      "{\"n\": [0, 1000000], \"delta\": [-3, 3]}",
+      "--inputs",
+      "{\"n\": 1000000, \"delta\": 3}"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.92,
+    "log": "demo.json",
+    "passed": true,
+    "evaluation": {
+      "allocation_count": 100,
+      "all_success_case": false,
+      "conditional_on_selected_allocation_outcome": true,
+      "live_nodes_after_return": 0,
+      "orientation": "ascending",
+      "value": 5250
+    }
+  },
+  "frozen_source_unchanged": true,
+  "frozen_manifest_paths": 366,
+  "github_actions_used": false,
+  "klee_used": false,
+  "complete_c_support": false,
+  "passed": true,
+  "evidence_sha256": {
+    "pytest.txt": "41887229272408cefacffb3047c738f43c925677d21b17d70ff5e4556480a30a",
+    "source_manifest.json": "7041b13e81d61bec266e18d5845211df57ebc8f5d41e54acbccbc246b7fd9eb6",
+    "native.json": "563153159e85fd089fd6560f883bf974ab5c643fd8a293894ab4ca45fe8d32f8",
+    "payload_maps.txt": "c0b88af94377f575f421f57e6e0b382a2cc60d7f828c0f7fe8127e8971d60704",
+    "reversal_native.json": "5d31c423c18fc6e1e7388541a51c3d9ef92a2bc941d96748dc33472f3ed6d726",
+    "reversal_regression.txt": "16cbe1825eeea1d4e83cced20fdb67bf4226dca4e16005a9e4343b92604626c9",
+    "demo.json": "44eff2704f7612611910f80855cf35a3e21c6e10874dba511ae6cb6c92954a34",
+    "report.md": "f1320b6ca40bcae9446cc0d3de601a650973e76892a3170ad187764b2d802b7b"
+  },
+  "remote_source_checkpoint_commit": "fe7b9467f6dcbd2e62f6d9c1efa0b11d639c856a",
+  "source_git_tree": "942338ffed855087bea3069a175298d6e481902c",
+  "remote_tree_matches_tested_local_tree": true,
+  "native_totals": {
+    "correspondences": 882,
+    "expected_ubsan_failures": 12
+  },
+  "post_validation_changes": "Generated evidence provenance only; frozen source unchanged"
+}
