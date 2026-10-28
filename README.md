@@ -761,6 +761,21 @@ checks. See the [Clang example](examples/clang_list_payload_map.c),
 [v0.35 experiments](experiments/v035/report.md). General graph/alias contracts,
 arbitrary branch discovery and full C/LLVM semantics remain open; no KLEE.
 
+## v0.36: eager expressions and integer conversions in list-map calls
+
+Borrowed map helpers now accept pure scalar argument expressions and different
+integer parameter types. Every actual is independently checked before entering
+the helper, even when the chain is empty or the formal is unused. Parameter
+conversions and short-circuit guards remain in the typed witness; hygienic
+simultaneous bindings preserve caller names and record fields.
+
+The builder's identity-only argument contract is unchanged. Modular sums may
+need supplied candidates, which still pass independent original-source proofs.
+See the [Clang example](examples/clang_list_argument_conversions.c),
+[eager argument contract](docs/EAGER_LIST_ARGUMENTS.md) and
+[v0.36 experiments](experiments/v036/report.md). General alias/call/graph and
+complete C/LLVM requirements remain open; no KLEE.
+
 ### Independent sequential threshold branches
 
 Automatic typed-loop summaries also propose closed forms for two or three

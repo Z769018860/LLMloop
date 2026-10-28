@@ -1,7 +1,8 @@
 """Checked composition of a fresh-list builder and its unique owner.
 
 This is a source-contract composition rule, not general inlining. Scalar
-arguments must be unchanged identifiers of exactly matching integer types.
+builder arguments must be unchanged identifiers of matching integer types;
+map helpers also accept independently checked pure scalar argument expressions.
 The returned footprint has one owner, permits a local nonescaping map cursor,
 and is forwarded or consumed by the list fold contract, locally or in a helper.
 """
@@ -15,6 +16,7 @@ from .c_validation import validate_automatic_locals
 from .list_heap import ListHeapProgram, check_list_map, check_list_reversal, identifier, items, pointer_tag
 from .smt_spath import SMTGraphError
 from .typed_c import c_type
+from .typed_cfg_heap import TypedCFGHeap
 
 
 def walk(node):
@@ -45,6 +47,38 @@ def rename(node, names):
         elif isinstance(value, list):
             setattr(result, slot, [rename(v, names) if isinstance(v, c_ast.Node) else v for v in value])
     return result
+
+
+def bind_expressions(node, bindings):
+    """Substitute scalar values without touching record member/tag names."""
+    if isinstance(node, c_ast.ID) and node.name in bindings:
+        return copy.deepcopy(bindings[node.name])
+    result=copy.deepcopy(node)
+    if isinstance(result,c_ast.StructRef):
+        result.name=bind_expressions(result.name,bindings)
+        return result
+    for slot in result.__slots__:
+        if slot in ('coord','__weakref__'):continue
+        value=getattr(result,slot)
+        if isinstance(value,c_ast.Node):setattr(result,slot,bind_expressions(value,bindings))
+        elif isinstance(value,list):setattr(result,slot,[bind_expressions(v,bindings) if isinstance(v,c_ast.Node) else v for v in value])
+    return result
+
+
+def pure_scalar_argument(node, parameters, model):
+    """Reject effects/memory even in unevaluated branches of actual arguments."""
+    if isinstance(node,c_ast.ID) and node.name in parameters:return
+    if isinstance(node,c_ast.Constant) and node.type!='string':return
+    if isinstance(node,c_ast.BinaryOp):
+        pure_scalar_argument(node.left,parameters,model);pure_scalar_argument(node.right,parameters,model);return
+    if isinstance(node,c_ast.UnaryOp) and node.op in ('+','-','!','~'):
+        pure_scalar_argument(node.expr,parameters,model);return
+    if isinstance(node,c_ast.TernaryOp):
+        for child in (node.cond,node.iftrue,node.iffalse):pure_scalar_argument(child,parameters,model)
+        return
+    if isinstance(node,c_ast.Cast):
+        c_type(node.to_type,model);pure_scalar_argument(node.expr,parameters,model);return
+    raise SMTGraphError('List map actual arguments require pure integer expressions of immutable entry parameters')
 
 
 class ListHeapCallsProgram:
@@ -81,6 +115,8 @@ class ListHeapCallsProgram:
         if not params or not all(isinstance(p, c_ast.Decl) and p.name for p in params):
             raise SMTGraphError('List call entry needs named scalar parameters')
         parameter_types = {p.name: c_type(p, self.model) for p in params}
+        self.parameter_source=', '.join(self.generator.visit(p) for p in params)
+        self.argument_checks=[]
         if set(self.bounds)-set(parameter_types):
             raise SMTGraphError('Unknown list call entry parameter bound')
         body = entry.body.block_items or []
@@ -144,21 +180,34 @@ class ListHeapCallsProgram:
                 actuals=first.args.exprs if first.args else []
                 if not isinstance(returned,c_ast.TypeDecl) or not isinstance(returned.type,c_ast.IdentifierType) or returned.type.names!=['void'] or not formals or len(actuals)!=len(formals) or not isinstance(formals[0],c_ast.Decl) or pointer_tag(formals[0])!=self.builder.tag or not identifier(actuals[0],head.name):
                     raise SMTGraphError('Payload map helper must return void and borrow the same-record owned head')
+                if len(formals)>17:raise SMTGraphError('Map helper scalar argument budget is sixteen per call')
                 mapping=self.local_names(helper)
                 cursor='__list_call_cursor'
                 while cursor in self.used:cursor+='_'
                 self.used.add(cursor);mapping[formals[0].name]=cursor
+                bindings={};argument_contracts=[]
                 for formal,actual in zip(formals[1:],actuals[1:]):
-                    if not isinstance(formal,c_ast.Decl) or not isinstance(actual,c_ast.ID) or actual.name not in parameter_types or c_type(formal,self.model)!=parameter_types[actual.name]:
-                        raise SMTGraphError('Payload map scalar arguments require immutable identifiers with identical types')
-                    mapping[formal.name]=actual.name
+                    if not isinstance(formal,c_ast.Decl):raise SMTGraphError('Named integer map helper parameters required')
+                    formal_type=c_type(formal,self.model)
+                    pure_scalar_argument(actual,parameter_types,self.model)
+                    converted=c_parser.CParser().parse('int x(void){return ('+formal_type.name+')0;}').ext[0].body.block_items[0].expr
+                    converted.expr=copy.deepcopy(actual)
+                    bindings[formal.name]=converted
+                    argument_contracts.append(self.check_argument(name,formal.name,formal_type,actual,abi,char_signed,max_paths))
                 borrowed=rename(formals[0],mapping);borrowed.init=c_ast.ID(head.name)
                 borrowed.storage=[]
-                stage=[borrowed]+(rename(helper.body,mapping).block_items or [])
+                estimate=len(self.generator.visit(helper.body))+sum(
+                    len(self.generator.visit(expression))*sum(isinstance(n,c_ast.ID) and n.name==formal for n in walk(helper.body))
+                    for formal,expression in bindings.items())
+                if estimate>100000:raise SMTGraphError('Bound map argument substitution exceeds the source budget')
+                # Rename the helper frame before inserting caller expressions;
+                # an entry parameter may share a spelling with the callee cursor.
+                stage=[borrowed]+(bind_expressions(rename(helper.body,mapping),bindings).block_items or [])
                 contract=check_list_map(stage,head.name,self.builder.tag,self.builder.link,self.builder.value,parameter_types)
                 contract.pop('expression')
                 metadata={'kind':'payload_map','callee':name,'source_contract':contract,
                           'source_sha256':hashlib.sha256(self.generator.visit(helper).encode()).hexdigest(),
+                          'scalar_argument_bindings':argument_contracts,
                           'unique_owned_chain_precondition':True,'borrowed_cursor_does_not_escape':True,
                           'same_footprint_head_and_links_preserved':True}
                 pipeline.extend(stage);suffix=suffix[1:];used_functions.add(name)
@@ -243,16 +292,42 @@ class ListHeapCallsProgram:
             max_paths=max_paths, loop_summaries=loop_summaries)
         self.contract = {'method':'checked fresh-list ownership transfer and scalar-preserving source-contract composition',
             'builder':builder_name, 'consumer':self.consumer_name or 'entry suffix',
-            'argument_bindings':arguments, 'argument_conversions':'identity only; exact integer types checked',
+            'argument_bindings':arguments, 'argument_conversions':'builder identity only; map parameter assignment conversions checked separately',
             'builder_return_contract_checked':True, 'unique_owner_no_external_aliases':True,
             'allocation_failure_prefix_transferred':True, 'builder_failure_return_becomes_loop_exit':failure_return,
             'callee_then_caller_return_conversions_preserved':self.consumer_name is not None,
             'helper_locals_alpha_renamed':True, 'composed_source':self.composed_source,
             'reversal_helpers':self.reversal_helpers,'builder_reversal_stages':len(self.builder.reversals),
             'payload_map_helpers':self.map_helpers,'heap_helpers_in_source_order':self.heap_helpers,
+            'map_scalar_arguments':'pure integer expressions; callee parameter conversions retained',
+            'map_scalar_argument_budget_per_call':16,
+            'eager_argument_evaluation_checked_even_for_empty_chain':True,
+            'argument_checks':self.argument_checks,
             'builder_payload_map_stages':len(self.builder.maps),
             'composed_source_sha256':hashlib.sha256(self.composed_source.encode()).hexdigest(),
             'general_interprocedural_heap_analysis':False}
+
+    def check_argument(self, callee, formal, formal_type, actual, abi, char_signed, max_paths):
+        # Calls evaluate every actual before entering the helper, including
+        # unused formals and an empty chain. Per-node substitution alone would
+        # erase undefined behavior in those cases. Check the eager expression
+        # once in the full caller domain, independently of allocation outcomes.
+        name='__list_call_argument_check'
+        while name in self.used:name+='_'
+        self.used.add(name)
+        temporary='__list_call_actual'
+        while temporary in self.used:temporary+='_'
+        self.used.add(temporary)
+        source=formal_type.name+' '+name+'('+self.parameter_source+'){'+formal_type.name+' '+temporary+'='+self.generator.visit(actual)+';return '+temporary+';}'
+        proof=TypedCFGHeap(source,function=name,parameter_bounds=self.bounds,abi=abi,char_signed=char_signed,max_paths=max_paths).report()
+        contract={'callee':callee,'formal':formal,'actual_expression':self.generator.visit(actual),
+                  'parameter_assignment_type':formal_type.name,'eager_evaluation_before_helper':True,
+                  'independent_of_chain_length_and_formal_use':True,'pure_no_memory_or_effects':True,
+                  'converted_value_smt2':proof.get('return_smt2'),
+                  'source':source,'source_sha256':hashlib.sha256(source.encode()).hexdigest(),'proof':proof}
+        self.argument_checks.append(contract)
+        return {'argument_check_index':len(self.argument_checks)-1,'formal':formal,
+                'actual_expression':contract['actual_expression'],'parameter_assignment_type':formal_type.name}
 
     def validate_function(self, function):
         if function.decl.funcspec or function.decl.quals:
@@ -279,6 +354,11 @@ class ListHeapCallsProgram:
         return result
 
     def report(self, inputs=None, allocation_count=None):
+        for contract in self.argument_checks:
+            if contract['proof']['status']!='PROVED_DEFINED_TYPED_C_CFG_HEAP':
+                return {'status':'UNKNOWN','reason':'List map call argument source proof failed',
+                        'c_overflow_verified':False,'memory_safety_verified':False,'termination_proved':False,
+                        'source_proof':contract}
         builder_inputs = None if inputs is None else {formal:inputs[actual] for formal, actual in self.arguments.items() if actual in inputs}
         # Validate the full entry domain before selecting a helper's arguments.
         result = self.program.report(inputs, allocation_count)
@@ -292,5 +372,5 @@ class ListHeapCallsProgram:
         result['status'] = 'PROVED_DEFINED_TYPED_C_LIST_CALLS'
         result['interprocedural_heap_summary'] = True
         result['certificate']['composition'] = {**self.contract,'builder_proof':builder}
-        result['scope'] = 'one fresh prepend builder transfers its footprint through checked reversal and nonescaping borrowed pointwise-map stages to one caller/consumer; forwarding or additive fold/free; no arbitrary aliases, calls, recursion or shapes'
+        result['scope'] = 'one fresh prepend builder transfers its footprint through checked reversal and nonescaping borrowed pointwise-map stages with eagerly checked pure scalar arguments and retained parameter conversions; forwarding or additive fold/free; no arbitrary aliases, calls, recursion or shapes'
         return result

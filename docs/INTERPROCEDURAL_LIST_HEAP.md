@@ -16,6 +16,9 @@ The v0.35 [payload-map extension](OWNED_LIST_PAYLOAD_MAPS.md) adds void helpers
 with a nonescaping borrowed cursor and immutable scalar arguments. Maps preserve
 the owner, allocation footprint and links, while independently checking each
 payload write with all preceding C store conversions retained.
+From v0.36, map helpers admit [eager scalar expressions and parameter
+conversions](EAGER_LIST_ARGUMENTS.md), with a separate argument proof even for
+empty chains and unused formals. Builder argument restrictions below remain.
 
 ## Run
 

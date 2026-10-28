@@ -48,8 +48,9 @@ are rejected. Compound assignments are not part of this rule.
 A direct helper returns `void`, takes the same-record cursor as its first
 parameter and optional immutable scalar parameters, and contains exactly the
 while loop above. The caller uses `map(head, delta);`. Pointer identity must be
-the unique owner's head; scalar arguments must be unchanged entry parameter
-identifiers with exactly matching integer types. The helper cannot retain or
+the unique owner's head; scalar arguments use [eager pure integer expressions and checked parameter
+conversions](EAGER_LIST_ARGUMENTS.md) from v0.36. Builder scalar arguments retain
+their separate identity-only contract. The helper cannot retain or
 return an alias. Its local cursor ends null, while the caller's head, all links
 and allocation ownership remain unchanged. The emitted borrowed pointer gets
 a fresh name, preserving source fields and parameter bindings.

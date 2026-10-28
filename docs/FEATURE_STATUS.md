@@ -1,4 +1,4 @@
-# Feature status after v0.35
+# Feature status after v0.36
 
 This inventory distinguishes certified capabilities from outstanding general
 requirements. The project remains a restricted research prototype.
@@ -6,7 +6,7 @@ requirements. The project remains a restricted research prototype.
 | Requirement | Implemented certified fragment | Outstanding general cases |
 | --- | --- | --- |
 | Nested loop summaries | Counted finite-cell affine summaries, immutable parameter bounds, interleaved outer scalar updates; compositional typed scalar for-loop trajectories up to 16 levels | Arbitrary data-dependent nested CFGs and escaping heap interactions |
-| Arrays/pointers/heap | Finite layouts, aliases/lifetimes, dynamic pointwise sweeps, finite-window backward scans, repeated private fixed calloc/free folds; unified typed finite local arrays/fixed malloc/calloc sites with per-cell initialization and alias lifetimes; failure-aware bounded CFG/direct-call pointer arguments/returns; finite pointer-valued tables and bounded linked/cyclic record graphs; inductive fresh prepend chains with owned in-place reversal, nonescaping borrowed pointwise payload maps, returned ownership and builder/mutation/caller/consumer composition without represented-node expansion | General unbounded graphs, arbitrary updates and ownership/alias composition, external pointer layouts, realloc and physical capacity |
+| Arrays/pointers/heap | Finite layouts, aliases/lifetimes, dynamic pointwise sweeps, finite-window backward scans, repeated private fixed calloc/free folds; unified typed finite local arrays/fixed malloc/calloc sites with per-cell initialization and alias lifetimes; failure-aware bounded CFG/direct-call pointer arguments/returns; finite pointer-valued tables and bounded linked/cyclic record graphs; inductive fresh prepend chains with owned in-place reversal, nonescaping borrowed pointwise payload maps, returned ownership and builder/mutation/caller/consumer composition with eagerly checked pure map arguments and retained parameter conversions without represented-node expansion | General unbounded graphs, arbitrary updates and ownership/alias composition, external pointer layouts, realloc and physical capacity |
 | General recurrences | Affine induction-certified matrix powers, finite polynomial lifts, periodic schedules, inductive state-dependent phases, supplied nonperiodic Piecewise candidates; automatic triangular finite-polynomial, isolated saturation, parity/transient and static-cell, periodic coupled block and counter-threshold additive polynomial candidates independently verified against typed source; exact bounded state-branch execution without closed-form synthesis | Automatic discovery of arbitrary coupled/branching nonperiodic trajectories or closed forms; unsupported symbolic exponentials in candidate SMT mode |
 | C integer semantics | ABI-aware concrete and symbolic typed expressions, bounded typed scalar function execution, unroll-free heterogeneous single/nested scalar loop certificates from supplied state candidates, typed finite local memory composed with nested scalar loop certificates; restricted single-width dynamic memory safety proofs; independent failure-aware finite dynamic heap CFG verification | General typed heap shapes, external pointer layouts, arbitrary calls/side effects |
 | Execution validity | Bounded reachable-state checks, ranking certificates, counted-loop termination in mathematical frontends and certified typed scalar trajectories; bounded complete-exit CFG with break/continue, goto, switch, early exits and typed direct-call frames and opt-in recursive closure with unreachable depth frontiers | General unbounded termination and feasibility for arbitrary C CFG loops |
@@ -19,7 +19,7 @@ particular exit condition terminates. `UNKNOWN` is an explicit unsupported or
 unproved result, not a valid summary.
 
 See [v0.14 recurrence and experiment contracts](GUARDED_RECURRENCES_AND_EXPERIMENTS.md)
-and the committed [latest experiment report](../experiments/v035/report.md).
+and the committed [latest experiment report](../experiments/v036/report.md).
 
 See [unroll-free typed scalar C contracts](TYPED_UNBOUNDED_RECURRENCES.md) for the new machine-integer certificate. It does not certify general heap memory.
 
@@ -79,3 +79,5 @@ between compiler ingestion and whole-language verification, and the acceptance
 criteria for the remaining work.
 
 See [borrowed payload maps](OWNED_LIST_PAYLOAD_MAPS.md) for pure pointwise integer updates, preserved per-store conversions, nonescaping cursor helpers and source-ordered mutation composition. This admits one restricted borrowed alias; general aliases, stateful passes and graph mutation remain open.
+
+See [eager list-call arguments](EAGER_LIST_ARGUMENTS.md) for pure scalar expression binding, parameter conversions, full-domain eager checks on empty chains/unused formals, and simultaneous hygienic substitution. General builder/consumer argument contracts and side effects remain open.

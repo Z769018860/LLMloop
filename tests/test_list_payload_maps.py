@@ -185,8 +185,7 @@ def test_alias_observation_link_changes_partial_passes_and_effects_rejected(old,
 
 @pytest.mark.parametrize('old,new',[
     ('map(head,delta)','map(head->next,delta)'),
-    ('map(head,delta)','map(head,delta+1)'),
-    ('int d)','long d)'),('void map','int map'),
+    ('void map','int map'),
     ('q=q->next;','q=q->next;return;'),
     ('q->value=q->value+d;','q->next=q;'),
 ])
