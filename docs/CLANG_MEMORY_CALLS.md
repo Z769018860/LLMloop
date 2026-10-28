@@ -6,6 +6,10 @@ represented-object cutoff for its admitted builder/fold/free normal form.
 A separate `list_calls` backend adds
 [checked builder/caller/consumer ownership composition](INTERPROCEDURAL_LIST_HEAP.md)
 for that shape fragment; it does not relax the finite `calls` backend's limits.
+Both inductive routes now admit
+[checked in-place reversal stages](OWNED_LIST_REVERSAL.md), including helper
+pipelines. This is a mutation rule for one uniquely owned acyclic chain, not
+arbitrary unbounded heap graph support.
 
 The `clang_proof` API adds two backends to the existing scalar bridge. The
 compiler resolves macros, headers, typedefs, implicit integer conversions and

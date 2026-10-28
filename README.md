@@ -726,6 +726,24 @@ See the [example](examples/clang_sequenced_calls.c),
 remain explicit; this does not establish general C/LLVM semantics or arbitrary
 heap/branch summaries. KLEE is not integrated.
 
+## v0.34: unbounded owned-chain reversal and helper pipelines
+
+The `list` and `list_calls` Clang backends now check in-place reversal of the
+constructed chain, including repeated reversal helpers before returning the
+head or consuming it. A disjoint reversed-prefix/unprocessed-suffix invariant
+checks link updates, unchanged allocation identities/payloads and termination.
+The fold uses the resulting traversal order, retaining intermediate C overflow
+checks even when the final mathematical sum is unchanged.
+
+There is no represented-node or traversal-iteration cutoff. Up to eight source
+reversal stages compose with the existing failure-prefix and ownership rules;
+arbitrary graph updates/aliases remain unsupported. See the
+[four-function example](examples/clang_list_reverse_calls.c),
+[mutation contract](docs/OWNED_LIST_REVERSAL.md) and
+[v0.34 evidence](experiments/v034/report.md). The test extra caps pytest below
+9.2 after reproducing a worker-exit incompatibility with the current fork plugin;
+the full test workflow retains process isolation.
+
 ### Independent sequential threshold branches
 
 Automatic typed-loop summaries also propose closed forms for two or three

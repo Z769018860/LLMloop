@@ -6,6 +6,12 @@ boundaries. It has no represented-node or iteration-count cutoff. Allocation
 failure is always modeled as every successful-allocation prefix. It is a
 restricted ownership rule, not a general interprocedural heap analyzer.
 
+The v0.34 [reversal extension](OWNED_LIST_REVERSAL.md) also admits up to eight
+checked in-place reversal stages between construction and return/consumption,
+including repeated direct helpers and reversals inside the builder. Final
+traversal order is tracked explicitly; the consumer's original arithmetic is
+checked in that order.
+
 ## Run
 
 ```sh
@@ -32,9 +38,12 @@ Three supported entry shapes are:
 ## Source contract
 
 Clang resolves all selected direct definitions, scalar types, source declaration
-metadata and record layouts. Exactly one two-field list record and two or three
-reachable normalized definitions are admitted. Emitted prototypes must match
-their normalized definitions. No globals, additional entry actions or recursive
+metadata and record layouts. Exactly one two-field list record and two through
+eleven reachable normalized definitions are admitted: entry, builder, up to
+eight distinct reversal helpers and an optional consumer. Repeated reversal
+calls share their source definition but get hygienic local frames. The combined
+builder/caller source reversal budget is eight. Emitted prototypes must match
+their normalized definitions. No globals, entry actions outside the checked pipeline or recursive
 call chains are admitted. Unreachable source functions need not be normalized.
 
 The builder is independently checked with the existing escape contract:
@@ -42,6 +51,8 @@ null initial head, canonical `int` counted loop, one fresh `calloc` per iteratio
 immediate null exit, explicit typed payload and old-head link initialization,
 publish new head, and final head return. An immediate failure `return head`
 and a failure `break` both transfer exactly the prefix already built.
+If the builder itself has later reversal stages, its failure must break to those
+stages; an early return that bypasses them is not assigned their postcondition.
 
 Entry parameters are immutable scalar integers. Builder arguments must be
 unchanged entry parameter identifiers with identical integer types; permutation

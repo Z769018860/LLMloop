@@ -10,6 +10,10 @@ This is an inductive shape fragment, not general separation logic, arbitrary
 heap/call normalization, or unrestricted branching closed-form synthesis.
 Clang and the structural frontend remain trusted components.
 
+The v0.34 [owned-chain reversal extension](OWNED_LIST_REVERSAL.md) adds checked
+updates to existing next links, locally or through the list_calls ownership
+pipeline. Up to eight source reversal stages precede the final return/fold.
+
 ## Source examples
 
 ```sh
@@ -55,14 +59,15 @@ The head starts null. Each iteration has exactly these operations in order:
 4. Initialize the link to the old head.
 5. Publish the fresh pointer as the new head.
 
-The function then either returns the head or has a zero-initialized scalar
+After optional checked reversals, the function either returns the head or has a zero-initialized scalar
 accumulator and `while(head)` with this exact order: save the next link, add
 the current payload, free the current head, advance to the saved tail. Integer
 casts on the load and return are retained. The scalar result is returned only
 after the chain is exhausted.
 
-Mutation of old nodes, cycles, aliases from external inputs, payload memory
-reads, helper/indirect calls, append/doubly-linked/tree/graph updates, non-prefix
+Updates outside the checked reversal rule, cycles, aliases from external inputs,
+payload memory reads, helper/indirect calls in this single-function backend,
+append/doubly-linked/tree/graph updates, non-prefix
 allocation failures and arbitrary early exits are unsupported. The general
 caller does not compose an escaped shape contract with arbitrary callees.
 A separate [list_calls backend](INTERPROCEDURAL_LIST_HEAP.md) now admits a
@@ -73,7 +78,8 @@ options; it does not silently change its contract to fit those budgets.
 ## Proof components
 
 The shape checker uses logical allocation tokens `1..m`, with `0` denoting null.
-These are identities rather than numeric C addresses. The head is token `m`;
+These are identities rather than numeric C addresses. Immediately after
+construction, the head is token `m`;
 token `j` links to `j-1` and holds the typed payload evaluated at builder index
 `j-1`. Standard allocator freshness, alignment and null-failure contracts are
 assumed, as in the existing heap kernels. Typed null values are explicitly
@@ -89,7 +95,8 @@ prevent unmodeled alias observations.
 A typed scalar loop proof retains every original payload expression and loop
 index operation. Its unchanged dummy-state candidate is independently checked;
 it does not erase evaluated intermediates. For the fold, the loaded payload is
-reconstructed at index `m-1-t`, assigned to the original payload type, and used
+reconstructed at index `m-1-t` for descending order or `t` after an odd number
+of reversals, assigned to the original payload type, and used
 in the original typed accumulator operation. Source integer casts are retained.
 The scalar proof checks every intermediate, candidate successor and return.
 Its parameter domain overapproximates all actual failure-prefix lengths, so an
