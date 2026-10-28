@@ -2,8 +2,8 @@
 
 This is a source-contract composition rule, not general inlining. Scalar
 arguments must be unchanged identifiers of exactly matching integer types.
-The returned footprint has one owner and is either forwarded or consumed by
-the existing list fold contract, locally or in one direct helper.
+The returned footprint has one owner, permits a local nonescaping map cursor,
+and is forwarded or consumed by the list fold contract, locally or in a helper.
 """
 import copy
 import hashlib
@@ -12,7 +12,7 @@ from pycparser import c_ast, c_generator, c_parser
 
 from .c_integers import IntegerABI
 from .c_validation import validate_automatic_locals
-from .list_heap import ListHeapProgram, check_list_reversal, identifier, items, pointer_tag
+from .list_heap import ListHeapProgram, check_list_map, check_list_reversal, identifier, items, pointer_tag
 from .smt_spath import SMTGraphError
 from .typed_c import c_type
 
@@ -66,7 +66,7 @@ class ListHeapCallsProgram:
         prototypes = [n for n in unit.ext if isinstance(n, c_ast.Decl) and isinstance(n.type, c_ast.FuncDecl)]
         self.functions = {n.decl.name: n for n in functions}
         if not 2 <= len(functions) <= 11 or len(self.functions) != len(functions) or len(records) != 1 or len(unit.ext) != len(functions)+1+len(prototypes):
-            raise SMTGraphError('List calls need one record, entry, builder, optional reversal helpers and consumer, without globals')
+            raise SMTGraphError('List calls need one record, entry, builder, optional reversal/map helpers and consumer, without globals')
         if function not in self.functions or set(self.functions) & {'calloc', 'malloc', 'free'}:
             raise SMTGraphError('Select an available list call entry with distinct non-builtin function names')
         for prototype in prototypes:
@@ -114,18 +114,58 @@ class ListHeapCallsProgram:
         self.consumer_name = None
         suffix = copy.deepcopy(body[1:])
         used_functions = {function, builder_name}
-        pipeline=[];self.reversal_helpers=[]
+        pipeline=[];self.reversal_helpers=[];self.map_helpers=[];self.heap_helpers=[]
         while suffix:
             first=suffix[0]
             if isinstance(first,c_ast.Decl) and pointer_tag(first)==self.builder.tag:
-                if len(self.reversal_helpers)>=8:raise SMTGraphError('At most eight source reversal stages are supported')
+                if len(self.heap_helpers)>=8:raise SMTGraphError('At most eight source heap stages are supported')
+                if identifier(first.init,head.name):
+                    stage=suffix[:2]
+                    contract=check_list_map(stage,head.name,self.builder.tag,self.builder.link,self.builder.value,parameter_types)
+                    contract.pop('expression')
+                    metadata={'callee':None,'source_contract':contract,'unique_owned_chain_precondition':True,'kind':'payload_map'}
+                    pipeline.extend(stage);suffix=suffix[2:]
+                    self.map_helpers.append(metadata);self.heap_helpers.append(metadata)
+                    continue
                 stage=suffix[:3]
                 contract=check_list_reversal(stage,head.name,self.builder.tag,self.builder.link)
                 pipeline.extend(stage);suffix=suffix[3:]
-                self.reversal_helpers.append({'callee':None,'source_contract':contract,'unique_owned_chain_precondition':True})
+                metadata={'callee':None,'source_contract':contract,'unique_owned_chain_precondition':True,'kind':'reversal'}
+                self.reversal_helpers.append(metadata);self.heap_helpers.append(metadata)
+                continue
+            if isinstance(first,c_ast.FuncCall):
+                if len(self.heap_helpers)>=8:raise SMTGraphError('At most eight source heap stages are supported')
+                name=first.name.name if isinstance(first.name,c_ast.ID) else None
+                if name in (function,builder_name) or name not in self.functions:
+                    raise SMTGraphError('Payload map must call a separate available borrowed-chain helper')
+                helper=self.functions[name]
+                returned=helper.decl.type.type
+                formals=helper.decl.type.args.params if helper.decl.type.args else []
+                actuals=first.args.exprs if first.args else []
+                if not isinstance(returned,c_ast.TypeDecl) or not isinstance(returned.type,c_ast.IdentifierType) or returned.type.names!=['void'] or not formals or len(actuals)!=len(formals) or not isinstance(formals[0],c_ast.Decl) or pointer_tag(formals[0])!=self.builder.tag or not identifier(actuals[0],head.name):
+                    raise SMTGraphError('Payload map helper must return void and borrow the same-record owned head')
+                mapping=self.local_names(helper)
+                cursor='__list_call_cursor'
+                while cursor in self.used:cursor+='_'
+                self.used.add(cursor);mapping[formals[0].name]=cursor
+                for formal,actual in zip(formals[1:],actuals[1:]):
+                    if not isinstance(formal,c_ast.Decl) or not isinstance(actual,c_ast.ID) or actual.name not in parameter_types or c_type(formal,self.model)!=parameter_types[actual.name]:
+                        raise SMTGraphError('Payload map scalar arguments require immutable identifiers with identical types')
+                    mapping[formal.name]=actual.name
+                borrowed=rename(formals[0],mapping);borrowed.init=c_ast.ID(head.name)
+                borrowed.storage=[]
+                stage=[borrowed]+(rename(helper.body,mapping).block_items or [])
+                contract=check_list_map(stage,head.name,self.builder.tag,self.builder.link,self.builder.value,parameter_types)
+                contract.pop('expression')
+                metadata={'kind':'payload_map','callee':name,'source_contract':contract,
+                          'source_sha256':hashlib.sha256(self.generator.visit(helper).encode()).hexdigest(),
+                          'unique_owned_chain_precondition':True,'borrowed_cursor_does_not_escape':True,
+                          'same_footprint_head_and_links_preserved':True}
+                pipeline.extend(stage);suffix=suffix[1:];used_functions.add(name)
+                self.map_helpers.append(metadata);self.heap_helpers.append(metadata)
                 continue
             if not isinstance(first,c_ast.Assignment) or first.op!='=' or not identifier(first.lvalue,head.name) or not isinstance(first.rvalue,c_ast.FuncCall):break
-            if len(self.reversal_helpers)>=8:raise SMTGraphError('At most eight source reversal stages are supported')
+            if len(self.heap_helpers)>=8:raise SMTGraphError('At most eight source heap stages are supported')
             call=first.rvalue
             name=call.name.name if isinstance(call.name,c_ast.ID) else None
             if name in (function,builder_name) or name not in self.functions:
@@ -142,9 +182,10 @@ class ListHeapCallsProgram:
             stage[-1]=c_ast.Assignment('=',c_ast.ID(head.name),stage[-1].expr)
             contract=check_list_reversal(stage,head.name,self.builder.tag,self.builder.link)
             pipeline.extend(stage);suffix=suffix[1:];used_functions.add(name)
-            self.reversal_helpers.append({'callee':name,'source_contract':contract,
+            metadata={'kind':'reversal','callee':name,'source_contract':contract,
                 'source_sha256':hashlib.sha256(self.generator.visit(helper).encode()).hexdigest(),
-                'unique_owned_chain_precondition':True,'same_footprint_and_payloads_returned':True})
+                'unique_owned_chain_precondition':True,'same_footprint_and_payloads_returned':True}
+            self.reversal_helpers.append(metadata);self.heap_helpers.append(metadata)
         if len(suffix) not in (1,3):raise SMTGraphError('List ownership pipeline must end in head return or checked fold/free')
         if len(suffix) == 1 and isinstance(suffix[0], c_ast.Return):
             caller_return=copy.deepcopy(suffix[0].expr)
@@ -208,6 +249,8 @@ class ListHeapCallsProgram:
             'callee_then_caller_return_conversions_preserved':self.consumer_name is not None,
             'helper_locals_alpha_renamed':True, 'composed_source':self.composed_source,
             'reversal_helpers':self.reversal_helpers,'builder_reversal_stages':len(self.builder.reversals),
+            'payload_map_helpers':self.map_helpers,'heap_helpers_in_source_order':self.heap_helpers,
+            'builder_payload_map_stages':len(self.builder.maps),
             'composed_source_sha256':hashlib.sha256(self.composed_source.encode()).hexdigest(),
             'general_interprocedural_heap_analysis':False}
 
@@ -249,5 +292,5 @@ class ListHeapCallsProgram:
         result['status'] = 'PROVED_DEFINED_TYPED_C_LIST_CALLS'
         result['interprocedural_heap_summary'] = True
         result['certificate']['composition'] = {**self.contract,'builder_proof':builder}
-        result['scope'] = 'one fresh prepend builder transfers its footprint through checked in-place reversal stages to one caller/consumer; forwarding or additive fold/free; no arbitrary aliases, calls, recursion or shapes'
+        result['scope'] = 'one fresh prepend builder transfers its footprint through checked reversal and nonescaping borrowed pointwise-map stages to one caller/consumer; forwarding or additive fold/free; no arbitrary aliases, calls, recursion or shapes'
         return result

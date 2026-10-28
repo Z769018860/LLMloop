@@ -12,7 +12,9 @@ Clang and the structural frontend remain trusted components.
 
 The v0.34 [owned-chain reversal extension](OWNED_LIST_REVERSAL.md) adds checked
 updates to existing next links, locally or through the list_calls ownership
-pipeline. Up to eight source reversal stages precede the final return/fold.
+pipeline. The v0.35 [pointwise payload-map extension](OWNED_LIST_PAYLOAD_MAPS.md)
+also permits a nonescaping borrowed cursor to update existing payloads. Up to
+eight combined source map/reversal stages precede the final return/fold.
 
 ## Source examples
 
@@ -59,14 +61,14 @@ The head starts null. Each iteration has exactly these operations in order:
 4. Initialize the link to the old head.
 5. Publish the fresh pointer as the new head.
 
-After optional checked reversals, the function either returns the head or has a zero-initialized scalar
+After optional checked reversals and pointwise payload maps, the function either returns the head or has a zero-initialized scalar
 accumulator and `while(head)` with this exact order: save the next link, add
 the current payload, free the current head, advance to the saved tail. Integer
 casts on the load and return are retained. The scalar result is returned only
 after the chain is exhausted.
 
-Updates outside the checked reversal rule, cycles, aliases from external inputs,
-payload memory reads, helper/indirect calls in this single-function backend,
+Updates outside the checked reversal/pointwise-map rules, cycles, aliases from external inputs,
+other-node payload reads, helper/indirect calls in this single-function backend,
 append/doubly-linked/tree/graph updates, non-prefix
 allocation failures and arbitrary early exits are unsupported. The general
 caller does not compose an escaped shape contract with arbitrary callees.
@@ -96,7 +98,8 @@ A typed scalar loop proof retains every original payload expression and loop
 index operation. Its unchanged dummy-state candidate is independently checked;
 it does not erase evaluated intermediates. For the fold, the loaded payload is
 reconstructed at index `m-1-t` for descending order or `t` after an odd number
-of reversals, assigned to the original payload type, and used
+of reversals, with pointwise map functions composed in source stage order and
+every earlier assignment conversion retained, assigned to the original payload type, and used
 in the original typed accumulator operation. Source integer casts are retained.
 The scalar proof checks every intermediate, candidate successor and return.
 Its parameter domain overapproximates all actual failure-prefix lengths, so an

@@ -12,6 +12,11 @@ including repeated direct helpers and reversals inside the builder. Final
 traversal order is tracked explicitly; the consumer's original arithmetic is
 checked in that order.
 
+The v0.35 [payload-map extension](OWNED_LIST_PAYLOAD_MAPS.md) adds void helpers
+with a nonescaping borrowed cursor and immutable scalar arguments. Maps preserve
+the owner, allocation footprint and links, while independently checking each
+payload write with all preceding C store conversions retained.
+
 ## Run
 
 ```sh
@@ -40,9 +45,9 @@ Three supported entry shapes are:
 Clang resolves all selected direct definitions, scalar types, source declaration
 metadata and record layouts. Exactly one two-field list record and two through
 eleven reachable normalized definitions are admitted: entry, builder, up to
-eight distinct reversal helpers and an optional consumer. Repeated reversal
+eight distinct reversal/map helpers and an optional consumer. Repeated mutation
 calls share their source definition but get hygienic local frames. The combined
-builder/caller source reversal budget is eight. Emitted prototypes must match
+builder/caller combined source heap-stage budget is eight. Emitted prototypes must match
 their normalized definitions. No globals, entry actions outside the checked pipeline or recursive
 call chains are admitted. Unreachable source functions need not be normalized.
 
@@ -51,7 +56,7 @@ null initial head, canonical `int` counted loop, one fresh `calloc` per iteratio
 immediate null exit, explicit typed payload and old-head link initialization,
 publish new head, and final head return. An immediate failure `return head`
 and a failure `break` both transfer exactly the prefix already built.
-If the builder itself has later reversal stages, its failure must break to those
+If the builder itself has later reversal/map stages, its failure must break to those
 stages; an early return that bypasses them is not assigned their postcondition.
 
 Entry parameters are immutable scalar integers. Builder arguments must be

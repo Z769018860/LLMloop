@@ -1,8 +1,9 @@
 """Inductive fresh-node list summaries without a represented-object cutoff.
 
-Admits a checked prepend-builder normal form, optionally followed by a scalar
-fold that frees every node. Abstract identities are allocation tokens, never C
-addresses. Typed scalar obligations are delegated to the existing C kernel.
+Admits a checked prepend builder, owned-chain reversal and borrowed pointwise
+payload maps, optionally followed by a fold that frees every node. Abstract
+identities are allocation tokens, never C addresses. Typed scalar obligations
+are delegated to the existing C kernel.
 """
 import copy
 import hashlib
@@ -119,6 +120,85 @@ def check_list_reversal(statements, head, tag, link):
     return {'head':head,'previous':previous.name,'saved_next':saved.name,
             'only_next_fields_modified':True,'no_allocation_or_free':True,
             'saved_next_before_rewrite':True,'source_sha256':hashlib.sha256(text.encode()).hexdigest()}
+
+
+def check_list_map(statements, head, tag, link, value, parameters):
+    """One local borrowed cursor, pure payload assignment, then stored next."""
+    if len(statements) != 2:
+        raise SMTGraphError('Payload map needs a borrowed cursor and complete while traversal')
+    cursor, loop = statements
+    if not isinstance(cursor, c_ast.Decl) or pointer_tag(cursor) != tag or cursor.name == head or not identifier(cursor.init, head):
+        raise SMTGraphError('Payload map must borrow the owned head into a distinct same-record cursor')
+    if not isinstance(loop, c_ast.While) or not nonnull(loop.cond, cursor.name):
+        raise SMTGraphError('Payload map requires while(cursor) without early exit')
+    body = items(loop.stmt)
+    if len(body) != 2:
+        raise SMTGraphError('Payload map must only assign its payload and advance through next')
+    write, advance = body
+    if not isinstance(write, c_ast.Assignment) or write.op != '=' or not member(write.lvalue, cursor.name, value):
+        raise SMTGraphError('Payload map must assign exactly the current payload')
+    def pure(node):
+        if member(node, cursor.name, value):
+            return
+        if isinstance(node, c_ast.ID) and node.name in parameters:
+            return
+        if isinstance(node, c_ast.Constant) and node.type != 'string':
+            return
+        if isinstance(node, c_ast.BinaryOp):
+            pure(node.left); pure(node.right); return
+        if isinstance(node, c_ast.UnaryOp) and node.op in ('+', '-', '!', '~'):
+            pure(node.expr); return
+        if isinstance(node, c_ast.TernaryOp):
+            pure(node.cond); pure(node.iftrue); pure(node.iffalse); return
+        if isinstance(node, c_ast.Cast):
+            pure(node.expr); return
+        raise SMTGraphError('Payload map expression may read only current payload and immutable scalar parameters')
+    pure(write.rvalue)
+    if not isinstance(advance, c_ast.Assignment) or advance.op != '=' or not identifier(advance.lvalue, cursor.name) or not member(advance.rvalue, cursor.name, link):
+        raise SMTGraphError('Payload map must advance through the unchanged next field')
+    text = c_generator.CGenerator().visit(c_ast.Compound(statements))
+    return {'cursor':cursor.name, 'head_preserved':True, 'only_payload_fields_modified':True,
+            'no_allocation_or_free':True, 'borrow_does_not_escape':True,
+            'expression':copy.deepcopy(write.rvalue), 'source_sha256':hashlib.sha256(text.encode()).hexdigest()}
+
+
+def list_map_certificate(orientation):
+    """Pointwise update induction with symbolic old/new values at every token."""
+    if orientation not in ('descending', 'ascending'):
+        raise SMTGraphError('Unknown list orientation')
+    m, t, p, j = z3.Ints('map_length map_step map_position map_token')
+    token = lambda x: m-x if orientation == 'descending' else x+1
+    inverse = lambda x: m-x if orientation == 'descending' else x-1
+    old, new = z3.Function('map_old', z3.IntSort(), z3.IntSort()), z3.Function('map_new', z3.IntSort(), z3.IntSort())
+    value_at = lambda size, x: z3.If(inverse(x) < size, new(x), old(x))
+    active = z3.And(m >= 0, t >= 0, t < m)
+    valid = z3.And(j >= 1, j <= m)
+    checks = []
+    def check(label, premise, claim):
+        solver = z3.Solver(); solver.set(timeout=5000); solver.add(premise, z3.Not(claim))
+        if solver.check() != z3.unsat:
+            raise SMTGraphError('List payload-map obligation not proved: '+label)
+        checks.append({'obligation':label, 'proved':True, 'refutation_smt2':solver.to_smt2()})
+    check('every live token has one traversal position', z3.And(m >= 0, valid),
+          z3.And(inverse(j) >= 0, inverse(j) < m, token(inverse(j)) == j))
+    check('cursor is live and maps to the current position', active,
+          z3.And(token(t) >= 1, token(t) <= m, inverse(token(t)) == t))
+    current=lambda size:z3.If(size<m,token(size),0)
+    successor=lambda node:node-1 if orientation=='descending' else z3.If(node<m,node+1,0)
+    check('stored unchanged next follows the cursor trajectory',active,successor(current(t))==current(t+1))
+    check('cursor reaches null exactly at complete exit',z3.And(m>=0,t>=0,t<=m),(current(t)==0)==(t==m))
+    check('current node is distinct from every previously visited node',z3.And(active,p>=0,p<t),token(t)!=token(p))
+    check('entry preserves every initialized old payload', z3.And(m >= 0, valid), value_at(0,j) == old(j))
+    check('current payload has not yet been overwritten', active, value_at(t,token(t)) == old(token(t)))
+    check('one payload store establishes the next prefix invariant', z3.And(active,valid),
+          z3.If(j == token(t),new(j),value_at(t,j)) == value_at(t+1,j))
+    check('all other node payloads are framed', z3.And(active,valid,j != token(t)), value_at(t+1,j) == value_at(t,j))
+    check('exit updates every live payload exactly once', z3.And(m >= 0,valid), value_at(m,j) == new(j))
+    check('cursor rank strictly decreases', active, z3.And(m-t-1 >= 0,m-t-1 < m-t))
+    check('empty chain has no payload access', m == 0, z3.Not(valid))
+    return {'method':'universal borrowed-cursor pointwise payload prefix induction',
+            'orientation':orientation,'head_links_and_live_footprint_framed_by_source_match':True,
+            'typed_old_to_new_function_checked_separately':True,'represented_object_cutoff':None,'obligations':checks}
 
 
 def list_reversal_certificate(orientation):
@@ -257,19 +337,26 @@ class ListHeapProgram:
         self.parameter_source = ', '.join(self.generator.visit(param) for param in raw)
         body = self.func.body.block_items or []
         if len(body) < 3:
-            raise SMTGraphError('Expected head declaration, prepend loop, optional reversals and return/fold suffix')
+            raise SMTGraphError('Expected head declaration, prepend loop, optional heap stages and return/fold suffix')
         head, self.loop = body[:2]
         if not isinstance(head, c_ast.Decl) or pointer_tag(head) != self.tag or _lit(head.init) != 0:
             raise SMTGraphError('List head must start as a null same-record pointer')
         self.head = head.name
-        self.orientation='descending';self.reversals=[];suffix=body[2:]
+        self.orientation='descending';self.reversals=[];self.maps=[];self.stages=[];suffix=body[2:]
         while len(suffix)>=3 and isinstance(suffix[0],c_ast.Decl) and pointer_tag(suffix[0])==self.tag:
-            if len(self.reversals)>=8:raise SMTGraphError('At most eight source reversal stages are supported')
+            if len(self.stages)>=8:raise SMTGraphError('At most eight source heap stages are supported')
+            if identifier(suffix[0].init,self.head):
+                contract=check_list_map(suffix[:2],self.head,self.tag,self.link,self.value,self.parameters)
+                expression=contract.pop('expression')
+                stage={'kind':'payload_map','source_contract':contract,'proof':list_map_certificate(self.orientation)}
+                self.maps.append((stage,expression));self.stages.append(stage);suffix=suffix[2:]
+                continue
             source_contract=check_list_reversal(suffix[:3],self.head,self.tag,self.link)
             proof=list_reversal_certificate(self.orientation)
-            self.reversals.append({'source_contract':source_contract,'proof':proof})
+            stage={'kind':'reversal','source_contract':source_contract,'proof':proof}
+            self.reversals.append(stage);self.stages.append(stage)
             self.orientation=proof['output_orientation'];suffix=suffix[3:]
-        if len(suffix) not in (1,3):raise SMTGraphError('Expected pointer return or scalar fold/free after reversals')
+        if len(suffix) not in (1,3):raise SMTGraphError('Expected pointer return or scalar fold/free after heap stages')
         self.mode = 'escape' if len(suffix) == 1 else 'fold_free'
         if self.mode == 'escape':
             if not isinstance(suffix[0], c_ast.Return) or not identifier(suffix[0].expr, self.head) or pointer_tag(self.func.decl.type) != self.tag:
@@ -285,9 +372,14 @@ class ListHeapProgram:
         self.build_engine = TypedCNested(self.build_source, {self.index:{dummy:'entry("'+dummy+'")'}}, function=build_name, parameter_bounds=self.bounds,
                                         abi=abi, char_signed=char_signed, max_paths=max_paths)
         self.build_report = self.build_engine.report()
+        self.map_reports=[]
+        if self.build_report['status'] == 'PROVED_DEFINED_TYPED_C_NESTED':
+            for stage,expression in self.maps:
+                self.make_map(stage,expression,max_paths)
+                if self.map_reports[-1]['status'] != 'PROVED_DEFINED_TYPED_C_NESTED':break
         self.fold_engine = None
         self.fold_source = None
-        if self.build_report['status'] == 'PROVED_DEFINED_TYPED_C_NESTED' and self.mode == 'fold_free':
+        if self.build_report['status'] == 'PROVED_DEFINED_TYPED_C_NESTED' and all(r['status']=='PROVED_DEFINED_TYPED_C_NESTED' for r in self.map_reports) and self.mode == 'fold_free':
             self.parse_fold(suffix)
             self.make_fold(max_paths, loop_summaries)
         self.shape = list_shape_certificate()
@@ -340,9 +432,9 @@ class ListHeapProgram:
         if isinstance(condition, c_ast.BinaryOp) and condition.op == '==':
             null_test = identifier(condition.left, self.node) and _lit(condition.right) == 0 or identifier(condition.right, self.node) and _lit(condition.left) == 0
         exits = items(failure.iftrue)
-        allowed_exit = len(exits) == 1 and (isinstance(exits[0], c_ast.Break) or self.mode == 'escape' and not self.reversals and isinstance(exits[0], c_ast.Return) and identifier(exits[0].expr, self.head))
+        allowed_exit = len(exits) == 1 and (isinstance(exits[0], c_ast.Break) or self.mode == 'escape' and not self.stages and isinstance(exits[0], c_ast.Return) and identifier(exits[0].expr, self.head))
         if not null_test or not allowed_exit:
-            raise SMTGraphError('Allocation failure must break before later phases; head return is allowed only without reversal/fold')
+            raise SMTGraphError('Allocation failure must break before later phases; head return is allowed only without later heap stages/fold')
         if not isinstance(payload, c_ast.Assignment) or payload.op != '=' or not member(payload.lvalue, self.node, self.value):
             raise SMTGraphError('Fresh list payload must be explicitly initialized')
         self.payload_expr = payload.rvalue
@@ -364,6 +456,41 @@ class ListHeapProgram:
             raise SMTGraphError('Fresh node must link to the previous head')
         if not isinstance(head_write, c_ast.Assignment) or head_write.op != '=' or not identifier(head_write.lvalue, self.head) or not identifier(head_write.rvalue, self.node):
             raise SMTGraphError('List construction must publish the fresh node as head')
+
+    def make_map(self, stage, expression, max_paths):
+        # Reify the previous assignment conversion before every read. Each
+        # source map is pure and reads the same node's stored old value only.
+        stored=c_parser.CParser().parse('int x(void){return ('+self.payload_type.name+')0;}').ext[0].body.block_items[0].expr
+        stored.expr=copy.deepcopy(self.payload_expr)
+        cursor=stage['source_contract']['cursor']
+        def reads(node):
+            if member(node,cursor,self.value):return 1
+            return sum(reads(child) for _,child in node.children())
+        if len(self.generator.visit(expression))+reads(expression)*len(self.generator.visit(stored))>100000:
+            raise SMTGraphError('Composed payload expression exceeds the source size budget')
+        def substitute(node):
+            if member(node,cursor,self.value):return copy.deepcopy(stored)
+            result=copy.deepcopy(node)
+            for slot in result.__slots__:
+                if slot in ('coord','__weakref__'):continue
+                child=getattr(result,slot)
+                if isinstance(child,c_ast.Node):setattr(result,slot,substitute(child))
+                elif isinstance(child,list):setattr(result,slot,[substitute(c) if isinstance(c,c_ast.Node) else c for c in child])
+            return result
+        expression=substitute(expression)
+        text=self.generator.visit(expression)
+        if len(text)>100000:raise SMTGraphError('Composed payload expression exceeds the source size budget')
+        name,temporary,dummy=self.fresh('map_check'),self.fresh('mapped'),self.fresh('map_dummy')
+        loop=copy.deepcopy(self.loop)
+        loop.stmt=c_parser.CParser().parse('void x(void){'+self.payload_type_source+' '+temporary+'='+text+';}').ext[0].body
+        source='int '+name+'('+self.parameter_source+'){int '+dummy+'=0;'+self.generator.visit(loop)+'return '+dummy+';}'
+        report=TypedCNested(source,{self.index:{dummy:'entry("'+dummy+'")'}},function=name,
+            parameter_bounds=self.bounds,abi=self.abi,char_signed=self.char_signed,max_paths=max_paths).report()
+        self.map_reports.append(report)
+        stage.update(payload_source=source,payload_proof=report,
+                     stored_payload_expression=text,payload_assignment_type=self.payload_type.name,
+                     scalar_domain_overapproximates_all_allocation_prefixes=True)
+        self.payload_expr=expression
 
     def parse_fold(self, suffix):
         accumulator, loop, returned = suffix
@@ -435,6 +562,9 @@ class ListHeapProgram:
         failure = {'status':'UNKNOWN','c_overflow_verified':False,'memory_safety_verified':False,'termination_proved':False}
         if self.build_report['status'] != 'PROVED_DEFINED_TYPED_C_NESTED':
             return {**failure,'reason':'List payload/index source proof failed','source_proof':self.build_report}
+        for proof in self.map_reports:
+            if proof['status'] != 'PROVED_DEFINED_TYPED_C_NESTED':
+                return {**failure,'reason':'List payload-map source proof failed','source_proof':proof}
         fold = self.fold_engine.report() if self.fold_engine is not None else None
         if fold is not None and fold['status'] != 'PROVED_DEFINED_TYPED_C_NESTED':
             return {**failure,'reason':'List fold source proof failed','source_proof':fold}
@@ -448,23 +578,24 @@ class ListHeapProgram:
                 'live_nodes':'allocation_token(j), 1 <= j <= m',
                 'next':'allocation_token(j-1), with token(0) = null' if self.orientation=='descending' else 'allocation_token(j+1) if j < m, otherwise null',
                 'orientation':self.orientation,'reversal_stages':len(self.reversals),'source_reversal_stage_budget':8,
+                'payload_map_stages':len(self.maps),'source_heap_stage_budget':8,
                 'traversal_builder_index':'m-1-t' if self.orientation=='descending' else 't',
                 'payload_at_node':{'source_expression':self.generator.visit(self.payload_expr),'builder_index':self.index+' = j-1','assignment_type':self.payload_type.name},
                 'escapes_build_loop':True,'escapes_function':self.mode=='escape',
                 'live_nodes_after_return':'m' if self.mode=='escape' else '0'},
             'memory_model':{**self.memory_model,'max_object_instances':None,'max_cells_per_object':2,'max_total_cells':None,
-                'model':'inductively represented fresh acyclic chain with checked in-place reversal; no per-node materialization'},
-            'certificate':{'method':'checked C list normal form + universal construction/reversal/traversal induction + typed scalar loop proofs',
+                'model':'inductively represented fresh acyclic chain with checked in-place reversal and pointwise payload maps; no per-node materialization'},
+            'certificate':{'method':'checked C list normal form + universal construction/reversal/pointwise-map/traversal induction + typed scalar loop proofs',
                 'source_contract':{'record':self.tag,'payload_field':self.value,'next_field':self.link,
                     'head_initially_null':True,'fresh_allocation_before_each_publish':True,
                     'both_fields_initialized_before_publish':True,'null_failure_exits_before_memory_writes':True,
                     'no_external_aliases_or_pointer_identity_observations':True,
                     'saved_next_before_free':self.mode=='fold_free'},
-                'shape':self.shape,'reversals':self.reversals,'final_traversal':self.traversal,
+                'shape':self.shape,'reversals':self.reversals,'heap_stages':self.stages,'final_traversal':self.traversal,
                 'payload_source':self.build_source,'payload_proof':self.build_report,
                 'fold_source':self.fold_source,'fold_proof':fold,
                 'fold_domain_overapproximates_all_failure_prefix_lengths':True if fold else None},
-            'scope':'fresh acyclic two-field prepend lists with failure-prefix exits; checked in-place reversals and optional additive fold/free; no external aliases or arbitrary heap updates'}
+            'scope':'fresh acyclic two-field prepend lists with failure-prefix exits; checked in-place reversals, pure pointwise payload maps and optional additive fold/free; no external aliases or arbitrary heap updates'}
         if inputs is None:
             if allocation_count is not None:raise SMTGraphError('allocation_count requires inputs')
         else:

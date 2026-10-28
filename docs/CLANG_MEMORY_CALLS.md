@@ -8,7 +8,7 @@ A separate `list_calls` backend adds
 for that shape fragment; it does not relax the finite `calls` backend's limits.
 Both inductive routes now admit
 [checked in-place reversal stages](OWNED_LIST_REVERSAL.md), including helper
-pipelines. This is a mutation rule for one uniquely owned acyclic chain, not
+pipelines, and [nonescaping pointwise payload maps](OWNED_LIST_PAYLOAD_MAPS.md). These are mutation rules for one uniquely owned acyclic chain, not
 arbitrary unbounded heap graph support.
 
 The `clang_proof` API adds two backends to the existing scalar bridge. The

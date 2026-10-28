@@ -744,6 +744,23 @@ arbitrary graph updates/aliases remain unsupported. See the
 9.2 after reproducing a worker-exit incompatibility with the current fork plugin;
 the full test workflow retains process isolation.
 
+## v0.35: borrowed pointwise payload mutation
+
+The `list`/`list_calls` backends now check complete in-place payload maps with a
+nonescaping borrowed cursor, including void helpers with immutable scalar
+arguments. Maps and reversals compose in source order while preserving node
+identity, ownership and unchanged links. Each map retains all previous payload
+store conversions, and unsafe intermediate arithmetic is rejected even when a
+later map overwrites its result.
+
+There is no represented-node or traversal-iteration bound. The shared source
+budget admits eight map/reversal stages. Automatic discovery still has limits
+for modular folds; supplied candidates pass the same original typed-source
+checks. See the [Clang example](examples/clang_list_payload_map.c),
+[ownership and arithmetic contract](docs/OWNED_LIST_PAYLOAD_MAPS.md) and
+[v0.35 experiments](experiments/v035/report.md). General graph/alias contracts,
+arbitrary branch discovery and full C/LLVM semantics remain open; no KLEE.
+
 ### Independent sequential threshold branches
 
 Automatic typed-loop summaries also propose closed forms for two or three
