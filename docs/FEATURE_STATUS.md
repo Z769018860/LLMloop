@@ -1,4 +1,4 @@
-# Feature status after v0.36
+# Feature status after v0.37
 
 This inventory distinguishes certified capabilities from outstanding general
 requirements. The project remains a restricted research prototype.
@@ -10,7 +10,7 @@ requirements. The project remains a restricted research prototype.
 | General recurrences | Affine induction-certified matrix powers, finite polynomial lifts, periodic schedules, inductive state-dependent phases, supplied nonperiodic Piecewise candidates; automatic triangular finite-polynomial, isolated saturation, parity/transient and static-cell, periodic coupled block and counter-threshold additive polynomial candidates independently verified against typed source; exact bounded state-branch execution without closed-form synthesis | Automatic discovery of arbitrary coupled/branching nonperiodic trajectories or closed forms; unsupported symbolic exponentials in candidate SMT mode |
 | C integer semantics | ABI-aware concrete and symbolic typed expressions, bounded typed scalar function execution, unroll-free heterogeneous single/nested scalar loop certificates from supplied state candidates, typed finite local memory composed with nested scalar loop certificates; restricted single-width dynamic memory safety proofs; independent failure-aware finite dynamic heap CFG verification | General typed heap shapes, external pointer layouts, arbitrary calls/side effects |
 | Execution validity | Bounded reachable-state checks, ranking certificates, counted-loop termination in mathematical frontends and certified typed scalar trajectories; bounded complete-exit CFG with break/continue, goto, switch, early exits and typed direct-call frames and opt-in recursive closure with unreachable depth frontiers | General unbounded termination and feasibility for arbitrary C CFG loops |
-| Experiments | Full local regressions, native C/UBSan oracles, positive and negative proof controls, reproducible manifests/results | Representative real-library coverage and independent external benchmarks |
+| Experiments | Full local regressions, native C/UBSan oracles, proof controls and reproducible manifests/results; pinned LLVM compiler-rt pilot with unchanged upstream source/headers, independent functional queries, native references and retained unsupported rows | Broader representative real-library families, external memory/call contracts and complete functional proof coverage |
 
 Mathematical summaries never imply machine arithmetic safety. Check
 `c_overflow_verified`, the reported semantics and domain, and the certificate's
@@ -19,7 +19,7 @@ particular exit condition terminates. `UNKNOWN` is an explicit unsupported or
 unproved result, not a valid summary.
 
 See [v0.14 recurrence and experiment contracts](GUARDED_RECURRENCES_AND_EXPERIMENTS.md)
-and the committed [latest experiment report](../experiments/v036/report.md).
+and the committed [latest experiment report](../experiments/v037/report.md).
 
 See [unroll-free typed scalar C contracts](TYPED_UNBOUNDED_RECURRENCES.md) for the new machine-integer certificate. It does not certify general heap memory.
 
@@ -81,3 +81,5 @@ criteria for the remaining work.
 See [borrowed payload maps](OWNED_LIST_PAYLOAD_MAPS.md) for pure pointwise integer updates, preserved per-store conversions, nonescaping cursor helpers and source-ordered mutation composition. This admits one restricted borrowed alias; general aliases, stateful passes and graph mutation remain open.
 
 See [eager list-call arguments](EAGER_LIST_ARGUMENTS.md) for pure scalar expression binding, parameter conversions, full-domain eager checks on empty chains/unused formals, and simultaneous hygienic substitution. General builder/consumer argument contracts and side effects remain open.
+
+See [exact finite choices and upstream evidence](FINITE_CHOICES_AND_UPSTREAM_BENCHMARKS.md) for budgeted equivalent shift/conversion normalization, unchanged undefinedness checks, real compiler-rt translation units, distinct safety/functional/native claims, and explicit unsupported/solver-unknown coverage. This is a pilot, not whole-C or representative whole-library coverage.

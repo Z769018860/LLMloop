@@ -776,6 +776,24 @@ See the [Clang example](examples/clang_list_argument_conversions.c),
 [v0.36 experiments](experiments/v036/report.md). General alias/call/graph and
 complete C/LLVM requirements remain open; no KLEE.
 
+## v0.37: exact finite choices and a pinned compiler-rt pilot
+
+The integer lift now simplifies small exhaustive integer choices and expands
+only the actual finite shift selectors when recognized. Original shift/overflow
+conditions remain; unknown choices use the previous rule. LLVM's original
+32-bit leading/trailing-zero algorithms now pass the same safety-query budget.
+
+A pinned LLVM 18.1.8 pilot preserves source bodies, headers, licensing and exact
+upstream blob hashes. Its 13 selected public builtins form 15 declared domains,
+including unsupported union/external/builtin cases. Source safety, independent
+functional QF_BV queries and native comparisons are reported separately;
+functional timeouts and unsupported rows remain explicit. A defined wrong
+algorithm must fail the functional oracle, while UB and intended abort controls
+stay distinct. See the [upstream corpus](benchmarks/llvm_compiler_rt/README.md),
+[contract](docs/FINITE_CHOICES_AND_UPSTREAM_BENCHMARKS.md) and
+[v0.37 evidence](experiments/v037/report.md). This is a small integer pilot,
+not whole-library or complete C/LLVM coverage. No KLEE.
+
 ### Independent sequential threshold branches
 
 Automatic typed-loop summaries also propose closed forms for two or three

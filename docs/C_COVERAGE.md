@@ -41,7 +41,7 @@ separate workstreams; completing a new example does not close the general case.
 | Wider C data model | Floating point, unions/type punning, embedded aggregates, flexible/VLA layouts, byte memory/effective types, strings, broader globals/static state | Explicit typed semantics, layout/initialization/lifetime rules, UB controls and compiler/native correspondence |
 | Wider execution/calls | Arbitrary side-effect evaluation beyond checked sequencing/purity, function pointers, varargs, unrestricted recursion, external libraries, concurrency/atomics/volatile, nonlocal control | Explicit environment/ordering contracts, valid call-target resolution and whole-path safety obligations |
 | General LLVM bridge | Semantics for instructions, poison/undef/provenance and optimizations rather than exporting IR only | Validated lowering contract and source/IR correspondence; never infer safety from IR availability |
-| Representative evaluation | Real-library functions and independent benchmarks with declared supported/unsupported coverage | Reproducible versions/domains, compiler flags, failure counts, performance and independent oracles |
+| Representative evaluation | Broader library families beyond the pinned compiler-rt integer pilot; external memory/call and wider C-type coverage | Reproducible versions/domains, compiler flags, failure counts, performance and independent oracles |
 
 An unrestricted algorithm that always finds exact closed forms and decides
 termination for arbitrary C cannot be promised. The engineering goal is broader
@@ -65,4 +65,5 @@ See [feature inventory](FEATURE_STATUS.md),
 [owned-chain reversal contract](OWNED_LIST_REVERSAL.md) and
 [borrowed payload-map contract](OWNED_LIST_PAYLOAD_MAPS.md) and
 [eager list-call arguments](EAGER_LIST_ARGUMENTS.md) and
-[latest experiment report](../experiments/v036/report.md).
+[finite choices and upstream integer pilot](FINITE_CHOICES_AND_UPSTREAM_BENCHMARKS.md) and
+[latest experiment report](../experiments/v037/report.md).

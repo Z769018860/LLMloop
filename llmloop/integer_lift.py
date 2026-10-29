@@ -8,6 +8,7 @@ import z3
 from .c_integers import IntegerABI
 from .symbolic_integers import TypedTerm
 from .smt_spath import SMTGraphError
+from .finite_choices import integer_choices, choice_value
 
 
 class IntegerLift:
@@ -24,7 +25,10 @@ class IntegerLift:
         if target.name == '_Bool':value = z3.If(value != 0,z3.IntVal(1),z3.IntVal(0))
         elif target.signed:value = (value-target.minimum) % (1 << target.bits)+target.minimum
         else:value = value % (1 << target.bits)
-        return TypedTerm(z3.simplify(value),target,term.safe)
+        value=z3.simplify(value)
+        choices=integer_choices(value,max_cases=4)
+        if choices is not None:value=choice_value(choices)
+        return TypedTerm(value,target,term.safe)
 
     def promoted(self, term):
         target = self.abi.promote(self.abi.value(0,term.type.name)).type
@@ -83,9 +87,14 @@ class IntegerLift:
             a,b=self.promoted(a),self.promoted(b);x,amount=a.value,b.value
             safe=z3.And(a.safe,b.safe,amount>=0,amount<a.type.bits)
             value=z3.IntVal(0)
-            for shift in reversed(range(a.type.bits)):
+            choices=integer_choices(amount)
+            if choices is None:
+                shifts=[(shift,amount==shift) for shift in reversed(range(a.type.bits))]
+            else:
+                shifts=[(shift,guard) for shift,guard in choices.items() if 0<=shift<a.type.bits]
+            for shift,guard in shifts:
                 term=x*(1 << shift) if op == '<<' else x/(1 << shift)
-                value=z3.If(amount==shift,term,value)
+                value=z3.If(guard,term,value)
             if op == '<<' and a.type.signed:safe=z3.And(safe,x>=0,value<=a.type.maximum)
             if not a.type.signed:value=value % (1 << a.type.bits)
             return TypedTerm(z3.simplify(value),a.type,safe)
