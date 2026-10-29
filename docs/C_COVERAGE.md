@@ -24,7 +24,7 @@ iteration unfolding only within their checked source contracts.
 | `nested` | Counted scalar nested loops without iteration unfolding | Admitted trajectories/candidates and immutable bounds |
 | `recurrence` | Supplied typed single-loop trajectory | Typed induction and supported formulas |
 | `memory` | Counted loops over finite represented typed cells | Finite cells; explicit successful-allocation assumptions |
-| `calls` | Failure-aware direct helpers, finite pointer/record heaps, sequenced lazy/nested/comma/loop-header calls, independent pure sibling calls, opt-in bounded recursion | Finite objects/cells/call expansion; every frontier excluded; unordered observable sibling effects refused |
+| `calls` | Failure-aware direct helpers, finite pointer/record heaps, sequenced lazy/nested/comma/loop-header calls, independent pure sibling calls, opt-in bounded recursion | Finite objects/cells/call expansion; external calls only when their entire evaluation is proved unreachable; every frontier excluded; unordered observable sibling effects refused |
 | `list` | Fresh prepend builder, checked reversal/pointwise payload maps, head return or fold/free | One exact acyclic two-field shape; at most eight combined source heap stages; no arbitrary calls |
 | `list_calls` | Builder transfers list through checked reversal/map stages to caller or one consumer | One exact ownership chain; builder identity arguments, map pure scalar expressions with checked parameter conversions; eight combined heap stages |
 
@@ -66,4 +66,6 @@ See [feature inventory](FEATURE_STATUS.md),
 [borrowed payload-map contract](OWNED_LIST_PAYLOAD_MAPS.md) and
 [eager list-call arguments](EAGER_LIST_ARGUMENTS.md) and
 [finite choices and upstream integer pilot](FINITE_CHOICES_AND_UPSTREAM_BENCHMARKS.md) and
-[latest experiment report](../experiments/v037/report.md).
+[latest experiment report](../experiments/v038/report.md).
+
+The [external-call exclusion contract](UNREACHABLE_EXTERNAL_CALLS.md) admits unreachable direct external calls without assigning any return/effect behavior to them. This does not implement reachable external library contracts.

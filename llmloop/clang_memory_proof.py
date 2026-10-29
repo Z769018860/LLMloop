@@ -20,8 +20,49 @@ class MemoryNormalizer(ScalarNormalizer):
         self.builtins = {n['id']: n for n in frontend.get('modeled_function_declarations', [])}
         self.record_defs = {}
         self.used_records = set()
+        self.external_declarations = {n['id']: n for n in frontend.get('external_function_declarations', [])}
+        self.external_prototypes = {}
+        self.external_frontiers = []
         for record in frontend.get('record_definitions', []):
             self.record_defs.setdefault(record.get('name'), []).append(record)
+
+    def external_argument(self, node):
+        """Retain string/func-name literals only inside an opaque call argument.
+
+        The kernel must exclude evaluation of the entire call; this adds no
+        string-memory semantics to reachable typed expressions.
+        """
+        kind=node.get('kind');children=node.get('inner',[])
+        if kind in ('ImplicitCastExpr','ParenExpr','PredefinedExpr') and len(children)==1 and (kind!='ImplicitCastExpr' or node.get('castKind') in ('NoOp','ArrayToPointerDecay')):
+            return self.external_argument(children[0])
+        if kind=='StringLiteral':
+            value=node.get('value','')
+            if node.get('type',{}).get('qualType','').startswith(('char[','char [','const char[')) and value.startswith('"') and value.endswith('"'):
+                return value
+            raise SMTGraphError('Only ordinary Clang string literals admitted in opaque arguments')
+        return self.expr(node)
+
+    def external_call(self, node, ref):
+        if not self.callables:raise SMTGraphError('External call frontiers require the calls backend')
+        declaration=self.external_declarations.get(ref.get('id'))
+        if declaration is None:raise SMTGraphError('External Clang declaration metadata missing')
+        signature=declaration['type'].get('desugaredQualType',declaration['type']['qualType'])
+        if '...' in signature or not re.search(r'\([^)]*\)',signature):raise SMTGraphError('Opaque Clang calls require a nonvariadic prototype')
+        result='void' if node['type'].get('qualType')=='void' else super().type(node['type'])
+        params=[]
+        for param in declaration.get('inner',[]):
+            if param.get('kind')!='ParmVarDecl':continue
+            text=param['type'].get('desugaredQualType',param['type']['qualType'])
+            if re.fullmatch(r'const char\s*\*',text):params.append('const char *')
+            else:params.append(self.memory_type(param['type']))
+        arguments=node.get('inner',[])[1:]
+        if len(params)!=len(arguments):raise SMTGraphError('Opaque Clang call prototype arity mismatch')
+        prototype=result+' '+ref['name']+'('+(', '.join(params) or 'void')+');'
+        if ref['name'] in self.external_prototypes and self.external_prototypes[ref['name']]!=prototype:raise SMTGraphError('Conflicting normalized external prototypes')
+        self.external_prototypes[ref['name']]=prototype
+        self.external_frontiers.append({'callee':ref['name'],'ast_id':node.get('id'),'argument_count':len(arguments),
+                                        'policy':'entire call evaluation must be proved unreachable; no attributes or external semantics assumed'})
+        return ref['name']+'('+', '.join(self.external_argument(arg) for arg in arguments)+')'
 
     def check_builtin(self, ref):
         declaration = self.builtins.get(ref.get('id'))
@@ -160,6 +201,8 @@ class MemoryNormalizer(ScalarNormalizer):
             while callee.get('kind') in ('ImplicitCastExpr', 'ParenExpr') and len(callee.get('inner', [])) == 1:
                 callee = callee['inner'][0]
             ref = callee.get('referencedDecl', {})
+            if callee.get('kind')=='DeclRefExpr' and ref.get('kind')=='FunctionDecl' and ref.get('name') not in self.callables | BUILTINS:
+                return self.external_call(node,ref)
             if callee.get('kind') != 'DeclRefExpr' or ref.get('kind') != 'FunctionDecl' or ref.get('name') not in self.callables | BUILTINS:
                 raise SMTGraphError('Clang proof requires an available direct function call')
             if ref['name'] in BUILTINS:
@@ -290,12 +333,17 @@ def normalize_calls(frontend, function):
                 callee = node['referencedDecl']['name']
                 if callee in functions:
                     pending.append(callee)
-                elif callee not in BUILTINS:
-                    raise SMTGraphError('External Clang call lacks a verified definition: ' + callee)
+                # Undefined direct callees become explicit unreachable-call
+                # frontiers. Their arguments and declarations are retained.
     normalizers = [MemoryNormalizer({**frontend, 'functions': [functions[name]]}, selected) for name in sorted(selected)]
     sources = [normalizer.source() for normalizer in normalizers]
     prototypes = [source.split('{', 1)[0].strip() + ';' for source in sources]
-    return '\n'.join(prototypes + sources), normalizers, function
+    external={}
+    for normalizer in normalizers:
+        for name,prototype in normalizer.external_prototypes.items():
+            if name in external and external[name]!=prototype:raise SMTGraphError('Conflicting external declarations across callers')
+            external[name]=prototype
+    return '\n'.join(list(external.values())+prototypes + sources), normalizers, function
 
 
 def record_source(normalizers):

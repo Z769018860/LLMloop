@@ -3,6 +3,7 @@
 Sequenced lazy/nested/loop-header calls and independent pure siblings are expanded. Scalar
 parameter/return conversions remain typed declarations/assignments. Heap object
 identity survives helper frames; automatic objects expire on return edges.
+External calls are admitted only after excluding their entire evaluation.
 """
 import copy
 import hashlib
@@ -83,9 +84,18 @@ class CallExpansion:
             name=item.decl.name
             if name in self.functions or name in BUILTINS:raise SMTGraphError('Duplicate/reserved function definition')
             self.functions[name]=item
+        self.externals={}
         for prototype in prototypes:
             if prototype.funcspec:raise SMTGraphError('Prototype specifiers require explicit call contracts')
-            if prototype.name not in self.functions or signature_key(prototype)!=signature_key(self.functions[prototype.name].decl):raise SMTGraphError('Prototype must match an available definition')
+            if prototype.name in self.functions:
+                if signature_key(prototype)!=signature_key(self.functions[prototype.name].decl):raise SMTGraphError('Prototype must match an available definition')
+            else:
+                if prototype.name in BUILTINS:raise SMTGraphError('Allocator prototypes require the modeled allocator contract')
+                if prototype.name in self.externals and signature_key(prototype)!=signature_key(self.externals[prototype.name]):raise SMTGraphError('Conflicting external prototypes')
+                ret=prototype.type.type
+                if not scalar_declarator(ret) and not (isinstance(ret,c_ast.TypeDecl) and isinstance(ret.type,c_ast.IdentifierType) and ret.type.names==['void']):raise SMTGraphError('External frontier requires an integer or void result')
+                self.externals[prototype.name]=prototype
+        if len(self.externals)>32:raise SMTGraphError('External declaration budget is 32')
         if not 1<=len(self.functions)<=16:raise SMTGraphError('Call frontend supports 1..16 function definitions')
         if function is None:
             if len(self.functions)!=1:raise SMTGraphError('Select the entry function for a multi-function source')
@@ -99,7 +109,7 @@ class CallExpansion:
             if count>8192 or depth>64:raise SMTGraphError('Call source AST budget exceeded')
             if isinstance(node,c_ast.Decl) and not isinstance(node.type,c_ast.FuncDecl):
                 (self.scalar_names if isinstance(node.type,c_ast.TypeDecl) else non_scalar).add(node.name)
-            if isinstance(node,c_ast.Decl) and not isinstance(node.type,c_ast.FuncDecl) and node.name in self.functions:
+            if isinstance(node,c_ast.Decl) and not isinstance(node.type,c_ast.FuncDecl) and node.name in set(self.functions)|set(self.externals):
                 raise SMTGraphError('Local/parameter shadowing of function names unsupported')
             if isinstance(node,(c_ast.ID,c_ast.Decl,c_ast.Label,c_ast.Goto)) and getattr(node,'name',None):self.used.add(node.name)
             pending.extend((child,depth+1) for _,child in node.children())
@@ -122,7 +132,7 @@ class CallExpansion:
             if name not in self.used:self.used.add(name);return name
 
     def user_call(self,node):
-        return isinstance(node,c_ast.FuncCall) and isinstance(node.name,c_ast.ID) and node.name.name in self.functions
+        return isinstance(node,c_ast.FuncCall) and isinstance(node.name,c_ast.ID) and node.name.name in set(self.functions)|set(self.externals)
 
     def validate_function_context(self,function):
         if function.decl.funcspec:raise SMTGraphError('Function specifiers require explicit call contracts')
@@ -132,7 +142,7 @@ class CallExpansion:
                 if not isinstance(n.type,c_ast.FuncDecl):declared.add(n.name)
                 self.generic_visit(n)
         Declarations().visit(function)
-        allowed=declared|set(self.functions)|BUILTINS
+        allowed=declared|set(self.functions)|set(self.externals)|BUILTINS
         def visit(node,loops=0,switches=0):
             if isinstance(node,c_ast.ID) and node.name not in allowed:raise SMTGraphError('Unknown function-local identifier: '+node.name)
             if isinstance(node,c_ast.Continue) and not loops:raise SMTGraphError('Helper continue has no enclosing loop in its own function')
@@ -337,10 +347,22 @@ class CallExpansion:
         return [node]
 
     @staticmethod
-    def as_statement(items):return items[0] if len(items)==1 else c_ast.Compound(items)
+    def as_statement(items):return items[0] if len(items)==1 and not isinstance(items[0],c_ast.Decl) else c_ast.Compound(items)
 
     def call(self,node,stack,need_value):
         name=node.name.name
+        if name in self.externals:
+            # Exclude the entire call evaluation, including its arguments. No
+            # return, purity, noreturn, memory or argument-safety assumption is
+            # made about an external function. Reachability is an analysis
+            # frontier, not evidence that the original source has UB.
+            signature=self.externals[name].type
+            if signature.args is None:raise SMTGraphError('External frontier requires a prototype')
+            params=signature.args.params
+            if len(params)==1 and isinstance(params[0],c_ast.Typename) and isinstance(params[0].type,c_ast.TypeDecl) and isinstance(params[0].type.type,c_ast.IdentifierType) and params[0].type.type.names==['void']:params=[]
+            if any(isinstance(p,c_ast.EllipsisParam) for p in params):raise SMTGraphError('Variadic external frontiers unsupported')
+            if len(params)!=len(node.args.exprs if node.args else []):raise SMTGraphError('External frontier argument count mismatch')
+            return self.frontier(signature.type,name,stack,need_value,kind='external')
         if name in stack and not self.allow_recursion:raise SMTGraphError('Recursive direct calls require allow_recursion')
         function=copy.deepcopy(self.functions[name]);signature=function.decl.type
         if not isinstance(signature,c_ast.FuncDecl) or function.param_decls:raise SMTGraphError('Prototype-style direct functions required')
@@ -427,12 +449,12 @@ class CallExpansion:
         return argument_prefix+prefix,c_ast.ID(result) if result else None
 
 
-    def frontier(self,ret,name,stack,need_value):
+    def frontier(self,ret,name,stack,need_value,kind='depth'):
         if len(self.frontiers)>=32:raise SMTGraphError('Call frontier budget is 32')
         is_void=isinstance(ret,c_ast.TypeDecl) and isinstance(ret.type,c_ast.IdentifierType) and ret.type.names==['void']
         if is_void and need_value:raise SMTGraphError('Void helper used as a value')
-        marker=self.fresh('depth_frontier')
-        self.frontiers.append({'marker':marker,'callee':name,'depth':len(stack),'recursive_edge':name in stack})
+        marker=self.fresh(kind+'_frontier')
+        self.frontiers.append({'marker':marker,'callee':name,'depth':len(stack),'recursive_edge':name in stack,'kind':kind})
         # This failing guard is an analysis frontier, never an assumed safe
         # return. A successful certificate requires this entire statement to
         # be unreachable. The base heap verifier also fails closed on it.
@@ -449,11 +471,13 @@ class TypedCFGCalls(TypedCFGHeap):
     def __init__(self,source,function=None,max_call_depth=3,allow_recursion=False,**options):
         self.expansion=CallExpansion(source,function,max_call_depth,allow_recursion)
         self.frontier_names={item['marker'] for item in self.expansion.frontiers}
+        self.frontier_kinds={item['marker']:item.get('kind','depth') for item in self.expansion.frontiers}
         super().__init__(self.expansion.source,function=self.expansion.entry,**options)
 
     def atom(self,node,states):
         if isinstance(node,c_ast.Decl) and node.name in self.frontier_names:
-            for guard,_,_ in states:self.check('call depth frontier unreachable: '+node.name,z3.And(self.domain,guard),z3.BoolVal(False))
+            label='external call frontier unreachable: ' if self.frontier_kinds[node.name]=='external' else 'call depth frontier unreachable: '
+            for guard,_,_ in states:self.check(label+node.name,z3.And(self.domain,guard),z3.BoolVal(False))
         return super().atom(node,states)
 
     def report(self,inputs=None):
@@ -471,10 +495,16 @@ class TypedCFGCalls(TypedCFGHeap):
                               'source_equivalence_machine_proved':False,
                               'expanded_sites':self.expansion.events,'max_depth':self.expansion.max_call_depth,
                               'recursion_supported':self.expansion.allow_recursion,'bounded_recursion_enabled':self.expansion.allow_recursion,
-                              'depth_frontiers':self.expansion.frontiers,
+                              'depth_frontiers':[f for f in self.expansion.frontiers if f['kind']=='depth'],
+                              'external_frontiers':[f for f in self.expansion.frontiers if f['kind']=='external'],
+                              'external_policy':'entire call evaluation must be unreachable; no external semantics assumed',
+                              'unreachable_external_calls_supported':True,
                               'all_frontiers_proved_unreachable':result['status']=='PROVED_DEFINED_TYPED_C_CFG_CALLS',
                               'external_calls_supported':False,'pointer_return_supported':True,
                               'nonvoid_return_marker_checked':True}
         if result.get('failed_obligation','').startswith('call depth frontier'):result['analysis_limit']='call_depth_frontier'
+        if result.get('failed_obligation','').startswith('external call frontier'):
+            result['analysis_limit']='external_call_frontier'
+            result['counterexample_kind']='reachable_external_analysis_frontier'
         result['scope']='bounded direct/recursive calls with shared integer/pointer-cell/record heap, pointer arguments/returns and callee stack lifetime; no unbounded recursion proof, external pointers, by-value structs or general closed-form synthesis'
         return result

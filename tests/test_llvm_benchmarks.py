@@ -21,7 +21,7 @@ def test_upstream_revision_license_and_complete_denominator_are_explicit():
     assert verified['upstream_commit']==UPSTREAM_COMMIT
     assert verified['license']=='Apache-2.0 WITH LLVM-exception'
     assert len(CASES)==15 and len({c['function'] for c in CASES})==13
-    assert sum(c['expected_safety']=='UNKNOWN' for c in CASES)==6
+    assert sum(c['expected_safety']=='UNKNOWN' for c in CASES)==4
 
 
 @pytest.mark.parametrize('entry',FILES,ids=[Path(e['path']).name for e in FILES])

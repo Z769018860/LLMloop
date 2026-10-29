@@ -14,7 +14,6 @@ import z3
 from .api import analyze_request
 from .smt_spath import SMTGraphError
 from .typed_c import TypedCFunction
-from .typed_cfg_heap import TypedCFGHeap
 
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -40,11 +39,11 @@ def verify_vendor(root=ROOT):
 
 def cases():
     result=[]
-    def add(name,function,types,oracle,supported=True,bounds=None):
+    def add(name,function,types,oracle,supported=True,bounds=None,backend=None):
         bounds=bounds or {key:[-(1<<(width-1)),(1<<(width-1))-1] if signed else [0,(1<<width)-1] for key,(width,signed) in types.items()}
         result.append({'name':name,'function':'__'+function,'file':function+'.c','types':types,'oracle':oracle,
-                       'bounds':bounds,'expected_safety':'PROVED_DEFINED_CLANG_SCALAR_CFG' if supported else 'UNKNOWN',
-                       'backend':'cfg' if supported else 'calls'})
+                       'bounds':bounds,'expected_safety':('PROVED_DEFINED_CLANG_CFG_CALLS' if backend=='calls' else 'PROVED_DEFINED_CLANG_SCALAR_CFG') if supported else 'UNKNOWN',
+                       'backend':backend or ('cfg' if supported else 'calls')})
     add('popcount32','popcountsi2',{'a':(32,True)},'popcount')
     add('popcount64','popcountdi2',{'a':(64,True)},'popcount')
     add('parity32','paritysi2',{'a':(32,True)},'parity')
@@ -56,8 +55,8 @@ def cases():
     add('union_parity64','paritydi2',{'a':(64,True)},'parity',False)
     add('union_unsigned_compare64','ucmpdi2',{'a':(64,False),'b':(64,False)},'compare',False)
     add('union_signed_compare64','cmpdi2',{'a':(64,True),'b':(64,True)},'compare',False)
-    add('external_abort_abs','absvsi2',{'a':(32,True)},'abs',False,{'a':[-2147483647,2147483647]})
-    add('external_abort_negate','negvsi2',{'a':(32,True)},'negate',False,{'a':[-2147483647,2147483647]})
+    add('external_abort_abs','absvsi2',{'a':(32,True)},'abs',bounds={'a':[-2147483647,2147483647]},backend='calls')
+    add('external_abort_negate','negvsi2',{'a':(32,True)},'negate',bounds={'a':[-2147483647,2147483647]},backend='calls')
     add('builtin_loop_udiv32','udivsi3',{'a':(32,False),'b':(32,False)},'udiv',False,{'a':[0,4294967295],'b':[1,4294967295]})
     return result
 
@@ -144,6 +143,8 @@ def bit_reference(case,model):
         for bit in bits[1:]:parity=parity^bit
         return z3.ZeroExt(output-1,parity)
     if case['oracle']=='bswap':return z3.Concat(*(z3.Extract(i+7,i,x) for i in range(0,width,8)))
+    if case['oracle']=='abs':return z3.If(x<0,-x,x)
+    if case['oracle']=='negate':return -x
     if case['oracle'] in ('clz','ctz'):
         result=z3.BitVecVal(width,output)
         order=range(width) if case['oracle']=='clz' else reversed(range(width))
@@ -156,29 +157,55 @@ def functional_proof(case,source):
     # A separate typed bit-vector source executor is paired with an independent
     # reference circuit. This is distinct from the primary integer-lift safety
     # certificate and is only requested after original-source safety succeeds.
-    model=TypedCFunction(source,function=case['function'],parameter_bounds=case['bounds'],max_unroll=0)
+    execution_source=source
+    if case['backend']=='calls':
+        from .typed_cfg_calls import CallExpansion
+        execution_source=CallExpansion(source,function=case['function']).source
+    model=TypedCFunction(execution_source,function=case['function'],parameter_bounds=case['bounds'],max_unroll=0)
     domain=[]
     for key,term in model.engine.variables.items():
         lo,hi=case['bounds'][key];x=term.value;lo=z3.BitVecVal(lo,term.type.bits);hi=z3.BitVecVal(hi,term.type.bits)
         domain.extend([x>=lo,x<=hi] if term.type.signed else [z3.UGE(x,lo),z3.ULE(x,hi)])
     solver=z3.SolverFor('QF_BV');solver.set(timeout=5000)
-    solver.add(*domain,model.engine.expression.value!=bit_reference(case,model))
+    difference=model.engine.expression.value!=bit_reference(case,model)
+    # The source-safety predicate contains BV2Int terms and belongs to the
+    # primary mixed-theory safety proof, not a SolverFor('QF_BV') query.
+    pending=[*domain,difference];seen=set()
+    while pending:
+        term=pending.pop()
+        if term.get_id() in seen:continue
+        seen.add(term.get_id())
+        if term.sort().kind() not in (z3.Z3_BOOL_SORT,z3.Z3_BV_SORT):raise SMTGraphError('Functional reference query is not QF_BV')
+        pending.extend(term.children())
+    solver.add(*domain,difference)
     start=time.monotonic();answer=solver.check()
     result={'status':'PROVED_FUNCTIONAL_QF_BV' if answer==z3.unsat else 'REFUTED_FUNCTIONAL_QF_BV' if answer==z3.sat else 'UNKNOWN',
             'query_result':str(answer),'timeout_ms':5000,'elapsed_seconds':round(time.monotonic()-start,3),
-            'method':'independent bit reference versus separate typed bit-vector execution of normalized source',
-            'refutation_smt2':solver.to_smt2(),'source_sha256':hashlib.sha256(source.encode()).hexdigest()}
+            'method':'independent bit reference versus separate typed bit-vector execution of normalized source; source safety proved separately',
+            'refutation_smt2':solver.to_smt2(),'source_sha256':hashlib.sha256(source.encode()).hexdigest(),
+            'execution_source':execution_source,'execution_source_sha256':hashlib.sha256(execution_source.encode()).hexdigest(),
+            'external_calls_assumed_defined':False}
     if answer==z3.unknown:result['reason']=solver.reason_unknown()
     if answer==z3.sat:result['counterexample']=model.engine.witness(solver.model())
     return result,model
 
 
-def model_values(case,source,inputs):
-    primary=TypedCFGHeap(source,function=case['function'],parameter_bounds=case['bounds'])
-    if primary.report()['status']!='PROVED_DEFINED_TYPED_C_CFG_HEAP':raise SMTGraphError('Repeated normalized source proof failed')
+def model_values(case,source,inputs,report):
+    # Evaluate the actual certified primary return expression. Reconstructing a
+    # second model would prove a different query with different fresh symbols.
+    if not report['status'].startswith('PROVED_DEFINED_CLANG_') or report.get('normalization',{}).get('source_sha256')!=hashlib.sha256(source.encode()).hexdigest():
+        raise SMTGraphError('Primary model samples require the matching successful source report')
+    symbols=report.get('parameter_symbols',{})
+    if set(symbols)!=set(case['types']) or len(set(symbols.values()))!=len(symbols):raise SMTGraphError('Primary parameter symbol bindings missing or ambiguous')
+    variables={name:z3.Int(symbol) for name,symbol in symbols.items()};decls={symbols[name]:term for name,term in variables.items()}
+    value=z3.parse_smt2_string('(assert (= 0 '+report['return_smt2']+'))',decls=decls)[0].arg(1)
+    domain=z3.parse_smt2_string('(assert '+report['domain_smt2']+')',decls=decls)[0]
     result=[]
     for row in inputs:
-        value=primary.evaluate_return(row)
-        if not z3.is_int_value(value):raise SMTGraphError('Benchmark model did not evaluate to an integer')
-        result.append(value.as_long())
+        independent_value(case,row)
+        substitutions=[(term,z3.IntVal(row[name])) for name,term in variables.items()]
+        if not z3.is_true(z3.simplify(z3.substitute(domain,*substitutions))):raise SMTGraphError('Primary model sample outside certified domain')
+        selected=z3.simplify(z3.substitute(value,*substitutions))
+        if not z3.is_int_value(selected):raise SMTGraphError('Benchmark model did not evaluate to an integer')
+        result.append(selected.as_long())
     return result

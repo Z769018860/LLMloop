@@ -487,6 +487,7 @@ class TypedCFGHeap(TypedCMemory):
             'c_overflow_verified':success,'memory_safety_verified':success,'termination_proved':success,
             'allocation_failure_modeled':self.allocation_failure,'allocation_success_assumed':not self.allocation_failure and any(o.heap for o in self.objects.values()),
             'domain_smt2':self.domain.sexpr(),'semantics':'typed C integer semantics with explicit implementation choices',
+            'parameter_symbols':{name:term.value.sexpr() for name,term in self.parameters.items()},
             'leak_freedom_proved':False,'unbounded_summary':False,
             'certificate':{'method':'exhaustive original CFG execution with proved complete exit for declared domain','obligations':self.checks,
                            'executed_cfg_nodes':self.executed,'max_steps_per_path':self.max_steps,'max_paths':self.max_paths,'represented_object_instances':len(self.objects)},

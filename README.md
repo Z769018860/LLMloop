@@ -776,6 +776,16 @@ See the [Clang example](examples/clang_list_argument_conversions.c),
 [v0.36 experiments](experiments/v036/report.md). General alias/call/graph and
 complete C/LLVM requirements remain open; no KLEE.
 
+## v0.38: prove external call evaluations unreachable
+
+The calls backend now retains external declarations and arguments, then requires
+the entire call evaluation to be unreachable. A reachable call yields an explicit
+analysis frontier with a witness, without claiming source undefined behavior or
+assuming a pure, returning or noreturn implementation. This admits original LLVM
+abs/negate functions when the declared domain excludes their abort input.
+See the [contract](docs/UNREACHABLE_EXTERNAL_CALLS.md) and
+[experiments](experiments/v038/report.md). General external-call semantics remain open.
+
 ## v0.37: exact finite choices and a pinned compiler-rt pilot
 
 The integer lift now simplifies small exhaustive integer choices and expands
