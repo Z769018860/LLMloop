@@ -1,0 +1,160 @@
+{
+  "base_commit": "95fb055f523fb8476068c783d20466f68aafe03a",
+  "tested_commit": "ad402bf9aae0b1ff218ff1e51cc945b7be9d48aa",
+  "validation_origin": "local isolated pytest workers, Clang frontend, QF_BV and native UBSan",
+  "environment": {
+    "python": "3.12.14",
+    "platform": "Linux-6.18.55-x86_64-with-glibc2.39",
+    "pytest": "9.1.1",
+    "sympy": "1.14.0",
+    "z3": "5.3.3",
+    "pycparser": "3.11",
+    "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+    "compiler": "cc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0"
+  },
+  "full_pytest": {
+    "command": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "--forked"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 305.04,
+    "log": "pytest.txt",
+    "passed": 1340,
+    "expected_passed": 1340,
+    "skipped": 0
+  },
+  "new_tests": {
+    "passed": 121,
+    "included_in_full_suite": true
+  },
+  "upstream_pilot": {
+    "command": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+      "scripts/check_llvm_builtins.py",
+      "--compare-baseline",
+      "--output",
+      "experiments/v037/upstream.json"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 28.07,
+    "log": "upstream.txt",
+    "passed": true,
+    "case_count": 15,
+    "upstream_functions": 13,
+    "safety_proved_cases": 9,
+    "safety_unknown_cases": 6,
+    "case_optimization_correspondences": 7680,
+    "native_comparisons": 12288,
+    "model_comparisons": 1152,
+    "expected_ubsan_failures": 4,
+    "intended_abort_runs": 4,
+    "wrong_algorithm_native_refutations": 2,
+    "functional_proved_cases": 8,
+    "functional_unknown_cases": [
+      "popcount64"
+    ]
+  },
+  "legacy_native": {
+    "arguments": {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_list_arguments_native.py",
+        "--output",
+        "experiments/v037/native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 31.77,
+      "log": "arguments.txt",
+      "correspondences": 1620,
+      "negative_native_runs": 12
+    },
+    "payload_maps": {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_list_payload_maps_native.py",
+        "--output",
+        "experiments/v037/payload_maps_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 16.82,
+      "log": "payload_maps.txt",
+      "correspondences": 510,
+      "negative_native_runs": 8
+    },
+    "reversal_regression": {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_list_reversal_native.py",
+        "--output",
+        "experiments/v037/reversal_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 13.91,
+      "log": "reversal_regression.txt",
+      "correspondences": 372,
+      "negative_native_runs": 4
+    }
+  },
+  "legacy_native_totals": {
+    "correspondences": 2502,
+    "expected_ubsan_failures": 24
+  },
+  "cli_demo": {
+    "command": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+      "-m",
+      "llmloop.symbolic_cli",
+      "examples/clang_list_argument_conversions.c",
+      "--c-clang-proof",
+      "--function",
+      "entry",
+      "--clang-proof-config",
+      "{\"backend\": \"list_calls\", \"allocation_count\": 100, \"loop_summaries\": {\"__list_scan\": {\"__list_call_total\": \"__list_scan*(__list_scan-1)//2+__list_scan*((delta+260)%256)\"}}}",
+      "--parameter-bounds",
+      "{\"n\": [0, 1000000], \"delta\": [0, 2]}",
+      "--inputs",
+      "{\"n\": 1000000, \"delta\": 2}"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.87,
+    "log": "demo.json",
+    "passed": true,
+    "evaluation": {
+      "allocation_count": 100,
+      "all_success_case": false,
+      "conditional_on_selected_allocation_outcome": true,
+      "live_nodes_after_return": 0,
+      "orientation": "ascending",
+      "value": 5550
+    }
+  },
+  "frozen_source_unchanged": true,
+  "frozen_manifest_paths": 420,
+  "github_actions_used": false,
+  "klee_used": false,
+  "complete_c_support": false,
+  "passed": true,
+  "evidence_sha256": {
+    "pytest.txt": "c13b7a1dac4219a34f9ffc6ae910cfdf38dd65cddd6ee6e6eb3e120129228d69",
+    "source_manifest.json": "6af0d892f18b5f08e935681f526e943f6e8f6cea176273ec9ce98a52fb794540",
+    "upstream.json": "016bd1d522431f6edb7c2d01db89a4b45adefed25eba2a48f64369e16bd76b5d",
+    "upstream.txt": "91174c9ecf1a6081b81d7bb09f315f2cc84dd9f907883d22548a1628b17febf3",
+    "native.json": "3ee40ab0ac2d6c9eb99f05aa20a9303d677bbbec144de8a7f8a656046d36c0a4",
+    "arguments.txt": "7446193b747bde45d24a4f6b0f6a252f45684612e758593aeaa4f964f81b7933",
+    "payload_maps_native.json": "351b533772cc2e9a790ee5c4b45bceadbf89e6864f355e75417f29a6238fc90b",
+    "payload_maps.txt": "c0b88af94377f575f421f57e6e0b382a2cc60d7f828c0f7fe8127e8971d60704",
+    "reversal_native.json": "01ee20cb5ad12a988f87ed2564a68af34f6cc7f3be1418833ffdc68f23ab66a6",
+    "reversal_regression.txt": "16cbe1825eeea1d4e83cced20fdb67bf4226dca4e16005a9e4343b92604626c9",
+    "demo.json": "0cbd4f6635cb0712f8bd3c14b9f145a037e0a3bae25edc26157471921feae7fc",
+    "report.md": "45715307a99ef8b1c2c446b14f87ae0e4b7061776fd3445afe214e08da09e96c"
+  },
+  "remote_source_checkpoint_commit": "ed60a22aec1d47e5a0595a53442828a12551e163",
+  "source_git_tree": "02973ef7e16db6a32df0671cab109d7c83a3dbb5",
+  "remote_tree_matches_tested_local_tree": true,
+  "post_validation_changes": "generated provenance/evidence only; frozen source unchanged",
+  "source_checkpoint_actions_runs": 0
+}
