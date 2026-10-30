@@ -94,7 +94,9 @@ class UnionViewNormalizer(ScalarNormalizer):
 
     def union_access(self,node):
         path=[];ids=[]
-        while node.get('kind')=='MemberExpr' and not node.get('isArrow') and len(node.get('inner',[]))==1:
+        while True:
+            while node.get('kind')=='ParenExpr' and len(node.get('inner',[]))==1:node=node['inner'][0]
+            if node.get('kind')!='MemberExpr' or node.get('isArrow') or len(node.get('inner',[]))!=1:break
             path.insert(0,node.get('name'));ids.insert(0,node.get('referencedMemberDecl'));node=node['inner'][0]
         if node.get('kind')!='DeclRefExpr' or node.get('referencedDecl',{}).get('id') not in self.union_objects:return None
         view=self.union_objects[node['referencedDecl']['id']];key=tuple(path)

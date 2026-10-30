@@ -45,9 +45,9 @@ def main():
 
     full,output=run([sys.executable,'-m','pytest','-q','--forked'],'pytest.txt',1200)
     match=re.search(r'(\d+) passed',output)
-    full.update(passed=int(match[1]) if match else 0,expected_passed=1454,
+    full.update(passed=int(match[1]) if match else 0,expected_passed=1460,
                 skipped=sum(int(x) for x in re.findall(r'(\d+) skipped',output)))
-    full_ok=full['exit_code']==0 and full['passed']==1454 and full['skipped']==0
+    full_ok=full['exit_code']==0 and full['passed']==1460 and full['skipped']==0
 
     # Delete a preflight artifact so a failed command cannot reuse stale success.
     upstream_path=out/'upstream.json'
@@ -106,7 +106,7 @@ def main():
     artifacts=['pytest.txt','source_manifest.json','upstream.json','upstream.txt','native.json','arguments.txt',
                'payload_maps_native.json','payload_maps.txt','reversal_native.json','reversal_regression.txt','demo.json','external_demo.json','external_frontier.json','union_demo.json']
     result={'base_commit':BASE,'tested_commit':tested,'validation_origin':'local isolated pytest workers, Clang frontend, QF_BV and native UBSan',
-            'environment':environment,'full_pytest':full,'new_tests':{'passed':62 if full_ok else None,'included_in_full_suite':True},
+            'environment':environment,'full_pytest':full,'new_tests':{'passed':68 if full_ok else None,'included_in_full_suite':True},
             'upstream_pilot':upstream_run,'legacy_native':natives,
             'legacy_native_totals':{'correspondences':sum(r['correspondences'] for r in natives.values()),
                                     'expected_ubsan_failures':sum(r['negative_native_runs'] for r in natives.values())},
@@ -119,7 +119,7 @@ def main():
             'and license) are checked against immutable upstream Git blobs and SHA-256.\n\n'
             f'Tested source commit: `{tested}`. Base: v0.38 `{BASE}`.\n\n'
             f'Full regression: **{full["passed"]} passed**, {full["skipped"]} skipped, exit {full["exit_code"]}; '
-            f'{full["elapsed_seconds"]} seconds. Includes 62 new tests without removing prior tests.\n\n'
+            f'{full["elapsed_seconds"]} seconds. Includes 68 new tests without removing prior tests.\n\n'
             f'Upstream denominator: {upstream.get("upstream_functions")} public functions, {upstream.get("case_count")} input domains. '
             f'Source safety: **{upstream.get("safety_proved_cases")} proved**, **{upstream.get("safety_unknown_cases")} UNKNOWN**. '
             f'Separate independent functional queries: **{upstream.get("functional_proved_cases")} proved**; '

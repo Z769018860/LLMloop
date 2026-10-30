@@ -144,10 +144,18 @@ def test_sizeof_union_keeps_the_compiler_size_t_type(target):
     assert report['evaluation']['value']==int('i386' not in target)
 
 
-def test_union_member_address_is_refused_even_in_an_unreachable_external_argument():
-    source=U64+'void opaque(int *);int entry(int n){Word x;x.word=n;if(n<0)opaque(&x.s.high);return 0;}'
+@pytest.mark.parametrize('address',['&x.s.high','&(x.s.high)','&((x).s.high)'])
+def test_union_member_address_is_refused_even_in_an_unreachable_external_argument(address):
+    source=U64+'void opaque(int *);int entry(int n){Word x;x.word=n;if(n<0)opaque('+address+');return 0;}'
     report=analyze(source,bounds={'n':[0,2]},backend='calls')
     assert report['status']=='UNKNOWN' and 'Addresses' in report['reason']
+
+
+@pytest.mark.parametrize('leaf',['(x).s.high','(x.s).high','((x).s).high','(x.s.high)'])
+def test_parenthesized_union_lvalues_and_paths_keep_identity(leaf):
+    source=U64+'int entry(unsigned long long n){Word x;(x.word)=n;return '+leaf+';}'
+    report=analyze(source,inputs={'n':1<<63})
+    assert report['status']=='PROVED_DEFINED_CLANG_SCALAR_CFG' and report['evaluation']['value']==-2147483648,report
 
 
 def test_wrong_normalized_view_offset_is_defined_but_functionally_refuted(tmp_path):

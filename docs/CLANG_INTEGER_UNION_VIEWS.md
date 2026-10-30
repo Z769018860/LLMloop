@@ -45,7 +45,7 @@ Only simple full-word stores are allowed. Initializer lists, partial/compound
 stores, increment/decrement, aggregate copies/values, static objects, address
 taking/escaping, pointer access and union declarations in for initializers remain
 unsupported. Addresses of union leaves are refused even inside otherwise opaque
-external arguments. A parenthesized discarded comma statement is normalized as
+external arguments, including parenthesized member paths/lvalues. Parentheses retain declaration identity for admitted reads and full writes. A parenthesized discarded comma statement is normalized as
 two source-ordered statements; assignment values are not invented in expression
 contexts. The scalar CFG/calls kernels still prove every executed arithmetic and
 initialization obligation and complete exit under their existing budgets.
