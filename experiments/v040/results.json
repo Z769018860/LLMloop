@@ -1,0 +1,237 @@
+{
+  "base_commit": "e06a06517ecc1ffc13a9a3f79d9a96bc6eadb726",
+  "tested_commit": "791ccb731c427c886bfe36e3074940c426d3c842",
+  "validation_origin": "local isolated pytest workers, Clang frontend, QF_BV and native UBSan",
+  "environment": {
+    "python": "3.12.14",
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.39",
+    "pytest": "9.1.1",
+    "sympy": "1.14.0",
+    "z3": "5.3.3",
+    "pycparser": "3.11",
+    "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+    "compiler": "cc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0"
+  },
+  "full_pytest": {
+    "command": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "--forked"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 348.77,
+    "log": "pytest.txt",
+    "passed": 1538,
+    "expected_passed": 1538,
+    "skipped": 0
+  },
+  "new_tests": {
+    "passed": 78,
+    "included_in_full_suite": true
+  },
+  "upstream_pilot": {
+    "command": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+      "scripts/check_llvm_builtins.py",
+      "--compare-baseline",
+      "--output",
+      "experiments/v040/upstream.json"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 41.36,
+    "log": "upstream.txt",
+    "passed": true,
+    "case_count": 15,
+    "upstream_functions": 13,
+    "safety_proved_cases": 14,
+    "safety_unknown_cases": 1,
+    "case_optimization_correspondences": 7680,
+    "native_comparisons": 14848,
+    "model_comparisons": 1792,
+    "expected_ubsan_failures": 4,
+    "intended_abort_runs": 4,
+    "wrong_algorithm_native_refutations": 6,
+    "functional_proved_cases": 14,
+    "functional_unknown_cases": []
+  },
+  "legacy_native": {
+    "arguments": {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_list_arguments_native.py",
+        "--output",
+        "experiments/v040/native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 28.82,
+      "log": "arguments.txt",
+      "correspondences": 1620,
+      "negative_native_runs": 12
+    },
+    "payload_maps": {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_list_payload_maps_native.py",
+        "--output",
+        "experiments/v040/payload_maps_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 16.37,
+      "log": "payload_maps.txt",
+      "correspondences": 510,
+      "negative_native_runs": 8
+    },
+    "reversal_regression": {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_list_reversal_native.py",
+        "--output",
+        "experiments/v040/reversal_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 13.46,
+      "log": "reversal_regression.txt",
+      "correspondences": 372,
+      "negative_native_runs": 4
+    }
+  },
+  "legacy_native_totals": {
+    "correspondences": 2502,
+    "expected_ubsan_failures": 24
+  },
+  "cli_demo": {
+    "command": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+      "-m",
+      "llmloop.symbolic_cli",
+      "examples/clang_list_argument_conversions.c",
+      "--c-clang-proof",
+      "--function",
+      "entry",
+      "--clang-proof-config",
+      "{\"backend\": \"list_calls\", \"allocation_count\": 100, \"loop_summaries\": {\"__list_scan\": {\"__list_call_total\": \"__list_scan*(__list_scan-1)//2+__list_scan*((delta+260)%256)\"}}}",
+      "--parameter-bounds",
+      "{\"n\": [0, 1000000], \"delta\": [0, 2]}",
+      "--inputs",
+      "{\"n\": 1000000, \"delta\": 2}"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.97,
+    "log": "demo.json",
+    "passed": true,
+    "evaluation": {
+      "allocation_count": 100,
+      "all_success_case": false,
+      "conditional_on_selected_allocation_outcome": true,
+      "live_nodes_after_return": 0,
+      "orientation": "ascending",
+      "value": 5550
+    }
+  },
+  "external_cli": {
+    "external_demo": {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-m",
+        "llmloop.symbolic_cli",
+        "examples/clang_unreachable_external.c",
+        "--c-clang-proof",
+        "--function",
+        "entry",
+        "--clang-proof-config",
+        "{\"backend\":\"calls\"}",
+        "--parameter-bounds",
+        "{\"x\": [0, 1000]}",
+        "--inputs",
+        "{\"x\":100}"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.52,
+      "log": "external_demo.json",
+      "passed": true
+    },
+    "external_frontier": {
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-m",
+        "llmloop.symbolic_cli",
+        "examples/clang_unreachable_external.c",
+        "--c-clang-proof",
+        "--function",
+        "entry",
+        "--clang-proof-config",
+        "{\"backend\":\"calls\"}",
+        "--parameter-bounds",
+        "{\"x\": [-1, 1000]}",
+        "--inputs",
+        "{\"x\":100}"
+      ],
+      "exit_code": 2,
+      "elapsed_seconds": 0.52,
+      "log": "external_frontier.json",
+      "passed": true
+    }
+  },
+  "union_cli": {
+    "command": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+      "-m",
+      "llmloop.symbolic_cli",
+      "examples/clang_union_word_view.c",
+      "--c-clang-proof",
+      "--function",
+      "entry",
+      "--inputs",
+      "{\"n\":9223372036854775808}"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.57,
+    "log": "union_demo.json",
+    "passed": true
+  },
+  "popcount_cli": {
+    "command": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+      "scripts/check_popcount_functional.py",
+      "--output",
+      "experiments/v040/popcount_demo.json"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.72,
+    "log": "popcount_demo.txt",
+    "passed": true
+  },
+  "frozen_source_unchanged": true,
+  "frozen_manifest_paths": 479,
+  "github_actions_used": false,
+  "klee_used": false,
+  "complete_c_support": false,
+  "passed": true,
+  "evidence_sha256": {
+    "pytest.txt": "7834edb0cdf95e2e94d901c1262133583c9768a4aa9caf2a3b066403a88b7a2b",
+    "source_manifest.json": "7fe97083478aa42c0511f0f3555e013f6b3891efdd5813d025fe8c3fee9298ee",
+    "upstream.json": "62143c2bc1aadc8168e0b460c1c35d9742c3b57e6303b5a9d74712a3f1d84f10",
+    "upstream.txt": "56fb542ae99f6ee4322a65eac5931f6192202a06bac14b07336a2e0d619eff81",
+    "native.json": "c829fc50ed579d89ccefb53f5a7b11a3d845de4f1662a86b9abc55430f9bdd08",
+    "arguments.txt": "7446193b747bde45d24a4f6b0f6a252f45684612e758593aeaa4f964f81b7933",
+    "payload_maps_native.json": "de2a23d9275a013f235f887eb8e437d3afba52737e9ac462b917a8c1a14bf93f",
+    "payload_maps.txt": "c0b88af94377f575f421f57e6e0b382a2cc60d7f828c0f7fe8127e8971d60704",
+    "reversal_native.json": "a522c26ab4db491c1f67ccbcb3d2173e22da1ad59cdfa6c3a6d811cf662bc4eb",
+    "reversal_regression.txt": "16cbe1825eeea1d4e83cced20fdb67bf4226dca4e16005a9e4343b92604626c9",
+    "demo.json": "5fc44437122a6376c78b8720444a0143d901a8a6bfe9a07a2f93013e18795a14",
+    "external_demo.json": "690f91ae365904139d95cfa5a94d1e0870ce2329971147ba0fcafed43ba96c5d",
+    "external_frontier.json": "f97baea3b24332c43987d6132717858c8afd997610bc297bd324b7fb08f834af",
+    "union_demo.json": "86ebbc6d24000258da33219fc614de019eeab0bffcb4dab6b93cfcb0ef38e62d",
+    "popcount_demo.json": "7937d1344321a191d24ecf6cfeab0f189d3a4b78ceb97a4aa0df0fc84d2bcc4a",
+    "popcount_demo.txt": "95752eb98c61dce1483d7b830303d15d63fa4d5a5cec3786f08818748790cdec",
+    "report.md": "12b110200fbd4166cb21f69affe9fdac26cbe9e487c22f2db690ebe622206b36"
+  },
+  "remote_source_checkpoint_commit": "2bbc8921b4c3cb0442fee52cb0ad06e272de6d60",
+  "source_git_tree": "87953dce230d470d8106b56b34143597dc62e541",
+  "remote_tree_matches_tested_local_tree": true,
+  "post_validation_changes": "generated provenance/evidence only; frozen source unchanged",
+  "source_checkpoint_actions_runs": 0,
+  "evidence_recovery": "popcount_demo.txt restored from the same captured master run log; exact original recorded SHA-256 verified"
+}
