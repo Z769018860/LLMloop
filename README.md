@@ -776,6 +776,18 @@ See the [Clang example](examples/clang_list_argument_conversions.c),
 [v0.36 experiments](experiments/v036/report.md). General alias/call/graph and
 complete C/LLVM requirements remain open; no KLEE.
 
+## v0.39: compiler-checked local integer union views
+
+Local 32/64-bit integer unions can now be written through a full-word member and
+read through validated scalar fields. Typedef identities, nesting, offsets, size,
+alignment and little-endian x86 representation are checked against Clang.
+Initialization flags prevent placeholder zero storage from certifying an unread
+object; partial writes, pointer escapes and unsupported layouts remain refused.
+Original compiler-rt 64-bit parity and signed/unsigned comparison now use this
+route. See the [contract](docs/CLANG_INTEGER_UNION_VIEWS.md) and
+[experiments](experiments/v039/report.md). This does not implement general union
+or byte-memory semantics.
+
 ## v0.38: prove external call evaluations unreachable
 
 The calls backend now retains external declarations and arguments, then requires

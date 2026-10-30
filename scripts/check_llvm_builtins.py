@@ -150,6 +150,32 @@ def main():
         controls.append({'control':'defined_but_wrong_algorithm','request':request,'safety_status':report['status'],
                          'source':wrong.read_text(),'source_sha256':hashlib.sha256(wrong.read_bytes()).hexdigest(),
                          'analysis':compact_report(report),'functional':query,'independent_expected':expected,'native':native})
+        # A wrong union byte offset is still defined scalar C. Independently
+        # refute it rather than trusting the normalizer's output as its own spec.
+        case=next(c for c in cases() if c['name']=='union_signed_compare64')
+        original_row=next(r for r in rows if r['case']['name']==case['name'])
+        original_normalized=original_row['analysis']['normalization']['source']
+        wrong_view=path/'wrong_union_view.c';wrong_view.write_text(original_normalized.replace(' >> 32',' >> 0'))
+        if wrong_view.read_text()==original_normalized:raise AssertionError('Union offset mutation did not change the source')
+        request,report,unused=isolated_analyze_case(case,database,wrong_view)
+        if report['status']!='PROVED_DEFINED_CLANG_CFG_CALLS':raise AssertionError(report)
+        query,unused=functional_proof(case,report['normalization']['source'])
+        if query['status']!='REFUTED_FUNCTIONAL_QF_BV':raise AssertionError(query)
+        witness=query['counterexample'];expected=independent_value(case,witness);native=[]
+        for opt in ('-O0','-O2'):
+            run=native_run(path,case,wrong_view,[witness],opt,'wrong_view')
+            if run['exit_code'] or run['stderr'] or int(run['stdout'])==expected:raise AssertionError(run)
+            native.append(run)
+        controls.append({'control':'defined_but_wrong_union_view_offset','request':request,'source':wrong_view.read_text(),
+                         'original_normalized_sha256':hashlib.sha256(original_normalized.encode()).hexdigest(),
+                         'source_sha256':hashlib.sha256(wrong_view.read_bytes()).hexdigest(),'analysis':compact_report(report),
+                         'functional':query,'independent_expected':expected,'native':native})
+        uninitialized=path/'uninitialized_union.c';uninitialized.write_text((VENDOR/case['file']).read_text().replace('x.all = a;',''))
+        request,report,unused=isolated_analyze_case(case,database,uninitialized)
+        if report['status']!='UNKNOWN' or report.get('c_overflow_verified') or not report.get('normalization',{}).get('union_views'):raise AssertionError(report)
+        controls.append({'control':'uninitialized_union_read','request':request,'source':uninitialized.read_text(),
+                         'source_sha256':hashlib.sha256(uninitialized.read_bytes()).hexdigest(),'analysis':compact_report(report),
+                         'native_executed':False,'reason':'UBSan does not provide a general uninitialized-read oracle'})
         # Signed low-byte left shift overflows before conversion to the return type.
         case=copy.deepcopy(next(c for c in cases() if c['name']=='bswap32'))
         case.update(name='signed_shift_mutation',types={'u':(32,True)},bounds={'u':[0,255]})
@@ -196,7 +222,7 @@ def main():
             'safety_proved_cases':safety_proved,'safety_unknown_cases':len(rows)-safety_proved,'functional_proved_cases':functional_proved,
             'functional_unknown_cases':[r['case']['name'] for r in rows if r['functional'] is not None and r['functional']['status']=='UNKNOWN'],
             'case_optimization_correspondences':correspondences,'native_comparisons':native_comparisons,'model_comparisons':model_comparisons,
-            'expected_ubsan_failures':4,'intended_abort_runs':4,'wrong_algorithm_native_refutations':2,
+            'expected_ubsan_failures':4,'intended_abort_runs':4,'wrong_algorithm_native_refutations':4,
             'baseline':baseline,'cases':rows,'controls':controls,'compiler':subprocess.check_output(['cc','--version'],text=True).splitlines()[0],
             'source_analysis_process_isolation':True,'source_analysis_retries':0,'scope':'pinned compiler-rt integer pilot; unsupported rows retained; native LP64; not representative whole-C/library coverage'}
     if args.output:

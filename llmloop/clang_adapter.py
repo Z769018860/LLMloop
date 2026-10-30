@@ -94,7 +94,9 @@ def layouts_from_dump(text):
         members=[]
         for line in block[header.end():].splitlines():
             m=re.match(r'\s*(\d+)(?::(\d+)-(\d+))?\s*\|\s+(.*)',line)
-            if m:members.append({'offset_bytes':int(m[1]),'declaration':m[4].strip(),**({'bit_range':[int(m[2]),int(m[3])]} if m[2] else {})})
+            if m:
+                tail=line.split('|',1)[1];indent=len(tail)-len(tail.lstrip())
+                members.append({'offset_bytes':int(m[1]),'declaration':m[4].strip(),'depth':(indent-1)//2,**({'bit_range':[int(m[2]),int(m[3])]} if m[2] else {})})
         records.append({'name':header[1].strip(),'size_bytes':int(size[1]),'alignment_bytes':int(size[2]),'members':members})
     return records
 
@@ -198,9 +200,18 @@ class ClangAdapter:
                 while nodes:
                     node=nodes.pop();count+=1
                     if count>250000:raise SMTGraphError('Clang AST node budget exceeded')
-                    if node.get('kind')=='TypedefDecl':typedefs.append({'name':node.get('name'),'type':node.get('type',{}),'location':node.get('loc')})
+                    if node.get('kind')=='TypedefDecl':
+                        pending_types=list(node.get('inner',[]));record_ids=set()
+                        while pending_types:
+                            part=pending_types.pop()
+                            if part.get('kind')=='RecordType' and part.get('decl',{}).get('kind')=='RecordDecl':record_ids.add(part['decl']['id'])
+                            pending_types.extend(part.get('inner',[]))
+                        typedefs.append({'name':node.get('name'),'type':node.get('type',{}),'location':node.get('loc'),'record_ids':sorted(record_ids)})
                     if node.get('kind')=='FunctionDecl' and node.get('name') in ('malloc','calloc','free'):modeled_declarations.append(node)
-                    if node.get('kind')=='RecordDecl' and node.get('completeDefinition'):record_definitions.append(node)
+                    if node.get('kind')=='RecordDecl' and node.get('completeDefinition'):
+                        loc=node.get('loc',{});line=loc.get('line')
+                        if line is None and not any(k in loc for k in ('includedFrom','expansionLoc','spellingLoc')) and type(loc.get('offset')) is int and 0<=loc['offset']<len(before) and (not loc.get('file') or Path(loc['file']).resolve()==path):line=before[:loc['offset']].count(b'\n')+1
+                        record_definitions.append({**node,'layout_line':line})
                     if node.get('kind')=='FunctionDecl':function_declarations.append(node)
                     if node.get('kind')=='FunctionDecl' and any(child.get('kind')=='CompoundStmt' for child in node.get('inner',[])):definitions.append(node)
                     nodes.extend(reversed(node.get('inner',[])))

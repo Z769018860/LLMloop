@@ -38,7 +38,7 @@ separate workstreams; completing a new example does not close the general case.
 | General heap summaries | Multiple objects/shapes, aliasing footprints, mutations beyond owned-chain reversal and pure pointwise payload maps, cycles/trees/graphs, joins and ownership contracts | Source-linked shape induction, alias/lifetime obligations, positive and unsafe counterexamples, native differentials |
 | General interprocedural composition | General builder/consumer parameter contracts beyond map pure-expression conversions, multiple/list aliases, stateful consumers, external contracts, recursive heap induction | Verified pre/postcondition binding, footprint/frame rules, conversions, recursion obligations and escaped ownership checks |
 | General state-dependent branches | Candidate discovery beyond current restricted schedules and algebraic independence | Independently checked original-source trajectories, guard feasibility, arithmetic safety and exit/termination evidence |
-| Wider C data model | Floating point, unions/type punning, embedded aggregates, flexible/VLA layouts, byte memory/effective types, strings, broader globals/static state | Explicit typed semantics, layout/initialization/lifetime rules, UB controls and compiler/native correspondence |
+| Wider C data model | Floating point, general unions/type punning beyond local compiler-checked integer word views, embedded aggregates, flexible/VLA layouts, byte memory/effective types, strings, broader globals/static state | Explicit typed semantics, layout/initialization/lifetime rules, UB controls and compiler/native correspondence |
 | Wider execution/calls | Arbitrary side-effect evaluation beyond checked sequencing/purity, function pointers, varargs, unrestricted recursion, external libraries, concurrency/atomics/volatile, nonlocal control | Explicit environment/ordering contracts, valid call-target resolution and whole-path safety obligations |
 | General LLVM bridge | Semantics for instructions, poison/undef/provenance and optimizations rather than exporting IR only | Validated lowering contract and source/IR correspondence; never infer safety from IR availability |
 | Representative evaluation | Broader library families beyond the pinned compiler-rt integer pilot; external memory/call and wider C-type coverage | Reproducible versions/domains, compiler flags, failure counts, performance and independent oracles |
@@ -66,6 +66,8 @@ See [feature inventory](FEATURE_STATUS.md),
 [borrowed payload-map contract](OWNED_LIST_PAYLOAD_MAPS.md) and
 [eager list-call arguments](EAGER_LIST_ARGUMENTS.md) and
 [finite choices and upstream integer pilot](FINITE_CHOICES_AND_UPSTREAM_BENCHMARKS.md) and
-[latest experiment report](../experiments/v038/report.md).
+[latest experiment report](../experiments/v039/report.md).
 
 The [external-call exclusion contract](UNREACHABLE_EXTERNAL_CALLS.md) admits unreachable direct external calls without assigning any return/effect behavior to them. This does not implement reachable external library contracts.
+
+[Integer union views](CLANG_INTEGER_UNION_VIEWS.md) now admit one restricted object-representation fragment after compiler layout checks; partial writes and byte/alias memory remain unsupported.

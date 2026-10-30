@@ -1,4 +1,4 @@
-# Feature status after v0.38
+# Feature status after v0.39
 
 This inventory distinguishes certified capabilities from outstanding general
 requirements. The project remains a restricted research prototype.
@@ -19,7 +19,7 @@ particular exit condition terminates. `UNKNOWN` is an explicit unsupported or
 unproved result, not a valid summary.
 
 See [v0.14 recurrence and experiment contracts](GUARDED_RECURRENCES_AND_EXPERIMENTS.md)
-and the committed [latest experiment report](../experiments/v038/report.md).
+and the committed [latest experiment report](../experiments/v039/report.md).
 
 See [unroll-free typed scalar C contracts](TYPED_UNBOUNDED_RECURRENCES.md) for the new machine-integer certificate. It does not certify general heap memory.
 
@@ -85,3 +85,5 @@ See [eager list-call arguments](EAGER_LIST_ARGUMENTS.md) for pure scalar express
 See [exact finite choices and upstream evidence](FINITE_CHOICES_AND_UPSTREAM_BENCHMARKS.md) for budgeted equivalent shift/conversion normalization, unchanged undefinedness checks, real compiler-rt translation units, distinct safety/functional/native claims, and explicit unsupported/solver-unknown coverage. This is a pilot, not whole-C or representative whole-library coverage.
 
 See [unreachable external-call frontiers](UNREACHABLE_EXTERNAL_CALLS.md) for whole-call exclusion without external return/effect assumptions, preserved arguments and compiler declarations, explicit reachability witnesses and original compiler-rt abs/negate coverage. Reachable external functions remain unmodeled.
+
+See [compiler-checked integer union views](CLANG_INTEGER_UNION_VIEWS.md) for local full-word stores, guarded scalar reads, exact compiler layout/typedef matching and original LLVM parity/comparison coverage. General union/byte-memory semantics remain open.

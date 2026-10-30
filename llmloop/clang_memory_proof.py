@@ -5,17 +5,20 @@ typed kernels retain their finite memory, alias, lifetime and call budgets.
 """
 import re
 
-from .clang_proof import ScalarNormalizer, nodes
+from .clang_proof import nodes
+from .clang_union_views import UnionViewNormalizer
 from .smt_spath import SMTGraphError
 
 
 BUILTINS = {'malloc', 'calloc', 'free'}
 
 
-class MemoryNormalizer(ScalarNormalizer):
+class MemoryNormalizer(UnionViewNormalizer):
     def __init__(self, frontend, callables=()):
         super().__init__(frontend)
         self.callables = set(callables)
+        self.used.update(self.callables)
+        self.used.update(n['name'] for n in frontend.get('external_function_declarations',[]) if n.get('name'))
         self.memory_used = False
         self.builtins = {n['id']: n for n in frontend.get('modeled_function_declarations', [])}
         self.record_defs = {}
@@ -120,6 +123,8 @@ class MemoryNormalizer(ScalarNormalizer):
     def expr(self, node):
         kind = node.get('kind')
         children = node.get('inner', [])
+        if kind=='UnaryOperator' and node.get('opcode')=='&' and len(children)==1 and self.union_access(children[0]):
+            raise SMTGraphError('Addresses of scalarized union views unsupported')
         if kind == 'CStyleCastExpr' and len(children) == 1 and node.get('castKind') == 'ToVoid' and node.get('type', {}).get('qualType') == 'void':
             return '((void)(' + self.expr(children[0]) + '))'
         if kind == 'BinaryOperator' and node.get('opcode') == ',' and len(children) == 2:
@@ -227,6 +232,8 @@ class MemoryNormalizer(ScalarNormalizer):
 
     def action(self, node):
         children = node.get('inner', [])
+        if node.get('kind') in ('BinaryOperator','CompoundAssignOperator') and children and self.union_access(children[0]):
+            return super().action(node)
         if node.get('kind') in ('BinaryOperator', 'CompoundAssignOperator') and node.get('opcode') in ('=', '+=', '-=', '*=', '/=', '%=', '<<=', '>>=', '&=', '|=', '^=') and len(children) == 2:
             if children[0].get('kind') not in ('DeclRefExpr', 'ArraySubscriptExpr', 'UnaryOperator', 'MemberExpr'):
                 raise SMTGraphError('Unsupported Clang memory lvalue')
@@ -267,6 +274,10 @@ class MemoryNormalizer(ScalarNormalizer):
         return self.memory_type(node['type']) + ' ' + self.names[node['id']] + ' = ' + self.expr(children[0])
 
     def stmt(self, node):
+        children=node.get('inner',[])
+        if node.get('kind')=='ParenExpr' and len(children)==1:return self.stmt(children[0])
+        if node.get('kind')=='BinaryOperator' and node.get('opcode')==',' and len(children)==2:
+            return '{ '+self.stmt(children[0])+' '+self.stmt(children[1])+' }'
         if node.get('kind') == 'ReturnStmt' and not node.get('inner'):
             return 'return;'
         if node.get('kind') == 'CallExpr':

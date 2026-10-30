@@ -52,9 +52,9 @@ def cases():
     for function,oracle in [('clzsi2','clz'),('ctzsi2','ctz')]:
         add(function+'_positive',function,{'a':(32,True)},oracle,bounds={'a':[1,2147483647]})
         add(function+'_negative',function,{'a':(32,True)},oracle,bounds={'a':[-2147483648,-1]})
-    add('union_parity64','paritydi2',{'a':(64,True)},'parity',False)
-    add('union_unsigned_compare64','ucmpdi2',{'a':(64,False),'b':(64,False)},'compare',False)
-    add('union_signed_compare64','cmpdi2',{'a':(64,True),'b':(64,True)},'compare',False)
+    add('union_parity64','paritydi2',{'a':(64,True)},'parity',backend='calls')
+    add('union_unsigned_compare64','ucmpdi2',{'a':(64,False),'b':(64,False)},'compare',backend='calls')
+    add('union_signed_compare64','cmpdi2',{'a':(64,True),'b':(64,True)},'compare',backend='calls')
     add('external_abort_abs','absvsi2',{'a':(32,True)},'abs',bounds={'a':[-2147483647,2147483647]},backend='calls')
     add('external_abort_negate','negvsi2',{'a':(32,True)},'negate',bounds={'a':[-2147483647,2147483647]},backend='calls')
     add('builtin_loop_udiv32','udivsi3',{'a':(32,False),'b':(32,False)},'udiv',False,{'a':[0,4294967295],'b':[1,4294967295]})
@@ -145,6 +145,10 @@ def bit_reference(case,model):
     if case['oracle']=='bswap':return z3.Concat(*(z3.Extract(i+7,i,x) for i in range(0,width,8)))
     if case['oracle']=='abs':return z3.If(x<0,-x,x)
     if case['oracle']=='negate':return -x
+    if case['oracle']=='compare':
+        a,b=[model.engine.variables[key] for key in case['types']]
+        less=a.value<b.value if a.type.signed else z3.ULT(a.value,b.value)
+        return z3.If(less,z3.BitVecVal(0,output),z3.If(a.value==b.value,z3.BitVecVal(1,output),z3.BitVecVal(2,output)))
     if case['oracle'] in ('clz','ctz'):
         result=z3.BitVecVal(width,output)
         order=range(width) if case['oracle']=='clz' else reversed(range(width))
