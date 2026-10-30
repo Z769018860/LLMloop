@@ -82,16 +82,22 @@ def isolated_analyze_case(case,database,source_file=None):
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--output',type=Path);parser.add_argument('--samples',type=int,default=256)
     parser.add_argument('--compare-baseline',action='store_true');parser.add_argument('--baseline-case',choices=['clzsi2_positive','ctzsi2_positive'])
-    parser.add_argument('--database',type=Path);parser.add_argument('--analyze-case');parser.add_argument('--analyze-source',type=Path);args=parser.parse_args()
+    parser.add_argument('--database',type=Path);parser.add_argument('--functional-baseline',action='store_true');parser.add_argument('--analyze-case');parser.add_argument('--analyze-source',type=Path);args=parser.parse_args()
     provenance=verify_vendor()
     if args.analyze_case:
         request,report,elapsed=analyze_case(json.loads(args.analyze_case),args.database,args.analyze_source)
         front=report.get('clang_frontend',{})
         report={**compact_report(report),'clang_frontend':{k:front[k] for k in ('status','compiler','source','target','effective_flags','compilation_database') if k in front}}
         print(json.dumps([request,report,elapsed]));return 0
+    if args.functional_baseline:
+        case=next(c for c in cases() if c['name']=='popcount64')
+        request,report,elapsed=analyze_case(case,args.database)
+        if not report['status'].startswith('PROVED_DEFINED_'):raise AssertionError(report)
+        query,unused=functional_proof(case,report['normalization']['source'],strategy='direct')
+        print(json.dumps({'case':case['name'],'source_safety_status':report['status'],'query':query}));return 0
     if args.baseline_case:
         print(json.dumps(baseline_case(args.baseline_case,args.database)));return 0
-    rows=[];native_comparisons=0;correspondences=0;model_comparisons=0;controls=[];baseline=[]
+    rows=[];native_comparisons=0;correspondences=0;model_comparisons=0;controls=[];baseline=[];functional_baseline=[]
     with tempfile.TemporaryDirectory(prefix='llmloop-llvm-bench-') as directory:
         path=Path(directory);database=compilation_database(path)
         for case in cases():
@@ -150,6 +156,20 @@ def main():
         controls.append({'control':'defined_but_wrong_algorithm','request':request,'safety_status':report['status'],
                          'source':wrong.read_text(),'source_sha256':hashlib.sha256(wrong.read_bytes()).hexdigest(),
                          'analysis':compact_report(report),'functional':query,'independent_expected':expected,'native':native})
+        case=next(c for c in cases() if c['name']=='popcount64')
+        wrong64=path/'wrong_popcount64.c';wrong64.write_text((VENDOR/case['file']).read_text().replace('0x5555555555555555','0x5555555555555554'))
+        request,report,unused=isolated_analyze_case(case,database,wrong64)
+        if report['status']!='PROVED_DEFINED_CLANG_SCALAR_CFG':raise AssertionError(report)
+        query,unused=functional_proof(case,report['normalization']['source'])
+        if query['status']!='REFUTED_FUNCTIONAL_QF_BV':raise AssertionError(query)
+        witness=query['counterexample'];expected=independent_value(case,witness);native=[]
+        for opt in ('-O0','-O2'):
+            run=native_run(path,case,wrong64,[witness],opt,'wrong64')
+            if run['exit_code'] or run['stderr'] or int(run['stdout'])==expected:raise AssertionError(run)
+            native.append(run)
+        controls.append({'control':'defined_but_wrong_popcount64','request':request,'source':wrong64.read_text(),
+                         'source_sha256':hashlib.sha256(wrong64.read_bytes()).hexdigest(),'analysis':compact_report(report),
+                         'functional':query,'independent_expected':expected,'native':native})
         # A wrong union byte offset is still defined scalar C. Independently
         # refute it rather than trusting the normalizer's output as its own spec.
         case=next(c for c in cases() if c['name']=='union_signed_compare64')
@@ -204,6 +224,9 @@ def main():
             controls.append({'control':'intended_external_abort','case':case['name'],'input':{'a':-2147483648},
                              'wide_domain_request':wide_request,'wide_domain_analysis':compact_report(wide_report),'native':native})
         if args.compare_baseline:
+            run=subprocess.run([sys.executable,str(Path(__file__).resolve()),'--functional-baseline','--database',str(database)],capture_output=True,text=True,timeout=60)
+            if run.returncode:raise AssertionError(run.stderr)
+            functional_baseline.append(json.loads(run.stdout))
             for name in ('clzsi2_positive','ctzsi2_positive'):
                 command=[sys.executable,str(Path(__file__).resolve()),'--baseline-case',name,'--database',str(database)]
                 run=subprocess.run(command,capture_output=True,text=True,timeout=60)
@@ -217,17 +240,17 @@ def main():
         if any(path.glob('*.o')) or any(path.glob('*.d')):raise AssertionError('Compiler frontend wrote compilation-database output artifacts')
     verify_vendor()
     safety_proved=sum(row['analysis']['status'].startswith('PROVED_DEFINED_') for row in rows)
-    functional_proved=sum(row['functional'] is not None and row['functional']['status']=='PROVED_FUNCTIONAL_QF_BV' for row in rows)
+    functional_proved=sum(row['functional'] is not None and row['functional']['status'].startswith('PROVED_FUNCTIONAL_') for row in rows)
     result={'passed':True,'provenance':provenance,'case_count':len(rows),'upstream_functions':len({r['case']['function'] for r in rows}),
             'safety_proved_cases':safety_proved,'safety_unknown_cases':len(rows)-safety_proved,'functional_proved_cases':functional_proved,
             'functional_unknown_cases':[r['case']['name'] for r in rows if r['functional'] is not None and r['functional']['status']=='UNKNOWN'],
             'case_optimization_correspondences':correspondences,'native_comparisons':native_comparisons,'model_comparisons':model_comparisons,
-            'expected_ubsan_failures':4,'intended_abort_runs':4,'wrong_algorithm_native_refutations':4,
-            'baseline':baseline,'cases':rows,'controls':controls,'compiler':subprocess.check_output(['cc','--version'],text=True).splitlines()[0],
+            'expected_ubsan_failures':4,'intended_abort_runs':4,'wrong_algorithm_native_refutations':6,
+            'baseline':baseline,'functional_baseline':functional_baseline,'functional_methods':{name:sum(r['functional'] is not None and r['functional']['status']==name for r in rows) for name in ('PROVED_FUNCTIONAL_QF_BV','PROVED_FUNCTIONAL_BV_CUTS')},'cases':rows,'controls':controls,'compiler':subprocess.check_output(['cc','--version'],text=True).splitlines()[0],
             'source_analysis_process_isolation':True,'source_analysis_retries':0,'scope':'pinned compiler-rt integer pilot; unsupported rows retained; native LP64; not representative whole-C/library coverage'}
     if args.output:
         args.output.parent.mkdir(parents=True,exist_ok=True);args.output.write_text(json.dumps(result,indent=2)+'\n')
-    print(json.dumps({k:v for k,v in result.items() if k not in ('cases','controls','baseline')},indent=2),flush=True)
+    print(json.dumps({k:v for k,v in result.items() if k not in ('cases','controls','baseline','functional_baseline')},indent=2),flush=True)
     return 0
 
 

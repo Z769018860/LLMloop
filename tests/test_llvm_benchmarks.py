@@ -104,7 +104,11 @@ def test_independent_bit_reference_is_separate_from_safety_and_replayable(case,d
     unused,report,unused=analyze_case(case,database)
     query,model=functional_proof(case,report['normalization']['source'])
     if case['name']=='popcount64':
-        assert query['status'] in ('PROVED_FUNCTIONAL_QF_BV','UNKNOWN')
+        assert query['status']=='PROVED_FUNCTIONAL_BV_CUTS',query
+        assert query['total_timeout_ms']==5000
+        for step in query['steps']:
+            solver=z3.SolverFor(step['logic']);solver.set(timeout=5000);solver.from_string(step['refutation_smt2'])
+            assert step['result']=='unsat' and solver.check()==z3.unsat
     else:
         assert query['status']=='PROVED_FUNCTIONAL_QF_BV',query
         solver=z3.SolverFor('QF_BV');solver.set(timeout=5000);solver.from_string(query['refutation_smt2'])

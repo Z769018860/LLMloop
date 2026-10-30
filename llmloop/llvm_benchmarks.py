@@ -157,10 +157,11 @@ def bit_reference(case,model):
     raise SMTGraphError('No universal bit-vector reference for this benchmark')
 
 
-def functional_proof(case,source):
+def functional_proof(case,source,strategy='auto'):
     # A separate typed bit-vector source executor is paired with an independent
     # reference circuit. This is distinct from the primary integer-lift safety
     # certificate and is only requested after original-source safety succeeds.
+    if strategy not in ('auto','direct'):raise SMTGraphError('Functional proof strategy must be auto/direct')
     execution_source=source
     if case['backend']=='calls':
         from .typed_cfg_calls import CallExpansion
@@ -170,25 +171,35 @@ def functional_proof(case,source):
     for key,term in model.engine.variables.items():
         lo,hi=case['bounds'][key];x=term.value;lo=z3.BitVecVal(lo,term.type.bits);hi=z3.BitVecVal(hi,term.type.bits)
         domain.extend([x>=lo,x<=hi] if term.type.signed else [z3.UGE(x,lo),z3.ULE(x,hi)])
-    solver=z3.SolverFor('QF_BV');solver.set(timeout=5000)
-    difference=model.engine.expression.value!=bit_reference(case,model)
+    from .bv_cuts import qfbv_terms,packed_popcount_proof
+    start=time.monotonic();reference=bit_reference(case,model);difference=model.engine.expression.value!=reference
     # The source-safety predicate contains BV2Int terms and belongs to the
     # primary mixed-theory safety proof, not a SolverFor('QF_BV') query.
-    pending=[*domain,difference];seen=set()
-    while pending:
-        term=pending.pop()
-        if term.get_id() in seen:continue
-        seen.add(term.get_id())
-        if term.sort().kind() not in (z3.Z3_BOOL_SORT,z3.Z3_BV_SORT):raise SMTGraphError('Functional reference query is not QF_BV')
-        pending.extend(term.children())
-    solver.add(*domain,difference)
-    start=time.monotonic();answer=solver.check()
-    result={'status':'PROVED_FUNCTIONAL_QF_BV' if answer==z3.unsat else 'REFUTED_FUNCTIONAL_QF_BV' if answer==z3.sat else 'UNKNOWN',
-            'query_result':str(answer),'timeout_ms':5000,'elapsed_seconds':round(time.monotonic()-start,3),
-            'method':'independent bit reference versus separate typed bit-vector execution of normalized source; source safety proved separately',
-            'refutation_smt2':solver.to_smt2(),'source_sha256':hashlib.sha256(source.encode()).hexdigest(),
+    qfbv_terms([*domain,difference]);cut_result=None
+    common={'source_sha256':hashlib.sha256(source.encode()).hexdigest(),
+            'reference_sha256':hashlib.sha256(reference.sexpr().encode()).hexdigest(),
             'execution_source':execution_source,'execution_source_sha256':hashlib.sha256(execution_source.encode()).hexdigest(),
-            'external_calls_assumed_defined':False}
+            'external_calls_assumed_defined':False,'strategy':strategy}
+    if strategy=='auto' and case['oracle']=='popcount' and len(model.engine.variables)==1:
+        word=next(iter(model.engine.variables.values())).value
+        if word.size()==64:
+            remaining=5000-int((time.monotonic()-start)*1000)
+            if remaining>0:cut_result=packed_popcount_proof(model.engine.expression.value,reference,word,remaining)
+            if cut_result is not None and cut_result['status']=='PROVED_FUNCTIONAL_BV_CUTS':
+                return {**cut_result,**common,'elapsed_seconds':round(time.monotonic()-start,6),'total_timeout_ms':5000},model
+    remaining=5000-int((time.monotonic()-start)*1000)
+    if remaining<=0:
+        return {**common,'status':'UNKNOWN','query_result':'unknown','timeout_ms':5000,'total_timeout_ms':5000,
+                'reason':'total functional proof budget exhausted','elapsed_seconds':round(time.monotonic()-start,6),
+                'compositional_attempt':cut_result,'refutation_smt2':None},model
+    solver=z3.SolverFor('QF_BV');solver.set(timeout=remaining)
+    solver.add(*domain,difference)
+    answer=solver.check()
+    result={'status':'PROVED_FUNCTIONAL_QF_BV' if answer==z3.unsat else 'REFUTED_FUNCTIONAL_QF_BV' if answer==z3.sat else 'UNKNOWN',
+            'query_result':str(answer),'timeout_ms':remaining,'total_timeout_ms':5000,'elapsed_seconds':round(time.monotonic()-start,3),
+            'method':'independent bit reference versus separate typed bit-vector execution of normalized source; source safety proved separately',
+            'refutation_smt2':solver.to_smt2(),**common}
+    if cut_result is not None:result['compositional_attempt']=cut_result
     if answer==z3.unknown:result['reason']=solver.reason_unknown()
     if answer==z3.sat:result['counterexample']=model.engine.witness(solver.model())
     return result,model

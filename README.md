@@ -776,6 +776,18 @@ See the [Clang example](examples/clang_list_argument_conversions.c),
 [v0.36 experiments](experiments/v036/report.md). General alias/call/graph and
 complete C/LLVM requirements remain open; no KLEE.
 
+## v0.40: checked compositional bit-vector value proofs
+
+The original compiler-rt 64-bit popcount now has an independent functional
+certificate within one total 5000 ms budget. Every byte identity and bound is
+proved, the remaining word equation is translated exactly, and audited affine
+div/mod normalization exposes a final linear equality. Failed intermediate
+lemmas are not output counterexamples; a whole-query fallback uses only the
+remaining time. Primary C source safety stays separate. See the
+[method](docs/COMPOSITIONAL_BITVECTOR_CERTIFICATES.md),
+[experiment evidence](experiments/v040/report.md), or run
+`python scripts/check_popcount_functional.py --output /tmp/popcount_proof.json`.
+
 ## v0.39: compiler-checked local integer union views
 
 Local 32/64-bit integer unions can now be written through a full-word member and
