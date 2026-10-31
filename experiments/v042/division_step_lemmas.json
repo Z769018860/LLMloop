@@ -1,0 +1,43 @@
+{
+  "provenance": {
+    "upstream_commit": "3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff",
+    "upstream_tag": "llvmorg-18.1.8",
+    "files_verified": 20,
+    "all_match_upstream_git_blobs": true,
+    "manifest_sha256": "3cab1e5a45ed4e18d12d2392e5b2094b8b73283619844ce2156082291ffc19f2",
+    "license": "Apache-2.0 WITH LLVM-exception"
+  },
+  "source_header_sha256": "833906405d418f0f421d6155acc5abf79d9902ed37a44903d01c95ff55d3a010",
+  "source_snippet": "const fixint_t s = (fixint_t)(d - r - 1) >> (N - 1);\n    carry = s & 1;\n    r -= d & s;",
+  "source_snippet_sha256": "d1234505ffe489f7c62f53a4318a3ccdfb7f6d8ccaa6e3d801671d1eb2955bf1",
+  "instantiated_width": 32,
+  "instantiated_scalar_source": "unsigned remainder(unsigned r,unsigned d){int s=(int)(d-r-1) >> 31;return r-(d&s);}unsigned carry(unsigned r,unsigned d){int s=(int)(d-r-1) >> 31;return s&1;}",
+  "queries": [
+    {
+      "phase": "low_divisor_expanded_remainder_bound",
+      "result": "unsat",
+      "replay_result": "unsat",
+      "logic": "QF_BV",
+      "timeout_ms": 5000,
+      "elapsed_seconds": 0.192322,
+      "hypothesis_smt2": "(and (distinct c_integer_d #x00000000)\n     (bvult c_integer_d #x80000000)\n     (bvult ((_ zero_extend 32) c_integer_r)\n            (bvmul ((_ zero_extend 32) c_integer_d) #x0000000000000002)))",
+      "claim_smt2": "(let ((a!1 (bvand (bvashr (bvsub (bvsub c_integer_d c_integer_r) #x00000001)\n                          #x0000001f)\n                  #x00000001))\n      (a!2 (bvand c_integer_d\n                  (bvashr (bvsub (bvsub c_integer_d c_integer_r) #x00000001)\n                          #x0000001f))))\n(let ((a!3 (bvadd ((_ zero_extend 32)\n                    (ite true (bvsub c_integer_r a!2) #x00000000))\n                  (bvmul ((_ zero_extend 32) c_integer_d)\n                         ((_ zero_extend 32) (ite true a!1 #x00000000))))))\n  (and (= (ite true a!1 #x00000000)\n          (ite (bvuge c_integer_r c_integer_d) #x00000001 #x00000000))\n       (= (ite true (bvsub c_integer_r a!2) #x00000000)\n          (ite (bvuge c_integer_r c_integer_d)\n               (bvsub c_integer_r c_integer_d)\n               c_integer_r))\n       (bvult (ite true (bvsub c_integer_r a!2) #x00000000) c_integer_d)\n       (= ((_ zero_extend 32) c_integer_r) a!3))))",
+      "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun c_integer_d () (_ BitVec 32))\n(declare-fun c_integer_r () (_ BitVec 32))\n(assert\n (let ((?x255 ((_ zero_extend 32) c_integer_r)))\n (let (($x121 (bvult ?x255 (bvmul ((_ zero_extend 32) c_integer_d) (_ bv2 64)))))\n (let (($x117 (bvult c_integer_d (_ bv2147483648 32))))\n (let (($x253 (and (distinct c_integer_d (_ bv0 32)) true)))\n (and $x253 $x117 $x121))))))\n(assert\n (let ((?x20 (bvashr (bvsub (bvsub c_integer_d c_integer_r) (_ bv1 32)) (_ bv31 32))))\n(let ((?x222 (ite true (bvand ?x20 (_ bv1 32)) (_ bv0 32))))\n(let ((?x119 ((_ zero_extend 32) c_integer_d)))\n(let ((?x258 (ite true (bvsub c_integer_r (bvand c_integer_d ?x20)) (_ bv0 32))))\n(let ((?x255 ((_ zero_extend 32) c_integer_r)))\n(let (($x115 (bvuge c_integer_r c_integer_d)))\n(let ((?x220 (ite $x115 (bvsub c_integer_r c_integer_d) c_integer_r)))\n(let (($x281 (and (= ?x222 (ite $x115 (_ bv1 32) (_ bv0 32))) (= ?x258 ?x220) (bvult ?x258 c_integer_d) (= ?x255 (bvadd ((_ zero_extend 32) ?x258) (bvmul ?x119 ((_ zero_extend 32) ?x222)))))))\n(not $x281))))))))))\n(check-sat)\n"
+    },
+    {
+      "phase": "high_divisor_high_expanded_remainder",
+      "result": "unsat",
+      "replay_result": "unsat",
+      "logic": "QF_BV",
+      "timeout_ms": 5000,
+      "elapsed_seconds": 0.158136,
+      "hypothesis_smt2": "(and (bvuge c_integer_d #x80000000) (bvuge c_integer_r #x80000000))",
+      "claim_smt2": "(let ((a!1 (bvand (bvashr (bvsub (bvsub c_integer_d c_integer_r) #x00000001)\n                          #x0000001f)\n                  #x00000001))\n      (a!2 (bvand c_integer_d\n                  (bvashr (bvsub (bvsub c_integer_d c_integer_r) #x00000001)\n                          #x0000001f))))\n(let ((a!3 (bvadd ((_ zero_extend 32)\n                    (ite true (bvsub c_integer_r a!2) #x00000000))\n                  (bvmul ((_ zero_extend 32) c_integer_d)\n                         ((_ zero_extend 32) (ite true a!1 #x00000000))))))\n  (and (= (ite true a!1 #x00000000)\n          (ite (bvuge c_integer_r c_integer_d) #x00000001 #x00000000))\n       (= (ite true (bvsub c_integer_r a!2) #x00000000)\n          (ite (bvuge c_integer_r c_integer_d)\n               (bvsub c_integer_r c_integer_d)\n               c_integer_r))\n       (bvult (ite true (bvsub c_integer_r a!2) #x00000000) c_integer_d)\n       (= ((_ zero_extend 32) c_integer_r) a!3))))",
+      "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun c_integer_r () (_ BitVec 32))\n(declare-fun c_integer_d () (_ BitVec 32))\n(assert\n (and (bvuge c_integer_d (_ bv2147483648 32)) (bvuge c_integer_r (_ bv2147483648 32))))\n(assert\n (let ((?x20 (bvashr (bvsub (bvsub c_integer_d c_integer_r) (_ bv1 32)) (_ bv31 32))))\n(let ((?x222 (ite true (bvand ?x20 (_ bv1 32)) (_ bv0 32))))\n(let ((?x119 ((_ zero_extend 32) c_integer_d)))\n(let ((?x258 (ite true (bvsub c_integer_r (bvand c_integer_d ?x20)) (_ bv0 32))))\n(let ((?x255 ((_ zero_extend 32) c_integer_r)))\n(let (($x115 (bvuge c_integer_r c_integer_d)))\n(let ((?x220 (ite $x115 (bvsub c_integer_r c_integer_d) c_integer_r)))\n(let (($x281 (and (= ?x222 (ite $x115 (_ bv1 32) (_ bv0 32))) (= ?x258 ?x220) (bvult ?x258 c_integer_d) (= ?x255 (bvadd ((_ zero_extend 32) ?x258) (bvmul ?x119 ((_ zero_extend 32) ?x222)))))))\n(not $x281))))))))))\n(check-sat)\n"
+    }
+  ],
+  "passed": true,
+  "whole_program_functional_proved": false,
+  "loop_invariant_established": false,
+  "scope": "Exploratory conditional mask/carry/remainder lemmas only. Typed scalar instantiation of the pinned source block is trusted. The preconditions are explicit hypotheses, not proved invariants of the original loop. These lemmas do not resolve the full quotient-equivalence UNKNOWN."
+}
