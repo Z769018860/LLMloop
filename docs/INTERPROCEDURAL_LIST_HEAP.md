@@ -70,11 +70,20 @@ input domain is obtained by renaming the caller's bounds. Repeated arguments
 can lose correlation in the independent builder check, yielding conservative
 UNKNOWN rather than an invalid certificate.
 
-The consumer, when present, takes exactly one literal same-record pointer
-parameter and has the existing zero-initialized accumulator, checked fold/free
-loop and scalar return suffix. It may not retain an alias, allocate, call another
-helper or read other state. Loading next precedes free; the current initialized
-payload is added before freeing; traversal advances to the saved live tail.
+The original consumer contract took exactly one literal same-record pointer
+parameter and had a zero-initialized accumulator, checked payload-add fold/free
+loop and accumulator return. Loading next precedes free; traversal advances to
+the saved live tail. A consumer may not retain an alias, allocate or call another
+helper.
+
+From v0.44, this original consumer restriction is extended by the
+[weighted consumer contract](WEIGHTED_LIST_CONSUMERS.md): the literal owner
+pointer may be followed by up to sixteen pure scalar actuals with eager checks
+and retained parameter conversions. The additive step may combine the current
+initialized payload with immutable scalar inputs; the return may combine its
+accumulator and those inputs. Loading next before free and the unique-owner
+footprint rule remain unchanged. Arbitrary effects and stateful recurrences
+remain unsupported.
 
 The helper's scalar return conversion is explicitly retained before caller
 casts and the caller's return conversion. For example, a `long long` accumulator
@@ -125,6 +134,6 @@ parameters. Native runs cover LP64; Clang-layout/SMT tests also cover ILP32 and
 LLP64. See the [experiment report](../experiments/v032/report.md).
 
 General aliasing ownership, arbitrary external pointer inputs, multiple lists,
-nonidentity scalar arguments, arbitrary consumer effects, indirect/external
+nonidentity builder arguments, arbitrary consumer effects, indirect/external
 calls, recursion, append/cycles/trees/graphs and complete C/LLVM semantics remain
 unsupported. The bounded `calls` backend is unchanged. KLEE is not integrated.

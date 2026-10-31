@@ -2,7 +2,7 @@
 
 This is a source-contract composition rule, not general inlining. Scalar
 builder arguments must be unchanged identifiers of matching integer types;
-map helpers also accept independently checked pure scalar argument expressions.
+map and consuming helpers also accept independently checked pure scalar arguments.
 The returned footprint has one owner, permits a local nonescaping map cursor,
 and is forwarded or consumed by the list fold contract, locally or in a helper.
 """
@@ -117,6 +117,7 @@ class ListHeapCallsProgram:
         parameter_types = {p.name: c_type(p, self.model) for p in params}
         self.parameter_source=', '.join(self.generator.visit(p) for p in params)
         self.argument_checks=[]
+        self.consumer_argument_bindings=[]
         if set(self.bounds)-set(parameter_types):
             raise SMTGraphError('Unknown list call entry parameter bound')
         body = entry.body.block_items or []
@@ -249,12 +250,33 @@ class ListHeapCallsProgram:
                 consumer = self.functions[consumer_name]
                 consumer_params = consumer.decl.type.args.params if consumer.decl.type.args else []
                 consumer_args = value.args.exprs if value.args else []
-                if len(consumer_params) != 1 or not isinstance(consumer_params[0], c_ast.Decl) or pointer_tag(consumer_params[0]) != self.builder.tag or len(consumer_args) != 1 or not identifier(consumer_args[0], head.name):
-                    raise SMTGraphError('List consumer must take exactly the unique owned list head')
+                if not consumer_params or not isinstance(consumer_params[0], c_ast.Decl) or pointer_tag(consumer_params[0]) != self.builder.tag or len(consumer_args) != len(consumer_params) or not identifier(consumer_args[0], head.name):
+                    raise SMTGraphError('List consumer must take the unique owned list head followed by immutable scalar arguments')
+                if len(consumer_params)>17:
+                    raise SMTGraphError('Consumer helper scalar argument budget is sixteen per call')
                 return_type = c_type(consumer.decl, self.model)
                 mapping = self.local_names(consumer)
                 mapping[consumer_params[0].name] = head.name
-                suffix = rename(consumer.body, mapping).block_items or []
+                bindings={}
+                for formal,actual in zip(consumer_params[1:],consumer_args[1:]):
+                    if not isinstance(formal,c_ast.Decl) or not formal.name:
+                        raise SMTGraphError('Named integer consumer helper parameters required')
+                    formal_type=c_type(formal,self.model)
+                    pure_scalar_argument(actual,parameter_types,self.model)
+                    fresh='__list_consumer_argument_'+formal.name
+                    while fresh in self.used:
+                        fresh+='_'
+                    self.used.add(fresh);mapping[formal.name]=fresh
+                    converted=c_parser.CParser().parse('int x(void){return ('+formal_type.name+')0;}').ext[0].body.block_items[0].expr
+                    converted.expr=copy.deepcopy(actual)
+                    bindings[fresh]=converted
+                    self.consumer_argument_bindings.append(self.check_argument(consumer_name,formal.name,formal_type,actual,abi,char_signed,max_paths,kind='consumer'))
+                renamed=rename(consumer.body,mapping)
+                estimate=len(self.generator.visit(renamed))+sum(
+                    len(self.generator.visit(expression))*sum(isinstance(n,c_ast.ID) and n.name==formal for n in walk(renamed))
+                    for formal,expression in bindings.items())
+                if estimate>100000:raise SMTGraphError('Bound consumer argument substitution exceeds the source budget')
+                suffix = bind_expressions(renamed,bindings).block_items or []
                 if len(suffix) != 3 or not isinstance(suffix[-1], c_ast.Return):
                     raise SMTGraphError('List consumer must have the checked accumulator, fold/free and return suffix')
                 # Reify the callee's return conversion before any caller casts
@@ -272,6 +294,11 @@ class ListHeapCallsProgram:
                 used_functions.add(consumer_name)
         if used_functions != set(self.functions):
             raise SMTGraphError('Every normalized list call helper must participate in the checked ownership chain')
+        # A composed witness is justified only after all eager actuals are
+        # proved defined. In particular, do not feed a rejected division/shift
+        # to automatic trajectory discovery and lose its source diagnostic.
+        if any(check['proof']['status']!='PROVED_DEFINED_TYPED_C_CFG_HEAP' for check in self.argument_checks):
+            return
         mapping = self.local_names(builder)
         mapping.update(arguments)
         mapping[self.builder.head] = head.name
@@ -292,7 +319,7 @@ class ListHeapCallsProgram:
             max_paths=max_paths, loop_summaries=loop_summaries)
         self.contract = {'method':'checked fresh-list ownership transfer and scalar-preserving source-contract composition',
             'builder':builder_name, 'consumer':self.consumer_name or 'entry suffix',
-            'argument_bindings':arguments, 'argument_conversions':'builder identity only; map parameter assignment conversions checked separately',
+            'argument_bindings':arguments, 'argument_conversions':'builder identity only; map and consumer parameter assignment conversions checked separately',
             'builder_return_contract_checked':True, 'unique_owner_no_external_aliases':True,
             'allocation_failure_prefix_transferred':True, 'builder_failure_return_becomes_loop_exit':failure_return,
             'callee_then_caller_return_conversions_preserved':self.consumer_name is not None,
@@ -301,13 +328,15 @@ class ListHeapCallsProgram:
             'payload_map_helpers':self.map_helpers,'heap_helpers_in_source_order':self.heap_helpers,
             'map_scalar_arguments':'pure integer expressions; callee parameter conversions retained',
             'map_scalar_argument_budget_per_call':16,
+            'consumer_scalar_argument_bindings':self.consumer_argument_bindings,
+            'consumer_scalar_argument_budget_per_call':16,
             'eager_argument_evaluation_checked_even_for_empty_chain':True,
             'argument_checks':self.argument_checks,
             'builder_payload_map_stages':len(self.builder.maps),
             'composed_source_sha256':hashlib.sha256(self.composed_source.encode()).hexdigest(),
             'general_interprocedural_heap_analysis':False}
 
-    def check_argument(self, callee, formal, formal_type, actual, abi, char_signed, max_paths):
+    def check_argument(self, callee, formal, formal_type, actual, abi, char_signed, max_paths, kind='map'):
         # Calls evaluate every actual before entering the helper, including
         # unused formals and an empty chain. Per-node substitution alone would
         # erase undefined behavior in those cases. Check the eager expression
@@ -321,6 +350,7 @@ class ListHeapCallsProgram:
         source=formal_type.name+' '+name+'('+self.parameter_source+'){'+formal_type.name+' '+temporary+'='+self.generator.visit(actual)+';return '+temporary+';}'
         proof=TypedCFGHeap(source,function=name,parameter_bounds=self.bounds,abi=abi,char_signed=char_signed,max_paths=max_paths).report()
         contract={'callee':callee,'formal':formal,'actual_expression':self.generator.visit(actual),
+                  'helper_kind':kind,
                   'parameter_assignment_type':formal_type.name,'eager_evaluation_before_helper':True,
                   'independent_of_chain_length_and_formal_use':True,'pure_no_memory_or_effects':True,
                   'converted_value_smt2':proof.get('return_smt2'),
@@ -356,7 +386,7 @@ class ListHeapCallsProgram:
     def report(self, inputs=None, allocation_count=None):
         for contract in self.argument_checks:
             if contract['proof']['status']!='PROVED_DEFINED_TYPED_C_CFG_HEAP':
-                return {'status':'UNKNOWN','reason':'List map call argument source proof failed',
+                return {'status':'UNKNOWN','reason':'List '+contract['helper_kind']+' call argument source proof failed',
                         'c_overflow_verified':False,'memory_safety_verified':False,'termination_proved':False,
                         'source_proof':contract}
         builder_inputs = None if inputs is None else {formal:inputs[actual] for formal, actual in self.arguments.items() if actual in inputs}
@@ -372,5 +402,5 @@ class ListHeapCallsProgram:
         result['status'] = 'PROVED_DEFINED_TYPED_C_LIST_CALLS'
         result['interprocedural_heap_summary'] = True
         result['certificate']['composition'] = {**self.contract,'builder_proof':builder}
-        result['scope'] = 'one fresh prepend builder transfers its footprint through checked reversal and nonescaping borrowed pointwise-map stages with eagerly checked pure scalar arguments and retained parameter conversions; forwarding or additive fold/free; no arbitrary aliases, calls, recursion or shapes'
+        result['scope'] = 'one fresh prepend builder transfers its footprint through checked reversal and nonescaping borrowed pointwise-map stages; map/consumer pure scalar arguments are eagerly checked with retained parameter conversions; forwarding or pure additive fold/free and scalar return; no arbitrary aliases, calls, recursion or shapes'
         return result

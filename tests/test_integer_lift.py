@@ -2,6 +2,7 @@ import pytest
 import z3
 from llmloop.integer_lift import IntegerLift
 from llmloop.c_integers import UndefinedInteger
+from llmloop.symbolic_integers import TypedTerm
 
 
 def test_exact_lift_matches_reference_kernel_across_abis_and_types():
@@ -48,3 +49,24 @@ def test_lazy_guards_and_assignment_conversions():
         engine.nodes=0;source=engine.lower({'value':-7,'type':'int'})
         result=engine.convert(source,engine.abi.types[target])
         assert z3.simplify(result.value).as_long()==engine.abi.cast(engine.abi.value(-7),target).value
+
+
+@pytest.mark.parametrize('abi',['LP64','ILP32','LLP64'])
+@pytest.mark.parametrize('char_signed',[False,True])
+def test_conversion_boundaries_match_concrete_abi_and_retain_undefinedness(abi,char_signed):
+    engine=IntegerLift(abi,char_signed)
+    names=['_Bool','char','signed char','unsigned char','int','unsigned int','long','unsigned long','long long','unsigned long long']
+    for source in names:
+        source_type=engine.abi.types[source]
+        values={source_type.minimum,source_type.maximum,0,1,source_type.maximum-1}
+        if source_type.minimum<0:values|={-1,source_type.minimum+1}
+        for target in names:
+            for value in values:
+                original=engine.abi.value(value,source)
+                term=TypedTerm(z3.IntVal(original.value),source_type,z3.BoolVal(True))
+                result=engine.convert(term,engine.abi.types[target])
+                assert z3.simplify(result.value).as_long()==engine.abi.cast(original,target).value,(abi,char_signed,source,target,value)
+    # An explicit value-preserving cast must retain earlier signed overflow.
+    engine.nodes=0
+    invalid=engine.lower({'cast':'long long','expr':{'op':'+','args':[{'literal':'2147483647'},{'literal':'1'}]}})
+    assert z3.is_false(z3.simplify(invalid.safe))

@@ -776,6 +776,21 @@ See the [Clang example](examples/clang_list_argument_conversions.c),
 [v0.36 experiments](experiments/v036/report.md). General alias/call/graph and
 complete C/LLVM requirements remain open; no KLEE.
 
+## v0.44: checked scalar consumer arguments and weighted list folds
+
+Owned-list consumers now accept up to sixteen eagerly checked pure scalar
+arguments with actual C parameter conversions. The checked additive step retains
+the complete current-payload/scalar expression, and the scalar return retains
+its operations and callee/caller conversions. Empty chains and allocation
+failure cannot erase undefined unused arguments or invalid return expressions.
+Value-preserving integer casts avoid redundant modular reductions while keeping
+the original safety predicates. General builder arguments, aliases, arbitrary
+stateful consumers and complete C/LLVM remain open.
+
+See the [contract and runnable example](docs/WEIGHTED_LIST_CONSUMERS.md),
+[v0.44 evidence](experiments/v044/report.md), or run
+`python scripts/check_list_consumers_native.py --output /tmp/consumers.json`.
+
 ## v0.43: source-bound unsigned division functional induction
 
 The original unsigned-32 divider now has an independent functional induction

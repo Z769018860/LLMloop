@@ -23,6 +23,11 @@ class IntegerLift:
     def convert(self, term, target):
         value = term.value
         if target.name == '_Bool':value = z3.If(value != 0,z3.IntVal(1),z3.IntVal(0))
+        elif target.minimum <= term.type.minimum and target.maximum >= term.type.maximum:
+            # Just as in promotions/usual arithmetic conversions, a defined
+            # value already representable in the target needs no reduction.
+            # Retain term.safe: widening must never repair earlier source UB.
+            pass
         elif target.signed:value = (value-target.minimum) % (1 << target.bits)+target.minimum
         else:value = value % (1 << target.bits)
         value=z3.simplify(value)

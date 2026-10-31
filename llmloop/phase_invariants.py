@@ -54,6 +54,12 @@ def exact_term(expr, env):
         return result
     if expr.func == s.Mod and expr.args[1].is_Integer and expr.args[1] != 0:
         a, b = args
+        # Positive integral Mod has exactly Z3's Euclidean remainder semantics.
+        # Keep the same atom as typed unsigned conversions instead of forcing
+        # nonlinear users to rediscover a-b*floor(a/b) under multiplication.
+        # Negative divisors and nonintegral dividends retain the floor rule.
+        if z3.is_int(a) and expr.args[1] > 0:
+            return a % b
         quotient = z3.ToInt(z3.ToReal(a) / z3.ToReal(b)) if z3.is_int(a) else z3.ToInt(a / b)
         return a - b * quotient
     raise SMTGraphError('Unsupported exact phase arithmetic: ' + str(expr))

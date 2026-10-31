@@ -97,6 +97,14 @@ def test_consumer_explicit_return_cast_then_implicit_return_then_caller_cast():
     assert all(cast in result['certificate']['fold_source'] for cast in ('(signed char)','(unsigned char)','(unsigned short)'))
 
 
+def test_checked_scalar_return_contract_preserves_constant_offset():
+    # This was rejected by the former accumulator-only return contract.
+    result = ListHeapCallsProgram(SOURCE.replace('return total;', 'return total+1;'),
+        function='entry', parameter_bounds={'n':[0,100]}).report({'n':100},17)
+    assert result['status']=='PROVED_DEFINED_TYPED_C_LIST_CALLS',result
+    assert result['evaluation']['value']==137
+
+
 def test_alpha_renaming_preserves_field_names_and_avoids_all_frames():
     source = SOURCE.replace('entry(int n)', 'entry(int n,int i,int total,int __list_call_p)').replace('p->value=i;', 'p->value=i;')
     source = source.replace('long long total=0;', 'long long value=0;').replace('total+=head->value;', 'value+=head->value;').replace('return total;', 'return value;')
@@ -124,7 +132,6 @@ def test_alpha_renaming_preserves_field_names_and_avoids_all_frames():
     ('consume(struct Node *head)', 'consume(struct Node **head)'),
     ('long long consume(', '_Noreturn long long consume('),
     ('entry(int n)', 'entry(const int n)'),
-    ('return total;', 'return total+1;'),
 ])
 def test_unchecked_calls_aliases_effects_or_shape_mutations_are_rejected(old,new):
     with pytest.raises(SMTGraphError):

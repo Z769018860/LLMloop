@@ -93,6 +93,26 @@ def nonnull(node, name):
         identifier(node.left,name) and _lit(node.right)==0 or identifier(node.right,name) and _lit(node.left)==0)
 
 
+def check_fold_value(node, parameters, model, head=None, field=None):
+    """Only immutable scalar inputs and, in a step, the live payload may be read."""
+    if head is not None and member(node, head, field):return
+    if isinstance(node, c_ast.ID) and node.name in parameters:return
+    if isinstance(node, c_ast.Constant) and node.type != 'string':return
+    if isinstance(node, c_ast.BinaryOp):
+        check_fold_value(node.left, parameters, model, head, field)
+        check_fold_value(node.right, parameters, model, head, field);return
+    if isinstance(node, c_ast.UnaryOp) and node.op in ('+', '-', '!', '~'):
+        check_fold_value(node.expr, parameters, model, head, field);return
+    if isinstance(node, c_ast.TernaryOp):
+        for child in (node.cond, node.iftrue, node.iffalse):
+            check_fold_value(child, parameters, model, head, field)
+        return
+    if isinstance(node, c_ast.Cast):
+        c_type(node.to_type, model)
+        check_fold_value(node.expr, parameters, model, head, field);return
+    raise SMTGraphError('List fold expressions require immutable scalar parameters and the current initialized payload; return may also read the accumulator')
+
+
 def check_list_reversal(statements, head, tag, link):
     """Recognize exactly one owned-chain reversal, with no hidden effects."""
     if len(statements) != 3:
@@ -506,25 +526,24 @@ class ListHeapProgram:
         saved, addition, release, advance = statements
         if not isinstance(saved, c_ast.Decl) or pointer_tag(saved) != self.tag or not member(saved.init, self.head, self.link):
             raise SMTGraphError('Next link must be saved before free')
-        value = addition.rvalue if isinstance(addition, c_ast.Assignment) else None
-        while isinstance(value, c_ast.Cast):
-            c_type(value.to_type, self.model)
-            value = value.expr
-        if not isinstance(addition, c_ast.Assignment) or addition.op != '+=' or not identifier(addition.lvalue, accumulator.name) or not member(value, self.head, self.value):
-            raise SMTGraphError('List fold must add the current initialized payload')
+        if not isinstance(addition, c_ast.Assignment) or addition.op != '+=' or not identifier(addition.lvalue, accumulator.name):
+            raise SMTGraphError('List fold must add a pure current-payload/scalar expression to its accumulator')
+        check_fold_value(addition.rvalue, self.parameters, self.model, self.head, self.value)
         self.fold_addition = copy.deepcopy(addition)
         args = release.args.exprs if isinstance(release, c_ast.FuncCall) and release.args else []
         if not isinstance(release, c_ast.FuncCall) or not identifier(release.name, 'free') or len(args) != 1 or not identifier(args[0], self.head):
             raise SMTGraphError('List fold must free exactly the current head')
         if not isinstance(advance, c_ast.Assignment) or advance.op != '=' or not identifier(advance.lvalue, self.head) or not identifier(advance.rvalue, saved.name):
             raise SMTGraphError('List head must advance to the saved live tail')
-        value = returned.expr if isinstance(returned, c_ast.Return) else None
-        while isinstance(value, c_ast.Cast):
-            c_type(value.to_type, self.model)
-            value = value.expr
-        if not isinstance(returned, c_ast.Return) or not identifier(value, accumulator.name):
-            raise SMTGraphError('List fold must return its accumulator')
+        if not isinstance(returned, c_ast.Return):
+            raise SMTGraphError('List fold must return a checked scalar expression')
+        check_fold_value(returned.expr, set(self.parameters) | {accumulator.name}, self.model)
         self.fold_return = copy.deepcopy(returned.expr)
+        self.fold_contract = {'step_expression':self.generator.visit(addition.rvalue),
+            'return_expression':self.generator.visit(returned.expr),
+            'pure_current_payload_and_immutable_scalars_only':True,
+            'all_original_operations_and_conversions_retained':True,
+            'return_checked_even_for_empty_chain':True}
 
     def make_fold(self, max_paths, summaries):
         self.length_name, scan, temporary = self.fresh('length'), self.fresh('scan'), self.fresh('loaded')
@@ -545,10 +564,14 @@ class ListHeapProgram:
         name = self.fresh('fold_check')
         addition = copy.deepcopy(self.fold_addition)
         def load(node):
-            if isinstance(node, c_ast.Cast):
-                node.expr = load(node.expr)
-                return node
-            return c_ast.ID(temporary)
+            if member(node,self.head,self.value):return c_ast.ID(temporary)
+            result=copy.deepcopy(node)
+            for slot in result.__slots__:
+                if slot in ('coord','__weakref__'):continue
+                value=getattr(result,slot)
+                if isinstance(value,c_ast.Node):setattr(result,slot,load(value))
+                elif isinstance(value,list):setattr(result,slot,[load(v) if isinstance(v,c_ast.Node) else v for v in value])
+            return result
         addition.rvalue = load(addition.rvalue)
         self.fold_source = self.return_type.name+' '+name+'('+self.parameter_source+', int '+self.length_name+'){'+self.generator.visit(self.accumulator)+';for(int '+scan+'=0;'+scan+'<'+self.length_name+';'+scan+'++){'+self.payload_type_source+' '+temporary+'='+expression+';'+self.generator.visit(addition)+';}return '+self.generator.visit(self.fold_return)+';}'
         limits = self.bounds.get(self.bound, [None,None])
@@ -594,6 +617,7 @@ class ListHeapProgram:
                 'shape':self.shape,'reversals':self.reversals,'heap_stages':self.stages,'final_traversal':self.traversal,
                 'payload_source':self.build_source,'payload_proof':self.build_report,
                 'fold_source':self.fold_source,'fold_proof':fold,
+                'fold_expression_contract':self.fold_contract if fold else None,
                 'fold_domain_overapproximates_all_failure_prefix_lengths':True if fold else None},
             'scope':'fresh acyclic two-field prepend lists with failure-prefix exits; checked in-place reversals, pure pointwise payload maps and optional additive fold/free; no external aliases or arbitrary heap updates'}
         if inputs is None:
