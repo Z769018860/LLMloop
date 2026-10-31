@@ -93,7 +93,11 @@ class IntegerLift:
             else:
                 shifts=[(shift,guard) for shift,guard in choices.items() if 0<=shift<a.type.bits]
             for shift,guard in shifts:
-                term=x*(1 << shift) if op == '<<' else x/(1 << shift)
+                if op == '<<':term=x*(1 << shift)
+                elif a.type.signed and shift==a.type.bits-1:
+                    # Arithmetic sign-bit shift on a represented signed word.
+                    term=z3.If(x<0,z3.IntVal(-1),z3.IntVal(0))
+                else:term=x/(1 << shift)
                 value=z3.If(guard,term,value)
             if op == '<<' and a.type.signed:safe=z3.And(safe,x>=0,value<=a.type.maximum)
             if not a.type.signed:value=value % (1 << a.type.bits)
@@ -112,6 +116,19 @@ class IntegerLift:
             value=quotient if op == '/' else x-quotient*y
             return TypedTerm(z3.simplify(value),t,safe)
         if op in ('&','|','^'):
+            # Exact zero/all-ones identities. Both original operands' safety
+            # predicates remain, including an undefined value masked to zero.
+            full=-1 if t.signed else (1 << t.bits)-1
+            for value,mask in ((x,y),(y,x)):
+                masks=integer_choices(mask,max_cases=4)
+                if masks and set(masks)<={0,full}:
+                    result=z3.IntVal(0)
+                    for number,guard in masks.items():
+                        if op=='^':part=value if number==0 else -value-1 if t.signed else full-value
+                        elif op=='&':part=z3.IntVal(0) if number==0 else value
+                        else:part=value if number==0 else z3.IntVal(full)
+                        result=z3.If(guard,part,result)
+                    return TypedTerm(z3.simplify(result),t,safe)
             left,right=z3.Int2BV(x,t.bits),z3.Int2BV(y,t.bits)
             bits=left&right if op == '&' else left|right if op == '|' else left^right
             return TypedTerm(z3.BV2Int(bits,is_signed=t.signed),t,safe)

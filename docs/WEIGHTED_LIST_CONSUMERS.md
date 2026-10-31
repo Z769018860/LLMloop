@@ -46,7 +46,12 @@ therefore retain the existing typed semantics. The implementation choice for
 out-of-range signed conversion is two's-complement modular conversion. A
 strictly wider containing target range needs no modular reduction in the list-fold
 integer profile; this representation change retains the original safety predicate.
-Other backends keep the original v0.43 integer converter unchanged.
+Other backends keep the original v0.43 conversion function unchanged.
+Arithmetic sign-bit right shifts and zero/all-ones bit masks additionally use
+exact word identities throughout the integer lift. All original shift bounds
+and eager operand safety predicates remain. This makes the original signed-abs
+idiom a linear integer expression rather than an avoidable mixed-theory query;
+INT_MIN and reachable abort frontiers remain independently rejected.
 It cannot repair earlier undefined arithmetic or remove a narrowing conversion.
 List fold candidates use the same Euclidean remainder expression as typed C
 conversions for positive integral `Mod`. This exact normalization avoids forcing
