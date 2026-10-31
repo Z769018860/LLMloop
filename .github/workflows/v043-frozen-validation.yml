@@ -1,0 +1,81 @@
+name: v0.43 frozen validation
+on:
+  push:
+    branches: [codex/v043-division-induction]
+    paths: [.github/workflows/v043-frozen-validation.yml]
+permissions:
+  contents: write
+concurrency:
+  group: llmloop-v043-frozen-validation
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install matching Clang and Python dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y clang-18
+          python -m pip install --no-build-isolation -e '.[test,smt]'
+          mkdir -p /tmp/llmloop-ci-bin
+          ln -s "$(command -v clang-18)" /tmp/llmloop-ci-bin/clang
+          echo /tmp/llmloop-ci-bin >> "$GITHUB_PATH"
+      - name: Run the complete frozen-source regression and experiments
+        run: python scripts/run_v043_experiments.py
+      - name: Bind successful evidence to its CI source identity
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json,os,subprocess
+          out=Path('experiments/v043')
+          r=json.loads((out/'results.json').read_text())
+          m=json.loads((out/'source_manifest.json').read_text())
+          assert r['passed'] and r['full_pytest']['passed']==1812 and r['full_pytest']['skipped']==0
+          assert r['github_actions_used'] is True
+          for p,h in m['sha256'].items():assert hashlib.sha256(Path(p).read_bytes()).hexdigest()==h,p
+          for p,h in r['evidence_sha256'].items():assert hashlib.sha256((out/p).read_bytes()).hexdigest()==h,p
+          head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          tree=subprocess.check_output(['git','rev-parse','HEAD^{tree}'],text=True).strip()
+          assert head==os.environ['GITHUB_SHA']==r['tested_commit']
+          checkpoint='8a17bfca4931b649a5be5a3238a89f8b91f01a81'
+          changed=subprocess.check_output(['git','diff','--name-only',checkpoint,head],text=True).splitlines()
+          assert changed==['.github/workflows/v043-frozen-validation.yml'],changed
+          run_url='https://github.com/'+os.environ['GITHUB_REPOSITORY']+'/actions/runs/'+os.environ['GITHUB_RUN_ID']
+          ci={'validation_origin':'One GitHub Actions fallback run after the primary execution environment became unavailable','run_url':run_url,'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'validation_commit':head,'validation_tree':tree,'code_checkpoint':checkpoint,'code_tree':'53bc07266ad6cba480f81cf0eae3345de7617626','targeted_local_commit':'c68969c5e677096a80cc3d955096e43e3bde0227','only_validation_workflow_added':True,'frozen_paths_verified':len(m['sha256']),'passed':True}
+          (out/'validation_ci.json').write_text(json.dumps(ci,indent=2)+'\n')
+          r['validation_origin']=ci['validation_origin']
+          r['source_identity']=dict(ci)
+          r['source_identity']['evidence_only_files_added']=26
+          r['bit_builtin_worker_isolation_scope']='One fresh worker per builtin/ABI case; positive source proof, helper query/replay and exact-zero source control share that case worker; no retries.'
+          p=out/'report.md'
+          s=p.read_text()
+          s+='\nValidation origin: **one GitHub Actions fallback run**, because the primary execution environment became unavailable before the full frozen run completed. Run: '+run_url+'. No full local validation of this final checkpoint is claimed. The 175 related tests and 3 signedness checks passed locally before environment loss; the two raw signedness cases overlap that targeted test set.\n'
+          s+='\nSource identity audit: targeted local commit `c68969c5e677096a80cc3d955096e43e3bde0227` exactly matches code checkpoint `'+checkpoint+'` at tree `53bc07266ad6cba480f81cf0eae3345de7617626`. Validation commit `'+head+'` adds only the isolated validation workflow. All '+str(len(m['sha256']))+' frozen paths, including that workflow, were checked unchanged after validation. The release adds only 26 evidence files to the validated tree. Ordinary-char signedness is inherited from the actual primary ABI; native signed/unsigned-char counterexamples are included in the full regression. Bit-builtin worker isolation is per builtin/ABI case, with no retries.\n'
+          p.write_text(s)
+          r['evidence_sha256']['validation_ci.json']=hashlib.sha256((out/'validation_ci.json').read_bytes()).hexdigest()
+          r['evidence_sha256']['report.md']=hashlib.sha256(p.read_bytes()).hexdigest()
+          (out/'results.json').write_text(json.dumps(r,indent=2)+'\n')
+          for p,h in r['evidence_sha256'].items():assert hashlib.sha256((out/p).read_bytes()).hexdigest()==h,p
+          assert len(list(out.iterdir()))==26
+          print(json.dumps({'passed':True,'full_tests':1812,'skipped':0,'frozen_paths':len(m['sha256']),'run_url':run_url,'validation_tree':tree}))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v043-frozen-evidence
+          path: experiments/v043/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Save validated evidence on the feature branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add experiments/v043
+          git commit -m 'Record verified v0.43 fallback CI evidence [skip ci]'
+          git push origin HEAD:refs/heads/codex/v043-division-induction
