@@ -1,0 +1,366 @@
+{
+  "base_commit": "63fbc1eaf9b2fef6a2fcce2440fb00286cda22c4",
+  "tested_commit": "1af180038a82d5d0cc18c99641882071feffd22e",
+  "tested_tree": "5fea8ea2d9bfab42ef4e8f30a046806e0084fc0e",
+  "validation_origin": "GitHub Actions fallback after primary execution environment loss; frozen-source pytest workers, Clang and native UBSan",
+  "environment": {
+    "python": "3.12.15",
+    "platform": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39",
+    "pytest": "9.1.1",
+    "sympy": "1.14.0",
+    "z3": "5.3.3",
+    "pycparser": "3.12",
+    "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+    "native_compiler": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0"
+  },
+  "full_pytest": {
+    "command": [
+      "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "--forked"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 730.361,
+    "log": "pytest.txt",
+    "passed": 1901,
+    "skipped": 0,
+    "expected_passed": 1901
+  },
+  "new_tests": 89,
+  "previous_accumulator_only_rejection_replaced_by_checked_offset_return": true,
+  "commands": {
+    "full_pytest": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--forked"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 730.361,
+      "log": "pytest.txt",
+      "passed": 1901,
+      "skipped": 0,
+      "expected_passed": 1901
+    },
+    "consumers": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "scripts/check_list_consumers_native.py",
+        "--output",
+        "experiments/v044/consumers.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 31.047,
+      "log": "consumers.txt"
+    },
+    "upstream": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "scripts/check_llvm_builtins.py",
+        "--compare-baseline",
+        "--output",
+        "experiments/v044/upstream.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 76.184,
+      "log": "upstream.txt"
+    },
+    "bit_builtins": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "scripts/check_clang_bit_builtins.py",
+        "--output",
+        "experiments/v044/bit_builtins.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 31.196,
+      "log": "bit_builtins.txt"
+    },
+    "division": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "scripts/check_division_bv.py",
+        "--strategy",
+        "induction",
+        "--compare-baseline",
+        "--controls",
+        "--output",
+        "experiments/v044/division.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 139.473,
+      "log": "division.txt"
+    },
+    "arguments": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "scripts/check_list_arguments_native.py",
+        "--output",
+        "experiments/v044/arguments.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 31.55,
+      "log": "arguments.txt"
+    },
+    "payload_maps": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "scripts/check_list_payload_maps_native.py",
+        "--output",
+        "experiments/v044/payload_maps.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 18.711,
+      "log": "payload_maps.txt"
+    },
+    "reversal": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "scripts/check_list_reversal_native.py",
+        "--output",
+        "experiments/v044/reversal.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 15.504,
+      "log": "reversal.txt"
+    },
+    "consumer_cli": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "-m",
+        "llmloop.symbolic_cli",
+        "examples/clang_list_weighted_consumer.c",
+        "--c-clang-proof",
+        "--function",
+        "entry",
+        "--clang-proof-config",
+        "{\"backend\": \"list_calls\", \"allocation_count\": 100, \"loop_summaries\": {\"__list_scan\": {\"__list_call_total\": \"((delta+260)%256)*(__list_scan*(2*__list_length-__list_scan-1)//2)+__list_scan*(delta-1)\"}}}",
+        "--parameter-bounds",
+        "{\"n\":[0,1000000],\"delta\":[0,2]}",
+        "--inputs",
+        "{\"n\":1000000,\"delta\":2}"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.067,
+      "log": "consumer_cli.json"
+    }
+  },
+  "checks": {
+    "full_pytest": true,
+    "consumers": true,
+    "upstream": true,
+    "popcount_baseline_identity": true,
+    "bit_builtins": true,
+    "division": true,
+    "arguments": true,
+    "payload_maps": true,
+    "reversal": true,
+    "consumer_cli": true,
+    "frozen_source_unchanged": true
+  },
+  "consumers": {
+    "case_count": 10,
+    "correspondence_groups": 1800,
+    "native_output_matches": 5400,
+    "model_matches": 900,
+    "expected_ubsan_failures": 20
+  },
+  "legacy_native": {
+    "arguments": {
+      "correspondences": 1620,
+      "expected_ubsan_failures": 12
+    },
+    "payload_maps": {
+      "correspondences": 510,
+      "expected_ubsan_failures": 8
+    },
+    "reversal": {
+      "correspondences": 372,
+      "expected_ubsan_failures": 4
+    }
+  },
+  "upstream": {
+    "case_count": 15,
+    "upstream_functions": 13,
+    "safety_proved_cases": 14,
+    "safety_unknown_cases": 1,
+    "functional_proved_cases": 14,
+    "native_comparisons": 14848,
+    "model_comparisons": 1792,
+    "expected_ubsan_failures": 4,
+    "intended_abort_runs": 4,
+    "wrong_algorithm_native_refutations": 6
+  },
+  "bit_builtins": {
+    "source_proved_cases": 18,
+    "functional_proved_cases": 18,
+    "zero_source_refutations": 18,
+    "native_comparisons": 6144,
+    "expected_zero_ubsan_failures": 24,
+    "wrong_count_functional_refutations": 6
+  },
+  "division": {
+    "source_status": "PROVED_DEFINED_CLANG_BV_CALLS",
+    "functional_status": "PROVED_FUNCTIONAL_DIVISION_INDUCTION",
+    "functional_elapsed_seconds": 7.183289,
+    "total_functional_timeout_ms": 30000,
+    "direct_baseline_status": "UNKNOWN",
+    "functional_replay": {
+      "queries": 40,
+      "all_unsat": true,
+      "all_replayed": true,
+      "arithmetic_audits": 1,
+      "counter_cases": 31
+    },
+    "native_comparisons": 1024,
+    "model_comparisons": 64,
+    "expected_ubsan_failures": 2,
+    "wrong_algorithm_native_refutations": 2
+  },
+  "retained_pilot_domains": 15,
+  "source_domains_proved_with_explicit_backends": 15,
+  "functional_domains_proved_with_explicit_strategies": 15,
+  "frozen_manifest_paths": 595,
+  "frozen_source_unchanged": true,
+  "github_actions_used": true,
+  "ci_runs_used": 5,
+  "klee_used": false,
+  "complete_c_support": false,
+  "passed": true,
+  "source_identity": {
+    "local_tested_commit": "1af180038a82d5d0cc18c99641882071feffd22e",
+    "local_tested_tree": "5fea8ea2d9bfab42ef4e8f30a046806e0084fc0e",
+    "published_source_commit": "1af180038a82d5d0cc18c99641882071feffd22e",
+    "published_source_tree": "5fea8ea2d9bfab42ef4e8f30a046806e0084fc0e",
+    "git_tree_equal": true,
+    "publication": "GitHub connector; commit metadata may differ but every tracked path is identical"
+  },
+  "prior_prevalidation_attempt": {
+    "source_commit": "be082f60ec8a2660ace80c685c09683f0085f818",
+    "source_tree": "b280087d4bc63dec48b71b22355115beb2c2d4ae",
+    "remote_code_checkpoint": "d4129541b64647f12eeeb6cac96b795c8054f95b",
+    "completed": false,
+    "interrupted_after_two_observed_old_test_failures": true,
+    "failed_cases": [
+      "test_rotation_keeps_signed_source_semantics_for_each_abi[ILP32]",
+      "test_rotation_keeps_signed_source_semantics_for_each_abi[LLP64]"
+    ],
+    "standalone_rotation_control": "3 passed; no passing full regression claimed",
+    "failure_details_unavailable": "Suite interrupted before final failure traceback; no cause/status inferred"
+  },
+  "evidence_sha256": {
+    "arguments.json": "59e3ea5f4f43f99f245c92f1cfc5f1062a6ef5bafdb0198a915f66b7ed96c775",
+    "arguments.txt": "7446193b747bde45d24a4f6b0f6a252f45684612e758593aeaa4f964f81b7933",
+    "bit_builtins.json": "4f097579715d789a06f78f2133dc7d0b919d83ef13361b8ad4d0ec3941e2494f",
+    "bit_builtins.txt": "bb52f611cd30515dd5654508bbf581ea8cacd9ede6f268fb702dfe7335639405",
+    "consumer_cli.json": "6f0411128f61b32749e347401512282ac12f72de76a93fc34d80c68851222d44",
+    "consumers.json": "ebd85002b4307c7b2bd900a3d15126dc7c465573fa337cc9e6950814b07fbc53",
+    "consumers.txt": "e191a47c16586a8d886ecb966d233b48a72eb0b3cd900557428d59d14ca81282",
+    "division.json": "dee45f72948cc108411ffad9c590f52a7f263609c25a2e04a2200ee4a53271c0",
+    "division.txt": "d09f53da5fcad90b70cd9242c4aba969265509ce87a7650e7dc984fccf45b642",
+    "payload_maps.json": "0ef0283e8a85cb63f2fae2b61ba0cbd4920fcfe1100fd4278e8424180b5b499d",
+    "payload_maps.txt": "c0b88af94377f575f421f57e6e0b382a2cc60d7f828c0f7fe8127e8971d60704",
+    "prevalidation_attempt.json": "7ad11e599e56f8bd8e0cfe0461f417380ed463e2f345f1a6dbfadb794e2aab5a",
+    "pytest.txt": "0807a5c9fadadc8e7545e7e6242ccf10300ed9ec0982879ce1d197b30f3b0f66",
+    "report.md": "e135e8d54236a22e054dcaec435f322873332caaf05ae27035d32d2c04f529d2",
+    "reversal.json": "8201c79150f128bfb0dba872460cdc57bb20223742be3c33135d185934519a78",
+    "reversal.txt": "16cbe1825eeea1d4e83cced20fdb67bf4226dca4e16005a9e4343b92604626c9",
+    "source_identity.json": "f67d78c764ba27c10dcd45011821bc90fef1edd779ce915fab90d2b143c8a5ca",
+    "source_manifest.json": "b04d41afb5ce25c8c56b6f26a035d1c3b7a9a43f4432a8aad513833c41958b51",
+    "upstream.json": "25ed498303b994bae736371acb583cb0ae51997b9d4e87ff27dfd1aa19e664c5",
+    "upstream.txt": "9f969a76d6ffe2393bcc97b80cebe4e555475c274218789a2ae9563d414791ef",
+    "validation_ci.json": "523b5f76006398e0ed00cf4a50a5c2164de12db35ca8e3eb5cf74fe2c61bad79"
+  },
+  "validation_ci": {
+    "validation_origin": "GitHub Actions fallback after primary execution environment loss",
+    "run_url": "https://github.com/Z769018860/LLMloop/actions/runs/41235218064",
+    "run_id": "41235218064",
+    "run_attempt": "1",
+    "ci_runs_used": 5,
+    "validation_commit": "1af180038a82d5d0cc18c99641882071feffd22e",
+    "validation_tree": "5fea8ea2d9bfab42ef4e8f30a046806e0084fc0e",
+    "application_code_checkpoint": "a8ebb0dcbeb59e3fc4dbcaa976dccb0ca2143d4d",
+    "application_code_tree": "8937758c8fbf2ec4f47b90547ab4ea4a19918153",
+    "only_isolated_validation_workflow_changed": true,
+    "default_integer_conversion_function_matches_v043": true,
+    "sign_shift_and_neutral_mask_identities_checked": true,
+    "typed_word_profile_explicit": true,
+    "generic_unbounded_integer_semantics_preserved": true,
+    "sign_and_external_preflight_passed": true,
+    "widening_and_modulo_optimizations_scoped_to_list_fold": true,
+    "first_ci_failure": {
+      "run_id": 41227825039,
+      "source_commit": "0f73956a2575a35b2b603c415a974333159d007a",
+      "source_tree": "3d5cf385717926a9358fcf3c1e884f420e890442",
+      "passed_tests": 1893,
+      "failed_tests": 3,
+      "skipped_tests": 0,
+      "all_standalone_experiments_passed": true,
+      "last_failure_location": "tests/test_llvm_benchmarks.py:90; expected PROVED_DEFINED_CLANG_CFG_CALLS, received UNKNOWN",
+      "complete_failure_diagnosis_not_claimed": true
+    },
+    "second_ci_failure": {
+      "run_id": 41229966583,
+      "source_commit": "dc540945e14811ea91cd01f5ae45ae7fceef1d96",
+      "source_tree": "0e4f585b90e10c850d75b8c434cdc07dc8098655",
+      "passed_tests": 1893,
+      "failed_tests": 3,
+      "skipped_tests": 0,
+      "all_standalone_experiments_passed": true,
+      "failed_cases": [
+        "tests/test_external_call_frontiers.py::test_real_library_abort_path_requires_explicit_domain_exclusion[external_abort_abs]",
+        "tests/test_external_call_frontiers.py::test_model_samples_replay_the_certified_return_expression[external_abort_abs]",
+        "tests/test_llvm_benchmarks.py::test_original_upstream_tus_and_headers_through_compilation_database[external_abort_abs]"
+      ],
+      "suite_status": "UNKNOWN for __absvsi2; independent fresh-worker experiment proved; exact timeout diagnosis not asserted"
+    },
+    "third_ci_preflight_failure": {
+      "run_id": 41232552732,
+      "source_commit": "bb438181da280ee2f5beaca3286f041d1e9dbfae",
+      "source_tree": "9d60a848e8050f3fd41028ccdad69b30ff6cad88",
+      "passed_selected_tests": 22,
+      "failed_selected_tests": 1,
+      "deselected_tests": 1877,
+      "full_regression_not_run": true,
+      "original_abs_failures_all_passed": true,
+      "failure": "New signed-minimum test compared numeric witness string with an integer; observed witness value was -2147483648",
+      "correction": "Parse numeric witness string; expected value and implementation unchanged"
+    },
+    "fourth_ci_failure": {
+      "run_id": 41232868246,
+      "source_commit": "04b8bf80847a089d3451c8947137758b4cecc325",
+      "source_tree": "d672c9266c2f843b3ac98ec58dbcdc2cccd814f8",
+      "passed_tests": 1898,
+      "failed_tests": 2,
+      "skipped_tests": 0,
+      "all_standalone_experiments_passed": true,
+      "failed_cases": [
+        "test_selective_shifts_match_the_original_all_width_enumeration[>>-signed int]",
+        "test_selective_shifts_match_the_original_all_width_enumeration[>>-signed long long]"
+      ],
+      "failure": "Generic integer tests require equivalence for unbounded integers; word sign rule requires the typed representability invariant",
+      "correction": "Keep generic arbitrary-integer semantics unchanged; select explicit TypedWordIntegers only in typed source kernels; old tests unchanged"
+    },
+    "earlier_local_checkpoint": {
+      "tested_commit": "ec85b49a7241d6951efe0c432797784973692a8f",
+      "tested_tree": "d37cb94b00789f1956278c7ce05eb7d0521fbc71",
+      "final_full_validation_verified": false,
+      "last_observed_progress_percent_at_least": 94,
+      "reason": "Primary exec-server transport disconnected and environment marked unavailable",
+      "targeted_tests_passed": 104,
+      "full_collection_rotation_checks_passed": 3,
+      "rotation_checks_overlap_targeted_tests": true,
+      "native_preflight_output_matches": 5400,
+      "native_preflight_model_matches": 900,
+      "native_preflight_expected_ubsan_failures": 20,
+      "scope": "earlier code checkpoint, not the final isolated profile implementation"
+    },
+    "frozen_paths_verified": 595,
+    "evidence_files_added": 22,
+    "passed": true
+  }
+}
