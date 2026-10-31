@@ -140,4 +140,4 @@ def test_sign_mask_abs_idiom_keeps_full_domain_and_signed_minimum_control():
         request.pop('inputs')
         rejected=analyze_request(request)
         assert rejected['status']=='UNKNOWN' and not rejected['c_overflow_verified'],rejected
-        assert rejected['counterexample']['a']==-2147483648
+        assert int(rejected['counterexample']['a'])==-2147483648
