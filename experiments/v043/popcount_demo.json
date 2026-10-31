@@ -1,0 +1,734 @@
+{
+  "provenance": {
+    "upstream_commit": "3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff",
+    "upstream_tag": "llvmorg-18.1.8",
+    "files_verified": 20,
+    "all_match_upstream_git_blobs": true,
+    "manifest_sha256": "3cab1e5a45ed4e18d12d2392e5b2094b8b73283619844ce2156082291ffc19f2",
+    "license": "Apache-2.0 WITH LLVM-exception"
+  },
+  "request": {
+    "source_file": "/home/runner/work/LLMloop/LLMloop/benchmarks/llvm_compiler_rt/popcountdi2.c",
+    "function": "__popcountdi2",
+    "frontend": "clang_proof",
+    "clang": {
+      "compilation_database": "/tmp/llmloop-popcount-proof-rxt2nsam/compile_commands.json"
+    },
+    "proof": {
+      "backend": "cfg",
+      "parameter_bounds": {
+        "a": [
+          -9223372036854775808,
+          9223372036854775807
+        ]
+      },
+      "max_steps": 128
+    }
+  },
+  "source_safety_status": "PROVED_DEFINED_CLANG_SCALAR_CFG",
+  "source_safety_elapsed_seconds": 0.245,
+  "source_certificate": {
+    "schema_version": 1,
+    "status": "PROVED_DEFINED_CLANG_SCALAR_CFG",
+    "abi": "LP64",
+    "function": "__popcountdi2",
+    "c_overflow_verified": true,
+    "memory_safety_verified": true,
+    "termination_proved": true,
+    "allocation_failure_modeled": true,
+    "allocation_success_assumed": false,
+    "domain_smt2": "(and (>= typed_loop_a!0 (- 9223372036854775808))\n     (<= typed_loop_a!0 9223372036854775807))",
+    "semantics": "typed C integer semantics with explicit implementation choices",
+    "parameter_symbols": {
+      "a": "typed_loop_a!0"
+    },
+    "leak_freedom_proved": false,
+    "unbounded_summary": false,
+    "certificate": {
+      "method": "exhaustive original CFG execution with proved complete exit for declared domain",
+      "obligations": [
+        {
+          "obligation": "control-flow step budget",
+          "proved": true
+        },
+        {
+          "obligation": "control-flow step budget",
+          "proved": true
+        },
+        {
+          "obligation": "control-flow step budget",
+          "proved": true
+        },
+        {
+          "obligation": "control-flow step budget",
+          "proved": true
+        },
+        {
+          "obligation": "control-flow step budget",
+          "proved": true
+        },
+        {
+          "obligation": "control-flow step budget",
+          "proved": true
+        },
+        {
+          "obligation": "control-flow step budget",
+          "proved": true
+        },
+        {
+          "obligation": "all original executed operations defined",
+          "proved": true
+        },
+        {
+          "obligation": "returned paths cover parameter and allocation domain",
+          "proved": true
+        }
+      ],
+      "executed_cfg_nodes": 7,
+      "max_steps_per_path": 128,
+      "max_paths": 48,
+      "represented_object_instances": 0
+    },
+    "memory_model": {
+      "pointer_rebinding_supported": true,
+      "block_escape_supported": true,
+      "dynamic_lengths_supported": true,
+      "max_object_instances": 8,
+      "max_cells_per_object": 8,
+      "max_total_cells": 64,
+      "adjacent_distinct_object_boundary_comparisons": "unsupported",
+      "external_pointer_parameters_supported": false,
+      "pointer_cells_supported": true,
+      "structs_supported": true,
+      "struct_model": "named single allocated records with integer/data-pointer fields",
+      "struct_layouts": {},
+      "max_pointer_indirection": 3,
+      "calloc_pointer_cells_implicitly_null": false
+    },
+    "implementation_choices": {
+      "signed_cast": "two-complement modular",
+      "signed_right_shift": "arithmetic",
+      "pointer_width_bits": 64
+    },
+    "scope": "declared scalar input domain and selected typed backend contract; allocation assumptions and the selected shape/CFG proof boundary remain explicit; no general LLVM semantics or KLEE execution",
+    "return_smt2": "(let ((a!1 ((_ int_to_bv 64)\n             (mod (div (mod typed_loop_a!0 18446744073709551616) 2)\n                  18446744073709551616))))\n(let ((a!2 (+ typed_loop_a!0\n              (* (- 4611686018427387904) (ubv_to_int ((_ extract 62 62) a!1)))\n              (* (- 1152921504606846976) (ubv_to_int ((_ extract 60 60) a!1)))\n              (* (- 288230376151711744) (ubv_to_int ((_ extract 58 58) a!1)))\n              (* (- 72057594037927936) (ubv_to_int ((_ extract 56 56) a!1)))\n              (* (- 18014398509481984) (ubv_to_int ((_ extract 54 54) a!1)))\n              (* (- 4503599627370496) (ubv_to_int ((_ extract 52 52) a!1)))\n              (* (- 1125899906842624) (ubv_to_int ((_ extract 50 50) a!1)))\n              (* (- 281474976710656) (ubv_to_int ((_ extract 48 48) a!1)))\n              (* (- 70368744177664) (ubv_to_int ((_ extract 46 46) a!1)))\n              (* (- 17592186044416) (ubv_to_int ((_ extract 44 44) a!1)))\n              (* (- 4398046511104) (ubv_to_int ((_ extract 42 42) a!1)))\n              (* (- 1099511627776) (ubv_to_int ((_ extract 40 40) a!1)))\n              (* (- 274877906944) (ubv_to_int ((_ extract 38 38) a!1)))\n              (* (- 68719476736) (ubv_to_int ((_ extract 36 36) a!1)))\n              (* (- 17179869184) (ubv_to_int ((_ extract 34 34) a!1)))\n              (* (- 4294967296) (ubv_to_int ((_ extract 32 32) a!1)))\n              (* (- 1073741824) (ubv_to_int ((_ extract 30 30) a!1)))\n              (* (- 268435456) (ubv_to_int ((_ extract 28 28) a!1)))\n              (* (- 67108864) (ubv_to_int ((_ extract 26 26) a!1)))\n              (* (- 16777216) (ubv_to_int ((_ extract 24 24) a!1)))\n              (* (- 4194304) (ubv_to_int ((_ extract 22 22) a!1)))\n              (* (- 1048576) (ubv_to_int ((_ extract 20 20) a!1)))\n              (* (- 262144) (ubv_to_int ((_ extract 18 18) a!1)))\n              (* (- 65536) (ubv_to_int ((_ extract 16 16) a!1)))\n              (* (- 16384) (ubv_to_int ((_ extract 14 14) a!1)))\n              (* (- 4096) (ubv_to_int ((_ extract 12 12) a!1)))\n              (* (- 1024) (ubv_to_int ((_ extract 10 10) a!1)))\n              (* (- 256) (ubv_to_int ((_ extract 8 8) a!1)))\n              (* (- 64) (ubv_to_int ((_ extract 6 6) a!1)))\n              (* (- 16) (ubv_to_int ((_ extract 4 4) a!1)))\n              (* (- 4) (ubv_to_int ((_ extract 2 2) a!1)))\n              (* (- 1) (ubv_to_int ((_ extract 0 0) a!1))))))\n(let ((a!3 ((_ int_to_bv 64)\n             (mod (div (mod a!2 18446744073709551616) 4) 18446744073709551616)))\n      (a!4 (ubv_to_int ((_ extract 61 60)\n                         ((_ int_to_bv 64) (mod a!2 18446744073709551616)))))\n      (a!5 (ubv_to_int ((_ extract 57 56)\n                         ((_ int_to_bv 64) (mod a!2 18446744073709551616)))))\n      (a!6 (ubv_to_int ((_ extract 53 52)\n                         ((_ int_to_bv 64) (mod a!2 18446744073709551616)))))\n      (a!7 (ubv_to_int ((_ extract 49 48)\n                         ((_ int_to_bv 64) (mod a!2 18446744073709551616)))))\n      (a!8 (ubv_to_int ((_ extract 45 44)\n                         ((_ int_to_bv 64) (mod a!2 18446744073709551616)))))\n      (a!9 (ubv_to_int ((_ extract 41 40)\n                         ((_ int_to_bv 64) (mod a!2 18446744073709551616)))))\n      (a!10 (ubv_to_int ((_ extract 37 36)\n                          ((_ int_to_bv 64) (mod a!2 18446744073709551616)))))\n      (a!11 (ubv_to_int ((_ extract 33 32)\n                          ((_ int_to_bv 64) (mod a!2 18446744073709551616)))))\n      (a!12 (ubv_to_int ((_ extract 29 28)\n                          ((_ int_to_bv 64) (mod a!2 18446744073709551616)))))\n      (a!13 (ubv_to_int ((_ extract 25 24)\n                          ((_ int_to_bv 64) (mod a!2 18446744073709551616)))))\n      (a!14 (ubv_to_int ((_ extract 21 20)\n                          ((_ int_to_bv 64) (mod a!2 18446744073709551616)))))\n      (a!15 (ubv_to_int ((_ extract 17 16)\n                          ((_ int_to_bv 64) (mod a!2 18446744073709551616)))))\n      (a!16 (ubv_to_int ((_ extract 13 12)\n                          ((_ int_to_bv 64) (mod a!2 18446744073709551616)))))\n      (a!17 (ubv_to_int ((_ extract 9 8)\n                          ((_ int_to_bv 64) (mod a!2 18446744073709551616)))))\n      (a!18 (ubv_to_int ((_ extract 5 4)\n                          ((_ int_to_bv 64) (mod a!2 18446744073709551616)))))\n      (a!19 (ubv_to_int ((_ extract 1 0)\n                          ((_ int_to_bv 64) (mod a!2 18446744073709551616))))))\n(let ((a!20 (+ (* 1152921504606846976 (ubv_to_int ((_ extract 61 60) a!3)))\n               (* 72057594037927936 (ubv_to_int ((_ extract 57 56) a!3)))\n               (* 4503599627370496 (ubv_to_int ((_ extract 53 52) a!3)))\n               (* 281474976710656 (ubv_to_int ((_ extract 49 48) a!3)))\n               (* 17592186044416 (ubv_to_int ((_ extract 45 44) a!3)))\n               (* 1099511627776 (ubv_to_int ((_ extract 41 40) a!3)))\n               (* 68719476736 (ubv_to_int ((_ extract 37 36) a!3)))\n               (* 4294967296 (ubv_to_int ((_ extract 33 32) a!3)))\n               (* 268435456 (ubv_to_int ((_ extract 29 28) a!3)))\n               (* 16777216 (ubv_to_int ((_ extract 25 24) a!3)))\n               (* 1048576 (ubv_to_int ((_ extract 21 20) a!3)))\n               (* 65536 (ubv_to_int ((_ extract 17 16) a!3)))\n               (* 4096 (ubv_to_int ((_ extract 13 12) a!3)))\n               (* 256 (ubv_to_int ((_ extract 9 8) a!3)))\n               (* 16 (ubv_to_int ((_ extract 5 4) a!3)))\n               (ubv_to_int ((_ extract 1 0) a!3))\n               (* 1152921504606846976 a!4)\n               (* 72057594037927936 a!5)\n               (* 4503599627370496 a!6)\n               (* 281474976710656 a!7)\n               (* 17592186044416 a!8)\n               (* 1099511627776 a!9)\n               (* 68719476736 a!10)\n               (* 4294967296 a!11)\n               (* 268435456 a!12)\n               (* 16777216 a!13)\n               (* 1048576 a!14)\n               (* 65536 a!15)\n               (* 4096 a!16)\n               (* 256 a!17)\n               (* 16 a!18)\n               a!19)))\n(let ((a!21 (+ (* 1152921504606846976 (ubv_to_int ((_ extract 61 60) a!3)))\n               (* 72057594037927936 (ubv_to_int ((_ extract 57 56) a!3)))\n               (* 4503599627370496 (ubv_to_int ((_ extract 53 52) a!3)))\n               (* 281474976710656 (ubv_to_int ((_ extract 49 48) a!3)))\n               (* 17592186044416 (ubv_to_int ((_ extract 45 44) a!3)))\n               (* 1099511627776 (ubv_to_int ((_ extract 41 40) a!3)))\n               (* 68719476736 (ubv_to_int ((_ extract 37 36) a!3)))\n               (* 4294967296 (ubv_to_int ((_ extract 33 32) a!3)))\n               (* 268435456 (ubv_to_int ((_ extract 29 28) a!3)))\n               (* 16777216 (ubv_to_int ((_ extract 25 24) a!3)))\n               (* 1048576 (ubv_to_int ((_ extract 21 20) a!3)))\n               (* 65536 (ubv_to_int ((_ extract 17 16) a!3)))\n               (* 4096 (ubv_to_int ((_ extract 13 12) a!3)))\n               (* 256 (ubv_to_int ((_ extract 9 8) a!3)))\n               (* 16 (ubv_to_int ((_ extract 5 4) a!3)))\n               (ubv_to_int ((_ extract 1 0) a!3))\n               (* 1152921504606846976 a!4)\n               (* 72057594037927936 a!5)\n               (* 4503599627370496 a!6)\n               (* 281474976710656 a!7)\n               (* 17592186044416 a!8)\n               (* 1099511627776 a!9)\n               (* 68719476736 a!10)\n               (* 4294967296 a!11)\n               (* 268435456 a!12)\n               (* 16777216 a!13)\n               (* 1048576 a!14)\n               (* 65536 a!15)\n               (* 4096 a!16)\n               (* 256 a!17)\n               (* 16 a!18)\n               a!19\n               (div (mod a!20 18446744073709551616) 16))))\n(let ((a!22 (ubv_to_int ((_ extract 59 56)\n                          ((_ int_to_bv 64) (mod a!21 18446744073709551616)))))\n      (a!23 (ubv_to_int ((_ extract 51 48)\n                          ((_ int_to_bv 64) (mod a!21 18446744073709551616)))))\n      (a!24 (ubv_to_int ((_ extract 43 40)\n                          ((_ int_to_bv 64) (mod a!21 18446744073709551616)))))\n      (a!25 (ubv_to_int ((_ extract 35 32)\n                          ((_ int_to_bv 64) (mod a!21 18446744073709551616)))))\n      (a!26 (ubv_to_int ((_ extract 27 24)\n                          ((_ int_to_bv 64) (mod a!21 18446744073709551616)))))\n      (a!27 (ubv_to_int ((_ extract 19 16)\n                          ((_ int_to_bv 64) (mod a!21 18446744073709551616)))))\n      (a!28 (ubv_to_int ((_ extract 11 8)\n                          ((_ int_to_bv 64) (mod a!21 18446744073709551616)))))\n      (a!29 (ubv_to_int ((_ extract 3 0)\n                          ((_ int_to_bv 64) (mod a!21 18446744073709551616))))))\n(let ((a!30 (div (mod (+ (* 72057594037927936 a!22)\n                         (* 281474976710656 a!23)\n                         (* 1099511627776 a!24)\n                         (* 4294967296 a!25)\n                         (* 16777216 a!26)\n                         (* 65536 a!27)\n                         (* 256 a!28)\n                         a!29)\n                      18446744073709551616)\n                 4294967296)))\n(let ((a!31 (mod (+ (* 72057594037927936 a!22)\n                    (* 281474976710656 a!23)\n                    (* 1099511627776 a!24)\n                    (* 4294967296 a!25)\n                    (* 16777216 a!26)\n                    (* 65536 a!27)\n                    (* 256 a!28)\n                    a!29\n                    a!30)\n                 18446744073709551616)))\n(let ((a!32 (mod (+ a!31 (div (mod a!31 4294967296) 65536)) 4294967296)))\n(let ((a!33 (mod (+ a!31 (div (mod a!31 4294967296) 65536) (div a!32 256))\n                 4294967296)))\n(let ((a!34 (+ 2147483648\n               (ubv_to_int ((_ extract 6 0) ((_ int_to_bv 32) a!33))))))\n  (+ (- 2147483648) (mod a!34 4294967296)))))))))))))",
+    "frontend": "clang_proof",
+    "normalization": {
+      "method": "structural admitted Clang AST to typed C; Clang + normalizer are trusted frontend components",
+      "source": "int __popcountdi2(long a) {\nunsigned long x2 = ((unsigned long)(a));\nx2 = ((unsigned long)((((unsigned long long)(x2)) - ((((unsigned long long)(((x2 >> 1)))) & 6148914691236517205ULL)))));\nx2 = ((unsigned long)((((((unsigned long long)(((x2 >> 2)))) & 3689348814741910323ULL)) + ((((unsigned long long)(x2)) & 3689348814741910323ULL)))));\nx2 = ((unsigned long)((((unsigned long long)(((x2 + ((x2 >> 4)))))) & 1085102592571150095ULL)));\nunsigned int x = ((unsigned int)(((x2 + ((x2 >> 32))))));\nx = (x + ((x >> 16)));\nreturn ((int)((((x + ((x >> 8)))) & ((unsigned int)(127)))));\n}\n",
+      "source_sha256": "b8e9994ac758f8f7ce091505d37ddad5cbad919d70d677838b8307caeaeccbfb",
+      "ast_sha256": "3eb36170631c82db015a4eca60820dcfe1909e284d5d87e3461ed7ec3b6fcc8d",
+      "type_environment_sha256": "49e8b3e2606783de3b2465e458aa2706068a035732d2ed9ada142a18e5652b92",
+      "alpha_renamed": [],
+      "functions": [
+        "__popcountdi2"
+      ],
+      "backend": "cfg",
+      "external_call_frontiers": [],
+      "external_call_semantics_assumed": false,
+      "bit_builtin_calls": [],
+      "bit_builtin_models": [],
+      "union_views": [],
+      "abi": "LP64",
+      "char_signed": true,
+      "record_layout_correspondence": {},
+      "compiler_equivalence_machine_proved": false,
+      "unsupported_constructs_rejected": true
+    }
+  },
+  "source_compiler": {
+    "status": "CLANG_FRONTEND_READY",
+    "compiler": {
+      "executable": "/usr/lib/llvm-18/bin/clang",
+      "version": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/lib/llvm-18/bin"
+    },
+    "source": {
+      "path": "/home/runner/work/LLMloop/LLMloop/benchmarks/llvm_compiler_rt/popcountdi2.c",
+      "sha256": "9c4e3828d94046d00aa66835dca4158ae097abfca27515de07b732b8fc1c887c"
+    },
+    "target": {
+      "triple": "x86_64-pc-linux-gnu",
+      "data_layout": "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+    },
+    "effective_flags": [
+      "-std=c11",
+      "-O0",
+      "-fno-builtin",
+      "-I",
+      "/home/runner/work/LLMloop/LLMloop/benchmarks/llvm_compiler_rt",
+      "-gline-tables-only",
+      "-fsanitize=undefined",
+      "-fno-sanitize-recover=all"
+    ],
+    "compilation_database": {
+      "path": "/tmp/llmloop-popcount-proof-rxt2nsam/compile_commands.json",
+      "sha256": "32566abda412d577c0ac9d4c790e65f9839177c1a0efb225ea512dfa1e990a12",
+      "command_index": 0,
+      "original_arguments": [
+        "clang",
+        "-std=c11",
+        "-O0",
+        "-fno-builtin",
+        "-I",
+        "/home/runner/work/LLMloop/LLMloop/benchmarks/llvm_compiler_rt",
+        "-c",
+        "/home/runner/work/LLMloop/LLMloop/benchmarks/llvm_compiler_rt/popcountdi2.c",
+        "-o",
+        "/tmp/llmloop-popcount-proof-rxt2nsam/popcountdi2.o",
+        "-MMD",
+        "-MF",
+        "/tmp/llmloop-popcount-proof-rxt2nsam/popcountdi2.d"
+      ]
+    }
+  },
+  "functional": {
+    "status": "PROVED_FUNCTIONAL_BV_CUTS",
+    "query_result": "unsat",
+    "method": "checked packed-byte BV cuts and exact bounded integer word equation",
+    "timeout_ms": 4983,
+    "total_timeout_ms": 5000,
+    "steps": [
+      {
+        "name": "byte_identity_and_bound_0",
+        "logic": "QF_BV",
+        "result": "unsat",
+        "timeout_ms": 4961,
+        "elapsed_seconds": 0.007725,
+        "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun c_integer_a () (_ BitVec 64))\n(assert\n (let ((?x261 (bvadd ((_ zero_extend 1) ((_ extract 6 6) c_integer_a)) ((_ zero_extend 1) ((_ extract 7 7) c_integer_a)))))\n(let ((?x257 (bvadd ((_ zero_extend 1) ((_ extract 4 4) c_integer_a)) ((_ zero_extend 1) ((_ extract 5 5) c_integer_a)))))\n(let ((?x252 (bvadd ((_ zero_extend 1) ((_ extract 2 2) c_integer_a)) ((_ zero_extend 1) ((_ extract 3 3) c_integer_a)))))\n(let ((?x251 (bvadd ((_ zero_extend 1) ((_ extract 0 0) c_integer_a)) ((_ zero_extend 1) ((_ extract 1 1) c_integer_a)))))\n(let ((?x489 (bvadd ((_ zero_extend 1) (bvadd ((_ zero_extend 1) ?x251) ((_ zero_extend 1) ?x252))) ((_ zero_extend 1) (bvadd ((_ zero_extend 1) ?x257) ((_ zero_extend 1) ?x261))))))\n(let ((?x87 (bvsub c_integer_a (bvand (bvlshr c_integer_a ((_ sign_extend 32) (_ bv1 32))) (_ bv6148914691236517205 64)))))\n(let ((?x421 (bvadd (bvand (bvlshr ?x87 ((_ sign_extend 32) (_ bv2 32))) (_ bv3689348814741910323 64)) (bvand ?x87 (_ bv3689348814741910323 64)))))\n(let ((?x331 (bvand (bvadd ?x421 (bvlshr ?x421 ((_ sign_extend 32) (_ bv4 32)))) (_ bv1085102592571150095 64))))\n(let ((?x807 ((_ extract 7 0) ?x331)))\n(or (and (distinct ?x807 ((_ zero_extend 4) ?x489)) true) (bvugt ?x489 (_ bv8 4)))))))))))))\n(check-sat)\n"
+      },
+      {
+        "name": "byte_identity_and_bound_1",
+        "logic": "QF_BV",
+        "result": "unsat",
+        "timeout_ms": 4952,
+        "elapsed_seconds": 0.00992,
+        "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun c_integer_a () (_ BitVec 64))\n(assert\n (let ((?x268 (bvadd ((_ zero_extend 1) ((_ extract 14 14) c_integer_a)) ((_ zero_extend 1) ((_ extract 15 15) c_integer_a)))))\n(let ((?x271 (bvadd ((_ zero_extend 1) ((_ extract 12 12) c_integer_a)) ((_ zero_extend 1) ((_ extract 13 13) c_integer_a)))))\n(let ((?x263 (bvadd ((_ zero_extend 1) ((_ extract 10 10) c_integer_a)) ((_ zero_extend 1) ((_ extract 11 11) c_integer_a)))))\n(let ((?x262 (bvadd ((_ zero_extend 1) ((_ extract 8 8) c_integer_a)) ((_ zero_extend 1) ((_ extract 9 9) c_integer_a)))))\n(let ((?x179 (bvadd ((_ zero_extend 1) (bvadd ((_ zero_extend 1) ?x262) ((_ zero_extend 1) ?x263))) ((_ zero_extend 1) (bvadd ((_ zero_extend 1) ?x271) ((_ zero_extend 1) ?x268))))))\n(let ((?x87 (bvsub c_integer_a (bvand (bvlshr c_integer_a ((_ sign_extend 32) (_ bv1 32))) (_ bv6148914691236517205 64)))))\n(let ((?x421 (bvadd (bvand (bvlshr ?x87 ((_ sign_extend 32) (_ bv2 32))) (_ bv3689348814741910323 64)) (bvand ?x87 (_ bv3689348814741910323 64)))))\n(let ((?x331 (bvand (bvadd ?x421 (bvlshr ?x421 ((_ sign_extend 32) (_ bv4 32)))) (_ bv1085102592571150095 64))))\n(let ((?x744 ((_ extract 15 8) ?x331)))\n(or (and (distinct ?x744 ((_ zero_extend 4) ?x179)) true) (bvugt ?x179 (_ bv8 4)))))))))))))\n(check-sat)\n"
+      },
+      {
+        "name": "byte_identity_and_bound_2",
+        "logic": "QF_BV",
+        "result": "unsat",
+        "timeout_ms": 4941,
+        "elapsed_seconds": 0.009068,
+        "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun c_integer_a () (_ BitVec 64))\n(assert\n (let ((?x286 (bvadd ((_ zero_extend 1) ((_ extract 22 22) c_integer_a)) ((_ zero_extend 1) ((_ extract 23 23) c_integer_a)))))\n(let ((?x282 (bvadd ((_ zero_extend 1) ((_ extract 20 20) c_integer_a)) ((_ zero_extend 1) ((_ extract 21 21) c_integer_a)))))\n(let ((?x281 (bvadd ((_ zero_extend 1) ((_ extract 18 18) c_integer_a)) ((_ zero_extend 1) ((_ extract 19 19) c_integer_a)))))\n(let ((?x273 (bvadd ((_ zero_extend 1) ((_ extract 16 16) c_integer_a)) ((_ zero_extend 1) ((_ extract 17 17) c_integer_a)))))\n(let ((?x689 (bvadd ((_ zero_extend 1) (bvadd ((_ zero_extend 1) ?x273) ((_ zero_extend 1) ?x281))) ((_ zero_extend 1) (bvadd ((_ zero_extend 1) ?x282) ((_ zero_extend 1) ?x286))))))\n(let ((?x87 (bvsub c_integer_a (bvand (bvlshr c_integer_a ((_ sign_extend 32) (_ bv1 32))) (_ bv6148914691236517205 64)))))\n(let ((?x421 (bvadd (bvand (bvlshr ?x87 ((_ sign_extend 32) (_ bv2 32))) (_ bv3689348814741910323 64)) (bvand ?x87 (_ bv3689348814741910323 64)))))\n(let ((?x331 (bvand (bvadd ?x421 (bvlshr ?x421 ((_ sign_extend 32) (_ bv4 32)))) (_ bv1085102592571150095 64))))\n(let ((?x807 ((_ extract 23 16) ?x331)))\n(or (and (distinct ?x807 ((_ zero_extend 4) ?x689)) true) (bvugt ?x689 (_ bv8 4)))))))))))))\n(check-sat)\n"
+      },
+      {
+        "name": "byte_identity_and_bound_3",
+        "logic": "QF_BV",
+        "result": "unsat",
+        "timeout_ms": 4931,
+        "elapsed_seconds": 0.00842,
+        "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun c_integer_a () (_ BitVec 64))\n(assert\n (let ((?x297 (bvadd ((_ zero_extend 1) ((_ extract 30 30) c_integer_a)) ((_ zero_extend 1) ((_ extract 31 31) c_integer_a)))))\n(let ((?x293 (bvadd ((_ zero_extend 1) ((_ extract 28 28) c_integer_a)) ((_ zero_extend 1) ((_ extract 29 29) c_integer_a)))))\n(let ((?x288 (bvadd ((_ zero_extend 1) ((_ extract 26 26) c_integer_a)) ((_ zero_extend 1) ((_ extract 27 27) c_integer_a)))))\n(let ((?x287 (bvadd ((_ zero_extend 1) ((_ extract 24 24) c_integer_a)) ((_ zero_extend 1) ((_ extract 25 25) c_integer_a)))))\n(let ((?x657 (bvadd ((_ zero_extend 1) (bvadd ((_ zero_extend 1) ?x287) ((_ zero_extend 1) ?x288))) ((_ zero_extend 1) (bvadd ((_ zero_extend 1) ?x293) ((_ zero_extend 1) ?x297))))))\n(let ((?x87 (bvsub c_integer_a (bvand (bvlshr c_integer_a ((_ sign_extend 32) (_ bv1 32))) (_ bv6148914691236517205 64)))))\n(let ((?x421 (bvadd (bvand (bvlshr ?x87 ((_ sign_extend 32) (_ bv2 32))) (_ bv3689348814741910323 64)) (bvand ?x87 (_ bv3689348814741910323 64)))))\n(let ((?x331 (bvand (bvadd ?x421 (bvlshr ?x421 ((_ sign_extend 32) (_ bv4 32)))) (_ bv1085102592571150095 64))))\n(let ((?x744 ((_ extract 31 24) ?x331)))\n(or (and (distinct ?x744 ((_ zero_extend 4) ?x657)) true) (bvugt ?x657 (_ bv8 4)))))))))))))\n(check-sat)\n"
+      },
+      {
+        "name": "byte_identity_and_bound_4",
+        "logic": "QF_BV",
+        "result": "unsat",
+        "timeout_ms": 4922,
+        "elapsed_seconds": 0.006713,
+        "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun c_integer_a () (_ BitVec 64))\n(assert\n (let ((?x311 (bvadd ((_ zero_extend 1) ((_ extract 38 38) c_integer_a)) ((_ zero_extend 1) ((_ extract 39 39) c_integer_a)))))\n(let ((?x307 (bvadd ((_ zero_extend 1) ((_ extract 36 36) c_integer_a)) ((_ zero_extend 1) ((_ extract 37 37) c_integer_a)))))\n(let ((?x306 (bvadd ((_ zero_extend 1) ((_ extract 34 34) c_integer_a)) ((_ zero_extend 1) ((_ extract 35 35) c_integer_a)))))\n(let ((?x298 (bvadd ((_ zero_extend 1) ((_ extract 32 32) c_integer_a)) ((_ zero_extend 1) ((_ extract 33 33) c_integer_a)))))\n(let ((?x120 (bvadd ((_ zero_extend 1) (bvadd ((_ zero_extend 1) ?x298) ((_ zero_extend 1) ?x306))) ((_ zero_extend 1) (bvadd ((_ zero_extend 1) ?x307) ((_ zero_extend 1) ?x311))))))\n(let ((?x87 (bvsub c_integer_a (bvand (bvlshr c_integer_a ((_ sign_extend 32) (_ bv1 32))) (_ bv6148914691236517205 64)))))\n(let ((?x421 (bvadd (bvand (bvlshr ?x87 ((_ sign_extend 32) (_ bv2 32))) (_ bv3689348814741910323 64)) (bvand ?x87 (_ bv3689348814741910323 64)))))\n(let ((?x331 (bvand (bvadd ?x421 (bvlshr ?x421 ((_ sign_extend 32) (_ bv4 32)))) (_ bv1085102592571150095 64))))\n(let ((?x807 ((_ extract 39 32) ?x331)))\n(or (and (distinct ?x807 ((_ zero_extend 4) ?x120)) true) (bvugt ?x120 (_ bv8 4)))))))))))))\n(check-sat)\n"
+      },
+      {
+        "name": "byte_identity_and_bound_5",
+        "logic": "QF_BV",
+        "result": "unsat",
+        "timeout_ms": 4914,
+        "elapsed_seconds": 0.00705,
+        "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun c_integer_a () (_ BitVec 64))\n(assert\n (let ((?x318 (bvadd ((_ zero_extend 1) ((_ extract 46 46) c_integer_a)) ((_ zero_extend 1) ((_ extract 47 47) c_integer_a)))))\n(let ((?x321 (bvadd ((_ zero_extend 1) ((_ extract 44 44) c_integer_a)) ((_ zero_extend 1) ((_ extract 45 45) c_integer_a)))))\n(let ((?x317 (bvadd ((_ zero_extend 1) ((_ extract 42 42) c_integer_a)) ((_ zero_extend 1) ((_ extract 43 43) c_integer_a)))))\n(let ((?x312 (bvadd ((_ zero_extend 1) ((_ extract 40 40) c_integer_a)) ((_ zero_extend 1) ((_ extract 41 41) c_integer_a)))))\n(let ((?x745 (bvadd ((_ zero_extend 1) (bvadd ((_ zero_extend 1) ?x312) ((_ zero_extend 1) ?x317))) ((_ zero_extend 1) (bvadd ((_ zero_extend 1) ?x321) ((_ zero_extend 1) ?x318))))))\n(let ((?x87 (bvsub c_integer_a (bvand (bvlshr c_integer_a ((_ sign_extend 32) (_ bv1 32))) (_ bv6148914691236517205 64)))))\n(let ((?x421 (bvadd (bvand (bvlshr ?x87 ((_ sign_extend 32) (_ bv2 32))) (_ bv3689348814741910323 64)) (bvand ?x87 (_ bv3689348814741910323 64)))))\n(let ((?x331 (bvand (bvadd ?x421 (bvlshr ?x421 ((_ sign_extend 32) (_ bv4 32)))) (_ bv1085102592571150095 64))))\n(let ((?x744 ((_ extract 47 40) ?x331)))\n(or (and (distinct ?x744 ((_ zero_extend 4) ?x745)) true) (bvugt ?x745 (_ bv8 4)))))))))))))\n(check-sat)\n"
+      },
+      {
+        "name": "byte_identity_and_bound_6",
+        "logic": "QF_BV",
+        "result": "unsat",
+        "timeout_ms": 4906,
+        "elapsed_seconds": 0.010922,
+        "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun c_integer_a () (_ BitVec 64))\n(assert\n (let ((?x332 (bvadd ((_ zero_extend 1) ((_ extract 54 54) c_integer_a)) ((_ zero_extend 1) ((_ extract 55 55) c_integer_a)))))\n(let ((?x328 (bvadd ((_ zero_extend 1) ((_ extract 52 52) c_integer_a)) ((_ zero_extend 1) ((_ extract 53 53) c_integer_a)))))\n(let ((?x327 (bvadd ((_ zero_extend 1) ((_ extract 50 50) c_integer_a)) ((_ zero_extend 1) ((_ extract 51 51) c_integer_a)))))\n(let ((?x326 (bvadd ((_ zero_extend 1) ((_ extract 48 48) c_integer_a)) ((_ zero_extend 1) ((_ extract 49 49) c_integer_a)))))\n(let ((?x761 (bvadd ((_ zero_extend 1) (bvadd ((_ zero_extend 1) ?x326) ((_ zero_extend 1) ?x327))) ((_ zero_extend 1) (bvadd ((_ zero_extend 1) ?x328) ((_ zero_extend 1) ?x332))))))\n(let ((?x87 (bvsub c_integer_a (bvand (bvlshr c_integer_a ((_ sign_extend 32) (_ bv1 32))) (_ bv6148914691236517205 64)))))\n(let ((?x421 (bvadd (bvand (bvlshr ?x87 ((_ sign_extend 32) (_ bv2 32))) (_ bv3689348814741910323 64)) (bvand ?x87 (_ bv3689348814741910323 64)))))\n(let ((?x331 (bvand (bvadd ?x421 (bvlshr ?x421 ((_ sign_extend 32) (_ bv4 32)))) (_ bv1085102592571150095 64))))\n(let ((?x807 ((_ extract 55 48) ?x331)))\n(or (and (distinct ?x807 ((_ zero_extend 4) ?x761)) true) (bvugt ?x761 (_ bv8 4)))))))))))))\n(check-sat)\n"
+      },
+      {
+        "name": "byte_identity_and_bound_7",
+        "logic": "QF_BV",
+        "result": "unsat",
+        "timeout_ms": 4895,
+        "elapsed_seconds": 0.008665,
+        "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun c_integer_a () (_ BitVec 64))\n(assert\n (let ((?x343 (bvadd ((_ zero_extend 1) ((_ extract 62 62) c_integer_a)) ((_ zero_extend 1) ((_ extract 63 63) c_integer_a)))))\n(let ((?x346 (bvadd ((_ zero_extend 1) ((_ extract 60 60) c_integer_a)) ((_ zero_extend 1) ((_ extract 61 61) c_integer_a)))))\n(let ((?x338 (bvadd ((_ zero_extend 1) ((_ extract 58 58) c_integer_a)) ((_ zero_extend 1) ((_ extract 59 59) c_integer_a)))))\n(let ((?x337 (bvadd ((_ zero_extend 1) ((_ extract 56 56) c_integer_a)) ((_ zero_extend 1) ((_ extract 57 57) c_integer_a)))))\n(let ((?x748 (bvadd ((_ zero_extend 1) (bvadd ((_ zero_extend 1) ?x337) ((_ zero_extend 1) ?x338))) ((_ zero_extend 1) (bvadd ((_ zero_extend 1) ?x346) ((_ zero_extend 1) ?x343))))))\n(let ((?x87 (bvsub c_integer_a (bvand (bvlshr c_integer_a ((_ sign_extend 32) (_ bv1 32))) (_ bv6148914691236517205 64)))))\n(let ((?x421 (bvadd (bvand (bvlshr ?x87 ((_ sign_extend 32) (_ bv2 32))) (_ bv3689348814741910323 64)) (bvand ?x87 (_ bv3689348814741910323 64)))))\n(let ((?x331 (bvand (bvadd ?x421 (bvlshr ?x421 ((_ sign_extend 32) (_ bv4 32)))) (_ bv1085102592571150095 64))))\n(let ((?x744 ((_ extract 63 56) ?x331)))\n(or (and (distinct ?x744 ((_ zero_extend 4) ?x748)) true) (bvugt ?x748 (_ bv8 4)))))))))))))\n(check-sat)\n"
+      },
+      {
+        "name": "exhaustive_byte_packing",
+        "logic": "QF_BV",
+        "result": "unsat",
+        "timeout_ms": 4885,
+        "elapsed_seconds": 0.000422,
+        "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun c_integer_a () (_ BitVec 64))\n(assert\n (let ((?x87 (bvsub c_integer_a (bvand (bvlshr c_integer_a ((_ sign_extend 32) (_ bv1 32))) (_ bv6148914691236517205 64)))))\n(let ((?x421 (bvadd (bvand (bvlshr ?x87 ((_ sign_extend 32) (_ bv2 32))) (_ bv3689348814741910323 64)) (bvand ?x87 (_ bv3689348814741910323 64)))))\n(let ((?x331 (bvand (bvadd ?x421 (bvlshr ?x421 ((_ sign_extend 32) (_ bv4 32)))) (_ bv1085102592571150095 64))))\n(let ((?x1546 (concat (concat (concat ((_ extract 63 56) ?x331) ((_ extract 55 48) ?x331)) ((_ extract 47 40) ?x331)) ((_ extract 39 32) ?x331))))\n(let ((?x2413 (concat (concat (concat ?x1546 ((_ extract 31 24) ?x331)) ((_ extract 23 16) ?x331)) ((_ extract 15 8) ?x331))))\n(let ((?x2134 (concat ?x2413 ((_ extract 7 0) ?x331))))\n(and (distinct ?x331 ?x2134) true))))))))\n(check-sat)\n"
+      },
+      {
+        "name": "bounded_integer_root",
+        "logic": "QF_LIA",
+        "result": "unsat",
+        "timeout_ms": 4858,
+        "elapsed_seconds": 0.000302,
+        "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun packed_count!976 () Int)\n(declare-fun packed_count!977 () Int)\n(declare-fun packed_count!978 () Int)\n(declare-fun packed_count!979 () Int)\n(declare-fun packed_count!980 () Int)\n(declare-fun packed_count!981 () Int)\n(declare-fun packed_count!982 () Int)\n(declare-fun packed_count!983 () Int)\n(assert\n (let (($x2260 (<= packed_count!976 8)))\n (let (($x1736 (>= packed_count!976 0)))\n (and $x1736 $x2260))))\n(assert\n (let (($x2397 (<= packed_count!977 8)))\n (let (($x998 (>= packed_count!977 0)))\n (and $x998 $x2397))))\n(assert\n (let (($x1793 (<= packed_count!978 8)))\n (let (($x2203 (>= packed_count!978 0)))\n (and $x2203 $x1793))))\n(assert\n (let (($x902 (<= packed_count!979 8)))\n (let (($x1218 (>= packed_count!979 0)))\n (and $x1218 $x902))))\n(assert\n (let (($x1729 (<= packed_count!980 8)))\n (let (($x843 (>= packed_count!980 0)))\n (and $x843 $x1729))))\n(assert\n (let (($x2221 (<= packed_count!981 8)))\n (let (($x1658 (>= packed_count!981 0)))\n (and $x1658 $x2221))))\n(assert\n (let (($x2483 (<= packed_count!982 8)))\n (let (($x2184 (>= packed_count!982 0)))\n (and $x2184 $x2483))))\n(assert\n (let (($x1344 (<= packed_count!983 8)))\n (let (($x2213 (>= packed_count!983 0)))\n (and $x2213 $x1344))))\n(assert\n (let ((?x1414 (+ packed_count!976 packed_count!977 packed_count!978 packed_count!979 packed_count!980 packed_count!981 packed_count!982 packed_count!983)))\n(let ((?x1403 (+ packed_count!979 packed_count!978 packed_count!983 packed_count!982 packed_count!977 packed_count!981 packed_count!976 packed_count!980)))\n(and (distinct ?x1403 ?x1414) true))))\n(check-sat)\n"
+      }
+    ],
+    "cut_smt2": "(let ((a!1 (bvsub c_integer_a\n                  (bvand (bvlshr c_integer_a ((_ sign_extend 32) #x00000001))\n                         #x5555555555555555))))\n(let ((a!2 (bvadd (bvand (bvlshr a!1 ((_ sign_extend 32) #x00000002))\n                         #x3333333333333333)\n                  (bvand a!1 #x3333333333333333))))\n  (bvand (bvadd a!2 (bvlshr a!2 ((_ sign_extend 32) #x00000004)))\n         #x0f0f0f0f0f0f0f0f)))",
+    "composition_rule": "all disjoint byte identities and bounds, exhaustive packing, exact word translation, bounded affine rewrites, final integer equality",
+    "source_word_bits": 64,
+    "byte_count": 8,
+    "source_input": "c_integer_a",
+    "reduced_output_bv": "(let ((a!1 (bvadd (concat #x0\n                          packed_byte!459\n                          #x0\n                          packed_byte!458\n                          #x0\n                          packed_byte!457\n                          #x0\n                          packed_byte!456)\n                  (concat #x0\n                          packed_byte!463\n                          #x0\n                          packed_byte!462\n                          #x0\n                          packed_byte!461\n                          #x0\n                          packed_byte!460))))\n(let ((a!2 ((_ extract 14 8)\n             (bvadd (concat #x0000 ((_ extract 31 16) a!1))\n                    (concat #x0\n                            packed_byte!459\n                            #x0\n                            packed_byte!458\n                            #x0\n                            packed_byte!457\n                            #x0\n                            packed_byte!456)\n                    (concat #x0\n                            packed_byte!463\n                            #x0\n                            packed_byte!462\n                            #x0\n                            packed_byte!461\n                            #x0\n                            packed_byte!460)))))\n  (concat #b0000000000000000000000000\n          (bvadd ((_ extract 22 16) a!1)\n                 a!2\n                 (concat #b000 packed_byte!456)\n                 (concat #b000 packed_byte!460)))))",
+    "reduced_reference_bv": "(let ((a!1 (bvadd (concat #b0\n                          (bvadd (concat #b0 packed_byte!456)\n                                 (concat #b0 packed_byte!457)))\n                  (concat #b0\n                          (bvadd (concat #b0 packed_byte!458)\n                                 (concat #b0 packed_byte!459)))))\n      (a!2 (bvadd (concat #b0\n                          (bvadd (concat #b0 packed_byte!460)\n                                 (concat #b0 packed_byte!461)))\n                  (concat #b0\n                          (bvadd (concat #b0 packed_byte!462)\n                                 (concat #b0 packed_byte!463))))))\n  (concat #b0000000000000000000000000 (bvadd (concat #b0 a!1) (concat #b0 a!2))))",
+    "counter_bindings": [
+      {
+        "counter": "packed_byte!456",
+        "reference": "(let ((a!1 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 0 0) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 1 1) c_integer_a)))))\n      (a!2 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 2 2) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 3 3) c_integer_a)))))\n      (a!3 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 4 4) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 5 5) c_integer_a)))))\n      (a!4 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 6 6) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 7 7) c_integer_a))))))\n  (bvadd ((_ zero_extend 1) (bvadd a!1 a!2))\n         ((_ zero_extend 1) (bvadd a!3 a!4))))",
+        "bounds": [
+          0,
+          8
+        ]
+      },
+      {
+        "counter": "packed_byte!457",
+        "reference": "(let ((a!1 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 8 8) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 9 9) c_integer_a)))))\n      (a!2 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 10 10) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 11 11) c_integer_a)))))\n      (a!3 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 12 12) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 13 13) c_integer_a)))))\n      (a!4 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 14 14) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 15 15) c_integer_a))))))\n  (bvadd ((_ zero_extend 1) (bvadd a!1 a!2))\n         ((_ zero_extend 1) (bvadd a!3 a!4))))",
+        "bounds": [
+          0,
+          8
+        ]
+      },
+      {
+        "counter": "packed_byte!458",
+        "reference": "(let ((a!1 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 16 16) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 17 17) c_integer_a)))))\n      (a!2 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 18 18) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 19 19) c_integer_a)))))\n      (a!3 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 20 20) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 21 21) c_integer_a)))))\n      (a!4 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 22 22) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 23 23) c_integer_a))))))\n  (bvadd ((_ zero_extend 1) (bvadd a!1 a!2))\n         ((_ zero_extend 1) (bvadd a!3 a!4))))",
+        "bounds": [
+          0,
+          8
+        ]
+      },
+      {
+        "counter": "packed_byte!459",
+        "reference": "(let ((a!1 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 24 24) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 25 25) c_integer_a)))))\n      (a!2 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 26 26) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 27 27) c_integer_a)))))\n      (a!3 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 28 28) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 29 29) c_integer_a)))))\n      (a!4 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 30 30) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 31 31) c_integer_a))))))\n  (bvadd ((_ zero_extend 1) (bvadd a!1 a!2))\n         ((_ zero_extend 1) (bvadd a!3 a!4))))",
+        "bounds": [
+          0,
+          8
+        ]
+      },
+      {
+        "counter": "packed_byte!460",
+        "reference": "(let ((a!1 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 32 32) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 33 33) c_integer_a)))))\n      (a!2 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 34 34) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 35 35) c_integer_a)))))\n      (a!3 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 36 36) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 37 37) c_integer_a)))))\n      (a!4 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 38 38) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 39 39) c_integer_a))))))\n  (bvadd ((_ zero_extend 1) (bvadd a!1 a!2))\n         ((_ zero_extend 1) (bvadd a!3 a!4))))",
+        "bounds": [
+          0,
+          8
+        ]
+      },
+      {
+        "counter": "packed_byte!461",
+        "reference": "(let ((a!1 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 40 40) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 41 41) c_integer_a)))))\n      (a!2 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 42 42) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 43 43) c_integer_a)))))\n      (a!3 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 44 44) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 45 45) c_integer_a)))))\n      (a!4 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 46 46) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 47 47) c_integer_a))))))\n  (bvadd ((_ zero_extend 1) (bvadd a!1 a!2))\n         ((_ zero_extend 1) (bvadd a!3 a!4))))",
+        "bounds": [
+          0,
+          8
+        ]
+      },
+      {
+        "counter": "packed_byte!462",
+        "reference": "(let ((a!1 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 48 48) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 49 49) c_integer_a)))))\n      (a!2 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 50 50) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 51 51) c_integer_a)))))\n      (a!3 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 52 52) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 53 53) c_integer_a)))))\n      (a!4 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 54 54) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 55 55) c_integer_a))))))\n  (bvadd ((_ zero_extend 1) (bvadd a!1 a!2))\n         ((_ zero_extend 1) (bvadd a!3 a!4))))",
+        "bounds": [
+          0,
+          8
+        ]
+      },
+      {
+        "counter": "packed_byte!463",
+        "reference": "(let ((a!1 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 56 56) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 57 57) c_integer_a)))))\n      (a!2 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 58 58) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 59 59) c_integer_a)))))\n      (a!3 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 60 60) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 61 61) c_integer_a)))))\n      (a!4 ((_ zero_extend 1)\n             (bvadd ((_ zero_extend 1) ((_ extract 62 62) c_integer_a))\n                    ((_ zero_extend 1) ((_ extract 63 63) c_integer_a))))))\n  (bvadd ((_ zero_extend 1) (bvadd a!1 a!2))\n         ((_ zero_extend 1) (bvadd a!3 a!4))))",
+        "bounds": [
+          0,
+          8
+        ]
+      }
+    ],
+    "refutation_smt2": "; benchmark generated from python API\n(set-info :status unknown)\n(declare-fun packed_count!976 () Int)\n(declare-fun packed_count!977 () Int)\n(declare-fun packed_count!978 () Int)\n(declare-fun packed_count!979 () Int)\n(declare-fun packed_count!980 () Int)\n(declare-fun packed_count!981 () Int)\n(declare-fun packed_count!982 () Int)\n(declare-fun packed_count!983 () Int)\n(assert\n (let (($x2260 (<= packed_count!976 8)))\n (let (($x1736 (>= packed_count!976 0)))\n (and $x1736 $x2260))))\n(assert\n (let (($x2397 (<= packed_count!977 8)))\n (let (($x998 (>= packed_count!977 0)))\n (and $x998 $x2397))))\n(assert\n (let (($x1793 (<= packed_count!978 8)))\n (let (($x2203 (>= packed_count!978 0)))\n (and $x2203 $x1793))))\n(assert\n (let (($x902 (<= packed_count!979 8)))\n (let (($x1218 (>= packed_count!979 0)))\n (and $x1218 $x902))))\n(assert\n (let (($x1729 (<= packed_count!980 8)))\n (let (($x843 (>= packed_count!980 0)))\n (and $x843 $x1729))))\n(assert\n (let (($x2221 (<= packed_count!981 8)))\n (let (($x1658 (>= packed_count!981 0)))\n (and $x1658 $x2221))))\n(assert\n (let (($x2483 (<= packed_count!982 8)))\n (let (($x2184 (>= packed_count!982 0)))\n (and $x2184 $x2483))))\n(assert\n (let (($x1344 (<= packed_count!983 8)))\n (let (($x2213 (>= packed_count!983 0)))\n (and $x2213 $x1344))))\n(assert\n (let ((?x1414 (+ packed_count!976 packed_count!977 packed_count!978 packed_count!979 packed_count!980 packed_count!981 packed_count!982 packed_count!983)))\n(let ((?x1403 (+ packed_count!979 packed_count!978 packed_count!983 packed_count!982 packed_count!977 packed_count!981 packed_count!976 packed_count!980)))\n(and (distinct ?x1403 ?x1414) true))))\n(check-sat)\n",
+    "refutation_scope": "bounded integer root only; all byte and packing steps plus the recorded translations are required",
+    "trusted_components": [
+      "typed source executor",
+      "cut composition rule",
+      "exact BV/unsigned-integer translator",
+      "bounded affine normalizer",
+      "SMT solver"
+    ],
+    "integer_bindings": [
+      {
+        "bv": "packed_byte!456",
+        "integer": "packed_count!976",
+        "bounds": [
+          0,
+          8
+        ]
+      },
+      {
+        "bv": "packed_byte!457",
+        "integer": "packed_count!977",
+        "bounds": [
+          0,
+          8
+        ]
+      },
+      {
+        "bv": "packed_byte!458",
+        "integer": "packed_count!978",
+        "bounds": [
+          0,
+          8
+        ]
+      },
+      {
+        "bv": "packed_byte!459",
+        "integer": "packed_count!979",
+        "bounds": [
+          0,
+          8
+        ]
+      },
+      {
+        "bv": "packed_byte!460",
+        "integer": "packed_count!980",
+        "bounds": [
+          0,
+          8
+        ]
+      },
+      {
+        "bv": "packed_byte!461",
+        "integer": "packed_count!981",
+        "bounds": [
+          0,
+          8
+        ]
+      },
+      {
+        "bv": "packed_byte!462",
+        "integer": "packed_count!982",
+        "bounds": [
+          0,
+          8
+        ]
+      },
+      {
+        "bv": "packed_byte!463",
+        "integer": "packed_count!983",
+        "bounds": [
+          0,
+          8
+        ]
+      }
+    ],
+    "integer_output": "(let ((a!1 (div (mod (+ (* 16777216 packed_count!979)\n                        (* 65536 packed_count!978)\n                        (* 256 packed_count!977)\n                        packed_count!976\n                        (* 16777216 packed_count!983)\n                        (* 65536 packed_count!982)\n                        (* 256 packed_count!981)\n                        packed_count!980)\n                     4294967296)\n                65536)))\n(let ((a!2 (div (mod (+ (mod a!1 65536)\n                        (* 16777216 packed_count!979)\n                        (* 65536 packed_count!978)\n                        (* 256 packed_count!977)\n                        packed_count!976\n                        (* 16777216 packed_count!983)\n                        (* 65536 packed_count!982)\n                        (* 256 packed_count!981)\n                        packed_count!980)\n                     4294967296)\n                256)))\n  (mod (+ a!1 a!2 packed_count!976 packed_count!980) 128)))",
+    "integer_reference": "(let ((a!1 (mod (+ (mod (+ packed_count!976 packed_count!977) 32)\n                   (mod (+ packed_count!978 packed_count!979) 32))\n                64))\n      (a!2 (mod (+ (mod (+ packed_count!980 packed_count!981) 32)\n                   (mod (+ packed_count!982 packed_count!983) 32))\n                64)))\n  (mod (+ a!1 a!2) 128))",
+    "normalized_output": "(+ packed_count!979\n   packed_count!978\n   packed_count!983\n   packed_count!982\n   packed_count!977\n   packed_count!981\n   packed_count!976\n   packed_count!980)",
+    "normalized_reference": "(+ packed_count!976\n   packed_count!977\n   packed_count!978\n   packed_count!979\n   packed_count!980\n   packed_count!981\n   packed_count!982\n   packed_count!983)",
+    "output_normalization": {
+      "method": "exact affine coefficient quotient/remainder with bounded residual interval",
+      "bounds": {
+        "packed_count!976": [
+          0,
+          8
+        ],
+        "packed_count!977": [
+          0,
+          8
+        ],
+        "packed_count!978": [
+          0,
+          8
+        ],
+        "packed_count!979": [
+          0,
+          8
+        ],
+        "packed_count!980": [
+          0,
+          8
+        ],
+        "packed_count!981": [
+          0,
+          8
+        ],
+        "packed_count!982": [
+          0,
+          8
+        ],
+        "packed_count!983": [
+          0,
+          8
+        ]
+      },
+      "rewrites": [
+        {
+          "argument": "(+ (* 16777216 packed_count!979)\n   (* 65536 packed_count!978)\n   (* 256 packed_count!977)\n   packed_count!976\n   (* 16777216 packed_count!983)\n   (* 65536 packed_count!982)\n   (* 256 packed_count!981)\n   packed_count!980)",
+          "divisor": 4294967296,
+          "quotient": "0",
+          "remainder": "(+ (* 16777216 packed_count!979)\n   (* 65536 packed_count!978)\n   (* 256 packed_count!977)\n   packed_count!976\n   (* 16777216 packed_count!983)\n   (* 65536 packed_count!982)\n   (* 256 packed_count!981)\n   packed_count!980)",
+          "residual_interval": [
+            0,
+            269488144
+          ],
+          "residual_quotient": 0,
+          "remainder_interval": [
+            0,
+            269488144
+          ],
+          "decomposition_identity_checked": true,
+          "operation": "mod"
+        },
+        {
+          "argument": "(+ (* 16777216 packed_count!979)\n   (* 65536 packed_count!978)\n   (* 256 packed_count!977)\n   packed_count!976\n   (* 16777216 packed_count!983)\n   (* 65536 packed_count!982)\n   (* 256 packed_count!981)\n   packed_count!980)",
+          "divisor": 65536,
+          "quotient": "(+ (* 256 packed_count!979)\n   packed_count!978\n   (* 256 packed_count!983)\n   packed_count!982)",
+          "remainder": "(+ (* 256 packed_count!977)\n   packed_count!976\n   (* 256 packed_count!981)\n   packed_count!980)",
+          "residual_interval": [
+            0,
+            4112
+          ],
+          "residual_quotient": 0,
+          "remainder_interval": [
+            0,
+            4112
+          ],
+          "decomposition_identity_checked": true,
+          "operation": "div"
+        },
+        {
+          "argument": "(+ (* 256 packed_count!979)\n   packed_count!978\n   (* 256 packed_count!983)\n   packed_count!982)",
+          "divisor": 65536,
+          "quotient": "0",
+          "remainder": "(+ (* 256 packed_count!979)\n   packed_count!978\n   (* 256 packed_count!983)\n   packed_count!982)",
+          "residual_interval": [
+            0,
+            4112
+          ],
+          "residual_quotient": 0,
+          "remainder_interval": [
+            0,
+            4112
+          ],
+          "decomposition_identity_checked": true,
+          "operation": "mod"
+        },
+        {
+          "argument": "(+ (* 16777472 packed_count!979)\n   (* 65537 packed_count!978)\n   (* 16777472 packed_count!983)\n   (* 65537 packed_count!982)\n   (* 256 packed_count!977)\n   packed_count!976\n   (* 256 packed_count!981)\n   packed_count!980)",
+          "divisor": 4294967296,
+          "quotient": "0",
+          "remainder": "(+ (* 16777472 packed_count!979)\n   (* 65537 packed_count!978)\n   (* 16777472 packed_count!983)\n   (* 65537 packed_count!982)\n   (* 256 packed_count!977)\n   packed_count!976\n   (* 256 packed_count!981)\n   packed_count!980)",
+          "residual_interval": [
+            0,
+            269492256
+          ],
+          "residual_quotient": 0,
+          "remainder_interval": [
+            0,
+            269492256
+          ],
+          "decomposition_identity_checked": true,
+          "operation": "mod"
+        },
+        {
+          "argument": "(+ (* 16777472 packed_count!979)\n   (* 65537 packed_count!978)\n   (* 16777472 packed_count!983)\n   (* 65537 packed_count!982)\n   (* 256 packed_count!977)\n   packed_count!976\n   (* 256 packed_count!981)\n   packed_count!980)",
+          "divisor": 256,
+          "quotient": "(+ (* 65537 packed_count!979)\n   (* 256 packed_count!978)\n   (* 65537 packed_count!983)\n   (* 256 packed_count!982)\n   packed_count!977\n   packed_count!981)",
+          "remainder": "(+ packed_count!978 packed_count!982 packed_count!976 packed_count!980)",
+          "residual_interval": [
+            0,
+            32
+          ],
+          "residual_quotient": 0,
+          "remainder_interval": [
+            0,
+            32
+          ],
+          "decomposition_identity_checked": true,
+          "operation": "div"
+        },
+        {
+          "argument": "(+ (* 65793 packed_count!979)\n   (* 257 packed_count!978)\n   (* 65793 packed_count!983)\n   (* 257 packed_count!982)\n   packed_count!977\n   packed_count!981\n   packed_count!976\n   packed_count!980)",
+          "divisor": 128,
+          "quotient": "(+ (* 514 packed_count!979)\n   (* 2 packed_count!978)\n   (* 514 packed_count!983)\n   (* 2 packed_count!982))",
+          "remainder": "(+ packed_count!979\n   packed_count!978\n   packed_count!983\n   packed_count!982\n   packed_count!977\n   packed_count!981\n   packed_count!976\n   packed_count!980)",
+          "residual_interval": [
+            0,
+            64
+          ],
+          "residual_quotient": 0,
+          "remainder_interval": [
+            0,
+            64
+          ],
+          "decomposition_identity_checked": true,
+          "operation": "mod"
+        }
+      ],
+      "complete": true
+    },
+    "reference_normalization": {
+      "method": "exact affine coefficient quotient/remainder with bounded residual interval",
+      "bounds": {
+        "packed_count!976": [
+          0,
+          8
+        ],
+        "packed_count!977": [
+          0,
+          8
+        ],
+        "packed_count!978": [
+          0,
+          8
+        ],
+        "packed_count!979": [
+          0,
+          8
+        ],
+        "packed_count!980": [
+          0,
+          8
+        ],
+        "packed_count!981": [
+          0,
+          8
+        ],
+        "packed_count!982": [
+          0,
+          8
+        ],
+        "packed_count!983": [
+          0,
+          8
+        ]
+      },
+      "rewrites": [
+        {
+          "argument": "(+ packed_count!976 packed_count!977)",
+          "divisor": 32,
+          "quotient": "0",
+          "remainder": "(+ packed_count!976 packed_count!977)",
+          "residual_interval": [
+            0,
+            16
+          ],
+          "residual_quotient": 0,
+          "remainder_interval": [
+            0,
+            16
+          ],
+          "decomposition_identity_checked": true,
+          "operation": "mod"
+        },
+        {
+          "argument": "(+ packed_count!978 packed_count!979)",
+          "divisor": 32,
+          "quotient": "0",
+          "remainder": "(+ packed_count!978 packed_count!979)",
+          "residual_interval": [
+            0,
+            16
+          ],
+          "residual_quotient": 0,
+          "remainder_interval": [
+            0,
+            16
+          ],
+          "decomposition_identity_checked": true,
+          "operation": "mod"
+        },
+        {
+          "argument": "(+ packed_count!976 packed_count!977 packed_count!978 packed_count!979)",
+          "divisor": 64,
+          "quotient": "0",
+          "remainder": "(+ packed_count!976 packed_count!977 packed_count!978 packed_count!979)",
+          "residual_interval": [
+            0,
+            32
+          ],
+          "residual_quotient": 0,
+          "remainder_interval": [
+            0,
+            32
+          ],
+          "decomposition_identity_checked": true,
+          "operation": "mod"
+        },
+        {
+          "argument": "(+ packed_count!980 packed_count!981)",
+          "divisor": 32,
+          "quotient": "0",
+          "remainder": "(+ packed_count!980 packed_count!981)",
+          "residual_interval": [
+            0,
+            16
+          ],
+          "residual_quotient": 0,
+          "remainder_interval": [
+            0,
+            16
+          ],
+          "decomposition_identity_checked": true,
+          "operation": "mod"
+        },
+        {
+          "argument": "(+ packed_count!982 packed_count!983)",
+          "divisor": 32,
+          "quotient": "0",
+          "remainder": "(+ packed_count!982 packed_count!983)",
+          "residual_interval": [
+            0,
+            16
+          ],
+          "residual_quotient": 0,
+          "remainder_interval": [
+            0,
+            16
+          ],
+          "decomposition_identity_checked": true,
+          "operation": "mod"
+        },
+        {
+          "argument": "(+ packed_count!980 packed_count!981 packed_count!982 packed_count!983)",
+          "divisor": 64,
+          "quotient": "0",
+          "remainder": "(+ packed_count!980 packed_count!981 packed_count!982 packed_count!983)",
+          "residual_interval": [
+            0,
+            32
+          ],
+          "residual_quotient": 0,
+          "remainder_interval": [
+            0,
+            32
+          ],
+          "decomposition_identity_checked": true,
+          "operation": "mod"
+        },
+        {
+          "argument": "(+ packed_count!976\n   packed_count!977\n   packed_count!978\n   packed_count!979\n   packed_count!980\n   packed_count!981\n   packed_count!982\n   packed_count!983)",
+          "divisor": 128,
+          "quotient": "0",
+          "remainder": "(+ packed_count!976\n   packed_count!977\n   packed_count!978\n   packed_count!979\n   packed_count!980\n   packed_count!981\n   packed_count!982\n   packed_count!983)",
+          "residual_interval": [
+            0,
+            64
+          ],
+          "residual_quotient": 0,
+          "remainder_interval": [
+            0,
+            64
+          ],
+          "decomposition_identity_checked": true,
+          "operation": "mod"
+        }
+      ],
+      "complete": true
+    },
+    "elapsed_seconds": 0.144348,
+    "source_sha256": "b8e9994ac758f8f7ce091505d37ddad5cbad919d70d677838b8307caeaeccbfb",
+    "reference_sha256": "480297b6b8ebb38446a734260c0a1b35b2abdde5f9755d6e2102b37db506bf41",
+    "execution_source": "int __popcountdi2(long a) {\nunsigned long x2 = ((unsigned long)(a));\nx2 = ((unsigned long)((((unsigned long long)(x2)) - ((((unsigned long long)(((x2 >> 1)))) & 6148914691236517205ULL)))));\nx2 = ((unsigned long)((((((unsigned long long)(((x2 >> 2)))) & 3689348814741910323ULL)) + ((((unsigned long long)(x2)) & 3689348814741910323ULL)))));\nx2 = ((unsigned long)((((unsigned long long)(((x2 + ((x2 >> 4)))))) & 1085102592571150095ULL)));\nunsigned int x = ((unsigned int)(((x2 + ((x2 >> 32))))));\nx = (x + ((x >> 16)));\nreturn ((int)((((x + ((x >> 8)))) & ((unsigned int)(127)))));\n}\n",
+    "execution_source_sha256": "b8e9994ac758f8f7ce091505d37ddad5cbad919d70d677838b8307caeaeccbfb",
+    "external_calls_assumed_defined": false,
+    "strategy": "auto"
+  },
+  "proof_boundary": "typed source safety and independent functional certificate; trusted Clang/source executors/composition/translation; no complete C/LLVM claim"
+}
