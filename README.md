@@ -783,8 +783,8 @@ arguments with actual C parameter conversions. The checked additive step retains
 the complete current-payload/scalar expression, and the scalar return retains
 its operations and callee/caller conversions. Empty chains and allocation
 failure cannot erase undefined unused arguments or invalid return expressions.
-Value-preserving integer casts avoid redundant modular reductions while keeping
-the original safety predicates. General builder arguments, aliases, arbitrary
+List-fold integer casts avoid redundant modular reductions while keeping
+the original safety predicates; other kernels retain their original converter. General builder arguments, aliases, arbitrary
 stateful consumers and complete C/LLVM remain open.
 
 See the [contract and runnable example](docs/WEIGHTED_LIST_CONSUMERS.md),

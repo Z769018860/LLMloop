@@ -23,11 +23,6 @@ class IntegerLift:
     def convert(self, term, target):
         value = term.value
         if target.name == '_Bool':value = z3.If(value != 0,z3.IntVal(1),z3.IntVal(0))
-        elif target.bits > term.type.bits and target.minimum <= term.type.minimum and target.maximum >= term.type.maximum:
-            # Just as in promotions/usual arithmetic conversions, a defined
-            # value already representable in the target needs no reduction.
-            # Retain term.safe: widening must never repair earlier source UB.
-            pass
         elif target.signed:value = (value-target.minimum) % (1 << target.bits)+target.minimum
         else:value = value % (1 << target.bits)
         value=z3.simplify(value)
@@ -125,3 +120,15 @@ class IntegerLift:
                          '<=':lambda:x<=y,'>':lambda:x>y,'>=':lambda:x>=y}
             return self.boolean(comparisons[op](),safe)
         raise SMTGraphError('Unsupported lifted C integer operator')
+
+
+class WideningIntegerLift(IntegerLift):
+    """List-fold-only value-preserving widening; default kernels stay unchanged."""
+    def convert(self,term,target):
+        if target.name!='_Bool' and target.bits>term.type.bits and target.minimum<=term.type.minimum and target.maximum>=term.type.maximum:
+            # Defined source values already fit. Earlier UB remains in safe.
+            value=z3.simplify(term.value)
+            choices=integer_choices(value,max_cases=4)
+            if choices is not None:value=choice_value(choices)
+            return TypedTerm(value,target,term.safe)
+        return super().convert(term,target)

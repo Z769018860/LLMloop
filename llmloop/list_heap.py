@@ -19,10 +19,12 @@ from .typed_c import c_type
 from .typed_cfg_heap import TypedCFGHeap
 from .typed_nested import TypedCNested
 from .phase_invariants import exact_term
+from .integer_lift import WideningIntegerLift
 
 
 class _ListFoldTrajectory(TypedCNested):
-    """Use equivalent positive integral Mod atoms only in list fold candidates."""
+    """Use equivalent widening/Mod representations only in list fold proofs."""
+    integer_engine = WideningIntegerLift
     def summary_term(self,expression,mapping):
         return exact_term(expression,mapping,integer_modulo=True)
 

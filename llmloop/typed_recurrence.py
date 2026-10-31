@@ -13,6 +13,8 @@ from .smt_spath import SMTGraphError
 
 
 class TypedCRecurrence(TypedCFunction):
+    integer_engine = IntegerLift
+
     def __init__(self,source,closed_forms,function=None,parameter_bounds=None,abi='LP64',char_signed=True,max_paths=48):
         if type(max_paths) is not int or not 1<=max_paths<=64:raise SMTGraphError('Typed recurrence paths must be 1..64')
         if not isinstance(closed_forms,dict):raise SMTGraphError('Typed recurrence requires candidate closed_forms')
@@ -20,7 +22,7 @@ class TypedCRecurrence(TypedCFunction):
         except Exception as exc:raise SMTGraphError('C parse failed: '+str(exc)) from exc
         funcs=[f for f in unit.ext if isinstance(f,c_ast.FuncDef) and (function is None or f.decl.name==function)]
         if len(funcs)!=1:raise SMTGraphError('Expected one selected typed function')
-        self.func=funcs[0];self.engine=IntegerLift(abi,char_signed)
+        self.func=funcs[0];self.engine=self.integer_engine(abi,char_signed)
         self.return_type=c_type(self.func.decl,self.engine.abi)
         self.max_unroll=0;self.max_paths=max_paths;self.nodes=0
         self.declarations={};self.types={};self.const=set();self.obligations=[];self.loop_certificates=[]
