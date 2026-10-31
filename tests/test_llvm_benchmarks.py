@@ -93,6 +93,13 @@ def test_original_upstream_tus_and_headers_through_compilation_database(case,dat
     assert front['source']['sha256']==hashlib.sha256((VENDOR/case['file']).read_bytes()).hexdigest()
     assert front['compilation_database']['sha256']==hashlib.sha256(database.read_bytes()).hexdigest()
     assert not list(database.parent.glob('*.o')) and not list(database.parent.glob('*.d'))
+    if case['name']=='builtin_loop_udiv32':
+        normalization=report['normalization']
+        assert {m['builtin'] for m in normalization['bit_builtin_models']}=={'__builtin_clz','__builtin_clzll'}
+        assert not normalization['external_call_frontiers']
+        if report.get('failed_obligation')=='control-flow step budget':
+            assert report['analysis_limit']=='control_flow_step_budget'
+            assert report['counterexample_kind']=='reachable_control_flow_step_frontier'
     proved=case['expected_safety']!='UNKNOWN'
     assert report.get('c_overflow_verified',False)==proved
     assert report.get('memory_safety_verified',False)==proved

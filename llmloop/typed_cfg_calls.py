@@ -194,6 +194,7 @@ class CallExpansion:
     def stable(self,node,allow_pure_calls=False):
         if isinstance(node,c_ast.ID):return node.name in self.scalar_names
         if isinstance(node,c_ast.Constant):return node.type=='char' or bool(node.type) and set(node.type.split())<=set(('int','long','signed','unsigned'))
+        if isinstance(node,c_ast.UnaryOp) and node.op=='sizeof' and isinstance(node.expr,c_ast.Typename):return scalar_declarator(node.expr.type)
         if isinstance(node,c_ast.UnaryOp) and node.op in ('+','-','~','!'):return self.stable(node.expr,allow_pure_calls)
         if isinstance(node,c_ast.Cast):return scalar_declarator(node.to_type.type) and self.stable(node.expr,allow_pure_calls)
         if isinstance(node,c_ast.BinaryOp):return self.stable(node.left,allow_pure_calls) and self.stable(node.right,allow_pure_calls)

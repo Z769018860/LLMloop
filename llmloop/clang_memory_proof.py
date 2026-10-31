@@ -14,7 +14,7 @@ BUILTINS = {'malloc', 'calloc', 'free'}
 
 
 class MemoryNormalizer(UnionViewNormalizer):
-    def __init__(self, frontend, callables=()):
+    def __init__(self, frontend, callables=(), bit_models=None):
         super().__init__(frontend)
         self.callables = set(callables)
         self.used.update(self.callables)
@@ -26,6 +26,8 @@ class MemoryNormalizer(UnionViewNormalizer):
         self.external_declarations = {n['id']: n for n in frontend.get('external_function_declarations', [])}
         self.external_prototypes = {}
         self.external_frontiers = []
+        self.bit_models = bit_models
+        self.bit_builtin_calls = []
         for record in frontend.get('record_definitions', []):
             self.record_defs.setdefault(record.get('name'), []).append(record)
 
@@ -206,6 +208,14 @@ class MemoryNormalizer(UnionViewNormalizer):
             while callee.get('kind') in ('ImplicitCastExpr', 'ParenExpr') and len(callee.get('inner', [])) == 1:
                 callee = callee['inner'][0]
             ref = callee.get('referencedDecl', {})
+            from .clang_bit_builtins import BIT_BUILTINS
+            if callee.get('kind') == 'DeclRefExpr' and ref.get('kind') == 'FunctionDecl' and ref.get('name') in BIT_BUILTINS:
+                if self.bit_models is None:
+                    raise SMTGraphError('Clang bit builtin models require the calls backend')
+                model = self.bit_models.model(ref, node)
+                self.bit_builtin_calls.append({'builtin': ref['name'], 'declaration_id': ref['id'],
+                                               'call_ast_id': node.get('id'), 'helper': model['helper']})
+                return model['helper'] + '(' + self.expr(children[1]) + ')'
             if callee.get('kind')=='DeclRefExpr' and ref.get('kind')=='FunctionDecl' and ref.get('name') not in self.callables | BUILTINS:
                 return self.external_call(node,ref)
             if callee.get('kind') != 'DeclRefExpr' or ref.get('kind') != 'FunctionDecl' or ref.get('name') not in self.callables | BUILTINS:
@@ -321,6 +331,7 @@ class MemoryNormalizer(UnionViewNormalizer):
 
 
 def normalize_calls(frontend, function):
+    from .clang_bit_builtins import BIT_BUILTINS, BitBuiltinModels
     functions = {fn['name']: fn for fn in frontend['functions']}
     if function is None:
         if len(functions) != 1:
@@ -330,6 +341,8 @@ def normalize_calls(frontend, function):
         raise SMTGraphError('Clang call entry function unavailable')
     if set(functions) & BUILTINS:
         raise SMTGraphError('User-defined allocator/free semantics unsupported')
+    if set(functions) & set(BIT_BUILTINS):
+        raise SMTGraphError('User-defined bit builtin bodies unsupported')
     selected = set()
     pending = [function]
     while pending:
@@ -346,8 +359,12 @@ def normalize_calls(frontend, function):
                     pending.append(callee)
                 # Undefined direct callees become explicit unreachable-call
                 # frontiers. Their arguments and declarations are retained.
-    normalizers = [MemoryNormalizer({**frontend, 'functions': [functions[name]]}, selected) for name in sorted(selected)]
+    used = {n['name'] for fn in frontend['functions'] for n in nodes(fn['ast']) if n.get('name')}
+    used.update(n['name'] for n in frontend.get('external_function_declarations', []) if n.get('name'))
+    bit_models = BitBuiltinModels(frontend, used)
+    normalizers = [MemoryNormalizer({**frontend, 'functions': [functions[name]]}, selected, bit_models) for name in sorted(selected)]
     sources = [normalizer.source() for normalizer in normalizers]
+    sources += [model['source'] for model in bit_models.models.values()]
     prototypes = [source.split('{', 1)[0].strip() + ';' for source in sources]
     external={}
     for normalizer in normalizers:

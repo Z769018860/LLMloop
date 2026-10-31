@@ -776,6 +776,19 @@ See the [Clang example](examples/clang_list_argument_conversions.c),
 [v0.36 experiments](experiments/v036/report.md). General alias/call/graph and
 complete C/LLVM requirements remain open; no KLEE.
 
+## v0.41: declaration-checked Clang clz/ctz models
+
+Six Clang leading/trailing-zero builtins now lower to checked typed helper
+bodies after declaration identity, signature and target-width validation.
+Original argument conversions, lazy evaluation and zero-input undefinedness
+are retained. Independent per-bit specifications and native UBSan controls
+cover LP64, ILP32 and LLP64 source models. The unsigned-division pilot now
+reaches its loop analysis but remains UNKNOWN; CFG step-frontier diagnostics
+explicitly distinguish a budget limit from source undefined behavior. See the
+[contract](docs/CLANG_BIT_BUILTINS.md) and
+[experiments](experiments/v041/report.md), or run
+`python scripts/check_clang_bit_builtins.py --output /tmp/bit_builtins.json`.
+
 ## v0.40: checked compositional bit-vector value proofs
 
 The original compiler-rt 64-bit popcount now has an independent functional

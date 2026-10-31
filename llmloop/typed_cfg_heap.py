@@ -501,6 +501,10 @@ class TypedCFGHeap(TypedCMemory):
         if not success:
             result.update(failed_obligation=self.failure.label,reason=self.failure.reason)
             if self.failure.witness is not None:result['counterexample']=self.failure.witness
+            if self.failure.label=='control-flow step budget':
+                result['analysis_limit']='control_flow_step_budget'
+                result['counterexample_kind']='reachable_control_flow_step_frontier'
+                result['reason']='Complete exit not proved within the configured CFG step budget; this is not a source undefined-behavior diagnosis'
         else:
             result['return_smt2']=self.result.value.sexpr()
             if inputs is not None:
