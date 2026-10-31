@@ -44,13 +44,14 @@ Formal assignment conversions remain explicit casts in the witness. Narrowing,
 signedness, `_Bool`, ABI-dependent `long` widths and ordinary-char signedness
 therefore retain the existing typed semantics. The implementation choice for
 out-of-range signed conversion is two's-complement modular conversion. A
-containing target range needs no modular reduction in the integer lift; this
-value-preserving representation change retains the original safety predicate.
+strictly wider containing target range needs no modular reduction in the integer
+lift; this value-preserving representation change retains the original safety predicate.
 It cannot repair earlier undefined arithmetic or remove a narrowing conversion.
-Positive integral symbolic `Mod` uses the same Euclidean remainder expression
-as typed C conversions. This exact mathematical normalization avoids forcing
+List fold candidates use the same Euclidean remainder expression as typed C
+conversions for positive integral `Mod`. This exact normalization avoids forcing
 weighted induction to rediscover the floor/remainder identity under products.
-Negative divisors and nonintegral dividends retain their exact floor rule.
+Other proof kernels retain their existing default translation. Negative divisors
+and nonintegral dividends retain their exact floor rule.
 
 Helper locals and scalar formal placeholders are renamed before simultaneous
 substitution. This avoids capture by caller variables, the owned head, another

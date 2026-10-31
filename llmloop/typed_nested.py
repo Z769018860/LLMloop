@@ -46,6 +46,9 @@ def entry_form(source,names,entry):
 
 
 class TypedCNested(TypedCRecurrence):
+    def summary_term(self,expression,mapping):
+        return exact_term(expression,mapping)
+
     def __init__(self,source,loop_summaries,function=None,parameter_bounds=None,abi='LP64',char_signed=True,max_paths=48):
         from .candidate_synthesis import normalize_summaries
         self.summaries=normalize_summaries(source,function,loop_summaries);self.live=[];self.loop_certificates=[];self.synthesis_records=[]
@@ -149,8 +152,8 @@ class TypedCNested(TypedCRecurrence):
         current={};successors={}
         for name,initial in state.items():
             expression,ghosts=entry_form(summary[name],names,state)
-            value=exact_term(s.expand_func(expression),{**mapping,**ghosts})
-            successor=exact_term(s.expand_func(expression.subs(symbol,symbol+1)),{**mapping,**ghosts})
+            value=self.summary_term(s.expand_func(expression),{**mapping,**ghosts})
+            successor=self.summary_term(s.expand_func(expression.subs(symbol,symbol+1)),{**mapping,**ghosts})
             if not z3.is_int(value):self.check(index+' '+name+' integral',inclusive,z3.IsInt(value));value=z3.ToInt(value)
             if not z3.is_int(successor):self.check(index+' '+name+' successor integral',active,z3.IsInt(successor));successor=z3.ToInt(successor)
             self.check(index+' '+name+' range',inclusive,z3.And(value>=initial.type.minimum,value<=initial.type.maximum))

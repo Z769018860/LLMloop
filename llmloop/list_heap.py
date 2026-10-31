@@ -18,6 +18,13 @@ from .smt_spath import SMTGraphError
 from .typed_c import c_type
 from .typed_cfg_heap import TypedCFGHeap
 from .typed_nested import TypedCNested
+from .phase_invariants import exact_term
+
+
+class _ListFoldTrajectory(TypedCNested):
+    """Use equivalent positive integral Mod atoms only in list fold candidates."""
+    def summary_term(self,expression,mapping):
+        return exact_term(expression,mapping,integer_modulo=True)
 
 
 def list_shape_certificate():
@@ -543,6 +550,7 @@ class ListHeapProgram:
             'return_expression':self.generator.visit(returned.expr),
             'pure_current_payload_and_immutable_scalars_only':True,
             'all_original_operations_and_conversions_retained':True,
+            'candidate_positive_integer_modulo':'Euclidean remainder; other proof kernels retain their default translation',
             'return_checked_even_for_empty_chain':True}
 
     def make_fold(self, max_paths, summaries):
@@ -577,7 +585,7 @@ class ListHeapProgram:
         limits = self.bounds.get(self.bound, [None,None])
         upper = self.model.types['int'].maximum if limits[1] is None else limits[1]
         self.max_length = max(0, upper)
-        self.fold_engine = TypedCNested(self.fold_source, summaries, function=name,
+        self.fold_engine = _ListFoldTrajectory(self.fold_source, summaries, function=name,
             parameter_bounds={**self.bounds,self.length_name:[0,self.max_length]}, abi=self.abi,
             char_signed=self.char_signed, max_paths=max_paths)
 
