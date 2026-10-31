@@ -1,6 +1,6 @@
 import pytest
 import z3
-from llmloop.integer_lift import IntegerLift,WideningIntegerLift
+from llmloop.integer_lift import IntegerLift,TypedWordIntegers,WideningIntegerLift
 from llmloop.c_integers import UndefinedInteger
 from llmloop.symbolic_integers import TypedTerm
 
@@ -54,7 +54,7 @@ def test_lazy_guards_and_assignment_conversions():
 @pytest.mark.parametrize('abi',['LP64','ILP32','LLP64'])
 @pytest.mark.parametrize('char_signed',[False,True])
 def test_conversion_boundaries_match_concrete_abi_and_retain_undefinedness(abi,char_signed):
-    for engine_class in (IntegerLift,WideningIntegerLift):
+    for engine_class in (IntegerLift,TypedWordIntegers,WideningIntegerLift):
         engine=engine_class(abi,char_signed)
         names=['_Bool','char','signed char','unsigned char','int','unsigned int','long','unsigned long','long long','unsigned long long']
         for source in names:
@@ -75,7 +75,7 @@ def test_conversion_boundaries_match_concrete_abi_and_retain_undefinedness(abi,c
 
 def test_arithmetic_sign_shift_is_floor_division_on_full_signed_domains():
     for abi in ('LP64','ILP32','LLP64'):
-        for cls in (IntegerLift,WideningIntegerLift):
+        for cls in (IntegerLift,TypedWordIntegers,WideningIntegerLift):
             for name in ('int','long','long long'):
                 engine=cls(abi);t=engine.abi.types[name]
                 x=z3.Int('sign_word_'+abi+name.replace(' ','_'))
@@ -97,7 +97,7 @@ def test_neutral_masks_match_full_word_identities_and_concrete_abi():
             assert solver.check()==z3.unsat
     for abi in ('LP64','ILP32','LLP64'):
         for name in ('int','unsigned int','long long','unsigned long long'):
-            engine=IntegerLift(abi);t=engine.abi.types[name]
+            engine=TypedWordIntegers(abi);t=engine.abi.types[name]
             x=z3.Int('neutral_mask_input');flag=z3.Bool('neutral_mask_flag')
             full=-1 if t.signed else (1 << t.bits)-1
             engine.variables={'x':TypedTerm(x,t,z3.BoolVal(True)),
@@ -115,7 +115,7 @@ def test_neutral_masks_match_full_word_identities_and_concrete_abi():
 
 
 def test_neutral_masks_cannot_erase_undefined_eager_operands():
-    for cls in (IntegerLift,WideningIntegerLift):
+    for cls in (IntegerLift,TypedWordIntegers,WideningIntegerLift):
         for op in ('&','|','^'):
             for mask in (0,-1):
                 for reverse in (False,True):
@@ -141,3 +141,17 @@ def test_sign_mask_abs_idiom_keeps_full_domain_and_signed_minimum_control():
         rejected=analyze_request(request)
         assert rejected['status']=='UNKNOWN' and not rejected['c_overflow_verified'],rejected
         assert int(rejected['counterexample']['a'])==-2147483648
+
+
+def test_generic_lift_keeps_unbounded_integer_shift_contract():
+    for name in ('signed int','signed long long'):
+        engine=IntegerLift();t=engine.abi.types[name];x=z3.Int('unbounded_shift_input')
+        engine.variables={'x':TypedTerm(x,t,z3.BoolVal(True))}
+        term=engine.lower({'op':'>>','args':[{'var':'x'},{'literal':str(t.bits-1)}]})
+        solver=z3.Solver();solver.set(timeout=5000);solver.add(term.value!=x/(1 << (t.bits-1)))
+        assert solver.check()==z3.unsat
+        engine.nodes=0
+        masked=engine.lower({'op':'^','args':[{'var':'x'},{'value':-1,'type':name}]})
+        reference=z3.BV2Int(z3.Int2BV(x,t.bits)^z3.BitVecVal(-1,t.bits),is_signed=True)
+        solver=z3.Solver();solver.set(timeout=5000);solver.add(masked.value!=reference)
+        assert solver.check()==z3.unsat

@@ -48,6 +48,12 @@ class IntegerLift:
     def boolean(self, value, safe):
         return TypedTerm(z3.If(value,z3.IntVal(1),z3.IntVal(0)),self.abi.types['int'],safe)
 
+    def right_shift_value(self,value,shift,ctype):
+        return value/(1 << shift)
+
+    def neutral_mask_value(self,op,left,right,ctype):
+        return None
+
     def lower(self,node,depth=0):
         self.nodes += 1
         if self.nodes > 256 or depth > 32 or not isinstance(node,dict):
@@ -93,11 +99,7 @@ class IntegerLift:
             else:
                 shifts=[(shift,guard) for shift,guard in choices.items() if 0<=shift<a.type.bits]
             for shift,guard in shifts:
-                if op == '<<':term=x*(1 << shift)
-                elif a.type.signed and shift==a.type.bits-1:
-                    # Arithmetic sign-bit shift on a represented signed word.
-                    term=z3.If(x<0,z3.IntVal(-1),z3.IntVal(0))
-                else:term=x/(1 << shift)
+                term=x*(1 << shift) if op == '<<' else self.right_shift_value(x,shift,a.type)
                 value=z3.If(guard,term,value)
             if op == '<<' and a.type.signed:safe=z3.And(safe,x>=0,value<=a.type.maximum)
             if not a.type.signed:value=value % (1 << a.type.bits)
@@ -116,19 +118,8 @@ class IntegerLift:
             value=quotient if op == '/' else x-quotient*y
             return TypedTerm(z3.simplify(value),t,safe)
         if op in ('&','|','^'):
-            # Exact zero/all-ones identities. Both original operands' safety
-            # predicates remain, including an undefined value masked to zero.
-            full=-1 if t.signed else (1 << t.bits)-1
-            for value,mask in ((x,y),(y,x)):
-                masks=integer_choices(mask,max_cases=4)
-                if masks and set(masks)<={0,full}:
-                    result=z3.IntVal(0)
-                    for number,guard in masks.items():
-                        if op=='^':part=value if number==0 else -value-1 if t.signed else full-value
-                        elif op=='&':part=z3.IntVal(0) if number==0 else value
-                        else:part=value if number==0 else z3.IntVal(full)
-                        result=z3.If(guard,part,result)
-                    return TypedTerm(z3.simplify(result),t,safe)
+            normalized=self.neutral_mask_value(op,x,y,t)
+            if normalized is not None:return TypedTerm(normalized,t,safe)
             left,right=z3.Int2BV(x,t.bits),z3.Int2BV(y,t.bits)
             bits=left&right if op == '&' else left|right if op == '|' else left^right
             return TypedTerm(z3.BV2Int(bits,is_signed=t.signed),t,safe)
@@ -139,7 +130,34 @@ class IntegerLift:
         raise SMTGraphError('Unsupported lifted C integer operator')
 
 
-class WideningIntegerLift(IntegerLift):
+class TypedWordIntegers(IntegerLift):
+    """Word identities under the typed source kernels' representability invariant.
+
+    Generic IntegerLift retains its original extension to arbitrary integers.
+    Source parameters are range-constrained; operation/trajectory safety and
+    range obligations remain mandatory before a source certificate succeeds.
+    """
+    def right_shift_value(self,value,shift,ctype):
+        if ctype.signed and shift==ctype.bits-1:
+            return z3.If(value<0,z3.IntVal(-1),z3.IntVal(0))
+        return super().right_shift_value(value,shift,ctype)
+
+    def neutral_mask_value(self,op,left,right,ctype):
+        full=-1 if ctype.signed else (1 << ctype.bits)-1
+        for value,mask in ((left,right),(right,left)):
+            masks=integer_choices(mask,max_cases=4)
+            if masks and set(masks)<={0,full}:
+                result=z3.IntVal(0)
+                for number,guard in masks.items():
+                    if op=='^':part=value if number==0 else -value-1 if ctype.signed else full-value
+                    elif op=='&':part=z3.IntVal(0) if number==0 else value
+                    else:part=value if number==0 else z3.IntVal(full)
+                    result=z3.If(guard,part,result)
+                return z3.simplify(result)
+        return None
+
+
+class WideningIntegerLift(TypedWordIntegers):
     """List-fold-only value-preserving widening; default kernels stay unchanged."""
     def convert(self,term,target):
         if target.name!='_Bool' and target.bits>term.type.bits and target.minimum<=term.type.minimum and target.maximum>=term.type.maximum:

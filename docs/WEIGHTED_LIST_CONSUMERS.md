@@ -48,7 +48,9 @@ strictly wider containing target range needs no modular reduction in the list-fo
 integer profile; this representation change retains the original safety predicate.
 Other backends keep the original v0.43 conversion function unchanged.
 Arithmetic sign-bit right shifts and zero/all-ones bit masks additionally use
-exact word identities throughout the integer lift. All original shift bounds
+exact word identities in the typed-source word profile. Generic IntegerLift
+retains its original arbitrary-integer semantics; the word profile is selected
+only by source kernels with checked parameter, trajectory and operation ranges. All original shift bounds
 and eager operand safety predicates remain. This makes the original signed-abs
 idiom a linear integer expression rather than an avoidable mixed-theory query;
 INT_MIN and reachable abort frontiers remain independently rejected.

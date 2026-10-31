@@ -3,7 +3,7 @@ import sympy as s
 import z3
 from pycparser import c_ast,c_parser
 from .typed_c import TypedCFunction,c_type
-from .integer_lift import IntegerLift
+from .integer_lift import IntegerLift,TypedWordIntegers
 from .symbolic_integers import TypedTerm
 from .memory_frontend import _lit
 from .closed_forms import parse_closed
@@ -13,7 +13,7 @@ from .smt_spath import SMTGraphError
 
 
 class TypedCRecurrence(TypedCFunction):
-    integer_engine = IntegerLift
+    integer_engine = TypedWordIntegers
 
     def __init__(self,source,closed_forms,function=None,parameter_bounds=None,abi='LP64',char_signed=True,max_paths=48):
         if type(max_paths) is not int or not 1<=max_paths<=64:raise SMTGraphError('Typed recurrence paths must be 1..64')
