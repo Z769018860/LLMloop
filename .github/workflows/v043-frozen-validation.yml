@@ -23,7 +23,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y clang-18
-          python -m pip install --no-build-isolation -e '.[test,smt]'
+          python -m pip install -e '.[test,smt]'
           mkdir -p /tmp/llmloop-ci-bin
           ln -s "$(command -v clang-18)" /tmp/llmloop-ci-bin/clang
           echo /tmp/llmloop-ci-bin >> "$GITHUB_PATH"
@@ -48,7 +48,7 @@ jobs:
           changed=subprocess.check_output(['git','diff','--name-only',checkpoint,head],text=True).splitlines()
           assert changed==['.github/workflows/v043-frozen-validation.yml'],changed
           run_url='https://github.com/'+os.environ['GITHUB_REPOSITORY']+'/actions/runs/'+os.environ['GITHUB_RUN_ID']
-          ci={'validation_origin':'One GitHub Actions fallback run after the primary execution environment became unavailable','run_url':run_url,'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'validation_commit':head,'validation_tree':tree,'code_checkpoint':checkpoint,'code_tree':'53bc07266ad6cba480f81cf0eae3345de7617626','targeted_local_commit':'c68969c5e677096a80cc3d955096e43e3bde0227','only_validation_workflow_added':True,'frozen_paths_verified':len(m['sha256']),'passed':True}
+          ci={'validation_origin':'GitHub Actions fallback validation after primary environment loss and one setup-only attempt','run_url':run_url,'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],'ci_runs_used':2,'setup_only_failure':{'run_id':41209203992,'reason':'Missing setuptools.build_meta while build isolation was disabled; no tests ran'},'validation_commit':head,'validation_tree':tree,'code_checkpoint':checkpoint,'code_tree':'53bc07266ad6cba480f81cf0eae3345de7617626','targeted_local_commit':'c68969c5e677096a80cc3d955096e43e3bde0227','only_validation_workflow_added':True,'frozen_paths_verified':len(m['sha256']),'passed':True}
           (out/'validation_ci.json').write_text(json.dumps(ci,indent=2)+'\n')
           r['validation_origin']=ci['validation_origin']
           r['source_identity']=dict(ci)
@@ -56,7 +56,7 @@ jobs:
           r['bit_builtin_worker_isolation_scope']='One fresh worker per builtin/ABI case; positive source proof, helper query/replay and exact-zero source control share that case worker; no retries.'
           p=out/'report.md'
           s=p.read_text()
-          s+='\nValidation origin: **one GitHub Actions fallback run**, because the primary execution environment became unavailable before the full frozen run completed. Run: '+run_url+'. No full local validation of this final checkpoint is claimed. The 175 related tests and 3 signedness checks passed locally before environment loss; the two raw signedness cases overlap that targeted test set.\n'
+          s+='\nValidation origin: **GitHub Actions fallback validation**, after one setup-only run failed for missing setuptools; no tests ran in that setup attempt. The complete validation uses one subsequent run because the primary execution environment became unavailable before the full frozen run completed. Run: '+run_url+'. No full local validation of this final checkpoint is claimed. The 175 related tests and 3 signedness checks passed locally before environment loss; the two raw signedness cases overlap that targeted test set.\n'
           s+='\nSource identity audit: targeted local commit `c68969c5e677096a80cc3d955096e43e3bde0227` exactly matches code checkpoint `'+checkpoint+'` at tree `53bc07266ad6cba480f81cf0eae3345de7617626`. Validation commit `'+head+'` adds only the isolated validation workflow. All '+str(len(m['sha256']))+' frozen paths, including that workflow, were checked unchanged after validation. The release adds only 26 evidence files to the validated tree. Ordinary-char signedness is inherited from the actual primary ABI; native signed/unsigned-char counterexamples are included in the full regression. Bit-builtin worker isolation is per builtin/ABI case, with no retries.\n'
           p.write_text(s)
           r['evidence_sha256']['validation_ci.json']=hashlib.sha256((out/'validation_ci.json').read_bytes()).hexdigest()
