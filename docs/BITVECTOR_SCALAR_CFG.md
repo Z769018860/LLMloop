@@ -112,3 +112,5 @@ The division pilot does not close general heap/alias/ownership composition,
 unbounded termination, arbitrary branch recurrence discovery, all builtin
 families or complete C/LLVM semantics. No KLEE is used. See
 [v0.42 evidence](../experiments/v042/report.md).
+
+The optional [source-bound division induction strategy](SOURCE_BOUND_DIVISION_INDUCTION.md) now closes the original unsigned-32 quotient proof with checked actual-source invariants and a separately declared total functional budget. The direct 5000 ms query and source-safety budgets remain unchanged.

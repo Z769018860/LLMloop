@@ -67,10 +67,10 @@ See [feature inventory](FEATURE_STATUS.md),
 [borrowed payload-map contract](OWNED_LIST_PAYLOAD_MAPS.md) and
 [eager list-call arguments](EAGER_LIST_ARGUMENTS.md) and
 [finite choices and upstream integer pilot](FINITE_CHOICES_AND_UPSTREAM_BENCHMARKS.md) and
-[latest experiment report](../experiments/v042/report.md).
+[latest experiment report](../experiments/v043/report.md).
 
 The [external-call exclusion contract](UNREACHABLE_EXTERNAL_CALLS.md) admits unreachable direct external calls without assigning any return/effect behavior to them. This does not implement reachable external library contracts.
 
 [Integer union views](CLANG_INTEGER_UNION_VIEWS.md) now admit one restricted object-representation fragment after compiler layout checks; partial writes and byte/alias memory remain unsupported.
 
-[Compositional value certificates](COMPOSITIONAL_BITVECTOR_CERTIFICATES.md) close the pinned 64-bit popcount functional timeout through checked cuts and a bounded integer equation. The separate [bit builtin contract](CLANG_BIT_BUILTINS.md) now models six declaration-checked clz/ctz operations. The optional [pure BV scalar CFG backend](BITVECTOR_SCALAR_CFG.md) now proves division source definedness and bounded complete exit at an explicit 512-step budget. A universal quotient-equivalence certificate is still open; broader builtin families and general C remain open.
+[Compositional value certificates](COMPOSITIONAL_BITVECTOR_CERTIFICATES.md) close the pinned 64-bit popcount functional timeout through checked cuts and a bounded integer equation. The separate [bit builtin contract](CLANG_BIT_BUILTINS.md) now models six declaration-checked clz/ctz operations. The optional [pure BV scalar CFG backend](BITVECTOR_SCALAR_CFG.md) now proves division source definedness and bounded complete exit at an explicit 512-step budget. A separate [source-bound induction certificate](SOURCE_BOUND_DIVISION_INDUCTION.md) now establishes the selected unsigned-32 quotient on the full nonzero-divisor domain. Broader arithmetic/functional contracts, builtin families and general C remain open.

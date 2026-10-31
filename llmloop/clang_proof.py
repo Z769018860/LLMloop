@@ -153,7 +153,7 @@ class ScalarNormalizer:
 
 def prove_clang(source=None,source_file=None,function=None,clang=None,proof=None):
     if proof is None:proof={}
-    if not isinstance(proof,dict) or set(proof)-{'backend','parameter_bounds','inputs','max_steps','max_paths','closed_forms','loop_summaries','allocation_failure','max_call_depth','allow_recursion','allocation_count'}:return {'status':'UNKNOWN','reason':'Invalid Clang proof options'}
+    if not isinstance(proof,dict) or set(proof)-{'backend','parameter_bounds','inputs','max_steps','max_paths','closed_forms','loop_summaries','allocation_failure','max_call_depth','allow_recursion','allocation_count','functional'}:return {'status':'UNKNOWN','reason':'Invalid Clang proof options'}
     options={} if clang is None else dict(clang) if isinstance(clang,dict) else clang
     if isinstance(options,dict) and options.get('include_ast') is False:return {'status':'UNKNOWN','reason':'Clang proof requires include_ast=true'}
     backend=proof.get('backend','cfg')

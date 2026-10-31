@@ -21,14 +21,18 @@ from check_llvm_builtins import native_run, compact_report
 CASE = next(case for case in cases() if case['name'] == 'builtin_loop_udiv32')
 
 
-def worker(strategy, database, source=None):
+def worker(strategy, database, source=None, induction=False):
     backend = 'calls' if strategy == 'integer512' else 'bv_calls'
     steps = 128 if strategy == 'bv128' else 512
     request = {'source_file': str(source or VENDOR / CASE['file']), 'function': CASE['function'], 'frontend': 'clang_proof',
                'clang': {'compilation_database': str(database)} if source is None else {'args': ['-I', str(source.parent), '-fno-builtin']},
                'proof': {'backend': backend, 'max_steps': steps, 'parameter_bounds': CASE['bounds']}}
-    started = time.monotonic(); report = analyze_request(request)
-    return {'strategy': strategy, 'request': request, 'report': compact_report(report), 'elapsed_seconds': round(time.monotonic() - started, 6)}
+    if induction and backend=='bv_calls':request['proof']['functional']={'kind':'unsigned_division','timeout_ms':30000}
+    started = time.monotonic(); report = analyze_request(request); elapsed=time.monotonic()-started
+    functional_elapsed=report.get('functional',{}).get('elapsed_seconds',0)
+    return {'strategy': strategy, 'request': request, 'report': compact_report(report), 'elapsed_seconds': round(elapsed,6),
+            'source_elapsed_seconds':round(elapsed-functional_elapsed,6),'functional_elapsed_seconds':functional_elapsed}
+
 
 
 def terms(row):
@@ -54,7 +58,7 @@ def functional(row, inputs=None):
     started = time.monotonic(); answer = solver.check()
     result = {'status': 'PROVED_FUNCTIONAL_QF_BV' if answer == z3.unsat else 'REFUTED_FUNCTIONAL_QF_BV' if answer == z3.sat else 'UNKNOWN',
               'elapsed_seconds': round(time.monotonic() - started, 6), 'logic': 'QF_BV', 'timeout_ms': 5000,
-              'refutation_smt2': solver.to_smt2(), 'reference': 'unsigned SMT bit-vector division on the original full nonzero-divisor domain',
+              'refutation_smt2': solver.to_smt2(), 'source_sha256':row['report']['source_sha256'],'execution_source_sha256':row['report']['execution_source_sha256'],'reference_sha256':hashlib.sha256(reference.sexpr().encode()).hexdigest(),'domain_sha256':hashlib.sha256(row['report']['domain_smt2'].encode()).hexdigest(), 'reference': 'unsigned SMT bit-vector division on the original full nonzero-divisor domain',
               'source_safety_inferred_from_functional': False, 'concrete_control_input': inputs}
     if answer == z3.sat:
         result['counterexample'] = {name: solver.model().eval(term).as_long() for name, term in variables.items()}
@@ -76,17 +80,18 @@ def main(argv=None):
     parser.add_argument('--output', type=Path)
     parser.add_argument('--compare-baseline', action='store_true')
     parser.add_argument('--controls', action='store_true')
+    parser.add_argument('--strategy', choices=['direct','induction'], default='direct')
     parser.add_argument('--worker', choices=['bv128', 'bv512', 'integer512'], help=argparse.SUPPRESS)
     parser.add_argument('--database', type=Path, help=argparse.SUPPRESS)
     parser.add_argument('--source', type=Path, help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
     if args.worker:
-        print(json.dumps(worker(args.worker, args.database, args.source))); return 0
+        print(json.dumps(worker(args.worker, args.database, args.source, induction=args.strategy=='induction'))); return 0
     provenance = verify_vendor(); comparisons = 0; expected_ubsan = 0; wrong_native = 0
     with tempfile.TemporaryDirectory(prefix='llmloop-division-bv-') as temporary:
         directory = Path(temporary); database = compilation_database(directory)
         def analyze(strategy, source=None):
-            command = [sys.executable, str(Path(__file__).resolve()), '--worker', strategy, '--database', str(database)]
+            command = [sys.executable, str(Path(__file__).resolve()), '--worker', strategy, '--database', str(database),'--strategy',args.strategy]
             if source: command += ['--source', str(source)]
             run = subprocess.run(command, capture_output=True, text=True, timeout=180)
             if run.returncode: raise AssertionError((command, run.stderr, run.stdout))
@@ -94,8 +99,24 @@ def main(argv=None):
             return row
         positive = analyze('bv512')
         if positive['report']['status'] != 'PROVED_DEFINED_CLANG_BV_CALLS': raise AssertionError(positive)
-        positive['query_replay'] = replay(positive); query = functional(positive)
-        if query['status'] == 'REFUTED_FUNCTIONAL_QF_BV': raise AssertionError(query)
+        positive['query_replay'] = replay(positive); direct_query = functional(positive)
+        if direct_query['status'] == 'REFUTED_FUNCTIONAL_QF_BV': raise AssertionError(direct_query)
+        query=positive['report'].get('functional') if args.strategy=='induction' else direct_query
+        induction_replay=None
+        if args.strategy=='induction':
+            if not query or query['status']!='PROVED_FUNCTIONAL_DIVISION_INDUCTION':raise AssertionError(query)
+            if any(query[key]!=direct_query[key] for key in ('source_sha256','execution_source_sha256','reference_sha256','domain_sha256')):raise AssertionError('Functional strategies changed source, execution, reference or domain')
+            steps=query['steps']
+            for step in steps:
+                solver=z3.SolverFor(step['logic']);solver.set(timeout=step['timeout_ms']);solver.from_string(step['refutation_smt2'])
+                if solver.check()!=z3.unsat:raise AssertionError(step['label'])
+            if not query['arithmetic_audits']:raise AssertionError('Arithmetic audit missing')
+            for audit in query['arithmetic_audits']:
+                variables={name:z3.Int(name) for name in 'audit_D audit_Q audit_R audit_H audit_T audit_F audit_B'.split()}
+                identity=z3.parse_smt2_string('(assert (= '+audit['before_smt2']+' '+audit['after_smt2']+'))',decls=variables)[0]
+                if not audit['identity_checked'] or audit['normalized_difference']!='0' or not z3.is_true(z3.simplify(identity,som=True)):raise AssertionError('Arithmetic audit failed replay')
+            if sorted(case['counter'] for case in query['counter_cases'])!=list(range(1,32)) or any(case['whole']!=2*case['half'] or case['whole']!=1<<case['counter'] or case['whole_is_twice_half'] is not True for case in query['counter_cases']):raise AssertionError('Counter coverage incomplete')
+            induction_replay={'queries':len(steps),'all_unsat':True,'all_replayed':True,'arithmetic_audits':len(query['arithmetic_audits']),'counter_cases':31}
         variables, domain, value = terms(positive); inputs = sample_inputs(CASE, 256)
         models = []
         for point in inputs[:32] + inputs[-32:]:
@@ -145,14 +166,14 @@ def main(argv=None):
                         if run['exit_code'] or run['stderr'] or int(run['stdout']) == 1: raise AssertionError(run)
                         wrong_native += 1; row['native'].append(run)
                 controls.append(row)
-    result = {'provenance': provenance, 'source': positive, 'functional': query, 'query_replay': positive['query_replay'],
+    result = {'provenance': provenance, 'source': positive, 'functional': query, 'functional_baseline':direct_query,'functional_induction_replay':induction_replay,'functional_strategy':args.strategy, 'query_replay': positive['query_replay'],
               'inputs': inputs, 'model_samples': models, 'model_comparisons': len(models), 'native': native, 'native_comparisons': comparisons,
               'baselines': baselines, 'controls': controls, 'expected_ubsan_failures': expected_ubsan, 'wrong_algorithm_native_refutations': wrong_native,
               'source_analysis_retries': 0, 'source_analysis_process_isolation': True, 'passed': True, 'klee_used': False, 'complete_c_support': False,
               'scope': 'original pinned 32-bit unsigned division source definedness and bounded complete exit; functional query status is independent; native samples do not establish universal output equivalence; no memory/LLVM theorem'}
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True); args.output.write_text(json.dumps(result, indent=2) + '\n')
-    print(json.dumps({'source_status': positive['report']['status'], 'functional_status': query['status'], 'source_elapsed_seconds': positive['elapsed_seconds'],
+    print(json.dumps({'source_status': positive['report']['status'], 'functional_status': query['status'], 'source_elapsed_seconds': positive['source_elapsed_seconds'],
                       'replayed_queries': positive['query_replay']['queries'], 'native_comparisons': comparisons, 'model_comparisons': len(models),
                       'expected_ubsan_failures': expected_ubsan, 'wrong_algorithm_native_refutations': wrong_native, 'passed': True}))
     return 0

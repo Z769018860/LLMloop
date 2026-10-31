@@ -13,7 +13,7 @@ def analyze_request(request: dict) -> dict:
     try:
         if not isinstance(request, dict):raise SMTGraphError('Request must be an object')
         allowed = {'ir', 'source', 'source_file', 'clang', 'proof', 'function', 'parameter_bounds', 'max_unroll',
-                   'max_paths', 'whole_function', 'invariants', 'verify_steps', 'assertion', 'ranking', 'synthesize_ranking', 'frontend', 'int_bits', 'parameter_mins', 'inputs', 'memory_layout', 'abi', 'char_signed', 'closed_forms', 'loop_summaries', 'max_steps', 'allocation_failure', 'max_call_depth', 'allow_recursion'}
+                   'max_paths', 'whole_function', 'invariants', 'verify_steps', 'assertion', 'ranking', 'synthesize_ranking', 'frontend', 'int_bits', 'parameter_mins', 'inputs', 'memory_layout', 'abi', 'char_signed', 'closed_forms', 'loop_summaries', 'max_steps', 'allocation_failure', 'max_call_depth', 'allow_recursion','functional'}
         if set(request)-allowed:raise SMTGraphError('Unknown request fields: '+', '.join(sorted(set(request)-allowed)))
         if 'synthesize_ranking' in request and type(request['synthesize_ranking']) is not bool:raise SMTGraphError('synthesize_ranking must be Boolean')
         if request.get('frontend')=='clang_proof':
@@ -32,6 +32,7 @@ def analyze_request(request: dict) -> dict:
             from .memory_frontend import translate_memory_c
             if not isinstance(request['source'], str):raise SMTGraphError('source must be a string')
             frontend=request.get('frontend','memory')
+            if 'functional' in request and frontend not in ('typed_bv_cfg','typed_bv_calls'):raise SMTGraphError('Functional strategies require a scalar BV CFG frontend')
             if 'loop_summaries' in request and frontend not in ('typed_nested','typed_memory'):raise SMTGraphError('loop_summaries requires typed_nested')
             if 'closed_forms' in request and frontend not in ('guarded_scalar','typed_recurrence'):raise SMTGraphError('closed_forms requires guarded_scalar or typed_recurrence frontend')
             if (set(request)&{'abi','char_signed'}) and frontend not in ('typed_c','typed_recurrence','typed_nested','typed_memory','typed_cfg_heap','typed_cfg_calls','typed_bv_cfg','typed_bv_calls'):raise SMTGraphError('ABI options require typed_c or typed_recurrence frontend')
@@ -39,11 +40,16 @@ def analyze_request(request: dict) -> dict:
             if (set(request)&{'max_steps','allocation_failure'}) and frontend not in ('typed_cfg_heap','typed_cfg_calls','typed_bv_cfg','typed_bv_calls'):raise SMTGraphError('CFG/heap options require typed_cfg_heap or typed_cfg_calls')
             if (set(request)&{'max_call_depth','allow_recursion'}) and frontend not in ('typed_cfg_calls','typed_bv_calls'):raise SMTGraphError('Call depth requires typed_cfg_calls')
             if frontend in ('typed_bv_cfg','typed_bv_calls'):
-                permitted={'source','function','frontend','parameter_bounds','abi','char_signed','max_steps','max_paths','inputs'}
+                permitted={'source','function','frontend','parameter_bounds','abi','char_signed','max_steps','max_paths','inputs','functional'}
                 if frontend=='typed_bv_calls':permitted.update({'max_call_depth','allow_recursion'})
                 if set(request)-permitted:raise SMTGraphError('Invalid scalar BV CFG options')
+                functional=request.get('functional')
+                if 'functional' in request and (not isinstance(functional,dict) or set(functional)-{'kind','timeout_ms'} or functional.get('kind')!='unsigned_division' or type(functional.get('timeout_ms',30000)) is not int or not 1<=functional.get('timeout_ms',30000)<=30000):raise SMTGraphError('Invalid scalar division functional strategy')
                 from .typed_bv_cfg import TypedBVScalarCFG
-                return {'schema_version':1,**TypedBVScalarCFG(request['source'],function=request.get('function'),parameter_bounds=request.get('parameter_bounds'),abi=request.get('abi','LP64'),char_signed=request.get('char_signed',True),max_steps=request.get('max_steps',128),max_paths=request.get('max_paths',48),max_call_depth=request.get('max_call_depth',3),allow_recursion=request.get('allow_recursion',False),calls=frontend=='typed_bv_calls').report(request.get('inputs'))}
+                model=TypedBVScalarCFG(request['source'],function=request.get('function'),parameter_bounds=request.get('parameter_bounds'),abi=request.get('abi','LP64'),char_signed=request.get('char_signed',True),max_steps=request.get('max_steps',128),max_paths=request.get('max_paths',48),max_call_depth=request.get('max_call_depth',3),allow_recursion=request.get('allow_recursion',False),calls=frontend=='typed_bv_calls')
+                result=model.report(request.get('inputs'))
+                if functional is not None:result['functional']=model.division_induction(timeout_ms=functional.get('timeout_ms',30000))
+                return {'schema_version':1,**result}
             elif frontend=='typed_cfg_calls':
                 if set(request)-{'source','function','frontend','parameter_bounds','abi','char_signed','max_steps','max_paths','allocation_failure','max_call_depth','allow_recursion','inputs'}:raise SMTGraphError('Invalid CFG calls options')
                 from .typed_cfg_calls import TypedCFGCalls
@@ -107,7 +113,7 @@ def analyze_request(request: dict) -> dict:
                                          whole_function=request.get('whole_function',True))
             else:raise SMTGraphError('Unsupported source frontend')
         else:
-            if set(request) & {'frontend','int_bits','whole_function','function','parameter_bounds','max_paths','max_unroll','parameter_mins','memory_layout','abi','char_signed','closed_forms','loop_summaries','max_steps','allocation_failure','max_call_depth','allow_recursion'}:raise SMTGraphError('Source translation options cannot be applied to an existing IR')
+            if set(request) & {'frontend','int_bits','whole_function','function','parameter_bounds','max_paths','max_unroll','parameter_mins','memory_layout','abi','char_signed','closed_forms','loop_summaries','max_steps','allocation_failure','max_call_depth','allow_recursion','functional'}:raise SMTGraphError('Source translation options cannot be applied to an existing IR')
             obj = request['ir']
             if not isinstance(obj, dict):raise SMTGraphError('ir must be an object')
         kind=obj.get('kind')

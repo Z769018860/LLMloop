@@ -195,7 +195,7 @@ class TypedBVScalarCFG(TypedCFunction):
     def report(self, inputs=None):
         success = self.failure is None
         result = {'status': 'PROVED_DEFINED_TYPED_C_BV_CALLS' if success and self.expansion else 'PROVED_DEFINED_TYPED_C_BV_CFG' if success else 'UNKNOWN',
-                  'abi': self.engine.abi.model, 'function': self.func.decl.name, 'logic': 'QF_BV',
+                  'abi': self.engine.abi.model, 'char_signed': self.engine.abi.types['char'].signed, 'function': self.func.decl.name, 'logic': 'QF_BV',
                   'c_overflow_verified': success, 'memory_safety_verified': success, 'termination_proved': success,
                   'unbounded_summary': False, 'domain_smt2': self.engine.pre.sexpr(),
                   'parameter_symbols': {name: term.value.sexpr() for name, term in self.parameter_env.items()},
@@ -265,3 +265,8 @@ class TypedBVScalarCFG(TypedCFunction):
         if answer == z3.sat: result['counterexample'] = self.witness(solver.model())
         elif answer == z3.unknown: result['reason'] = solver.reason_unknown()
         return result
+
+
+    def division_induction(self, timeout_ms=30000):
+        from .division_induction import prove_division_induction
+        return prove_division_induction(self, timeout_ms=timeout_ms)

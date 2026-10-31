@@ -1,4 +1,4 @@
-# Feature status after v0.42
+# Feature status after v0.43
 
 This inventory distinguishes certified capabilities from outstanding general
 requirements. The project remains a restricted research prototype.
@@ -19,7 +19,7 @@ particular exit condition terminates. `UNKNOWN` is an explicit unsupported or
 unproved result, not a valid summary.
 
 See [v0.14 recurrence and experiment contracts](GUARDED_RECURRENCES_AND_EXPERIMENTS.md)
-and the committed [latest experiment report](../experiments/v042/report.md).
+and the committed [latest experiment report](../experiments/v043/report.md).
 
 See [unroll-free typed scalar C contracts](TYPED_UNBOUNDED_RECURRENCES.md) for the new machine-integer certificate. It does not certify general heap memory.
 
@@ -90,6 +90,8 @@ See [compiler-checked integer union views](CLANG_INTEGER_UNION_VIEWS.md) for loc
 
 See [checked compositional bit-vector certificates](COMPOSITIONAL_BITVECTOR_CERTIFICATES.md) for independent byte lemmas, complete packed-word substitution, exact integer-word translation and audited affine quotient/remainder normalization under one total functional proof budget. Source-safety contracts remain separate.
 
-See [declaration-checked Clang bit builtins](CLANG_BIT_BUILTINS.md) for six exact clz/ctz helper models, target widths, zero-input obligations and independent functional/native evidence. The legacy division-loop case remains UNKNOWN; the optional BV backend now proves its definedness/complete exit at an explicit 512-step budget. Quotient equivalence remains separate, and step-budget witnesses are analysis frontiers.
+See [declaration-checked Clang bit builtins](CLANG_BIT_BUILTINS.md) for six exact clz/ctz helper models, target widths, zero-input obligations and independent functional/native evidence. The legacy division-loop case remains UNKNOWN; the optional BV backend now proves its definedness/complete exit at an explicit 512-step budget. Quotient equivalence is now established by the separate source-bound induction strategy; the direct baseline and step-budget frontiers retain their own outcomes.
 
 See [pure bit-vector scalar CFG certificates](BITVECTOR_SCALAR_CFG.md) for optional scalar-only QF_BV execution, widened C overflow guards, source-linked division definedness/complete exit at an explicit budget, replayable queries and independent functional UNKNOWN reporting. Existing memory backends keep separate contracts.
+
+See [source-bound unsigned division induction](SOURCE_BOUND_DIVISION_INDUCTION.md) for the now-complete functional proof of the selected original unsigned-32 divider, including established initialization/loop invariants, actual-source word updates, checked rank, complete counter coverage and Euclidean quotient uniqueness. The direct whole-expression baseline may still time out; general functional contracts and complete C/LLVM remain open.

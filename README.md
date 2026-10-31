@@ -776,6 +776,22 @@ See the [Clang example](examples/clang_list_argument_conversions.c),
 [v0.36 experiments](experiments/v036/report.md). General alias/call/graph and
 complete C/LLVM requirements remain open; no KLEE.
 
+## v0.43: source-bound unsigned division functional induction
+
+The original unsigned-32 divider now has an independent functional induction
+certificate on the full nonzero-divisor domain. Actual prefix/fast-return,
+initialization, loop-step, rank and final-return expressions are checked; no
+algorithm semantics are assigned from a function name. Forty queries, complete
+counter coverage and an exact polynomial audit connect packed C words to a final
+Euclidean quotient theorem. Intermediate SAT/UNKNOWN remains an unproved lemma,
+not a program counterexample.
+
+The optional strategy declares one total 30000 ms deadline and keeps the 5000 ms
+per-query cap; the unchanged 5000 ms direct baseline remains separate. See the
+[contract](docs/SOURCE_BOUND_DIVISION_INDUCTION.md) and
+[experiments](experiments/v043/report.md), or run
+`python scripts/check_division_bv.py --strategy induction --compare-baseline --controls --output /tmp/division.json`.
+
 ## v0.42: pure bit-vector scalar CFG and direct-call certificates
 
 Explicit `bv_cfg`/`bv_calls` Clang modes now check bounded scalar control flow
