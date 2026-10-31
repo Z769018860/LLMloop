@@ -1,4 +1,4 @@
-# Feature status after v0.41
+# Feature status after v0.42
 
 This inventory distinguishes certified capabilities from outstanding general
 requirements. The project remains a restricted research prototype.
@@ -19,7 +19,7 @@ particular exit condition terminates. `UNKNOWN` is an explicit unsupported or
 unproved result, not a valid summary.
 
 See [v0.14 recurrence and experiment contracts](GUARDED_RECURRENCES_AND_EXPERIMENTS.md)
-and the committed [latest experiment report](../experiments/v041/report.md).
+and the committed [latest experiment report](../experiments/v042/report.md).
 
 See [unroll-free typed scalar C contracts](TYPED_UNBOUNDED_RECURRENCES.md) for the new machine-integer certificate. It does not certify general heap memory.
 
@@ -90,4 +90,6 @@ See [compiler-checked integer union views](CLANG_INTEGER_UNION_VIEWS.md) for loc
 
 See [checked compositional bit-vector certificates](COMPOSITIONAL_BITVECTOR_CERTIFICATES.md) for independent byte lemmas, complete packed-word substitution, exact integer-word translation and audited affine quotient/remainder normalization under one total functional proof budget. Source-safety contracts remain separate.
 
-See [declaration-checked Clang bit builtins](CLANG_BIT_BUILTINS.md) for six exact clz/ctz helper models, target widths, zero-input obligations and independent functional/native evidence. The division-loop case remains UNKNOWN after passing builtin normalization; step-budget witnesses are analysis frontiers.
+See [declaration-checked Clang bit builtins](CLANG_BIT_BUILTINS.md) for six exact clz/ctz helper models, target widths, zero-input obligations and independent functional/native evidence. The legacy division-loop case remains UNKNOWN; the optional BV backend now proves its definedness/complete exit at an explicit 512-step budget. Quotient equivalence remains separate, and step-budget witnesses are analysis frontiers.
+
+See [pure bit-vector scalar CFG certificates](BITVECTOR_SCALAR_CFG.md) for optional scalar-only QF_BV execution, widened C overflow guards, source-linked division definedness/complete exit at an explicit budget, replayable queries and independent functional UNKNOWN reporting. Existing memory backends keep separate contracts.

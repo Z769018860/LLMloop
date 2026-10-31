@@ -776,6 +776,22 @@ See the [Clang example](examples/clang_list_argument_conversions.c),
 [v0.36 experiments](experiments/v036/report.md). General alias/call/graph and
 complete C/LLVM requirements remain open; no KLEE.
 
+## v0.42: pure bit-vector scalar CFG and direct-call certificates
+
+Explicit `bv_cfg`/`bv_calls` Clang modes now check bounded scalar control flow
+with pure QF_BV safety, reachability and complete-return queries. Widened signed
+overflow checks, original-width shift guards, scoped locals, lazy direct calls
+and explicit analysis frontiers preserve the typed C contract. Query SMT-LIB
+is exported for replay. Builtin helper parameters and subtotal names are also
+freshened against user function names.
+
+Original compiler-rt unsigned division now has a full nonzero-divisor source
+safety and bounded complete-exit certificate at an explicit 512-step budget.
+Independent quotient equivalence remains separate and may time out. See the
+[contract](docs/BITVECTOR_SCALAR_CFG.md), [example](examples/clang_bv_cfg.c) and
+[experiments](experiments/v042/report.md), or run
+`python scripts/check_division_bv.py --compare-baseline --controls --output /tmp/division.json`.
+
 ## v0.41: declaration-checked Clang clz/ctz models
 
 Six Clang leading/trailing-zero builtins now lower to checked typed helper

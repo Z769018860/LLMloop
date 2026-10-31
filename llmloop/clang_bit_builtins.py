@@ -79,8 +79,19 @@ class BitBuiltinModels:
             helper = '__clang_bit_' + operation + '_' + str(serial)
             self.used.add(helper)
             source = bit_count_helper(helper, operation, ctype, width)
+            # The call kernel conservatively forbids locals shadowing function
+            # names. Freshen helper parameters/subtotals as well as its symbol.
+            bindings = {}
+            for original, tag in [('x', 'argument')] + [('count' + str(i), 'count') for i in range((width - 2) // 16 + 1)]:
+                serial = 1
+                while '__clang_bit_' + tag + '_' + str(serial) in self.used:
+                    serial += 1
+                emitted = '__clang_bit_' + tag + '_' + str(serial)
+                self.used.add(emitted); bindings[original] = emitted
+            source = re.sub(r'\b(?:x|count[0-3])\b', lambda match: bindings[match[0]], source)
             self.models[name] = {'builtin': name, 'operation': operation, 'argument_type': ctype, 'width': width,
-                                 'result_type': 'int', 'helper': helper, 'source': source,
+                                 'result_type': 'int', 'helper': helper, 'argument_name': bindings['x'],
+                                 'partial_names': [bindings['count' + str(i)] for i in range((width - 2) // 16 + 1)], 'source': source,
                                  'source_sha256': hashlib.sha256(source.encode()).hexdigest(),
                                  'zero_input': 'undefined; explicit division guard retained',
                                  'semantics': 'typed scalar helper body, not an external assumption'}

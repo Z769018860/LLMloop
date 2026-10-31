@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def functional(model, abi, source=None):
     source = model['source'] if source is None else source
     program = TypedCFunction(source, function=model['helper'], abi=abi, max_unroll=0)
-    word = program.parameter_env['x'].value; width = word.size()
+    word = program.parameter_env[model.get('argument_name', 'x')].value; width = word.size()
     reference = z3.BitVecVal(0, 32)
     positions = range(width) if model['operation'] == 'clz' else reversed(range(width))
     for bit in positions:
@@ -130,7 +130,7 @@ def main(argv=None):
                     values = samples(model['width']); row['native_inputs'] = values; row['native'] = []
                     for tag, source in [('original', row['source']), ('normalized', row['source_safety']['normalization']['source'])]:
                         for opt in ('-O0', '-O2'): row['native'].append(native(directory, row, source, tag, opt, values))
-                    mutant_source = model['source'].replace('int count0 = ', 'int count0 = 1 + ', 1)
+                    mutant_source = model['source'].replace('int ' + model['partial_names'][0] + ' = ', 'int ' + model['partial_names'][0] + ' = 1 + ', 1)
                     mutant = functional(model, row['abi'], mutant_source)
                     if mutant['status'] != 'REFUTED' or mutant['replay_result'] != 'sat' or mutant['actual'] == mutant['expected']: raise AssertionError(mutant)
                     row['wrong_count_control'] = mutant

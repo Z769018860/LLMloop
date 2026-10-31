@@ -32,7 +32,7 @@ Results discarded by the caller still require defined argument evaluation and
 nonzero input. Existing restrictions on side-effecting arguments remain in force;
 this feature does not broaden their evaluation-order contract.
 
-All generated identifiers avoid names across the translation unit's exported
+Generated helper function, parameter and subtotal identifiers avoid names across the translation unit's exported
 functions and their variables/declarations. Helpers are shared across callers of
 the same builtin and consume the existing function/call/CFG budgets; those limits
 and the 5000 ms per-query timeout are unchanged. Scalar purity is derived from
@@ -67,7 +67,8 @@ The original compiler-rt unsigned-division case now reaches its loop analysis.
 Under its unchanged 128-step pilot configuration it remains UNKNOWN at the CFG
 step frontier. Such a witness identifies an exhausted analysis budget, not source
 undefined behavior or nontermination. A separate exploratory run at the existing
-512-step maximum still encountered an unproved reachability query. Neither run
+512-step maximum still encountered an unproved reachability query. The optional [BV scalar CFG backend](BITVECTOR_SCALAR_CFG.md) now separately proves
+definedness/complete exit at an explicit 512-step budget. None of these source-safety runs
 establishes a universal division functional theorem, and finite native matches
 do not close that gap. General builtin families, reachable external contracts,
 arbitrary heap/alias ownership and complete C/LLVM remain open. No KLEE is used.

@@ -34,11 +34,17 @@ def analyze_request(request: dict) -> dict:
             frontend=request.get('frontend','memory')
             if 'loop_summaries' in request and frontend not in ('typed_nested','typed_memory'):raise SMTGraphError('loop_summaries requires typed_nested')
             if 'closed_forms' in request and frontend not in ('guarded_scalar','typed_recurrence'):raise SMTGraphError('closed_forms requires guarded_scalar or typed_recurrence frontend')
-            if (set(request)&{'abi','char_signed'}) and frontend not in ('typed_c','typed_recurrence','typed_nested','typed_memory','typed_cfg_heap','typed_cfg_calls'):raise SMTGraphError('ABI options require typed_c or typed_recurrence frontend')
+            if (set(request)&{'abi','char_signed'}) and frontend not in ('typed_c','typed_recurrence','typed_nested','typed_memory','typed_cfg_heap','typed_cfg_calls','typed_bv_cfg','typed_bv_calls'):raise SMTGraphError('ABI options require typed_c or typed_recurrence frontend')
             if 'memory_layout' in request and frontend!='sweep_memory':raise SMTGraphError('memory_layout requires sweep_memory frontend')
-            if (set(request)&{'max_steps','allocation_failure'}) and frontend not in ('typed_cfg_heap','typed_cfg_calls'):raise SMTGraphError('CFG/heap options require typed_cfg_heap or typed_cfg_calls')
-            if (set(request)&{'max_call_depth','allow_recursion'}) and frontend!='typed_cfg_calls':raise SMTGraphError('Call depth requires typed_cfg_calls')
-            if frontend=='typed_cfg_calls':
+            if (set(request)&{'max_steps','allocation_failure'}) and frontend not in ('typed_cfg_heap','typed_cfg_calls','typed_bv_cfg','typed_bv_calls'):raise SMTGraphError('CFG/heap options require typed_cfg_heap or typed_cfg_calls')
+            if (set(request)&{'max_call_depth','allow_recursion'}) and frontend not in ('typed_cfg_calls','typed_bv_calls'):raise SMTGraphError('Call depth requires typed_cfg_calls')
+            if frontend in ('typed_bv_cfg','typed_bv_calls'):
+                permitted={'source','function','frontend','parameter_bounds','abi','char_signed','max_steps','max_paths','inputs'}
+                if frontend=='typed_bv_calls':permitted.update({'max_call_depth','allow_recursion'})
+                if set(request)-permitted:raise SMTGraphError('Invalid scalar BV CFG options')
+                from .typed_bv_cfg import TypedBVScalarCFG
+                return {'schema_version':1,**TypedBVScalarCFG(request['source'],function=request.get('function'),parameter_bounds=request.get('parameter_bounds'),abi=request.get('abi','LP64'),char_signed=request.get('char_signed',True),max_steps=request.get('max_steps',128),max_paths=request.get('max_paths',48),max_call_depth=request.get('max_call_depth',3),allow_recursion=request.get('allow_recursion',False),calls=frontend=='typed_bv_calls').report(request.get('inputs'))}
+            elif frontend=='typed_cfg_calls':
                 if set(request)-{'source','function','frontend','parameter_bounds','abi','char_signed','max_steps','max_paths','allocation_failure','max_call_depth','allow_recursion','inputs'}:raise SMTGraphError('Invalid CFG calls options')
                 from .typed_cfg_calls import TypedCFGCalls
                 return {'schema_version':1,**TypedCFGCalls(request['source'],function=request.get('function'),parameter_bounds=request.get('parameter_bounds'),abi=request.get('abi','LP64'),char_signed=request.get('char_signed',True),max_steps=request.get('max_steps',128),max_paths=request.get('max_paths',48),allocation_failure=request.get('allocation_failure',True),max_call_depth=request.get('max_call_depth',3),allow_recursion=request.get('allow_recursion',False)).report(request.get('inputs'))}

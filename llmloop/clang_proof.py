@@ -157,18 +157,18 @@ def prove_clang(source=None,source_file=None,function=None,clang=None,proof=None
     options={} if clang is None else dict(clang) if isinstance(clang,dict) else clang
     if isinstance(options,dict) and options.get('include_ast') is False:return {'status':'UNKNOWN','reason':'Clang proof requires include_ast=true'}
     backend=proof.get('backend','cfg')
-    front=ClangAdapter(source,source_file,None if backend in ('calls','list_calls') else function,options).report()
+    front=ClangAdapter(source,source_file,None if backend in ('calls','list_calls','bv_calls') else function,options).report()
     if front['status']!='CLANG_FRONTEND_READY':return front
     failure={'status':'UNKNOWN','frontend':'clang_proof','c_overflow_verified':False,'memory_safety_verified':False,'termination_proved':False,'clang_frontend':front}
     try:
-        if backend not in ('cfg','nested','recurrence','memory','calls','list','list_calls'):raise SMTGraphError('Clang proof backend must be cfg/nested/recurrence/memory/calls/list/list_calls')
+        if backend not in ('cfg','nested','recurrence','memory','calls','list','list_calls','bv_cfg','bv_calls'):raise SMTGraphError('Clang proof backend must be cfg/nested/recurrence/memory/calls/list/list_calls/bv_cfg/bv_calls')
         triple=front['target']['triple']
         linux=triple.endswith(('linux-gnu','linux-musl'))
         windows='-windows-gnu' in triple or '-windows-msvc' in triple
         if triple.startswith('x86_64-') and (linux or windows):abi='LLP64' if windows else 'LP64'
         elif re.match(r'i[3-6]86-',triple) and linux:abi='ILP32'
         else:raise SMTGraphError('Clang proof target not covered by the current x86 ABI contract (including x32)')
-        if backend in ('calls','list_calls'):
+        if backend in ('calls','list_calls','bv_calls'):
             from .clang_memory_proof import normalize_calls
             normalized,normalizers,entry=normalize_calls(front,function)
         else:
@@ -182,7 +182,7 @@ def prove_clang(source=None,source_file=None,function=None,clang=None,proof=None
         renamed=[item for normalizer in normalizers for item in normalizer.renamed]
         if backend in ('nested','recurrence','memory') and renamed:raise SMTGraphError('Summary backends require unambiguous source scalar names')
         record_tags=set();layout_correspondence={}
-        if backend in ('memory','calls','list','list_calls'):
+        if backend in ('memory','calls','list','list_calls','bv_calls'):
             from .clang_memory_proof import record_source
             records,record_tags=record_source(normalizers)
             if record_tags:normalized=records+'\n'+normalized
@@ -198,7 +198,7 @@ def prove_clang(source=None,source_file=None,function=None,clang=None,proof=None
             program=ListProgram(normalized,function=entry,parameter_bounds=proof.get('parameter_bounds'),abi=abi,char_signed=char_signed,max_paths=proof.get('max_paths',48),loop_summaries=proof.get('loop_summaries','auto'))
             result=program.report(proof.get('inputs'),proof.get('allocation_count'))
         else:
-            request={'source':normalized,'function':entry,'frontend':{'cfg':'typed_cfg_heap','nested':'typed_nested','recurrence':'typed_recurrence','memory':'typed_memory','calls':'typed_cfg_calls'}[backend],'abi':abi,'char_signed':char_signed}
+            request={'source':normalized,'function':entry,'frontend':{'cfg':'typed_cfg_heap','nested':'typed_nested','recurrence':'typed_recurrence','memory':'typed_memory','calls':'typed_cfg_calls','bv_cfg':'typed_bv_cfg','bv_calls':'typed_bv_calls'}[backend],'abi':abi,'char_signed':char_signed}
             for key,value in proof.items():
                 if key!='backend':request[key]=value
             if backend in ('nested','memory') and 'loop_summaries' not in proof:request['loop_summaries']='auto'
@@ -208,7 +208,7 @@ def prove_clang(source=None,source_file=None,function=None,clang=None,proof=None
         if success and record_tags:
             from .clang_memory_proof import check_record_layouts
             layout_correspondence=check_record_layouts(front,result,record_tags)
-        statuses={'cfg':'PROVED_DEFINED_CLANG_SCALAR_CFG','nested':'PROVED_DEFINED_CLANG_SCALAR_NESTED','recurrence':'PROVED_DEFINED_CLANG_SCALAR_RECURRENCE','memory':'PROVED_DEFINED_CLANG_FINITE_MEMORY','calls':'PROVED_DEFINED_CLANG_CFG_CALLS','list':'PROVED_DEFINED_CLANG_LIST_HEAP','list_calls':'PROVED_DEFINED_CLANG_LIST_CALLS'}
+        statuses={'cfg':'PROVED_DEFINED_CLANG_SCALAR_CFG','nested':'PROVED_DEFINED_CLANG_SCALAR_NESTED','recurrence':'PROVED_DEFINED_CLANG_SCALAR_RECURRENCE','memory':'PROVED_DEFINED_CLANG_FINITE_MEMORY','calls':'PROVED_DEFINED_CLANG_CFG_CALLS','list':'PROVED_DEFINED_CLANG_LIST_HEAP','list_calls':'PROVED_DEFINED_CLANG_LIST_CALLS','bv_cfg':'PROVED_DEFINED_CLANG_BV_CFG','bv_calls':'PROVED_DEFINED_CLANG_BV_CALLS'}
         if success:result['status']=statuses[backend]
         return {**result,'frontend':'clang_proof','clang_frontend':front,'normalization':{'method':'structural admitted Clang AST to typed C; Clang + normalizer are trusted frontend components','source':normalized,'source_sha256':hashlib.sha256(normalized.encode()).hexdigest(),'ast_sha256':hashlib.sha256(json.dumps([n.root for n in normalizers],sort_keys=True).encode()).hexdigest(),'type_environment_sha256':hashlib.sha256(json.dumps({key:front.get(key,[]) for key in ('typedefs','record_definitions','modeled_function_declarations','function_parameter_declarations','external_function_declarations')},sort_keys=True).encode()).hexdigest(),'alpha_renamed':renamed,'functions':[n.root['name'] for n in normalizers],'backend':backend,'external_call_frontiers':[f for n in normalizers for f in getattr(n,'external_frontiers',[])],'external_call_semantics_assumed':False,'bit_builtin_calls':[v for n in normalizers for v in getattr(n,'bit_builtin_calls',[])],'bit_builtin_models':list(next((n.bit_models.models for n in normalizers if getattr(n,'bit_models',None) is not None),{}).values()),'union_views':[v for n in normalizers for v in n.union_views],'abi':abi,'char_signed':char_signed,'record_layout_correspondence':layout_correspondence,'compiler_equivalence_machine_proved':False,'unsupported_constructs_rejected':True},'scope':'declared scalar input domain and selected typed backend contract; allocation assumptions and the selected shape/CFG proof boundary remain explicit; no general LLVM semantics or KLEE execution'}
     except (SMTGraphError,ValueError,TypeError,KeyError,RecursionError) as exc:return {**failure,'reason':str(exc)}
