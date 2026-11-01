@@ -1,8 +1,8 @@
 """Checked composition of a fresh-list builder and its unique owner.
 
 This is a source-contract composition rule, not general inlining. Scalar
-builder arguments must be unchanged identifiers of matching integer types;
-map and consuming helpers also accept independently checked pure scalar arguments.
+builder/map/consuming arguments are pure immutable scalar expressions with
+checked evaluation and retained parameter assignment conversions.
 The returned footprint has one owner, permits a local nonescaping map cursor,
 and is forwarded or consumed by the list fold contract, locally or in a helper.
 """
@@ -78,7 +78,7 @@ def pure_scalar_argument(node, parameters, model):
         return
     if isinstance(node,c_ast.Cast):
         c_type(node.to_type,model);pure_scalar_argument(node.expr,parameters,model);return
-    raise SMTGraphError('List map actual arguments require pure integer expressions of immutable entry parameters')
+    raise SMTGraphError('List scalar actual arguments require pure integer expressions of immutable entry parameters')
 
 
 class ListHeapCallsProgram:
@@ -117,6 +117,7 @@ class ListHeapCallsProgram:
         parameter_types = {p.name: c_type(p, self.model) for p in params}
         self.parameter_source=', '.join(self.generator.visit(p) for p in params)
         self.argument_checks=[]
+        self.builder_argument_bindings=[]
         self.consumer_argument_bindings=[]
         if set(self.bounds)-set(parameter_types):
             raise SMTGraphError('Unknown list call entry parameter bound')
@@ -134,14 +135,47 @@ class ListHeapCallsProgram:
         actuals = head.init.args.exprs if head.init.args else []
         if len(actuals) != len(builder_params):
             raise SMTGraphError('List builder call arity mismatch')
+        if not builder_params or len(builder_params)>16:
+            raise SMTGraphError('Builder scalar argument budget is one to sixteen per call')
         arguments = {}
+        identity_arguments = True
         for formal, actual in zip(builder_params, actuals):
-            if not isinstance(formal, c_ast.Decl) or not formal.name or not isinstance(actual, c_ast.ID) or actual.name not in parameter_types or c_type(formal, self.model) != parameter_types[actual.name]:
-                raise SMTGraphError('List builder arguments require unchanged scalar identifiers with identical parameter types')
-            arguments[formal.name] = actual.name
+            if not isinstance(formal, c_ast.Decl) or not formal.name:
+                raise SMTGraphError('Named integer builder parameters required')
+            formal_type = c_type(formal, self.model)
+            pure_scalar_argument(actual, parameter_types, self.model)
+            identity_arguments &= isinstance(actual, c_ast.ID) and actual.name in parameter_types and formal_type == parameter_types[actual.name]
+            arguments[formal.name] = self.generator.visit(actual)
         record_source = self.generator.visit(records[0])+';\n'
+        original_builder_source = record_source+self.generator.visit(builder)
+        self.builder_uses_entry_domain = not identity_arguments
+        if not identity_arguments:
+            mapping = self.local_names(builder)
+            bindings = {}
+            for formal, actual in zip(builder_params, actuals):
+                formal_type = c_type(formal, self.model)
+                fresh = '__list_builder_argument_'+formal.name
+                while fresh in self.used:fresh += '_'
+                self.used.add(fresh); mapping[formal.name] = fresh
+                converted = c_parser.CParser().parse('int x(void){return ('+formal_type.name+')0;}').ext[0].body.block_items[0].expr
+                converted.expr = copy.deepcopy(actual)
+                bindings[fresh] = converted
+                self.builder_argument_bindings.append(self.check_argument(builder_name,formal.name,formal_type,actual,abi,char_signed,max_paths,kind='builder'))
+            # Prove eager actuals before substituting them into even an unused
+            # formal or an empty/failed construction. Do not synthesize on UB.
+            if any(check['proof']['status']!='PROVED_DEFINED_TYPED_C_CFG_HEAP' for check in self.argument_checks):
+                return
+            renamed = rename(builder.body, mapping)
+            estimate = len(self.generator.visit(renamed))+sum(
+                len(self.generator.visit(expression))*sum(isinstance(n,c_ast.ID) and n.name==formal for n in walk(renamed))
+                for formal,expression in bindings.items())
+            if estimate>100000:
+                raise SMTGraphError('Bound builder argument substitution exceeds the source budget')
+            builder = copy.deepcopy(builder)
+            builder.decl.type.args = copy.deepcopy(entry.decl.type.args)
+            builder.body = bind_expressions(renamed, bindings)
         builder_source = record_source+self.generator.visit(builder)
-        builder_bounds = {formal:self.bounds[actual] for formal, actual in arguments.items() if actual in self.bounds}
+        builder_bounds = self.bounds if self.builder_uses_entry_domain else {formal:self.bounds[actual] for formal, actual in arguments.items() if actual in self.bounds}
         self.builder = ListHeapProgram(builder_source, function=builder_name,
             parameter_bounds=builder_bounds, abi=abi, char_signed=char_signed, max_paths=max_paths)
         if self.builder.mode != 'escape' or pointer_tag(head) != self.builder.tag:
@@ -300,7 +334,8 @@ class ListHeapCallsProgram:
         if any(check['proof']['status']!='PROVED_DEFINED_TYPED_C_CFG_HEAP' for check in self.argument_checks):
             return
         mapping = self.local_names(builder)
-        mapping.update(arguments)
+        if not self.builder_uses_entry_domain:
+            mapping.update(arguments)
         mapping[self.builder.head] = head.name
         builder_head = rename(builder.body.block_items[0], mapping)
         builder_loop = rename(self.builder.loop, mapping)
@@ -319,7 +354,14 @@ class ListHeapCallsProgram:
             max_paths=max_paths, loop_summaries=loop_summaries)
         self.contract = {'method':'checked fresh-list ownership transfer and scalar-preserving source-contract composition',
             'builder':builder_name, 'consumer':self.consumer_name or 'entry suffix',
-            'argument_bindings':arguments, 'argument_conversions':'builder identity only; map and consumer parameter assignment conversions checked separately',
+            'argument_bindings':arguments, 'argument_conversions':'pure immutable scalar expressions; builder/map/consumer parameter assignment conversions retained',
+            'builder_scalar_argument_bindings':self.builder_argument_bindings,
+            'builder_scalar_argument_budget_per_call':16,
+            'builder_identity_fast_path':identity_arguments,
+            'builder_original_source_sha256':hashlib.sha256(original_builder_source.encode()).hexdigest(),
+            'builder_instantiated_source':builder_source,
+            'builder_instantiated_source_sha256':hashlib.sha256(builder_source.encode()).hexdigest(),
+            'builder_exact_entry_domain_binding':self.builder_uses_entry_domain,
             'builder_return_contract_checked':True, 'unique_owner_no_external_aliases':True,
             'allocation_failure_prefix_transferred':True, 'builder_failure_return_becomes_loop_exit':failure_return,
             'callee_then_caller_return_conversions_preserved':self.consumer_name is not None,
@@ -389,7 +431,7 @@ class ListHeapCallsProgram:
                 return {'status':'UNKNOWN','reason':'List '+contract['helper_kind']+' call argument source proof failed',
                         'c_overflow_verified':False,'memory_safety_verified':False,'termination_proved':False,
                         'source_proof':contract}
-        builder_inputs = None if inputs is None else {formal:inputs[actual] for formal, actual in self.arguments.items() if actual in inputs}
+        builder_inputs = inputs if self.builder_uses_entry_domain else (None if inputs is None else {formal:inputs[actual] for formal, actual in self.arguments.items() if actual in inputs})
         # Validate the full entry domain before selecting a helper's arguments.
         result = self.program.report(inputs, allocation_count)
         builder = self.builder.report(builder_inputs, allocation_count)
@@ -402,5 +444,5 @@ class ListHeapCallsProgram:
         result['status'] = 'PROVED_DEFINED_TYPED_C_LIST_CALLS'
         result['interprocedural_heap_summary'] = True
         result['certificate']['composition'] = {**self.contract,'builder_proof':builder}
-        result['scope'] = 'one fresh prepend builder transfers its footprint through checked reversal and nonescaping borrowed pointwise-map stages; map/consumer pure scalar arguments are eagerly checked with retained parameter conversions; forwarding or pure additive fold/free and scalar return; no arbitrary aliases, calls, recursion or shapes'
+        result['scope'] = 'one fresh prepend builder transfers its footprint through checked reversal and nonescaping borrowed pointwise-map stages; builder/map/consumer pure scalar arguments are eagerly checked with retained parameter conversions; forwarding or pure additive fold/free and scalar return; no arbitrary aliases, calls, recursion or shapes'
         return result

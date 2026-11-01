@@ -137,8 +137,11 @@ def test_effects_memory_pointer_observation_calls_and_comma_are_rejected(actual)
     with pytest.raises(SMTGraphError):ListHeapCallsProgram(program(actual),function='entry')
 
 
-def test_builder_arguments_keep_their_separate_identity_contract():
-    with pytest.raises(SMTGraphError):ListHeapCallsProgram(program().replace('build(n);map','build(n+1);map'),function='entry')
+def test_checked_builder_expression_composes_with_eager_map_arguments():
+    result=ListHeapCallsProgram(program().replace('build(n);map','build(n+1);map'),function='entry',parameter_bounds={'n':[0,100],'delta':[0,2]}).report({'n':100,'delta':2},17)
+    assert result['status']=='PROVED_DEFINED_TYPED_C_LIST_CALLS',result
+    assert result['evaluation']['live_nodes_after_return']==0
+    assert result['certificate']['composition']['builder_exact_entry_domain_binding']
 
 
 def test_argument_resource_budget_is_explicit_and_fails_closed():

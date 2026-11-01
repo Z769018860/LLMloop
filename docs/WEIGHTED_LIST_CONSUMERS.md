@@ -115,7 +115,9 @@ run original/normalized C only, because a rejected argument/step does not justif
 a composed witness. Native tests are supplementary finite evidence, not the
 universal source proof. Three x86 ABIs and char signedness are checked separately.
 
-Builder arguments retain their identity-only contract. Consumers cannot mutate
+From v0.45, [builder arguments](CHECKED_LIST_BUILDERS.md) also accept eagerly
+checked pure expressions with retained conversions and exact caller-domain
+binding. Consumers cannot mutate
 payloads/links, keep aliases, allocate, call other helpers, recurse, change the
 fixed traversal, or carry arbitrary state-dependent accumulator recurrences.
 General builder contracts, aliases/ownership composition, external-call contracts,

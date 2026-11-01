@@ -18,7 +18,10 @@ the owner, allocation footprint and links, while independently checking each
 payload write with all preceding C store conversions retained.
 From v0.36, map helpers admit [eager scalar expressions and parameter
 conversions](EAGER_LIST_ARGUMENTS.md), with a separate argument proof even for
-empty chains and unused formals. Builder argument restrictions below remain.
+empty chains and unused formals. From v0.45, the
+[checked builder extension](CHECKED_LIST_BUILDERS.md) also accepts pure scalar
+builder expressions with eager safety, formal conversions and exact caller-domain
+binding. The identity rule below describes the retained original fast path.
 
 ## Run
 
@@ -62,7 +65,7 @@ and a failure `break` both transfer exactly the prefix already built.
 If the builder itself has later reversal/map stages, its failure must break to those
 stages; an early return that bypasses them is not assigned their postcondition.
 
-Entry parameters are immutable scalar integers. Builder arguments must be
+Entry parameters are immutable scalar integers. In the original identity path, builder arguments must be
 unchanged entry parameter identifiers with identical integer types; permutation
 and repeated immutable identifiers are allowed. Expressions, increments, nested
 calls and nonidentity conversions are refused rather than erased. The builder's

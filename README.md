@@ -776,6 +776,20 @@ See the [Clang example](examples/clang_list_argument_conversions.c),
 [v0.36 experiments](experiments/v036/report.md). General alias/call/graph and
 complete C/LLVM requirements remain open; no KLEE.
 
+## v0.45: checked scalar builder arguments
+
+List builders now accept eagerly checked pure scalar expressions, retaining
+formal parameter conversions and the caller's exact parameter domain. Converted
+signed-int counts control allocation-prefix outcomes; proposed count bounds need
+an independent proof before they can constrain the fold. Empty chains, failed
+allocations and unused formals cannot erase argument undefinedness. The unique
+owned prepend-chain contract remains required; general heap/call contracts and
+complete C/LLVM are still open.
+
+See [the contract and runnable example](docs/CHECKED_LIST_BUILDERS.md),
+[v0.45 evidence](experiments/v045/report.md), or run
+`python scripts/check_list_builders_native.py --output /tmp/builders.json`.
+
 ## v0.44: checked scalar consumer arguments and weighted list folds
 
 Owned-list consumers now accept up to sixteen eagerly checked pure scalar

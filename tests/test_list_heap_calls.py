@@ -116,9 +116,7 @@ def test_alpha_renaming_preserves_field_names_and_avoids_all_frames():
 
 
 @pytest.mark.parametrize('old,new',[
-    ('build(n)', 'build(n+1)'),
     ('build(n)', 'build(n++)'),
-    ('build(n)', 'build((int)n)'),
     ('build(int count)', 'build(unsigned int count)'),
     ('p->next=head;', 'p->next=p;'),
     ('if(!p){return head;}', 'if(!p){continue;}'),
@@ -185,8 +183,6 @@ def test_clang_composition_preserves_target_layout_and_return_conversions(clang,
     ('p->value = i;', 'p->value = (i+2147483647)-2147483647;'),
     ('free(head);', 'free(head); free(head);'),
     ('return consume(head);', 'return consume(head) + consume(head);'),
-    ('build(n)', 'build(n+1)'),
-    ('build(n)', 'build((unsigned)n)'),
     ('if (!p) { return head; }', 'if (!p) { continue; }'),
 ])
 def test_real_clang_unsafe_or_unmodeled_composition_is_unknown(clang,old,new):

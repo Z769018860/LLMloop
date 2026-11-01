@@ -393,6 +393,43 @@ class ListHeapProgram:
         else:
             self.return_type = c_type(self.func.decl, self.model)
         self.parse_builder()
+        self.count_engine = None
+        self.count_contract = None
+        if not isinstance(self.loop.cond.right, c_ast.ID):
+            count_name = self.fresh('count_check')
+            count_source = 'int '+count_name+'('+self.parameter_source+'){return '+self.bound+';}'
+            self.count_engine = TypedCFGHeap(count_source, function=count_name,
+                parameter_bounds=self.bounds, abi=abi, char_signed=char_signed, max_paths=max_paths)
+            count_report = self.count_engine.report()
+            if count_report['status'] != 'PROVED_DEFINED_TYPED_C_CFG_HEAP':
+                self.count_contract = {'source':count_source, 'proof':count_report}
+                self.build_report = count_report
+                self.map_reports = []
+                self.fold_engine = None
+                return
+            # Optimize proposes an upper bound only. A separate refutation
+            # certifies it; timeout/unknown keeps the full signed-int bound.
+            upper = self.model.types['int'].maximum
+            optimizer = z3.Optimize(); optimizer.set(timeout=5000)
+            optimizer.add(self.count_engine.domain)
+            target = optimizer.maximize(self.count_engine.result.value)
+            refutation = None
+            if optimizer.check() == z3.sat:
+                candidate = target.upper()
+                if z3.is_int_value(candidate):
+                    solver = z3.Solver(); solver.set(timeout=5000)
+                    solver.add(self.count_engine.domain, self.count_engine.result.value > candidate)
+                    if solver.check() == z3.unsat:
+                        upper = candidate.as_long()
+                        refutation = solver.to_smt2()
+            self.count_contract = {'source':count_source, 'proof':count_report,
+                'upper_bound':upper, 'upper_bound_refutation_smt2':refutation,
+                'fallback_is_full_signed_int_range':refutation is None,
+                'pure_immutable_expression_repeated_without_effects':True}
+        else:
+            limits = self.bounds.get(self.bound, [None,None])
+            upper = self.model.types['int'].maximum if limits[1] is None else limits[1]
+        self.max_length = max(0, upper)
         build_name = self.fresh('payload_check')
         temporary, dummy = self.fresh('payload'), self.fresh('dummy')
         build = copy.deepcopy(self.loop)
@@ -429,11 +466,17 @@ class ListHeapProgram:
         if c_type(index, self.model) != self.model.types['int'] or _lit(index.init) != 0:
             raise SMTGraphError('List index must be a fresh signed int starting at zero')
         self.index = index.name
-        if not isinstance(loop.cond, c_ast.BinaryOp) or loop.cond.op != '<' or not identifier(loop.cond.left, self.index) or not isinstance(loop.cond.right, c_ast.ID):
-            raise SMTGraphError('List loop condition must be index < immutable int parameter')
-        self.bound = loop.cond.right.name
-        if self.parameters.get(self.bound) != self.model.types['int']:
-            raise SMTGraphError('List count parameter must have signed int type')
+        if not isinstance(loop.cond, c_ast.BinaryOp) or loop.cond.op != '<' or not identifier(loop.cond.left, self.index):
+            raise SMTGraphError('List loop condition must be index < immutable signed int bound')
+        bound = loop.cond.right
+        if isinstance(bound, c_ast.ID):
+            if self.parameters.get(bound.name) != self.model.types['int']:
+                raise SMTGraphError('List count parameter must have signed int type')
+        elif isinstance(bound, c_ast.Cast) and c_type(bound.to_type, self.model) == self.model.types['int']:
+            check_fold_value(bound, self.parameters, self.model)
+        else:
+            raise SMTGraphError('List count expression requires an explicit signed int conversion')
+        self.bound = self.generator.visit(bound)
         if not isinstance(loop.next, c_ast.UnaryOp) or loop.next.op not in ('++', 'p++') or not identifier(loop.next.expr, self.index):
             raise SMTGraphError('List index must increment once per successful allocation')
         statements = items(loop.stmt)
@@ -584,15 +627,14 @@ class ListHeapProgram:
             return result
         addition.rvalue = load(addition.rvalue)
         self.fold_source = self.return_type.name+' '+name+'('+self.parameter_source+', int '+self.length_name+'){'+self.generator.visit(self.accumulator)+';for(int '+scan+'=0;'+scan+'<'+self.length_name+';'+scan+'++){'+self.payload_type_source+' '+temporary+'='+expression+';'+self.generator.visit(addition)+';}return '+self.generator.visit(self.fold_return)+';}'
-        limits = self.bounds.get(self.bound, [None,None])
-        upper = self.model.types['int'].maximum if limits[1] is None else limits[1]
-        self.max_length = max(0, upper)
         self.fold_engine = _ListFoldTrajectory(self.fold_source, summaries, function=name,
             parameter_bounds={**self.bounds,self.length_name:[0,self.max_length]}, abi=self.abi,
             char_signed=self.char_signed, max_paths=max_paths)
 
     def report(self, inputs=None, allocation_count=None):
         failure = {'status':'UNKNOWN','c_overflow_verified':False,'memory_safety_verified':False,'termination_proved':False}
+        if self.count_contract is not None and self.count_contract['proof']['status'] != 'PROVED_DEFINED_TYPED_C_CFG_HEAP':
+            return {**failure,'reason':'List count expression source proof failed','source_proof':self.count_contract['proof']}
         if self.build_report['status'] != 'PROVED_DEFINED_TYPED_C_NESTED':
             return {**failure,'reason':'List payload/index source proof failed','source_proof':self.build_report}
         for proof in self.map_reports:
@@ -628,13 +670,14 @@ class ListHeapProgram:
                 'payload_source':self.build_source,'payload_proof':self.build_report,
                 'fold_source':self.fold_source,'fold_proof':fold,
                 'fold_expression_contract':self.fold_contract if fold else None,
+                'immutable_count_expression':self.count_contract,
                 'fold_domain_overapproximates_all_failure_prefix_lengths':True if fold else None},
             'scope':'fresh acyclic two-field prepend lists with failure-prefix exits; checked in-place reversals, pure pointwise payload maps and optional additive fold/free; no external aliases or arbitrary heap updates'}
         if inputs is None:
             if allocation_count is not None:raise SMTGraphError('allocation_count requires inputs')
         else:
             self.build_engine.report(inputs)
-            count = max(0, inputs[self.bound])
+            count = max(0, self.count_engine.evaluate_return(inputs).as_long() if self.count_engine is not None else inputs[self.bound])
             selected = count if allocation_count is None else allocation_count
             if type(selected) is not int or not 0 <= selected <= count:
                 raise SMTGraphError('allocation_count must be a feasible successful-allocation prefix')
