@@ -198,6 +198,10 @@ def prove_clang(source=None,source_file=None,function=None,clang=None,proof=None
             from .clang_memory_proof import record_source
             records,record_tags=record_source(normalizers)
             if record_tags:normalized=records+'\n'+normalized
+            if project is not None and record_tags:
+                if backend!='calls':raise SMTGraphError('Linked records require the calls backend')
+                project.certificate['normalized_source_sha256']=hashlib.sha256(normalized.encode()).hexdigest()
+                project.certificate['record_compatibility']['emitted_record_source_sha256']=hashlib.sha256(records.encode()).hexdigest()
         char_signed=True
         for flag in front['effective_flags']:
             if flag in ('-funsigned-char','-fsigned-char'):char_signed=flag=='-fsigned-char'
@@ -219,7 +223,7 @@ def prove_clang(source=None,source_file=None,function=None,clang=None,proof=None
         success=result['status'].startswith('PROVED_DEFINED_TYPED_C_')
         if success and record_tags:
             from .clang_memory_proof import check_record_layouts
-            layout_correspondence=check_record_layouts(front,result,record_tags)
+            layout_correspondence=(project.record_types.check_model(result,record_tags) if project is not None else check_record_layouts(front,result,record_tags))
         statuses={'cfg':'PROVED_DEFINED_CLANG_SCALAR_CFG','nested':'PROVED_DEFINED_CLANG_SCALAR_NESTED','recurrence':'PROVED_DEFINED_CLANG_SCALAR_RECURRENCE','memory':'PROVED_DEFINED_CLANG_FINITE_MEMORY','calls':'PROVED_DEFINED_CLANG_CFG_CALLS','list':'PROVED_DEFINED_CLANG_LIST_HEAP','list_calls':'PROVED_DEFINED_CLANG_LIST_CALLS','bv_cfg':'PROVED_DEFINED_CLANG_BV_CFG','bv_calls':'PROVED_DEFINED_CLANG_BV_CALLS'}
         if success:result['status']=statuses[backend]
         if project is not None:project.check_snapshot()

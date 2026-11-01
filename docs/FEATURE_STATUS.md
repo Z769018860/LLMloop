@@ -1,4 +1,4 @@
-# Feature status after v0.47
+# Feature status after v0.48
 
 This inventory distinguishes certified capabilities from outstanding general
 requirements. The project remains a restricted research prototype.
@@ -19,7 +19,7 @@ particular exit condition terminates. `UNKNOWN` is an explicit unsupported or
 unproved result, not a valid summary.
 
 See [v0.14 recurrence and experiment contracts](GUARDED_RECURRENCES_AND_EXPERIMENTS.md)
-and the committed [latest experiment report](../experiments/v047/report.md).
+and the committed [latest experiment report](../experiments/v048/report.md).
 
 See [unroll-free typed scalar C contracts](TYPED_UNBOUNDED_RECURRENCES.md) for the new machine-integer certificate. It does not certify general heap memory.
 
@@ -120,3 +120,7 @@ for independently compiler-ingested source components, canonical integer/pointer
 interface checks and private-function isolation. Existing finite call/memory and
 recursion obligations remain; general external/linker and cross-unit record
 semantics are still open.
+
+See [cross-unit named records](CLANG_LINKED_RECORDS.md) for ordered canonical
+member-graph compatibility and per-unit compiler/model layout checks. This
+extends finite record calls without changing heap, call or execution budgets.

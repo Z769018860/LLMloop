@@ -104,3 +104,8 @@ See [latest evidence](../experiments/v047/report.md) and
 [remaining C requirements](C_COVERAGE.md). Cross-unit record compatibility,
 general globals/linker semantics, external contracts and complete C/LLVM support
 remain open.
+
+The [v0.48 extension](CLANG_LINKED_RECORDS.md) adds compatible named-struct
+pointer graphs to `calls`, with ordered canonical member checks and every used
+unit’s compiler/model layout correspondence. The v0.47 exclusions above describe
+the original release; other exclusions and finite proof budgets remain.

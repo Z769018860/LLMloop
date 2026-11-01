@@ -934,3 +934,12 @@ existing proof kernels; no external semantics are assumed. See the
 [experiment report](experiments/v047/report.md), and
 [remaining requirements](docs/C_COVERAGE.md). General C/LLVM, cross-unit records,
 external contracts and native-linker/interposition semantics remain open.
+
+## v0.48: checked records across C files
+
+The `calls` bridge now checks compatible named-struct member graphs and every
+participating unit’s Clang layout before admitting finite record heaps across
+source files. Aliases, lifetimes and allocation failures retain the existing
+bounded proof obligations. See the [contract and three-file example](docs/CLANG_LINKED_RECORDS.md)
+and [experiment report](experiments/v048/report.md). General heaps, external
+contracts and complete C/LLVM support remain open.

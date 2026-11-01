@@ -137,6 +137,7 @@ class LinkedClangProject:
             base=text.rstrip('* ').strip();suffix=text[len(base):]
             if suffix.replace('*','').strip():raise SMTGraphError('Unsupported linked type')
             stars=suffix.count('*')
+            if stars>3:raise SMTGraphError('Linked pointer indirection budget is three')
             aliases={}
             for alias in units[index].get('typedefs',[]):
                 aliases.setdefault(alias['name'],set()).add(alias['type'].get('desugaredQualType',alias['type'].get('qualType','')))
@@ -146,7 +147,11 @@ class LinkedClangProject:
             else:
                 from .clang_proof import INTEGER
                 if base=='void' and not stars:return 'void'
-                if base not in INTEGER:raise SMTGraphError('Linked interfaces currently require integer types and integer pointers')
+                if re.fullmatch(r'struct [A-Za-z_][A-Za-z0-9_]*',base):
+                    if not stars:raise SMTGraphError('Linked by-value struct interfaces unsupported')
+                    record_types.require(index,base.split()[1])
+                    return base+' *'*stars
+                if base not in INTEGER:raise SMTGraphError('Linked interfaces require integers or admitted integer/struct pointers')
                 if base in ('char','signed char','unsigned char','_Bool'):canonical=base
                 else:
                     parts=base.split();width='short' if 'short' in parts else 'long long' if parts.count('long')==2 else 'long' if 'long' in parts else 'int'
@@ -154,6 +159,10 @@ class LinkedClangProject:
                 result=canonical+' *'*stars
             if result.count('*')>3:raise SMTGraphError('Linked pointer indirection budget is three')
             return result
+
+        from .clang_linked_records import LinkedRecordTypes
+        record_types=LinkedRecordTypes(units,scalar_type)
+        self.record_types=record_types
 
         def type_signature(value,index):
             text=value.get('desugaredQualType',value.get('qualType',''))
@@ -253,8 +262,9 @@ class LinkedClangProject:
                 models=BitBuiltinModels(front,used);models.used=used;models.models=shared_models;models_by_unit[index]=models
             normalizer=MemoryNormalizer({**front,'functions':[definitions[key]]},callable_names,models_by_unit[index])
             source=normalizer.source()
-            if normalizer.used_records or normalizer.union_views:
-                raise SMTGraphError('Linked record/union interfaces and layouts are not yet admitted')
+            if normalizer.union_views:
+                raise SMTGraphError('Linked union views are not yet admitted')
+            for tag in sorted(normalizer.used_records):record_types.require(index,tag)
             normalizers.append(normalizer);sources.append(source)
         sources.extend(m['source'] for m in shared_models.values())
         prototypes=[s.split('{',1)[0].strip()+';' for s in sources];external_prototypes={}
@@ -274,6 +284,7 @@ class LinkedClangProject:
             'caller_provider_types_checked':True,'per_unit_declaration_contexts_preserved':True,
             'source_snapshots_checked':True,'closed_world_function_binding':True,'external_semantics_assumed':False,
             'dynamic_interposition_modeled':False,'general_linker_or_C_support':False,
-            'normalized_source_sha256':hashlib.sha256(normalized.encode()).hexdigest()}
+            'normalized_source_sha256':hashlib.sha256(normalized.encode()).hexdigest(),
+            **({'record_compatibility':record_types.certificate} if record_types.schemas else {})}
         self.check_snapshot()
         return normalized,normalizers,emitted[entry_key]

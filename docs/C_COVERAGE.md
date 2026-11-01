@@ -100,3 +100,13 @@ of interprocedural source availability. Cross-unit records, general globals,
 weak/interposed/asm linkage and assumed external contracts remain open. See
 [the exact contract](CLANG_LINKED_TRANSLATION_UNITS.md) and
 [separate-object native evidence](../experiments/v047/report.md).
+
+## v0.48 cross-unit record bridge
+
+The `calls` backend admits compatible named-struct pointer graphs across supplied
+C files after checking canonical ordered fields and each participating unit’s
+Clang/model layout. It retains finite objects/cells, source definedness, lifetime,
+allocation-failure and complete-exit obligations. General layouts, unions, opaque
+records, header pointer declarations and arbitrary shape/ownership contracts
+remain open. See [the exact contract](CLANG_LINKED_RECORDS.md) and
+[latest evidence](../experiments/v048/report.md).
