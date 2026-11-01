@@ -109,7 +109,7 @@ class LinkedClangProject:
                 key=(index,local_roots[node['id']])
                 if key in definitions:raise SMTGraphError('Duplicate linked definition identity')
                 definitions[key]=fn
-                if node.get('storageClass')!='static':
+                if key[1] not in internal[index]:
                     if name in external:raise SMTGraphError('Multiple external function definitions in supplied units: '+name)
                     external[name]=key
             for fn in front['functions']:
@@ -122,7 +122,7 @@ class LinkedClangProject:
         emitted={};renames=[]
         for key,fn in definitions.items():
             name=fn['name']
-            if fn['ast'].get('storageClass')=='static':
+            if key[1] in internal[key[0]]:
                 fresh='__clang_tu'+str(key[0])+'_'+name
                 while fresh in used:fresh+='_'
                 used.add(fresh);renames.append({'unit':key[0],'source':name,'normalized':fresh});name=fresh
@@ -168,7 +168,7 @@ class LinkedClangProject:
         def signature(node,index):
             if any(n.get('kind') not in ('ParmVarDecl','CompoundStmt','FullComment') for n in node.get('inner',[])):
                 raise SMTGraphError('Attributed linked function declarations/definitions unsupported')
-            if node.get('inline') and node.get('storageClass')!='static':
+            if node.get('inline') and roots[index].get(node['id']) not in internal[index]:
                 raise SMTGraphError('External inline linkage is outside the closed linked component')
             params=[p for p in node.get('inner',[]) if p.get('kind')=='ParmVarDecl']
             canonical=type_signature(node.get('type',{}),index)

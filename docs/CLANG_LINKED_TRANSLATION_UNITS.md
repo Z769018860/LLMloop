@@ -48,7 +48,9 @@ when storage widths coincide. All units require the same compiler version,
 target triple/data layout and plain-char signedness. Accepted proof targets
 remain x86 LP64/ILP32/LLP64.
 
-Static functions are renamed hygienically by unit; ordinary variable/member
+Internal linkage follows the complete declaration chain, including a static
+declaration followed by an extern or unqualified definition. Static functions
+are renamed hygienically by unit; ordinary variable/member
 names are not rewritten. An undefined static function cannot acquire a body from
 another unit. Duplicate external definitions are rejected even if unreachable.
 Selected functions require explicit nonvariadic prototypes (`void` for no

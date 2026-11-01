@@ -272,3 +272,17 @@ def test_metadata_integrity_and_aggregate_guards(tmp_path,clang,monkeypatch,muta
         return result
     monkeypatch.setattr(ClangAdapter,'report',altered)
     unknown(request(tmp_path,clang,'int api(int);int entry(int n){return api(n);}','int api(int x){return x;}',bounds={'n':[0,1]}))
+
+
+@pytest.mark.parametrize('storage',['extern ',''])
+def test_inherited_internal_definition_never_exports_a_provider(tmp_path,clang,storage):
+    r=request(tmp_path,clang,'int api(int);int entry(void){return api(1);}',
+        'static int api(int);'+storage+'int api(int n){return n+1;}')
+    unknown(r);assert r.get('analysis_limit')=='external_call_frontier'
+
+
+@pytest.mark.parametrize('storage',['extern ',''])
+def test_inherited_internal_definition_is_private_and_renamed(tmp_path,clang,storage):
+    r=request(tmp_path,clang,'int api(int);static int same(int);'+storage+'int same(int x){return x+2;}int entry(int n){return api(n)+same(n);}',
+        'static int same(int);'+storage+'int same(int x){return x+1;}int api(int x){return same(x);}',bounds={'n':[0,2]},inputs={'n':2})
+    c=proved(r,7);assert len(c['static_function_renames'])==2

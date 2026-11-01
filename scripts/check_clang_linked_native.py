@@ -11,7 +11,7 @@ from llmloop.api import analyze_request
 
 def fixtures():
     return [
-        dict(name='static_collisions',main='int api(int);static int same(int x){return x+2;}int entry(int n){return api(n)+same(n);}',helper='static int same(int x){return x+1;}int api(int x){return same(x);}',values=list(range(33)),oracle=lambda n:2*n+3),
+        dict(name='static_collisions',main='int api(int);static int same(int);int same(int x){return x+2;}int entry(int n){return api(n)+same(n);}',helper='static int same(int);extern int same(int x){return x+1;}int api(int x){return same(x);}',values=list(range(33)),oracle=lambda n:2*n+3),
         dict(name='typedef_narrowing',main='typedef unsigned char Byte;Byte api(Byte);int entry(int n){return api(n);}',helper='typedef unsigned char Octet;Octet api(Octet x){return x+1;}',values=list(range(250,266)),oracle=lambda n:(n+1)%256),
         dict(name='native_long_layout',main='long api(long);long entry(int n){return api(n);}',helper='long api(long x){return x+sizeof(long);}',values=list(range(33)),oracle=lambda n:n+8),
         dict(name='lazy_nested',main='int api(int);int entry(int n){return n==0 ? 7 : api(api(12/n));}',helper='int api(int x){return x+1;}',values=list(range(17)),oracle=lambda n:7 if n==0 else 12//n+2),
@@ -120,6 +120,7 @@ def main():
                     negative.append({'name':name,'optimization':opt,'source_form':tag,'observation':result,'commands':commands,'source_proof':compact(report)})
         for name,decl,body in [('return_type','long api(int);','int api(int n){return n;}'),('char_int','int api(unsigned char);','int api(int n){return n;}'),
                 ('internal','static int api(int);','int api(int n){return n;}'),('not_external','int api(int);','static int api(int n){return n;}'),
+                ('inherited_internal','int api(int);','static int api(int);extern int api(int n){return n;}'),
                 ('attribute','int api(int) __attribute__((weak));','int api(int n){return n;}'),('old_prototype','int api();','int api(int n){return n;}')]:
             helper=root/'refused.c';helper.write_text(body)
             report=analyze_request({'source':decl+'int entry(int n){return api(n);}','function':'entry','frontend':'clang_proof','clang':{'linked_sources':[str(helper)]},'proof':{'backend':'calls','parameter_bounds':{'n':[0,2]}}})
