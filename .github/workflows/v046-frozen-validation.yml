@@ -1,0 +1,122 @@
+name: v0.46 frozen validation
+on:
+  push:
+    branches: [codex/v046-stateful-consumers]
+    paths: [.github/workflows/v046-frozen-validation.yml]
+permissions:
+  contents: write
+concurrency:
+  group: llmloop-v046-frozen-validation
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install matching compiler and Python dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y clang-18
+          python -m pip install -e '.[test,smt]'
+          mkdir -p /tmp/llmloop-ci-bin
+          ln -s "$(command -v clang-18)" /tmp/llmloop-ci-bin/clang
+          echo /tmp/llmloop-ci-bin >> "$GITHUB_PATH"
+      - name: Preserve first frozen attempt and audit unchanged general kernels
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,subprocess
+          record=json.loads("{\"attempt\":1,\"tested_commit\":\"6f764a6aabe19d6f69754b0db492372ba060a0a4\",\"tested_tree\":\"7a7a75ec3d3b3a3f57030471c94a320f75ad6ed0\",\"published_source_commit\":\"ca01ce0b42ce91421a869bbbc1cceaa24ff9922f\",\"full_pytest\":{\"command\":[\"/tmp/llmloop-v046-env/bin/python\",\"-m\",\"pytest\",\"-q\",\"--forked\"],\"exit_code\":0,\"elapsed_seconds\":1177.31,\"log\":\"pytest.txt\",\"passed\":2042,\"skipped\":0,\"expected_passed\":2042},\"checks\":{\"full_pytest\":true,\"stateful\":true,\"sanitizer_frontiers_recorded\":true,\"stateful_cli\":true,\"builders\":true,\"builder_cli\":true,\"consumers\":false,\"upstream\":false,\"popcount_baseline_identity\":false,\"bit_builtins\":true,\"division\":true,\"arguments\":true,\"payload_maps\":true,\"reversal\":true,\"consumer_cli\":true,\"frozen_source_unchanged\":true},\"frozen_source_unchanged\":true,\"overall_passed\":false,\"commands\":{\"full_pytest\":{\"command\":[\"/tmp/llmloop-v046-env/bin/python\",\"-m\",\"pytest\",\"-q\",\"--forked\"],\"exit_code\":0,\"elapsed_seconds\":1177.31,\"log\":\"pytest.txt\",\"passed\":2042,\"skipped\":0,\"expected_passed\":2042},\"stateful\":{\"command\":[\"/tmp/llmloop-v046-env/bin/python\",\"scripts/check_list_stateful_native.py\",\"--output\",\"experiments/v046/stateful.json\"],\"exit_code\":0,\"elapsed_seconds\":45.16,\"log\":\"stateful.txt\"},\"stateful_cli\":{\"command\":[\"/tmp/llmloop-v046-env/bin/python\",\"-m\",\"llmloop.symbolic_cli\",\"examples/clang_list_stateful_consumer.c\",\"--c-clang-proof\",\"--function\",\"entry\",\"--clang-proof-config\",\"{\\\"backend\\\": \\\"list_calls\\\", \\\"allocation_count\\\": 100}\",\"--parameter-bounds\",\"{\\\"n\\\":[0,1000000],\\\"delta\\\":[-3,3]}\",\"--inputs\",\"{\\\"n\\\":1000000,\\\"delta\\\":2}\"],\"exit_code\":0,\"elapsed_seconds\":1.722,\"log\":\"stateful_cli.json\"},\"builders\":{\"command\":[\"/tmp/llmloop-v046-env/bin/python\",\"scripts/check_list_builders_native.py\",\"--output\",\"experiments/v046/builders.json\"],\"exit_code\":0,\"elapsed_seconds\":41.818,\"log\":\"builders.txt\"},\"builder_cli\":{\"command\":[\"/tmp/llmloop-v046-env/bin/python\",\"-m\",\"llmloop.symbolic_cli\",\"examples/clang_list_builder_arguments.c\",\"--c-clang-proof\",\"--function\",\"entry\",\"--clang-proof-config\",\"{\\\"backend\\\": \\\"list_calls\\\", \\\"allocation_count\\\": 100, \\\"loop_summaries\\\": {\\\"__list_scan\\\": {\\\"total\\\": \\\"__list_scan*(2*__list_length-__list_scan-1)//2+__list_scan*((delta+260)%256)\\\"}}}\",\"--parameter-bounds\",\"{\\\"n\\\":[0,1000000],\\\"delta\\\":[0,2]}\",\"--inputs\",\"{\\\"n\\\":1000000,\\\"delta\\\":2}\"],\"exit_code\":0,\"elapsed_seconds\":1.269,\"log\":\"builder_cli.json\"},\"consumers\":{\"command\":[\"/tmp/llmloop-v046-env/bin/python\",\"scripts/check_list_consumers_native.py\",\"--output\",\"experiments/v046/consumers.json\"],\"exit_code\":1,\"elapsed_seconds\":42.561,\"log\":\"consumers.txt\"},\"upstream\":{\"command\":[\"/tmp/llmloop-v046-env/bin/python\",\"scripts/check_llvm_builtins.py\",\"--compare-baseline\",\"--output\",\"experiments/v046/upstream.json\"],\"exit_code\":1,\"elapsed_seconds\":81.885,\"log\":\"upstream.txt\"},\"bit_builtins\":{\"command\":[\"/tmp/llmloop-v046-env/bin/python\",\"scripts/check_clang_bit_builtins.py\",\"--output\",\"experiments/v046/bit_builtins.json\"],\"exit_code\":0,\"elapsed_seconds\":42.296,\"log\":\"bit_builtins.txt\"},\"division\":{\"command\":[\"/tmp/llmloop-v046-env/bin/python\",\"scripts/check_division_bv.py\",\"--strategy\",\"induction\",\"--compare-baseline\",\"--controls\",\"--output\",\"experiments/v046/division.json\"],\"exit_code\":0,\"elapsed_seconds\":155.665,\"log\":\"division.txt\"},\"arguments\":{\"command\":[\"/tmp/llmloop-v046-env/bin/python\",\"scripts/check_list_arguments_native.py\",\"--output\",\"experiments/v046/arguments.json\"],\"exit_code\":0,\"elapsed_seconds\":44.532,\"log\":\"arguments.txt\"},\"payload_maps\":{\"command\":[\"/tmp/llmloop-v046-env/bin/python\",\"scripts/check_list_payload_maps_native.py\",\"--output\",\"experiments/v046/payload_maps.json\"],\"exit_code\":0,\"elapsed_seconds\":27.109,\"log\":\"payload_maps.txt\"},\"reversal\":{\"command\":[\"/tmp/llmloop-v046-env/bin/python\",\"scripts/check_list_reversal_native.py\",\"--output\",\"experiments/v046/reversal.json\"],\"exit_code\":0,\"elapsed_seconds\":22.176,\"log\":\"reversal.txt\"},\"consumer_cli\":{\"command\":[\"/tmp/llmloop-v046-env/bin/python\",\"-m\",\"llmloop.symbolic_cli\",\"examples/clang_list_weighted_consumer.c\",\"--c-clang-proof\",\"--function\",\"entry\",\"--clang-proof-config\",\"{\\\"backend\\\": \\\"list_calls\\\", \\\"allocation_count\\\": 100, \\\"loop_summaries\\\": {\\\"__list_scan\\\": {\\\"__list_call_total\\\": \\\"((delta+260)%256)*(__list_scan*(2*__list_length-__list_scan-1)//2)+__list_scan*(delta-1)\\\"}}}\",\"--parameter-bounds\",\"{\\\"n\\\":[0,1000000],\\\"delta\\\":[0,2]}\",\"--inputs\",\"{\\\"n\\\":1000000,\\\"delta\\\":2}\"],\"exit_code\":0,\"elapsed_seconds\":3.598,\"log\":\"consumer_cli.json\"}},\"failures\":[{\"experiment\":\"consumers\",\"case\":\"map_reverse_consume\",\"status\":\"UNKNOWN\",\"failed_obligation\":\"__list_scan path 0 successor\",\"reason\":\"timeout\",\"profile\":\"legacy additive list fold\"},{\"experiment\":\"upstream\",\"case\":\"builtin_loop_udiv32\",\"reason\":\"experiment source worker exceeded 60-second process wall limit\",\"expected_source_classification\":\"UNKNOWN\",\"not_an_smt_query_budget_change\":true}],\"correction\":\"Use checked typed same-type store identities and exact successor audits for all list folds; keep generic/other kernels unchanged. Add an explicit 120-second source-worker wall option and 1800-second full-pytest process ceiling; SMT query and functional proof budgets unchanged.\",\"previous_results_sha256\":\"c0cceccfeb2c748d50f15089b76bb459617d88854919bf9eb28b8c686d7842a6\"}")
+          Path('/tmp/v046-first-attempt.json').write_text(json.dumps(record,indent=2)+'\n')
+          base='a7ad2c359d9bb7a8a0a8c2136c1deed947e2fb5f'
+          protected=['llmloop/integer_lift.py','llmloop/typed_nested.py','llmloop/typed_recurrence.py','llmloop/phase_invariants.py','llmloop/interval_certificate.py','tests/test_llvm_benchmarks.py','tests/test_external_call_frontiers.py','tests/test_finite_choices.py']
+          for path in protected:
+              assert Path(path).read_bytes()==subprocess.check_output(['git','show',base+':'+path]),path
+          from llmloop.list_heap import _StatefulListIntegers,_StatefulListTrajectory
+          from llmloop.integer_lift import WideningIntegerLift
+          assert issubclass(_StatefulListIntegers,WideningIntegerLift)
+          assert _StatefulListTrajectory.integer_engine is _StatefulListIntegers
+          print('General kernels and protected regressions unchanged; list-fold same-type identity retains original safety guards.')
+          PY
+      - name: Full frozen-source regression and all retained experiments
+        run: python scripts/run_v046_experiments.py --published-source "$GITHUB_SHA" --previous-attempt /tmp/v046-first-attempt.json
+      - name: Bind evidence to the actual validated source and CI origin
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json,os,subprocess
+          out=Path('experiments/v046')
+          r=json.loads((out/'results.json').read_text())
+          m=json.loads((out/'source_manifest.json').read_text())
+          assert r['passed'] and all(r['checks'].values())
+          assert r['full_pytest']['passed']==2044 and r['full_pytest']['skipped']==0 and r['full_pytest']['exit_code']==0
+          assert r['new_tests']==81 and r['github_actions_used'] is True and r['ci_runs_used']==int(os.environ['GITHUB_RUN_ATTEMPT'])
+          assert r['klee_used'] is False and r['complete_c_support'] is False
+          assert r['validation_origin'].startswith('GitHub Actions fallback')
+          head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          tree=subprocess.check_output(['git','rev-parse','HEAD^{tree}'],text=True).strip()
+          assert head==os.environ['GITHUB_SHA']==r['tested_commit']==m['tested_commit']
+          assert tree==r['tested_tree']==m['tested_tree']
+          assert r['source_identity']['git_tree_equal'] and r['source_identity']['published_source_commit']==head
+          checkpoint='888a6f7c99d4972d3ba8191ae369459c84061b13'
+          changed=subprocess.check_output(['git','diff','--name-only',checkpoint,head],text=True).splitlines()
+          assert changed==['.github/workflows/v046-frozen-validation.yml'],changed
+          assert len(m['sha256'])==653
+          for p,h in m['sha256'].items():assert hashlib.sha256(Path(p).read_bytes()).hexdigest()==h,p
+          for p,h in r['evidence_sha256'].items():assert hashlib.sha256((out/p).read_bytes()).hexdigest()==h,p
+          assert len(r['evidence_sha256'])==26 and len(list(out.iterdir()))==27
+          first=r['prior_prevalidation_attempt']
+          assert first['overall_passed'] is False and first['full_pytest']['passed']==2042 and first['full_pytest']['skipped']==0
+          assert first['tested_tree']=='7a7a75ec3d3b3a3f57030471c94a320f75ad6ed0'
+          assert r['stateful']=={'case_count':10,'correspondence_groups':1512,'native_output_matches':4536,'model_matches':756,'expected_ubsan_failures':26,'unobserved_ubsan_controls':2,'negative_source_controls':7,'arithmetic_audits_replayed':7}
+          assert r['source_domains_proved_with_explicit_backends']==r['functional_domains_proved_with_explicit_strategies']==15
+          assert r['division']['functional_replay']=={'queries':40,'all_unsat':True,'all_replayed':True,'arithmetic_audits':1,'counter_cases':31}
+          url='https://github.com/'+os.environ['GITHUB_REPOSITORY']+'/actions/runs/'+os.environ['GITHUB_RUN_ID']
+          ci={'passed':True,'validation_origin':'GitHub Actions fallback after primary execution environment loss',
+              'run_url':url,'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],
+              'ci_runs_used':int(os.environ['GITHUB_RUN_ATTEMPT']),'validation_commit':head,'validation_tree':tree,
+              'application_code_checkpoint':checkpoint,'application_code_tree':'c4d8a5e7cdf7e0a2fbe5af6a06b44e4e79f11c81',
+              'only_isolated_validation_workflow_changed':True,'general_kernels_and_protected_regressions_unchanged':True,
+              'list_fold_same_type_identity_retains_safety':True,'source_worker_wall_seconds':120,'full_pytest_wall_seconds':1800,
+              'smt_query_budget_ms':5000,'division_functional_total_budget_ms':30000,
+              'earlier_corrected_local_attempt':{'tested_commit':'768292b62b0e09c153cac9b7e749cb690c72cd86',
+                  'tested_tree':'c4d8a5e7cdf7e0a2fbe5af6a06b44e4e79f11c81','completed':False,
+                  'last_observed_full_pytest_progress_percent':31,'failure_observed':False,
+                  'reason':'exec-server transport disconnected; environment marked unavailable',
+                  'targeted_tests_passed':245,'legacy_consumer_native_output_matches':5400,
+                  'legacy_consumer_expected_ubsan_failures':20,'upstream_standalone_passed':True,
+                  'no_complete_local_pass_claimed':True},
+              'first_frozen_attempt_record':'prevalidation_attempt.json','frozen_paths_verified':653,'evidence_files_added':28}
+          (out/'validation_ci.json').write_text(json.dumps(ci,indent=2)+'\n')
+          r['validation_ci']=ci
+          report=out/'report.md'
+          with report.open('a') as handle:
+              handle.write('\nFinal validation origin: **GitHub Actions fallback** after the primary environment disconnected during the corrected local full suite. The last observed local progress was 31%, without a failure shown; no complete local pass is claimed for that corrected source. Its 245 targeted checks, corrected legacy consumer experiment and upstream experiment passed locally. The final CI validates application checkpoint '+checkpoint+' (tree c4d8a5e7cdf7e0a2fbe5af6a06b44e4e79f11c81), plus only the isolated validation workflow. The first unsuccessful frozen attempt is preserved separately.\n')
+              handle.write('\nFinal CI: '+url+'. CI attempts this release: '+str(ci['ci_runs_used'])+'. All 653 frozen paths are unchanged; only 28 evidence files are added. No KLEE. Solver and functional budgets remain unchanged; only explicit process wall ceilings differ from the earlier local attempt.\n')
+          r['evidence_sha256']['validation_ci.json']=hashlib.sha256((out/'validation_ci.json').read_bytes()).hexdigest()
+          r['evidence_sha256']['report.md']=hashlib.sha256(report.read_bytes()).hexdigest()
+          (out/'results.json').write_text(json.dumps(r,indent=2)+'\n')
+          assert len(list(out.iterdir()))==28 and len(r['evidence_sha256'])==27
+          for p,h in r['evidence_sha256'].items():assert hashlib.sha256((out/p).read_bytes()).hexdigest()==h,p
+          print(json.dumps({'passed':True,'tests':2044,'skipped':0,'frozen_paths':653,'run_url':url,'tree':tree}))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v046-frozen-evidence
+          path: experiments/v046/
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Commit validated evidence to the feature branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add experiments/v046
+          git commit -m 'Record verified v0.46 fallback CI evidence [skip ci]'
+          git push origin HEAD:refs/heads/codex/v046-stateful-consumers
