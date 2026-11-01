@@ -6,7 +6,7 @@ The project distinguishes four independent outcomes:
 | Layer | Current capability | What success does not establish |
 | --- | --- | --- |
 | Compiler ingestion (`clang`) | Real Clang parses/type-checks selected C, exports AST, LLVM IR/CFG and compiler record layouts; compilation-database flags supported | Program safety, termination or a symbolic summary |
-| Structural normalization (`clang_proof`) | Admitted scalar, finite memory/direct-call and fresh-list source contracts mapped to typed kernels, with provenance | Semantics for every AST/LLVM operation or machine-verified compiler equivalence |
+| Structural normalization (`clang_proof`) | Admitted scalar, finite memory/direct-call, closed supplied multi-unit calls and fresh-list source contracts mapped to typed kernels, with provenance | Semantics for every AST/LLVM operation or machine-verified compiler equivalence |
 | Typed proof | Declared integer domains, explicit ABI, selected memory/call/shape contracts and complete obligations checked | Arbitrary heap/call behavior or all possible environmental contracts |
 | Closed-form discovery | Specified polynomial/affine/periodic/threshold fragments; independently checked supplied candidates | Automatic closed forms for arbitrary C branches or loops |
 
@@ -90,3 +90,13 @@ The [external-call exclusion contract](UNREACHABLE_EXTERNAL_CALLS.md) admits unr
 [Integer union views](CLANG_INTEGER_UNION_VIEWS.md) now admit one restricted object-representation fragment after compiler layout checks; partial writes and byte/alias memory remain unsupported.
 
 [Compositional value certificates](COMPOSITIONAL_BITVECTOR_CERTIFICATES.md) close the pinned 64-bit popcount functional timeout through checked cuts and a bounded integer equation. The separate [bit builtin contract](CLANG_BIT_BUILTINS.md) now models six declaration-checked clz/ctz operations. The optional [pure BV scalar CFG backend](BITVECTOR_SCALAR_CFG.md) now proves division source definedness and bounded complete exit at an explicit 512-step budget. A separate [source-bound induction certificate](SOURCE_BOUND_DIVISION_INDUCTION.md) now establishes the selected unsigned-32 quotient on the full nonzero-divisor domain. Broader arithmetic/functional contracts, builtin families and general C remain open.
+
+## v0.47 multi-unit source components
+
+`clang.linked_sources` admits independently compiled source bodies for `calls`
+and `bv_calls`, with per-unit typedef/AST contexts, compatible canonical integer/
+pointer interfaces and hygienic static functions. It closes a restricted part
+of interprocedural source availability. Cross-unit records, general globals,
+weak/interposed/asm linkage and assumed external contracts remain open. See
+[the exact contract](CLANG_LINKED_TRANSLATION_UNITS.md) and
+[separate-object native evidence](../experiments/v047/report.md).

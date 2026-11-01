@@ -923,3 +923,14 @@ independent additive counter-threshold `if` statements in a single loop. All
 branch combinations must pass an algebraic independence check, and the original
 typed-C verifier still checks every source operation. Interacting branches and
 unproved cases remain `UNKNOWN`. See the [contract and native regression](docs/COUNTER_THRESHOLD_DISCOVERY.md).
+
+## v0.47: supplied functions across translation units
+
+`clang_proof` now supports `clang.linked_sources` with `calls`/`bv_calls`: each
+C file is independently compiler-ingested, caller/provider C types are checked,
+and static functions retain separate identities. Supplied bodies reach the
+existing proof kernels; no external semantics are assumed. See the
+[contract and command example](docs/CLANG_LINKED_TRANSLATION_UNITS.md),
+[experiment report](experiments/v047/report.md), and
+[remaining requirements](docs/C_COVERAGE.md). General C/LLVM, cross-unit records,
+external contracts and native-linker/interposition semantics remain open.

@@ -157,7 +157,16 @@ def prove_clang(source=None,source_file=None,function=None,clang=None,proof=None
     options={} if clang is None else dict(clang) if isinstance(clang,dict) else clang
     if isinstance(options,dict) and options.get('include_ast') is False:return {'status':'UNKNOWN','reason':'Clang proof requires include_ast=true'}
     backend=proof.get('backend','cfg')
-    front=ClangAdapter(source,source_file,None if backend in ('calls','list_calls','bv_calls') else function,options).report()
+    project=None
+    if isinstance(options,dict) and 'linked_sources' in options:
+        if backend not in ('calls','bv_calls'):
+            return {'status':'UNKNOWN','reason':'Linked translation units currently require calls or bv_calls backend',
+                'c_overflow_verified':False,'memory_safety_verified':False,'termination_proved':False}
+        from .clang_linked import LinkedClangProject
+        project=LinkedClangProject(source,source_file,options)
+        front=project.report()
+    else:
+        front=ClangAdapter(source,source_file,None if backend in ('calls','list_calls','bv_calls') else function,options).report()
     if front['status']!='CLANG_FRONTEND_READY':return front
     failure={'status':'UNKNOWN','frontend':'clang_proof','c_overflow_verified':False,'memory_safety_verified':False,'termination_proved':False,'clang_frontend':front}
     try:
@@ -169,8 +178,11 @@ def prove_clang(source=None,source_file=None,function=None,clang=None,proof=None
         elif re.match(r'i[3-6]86-',triple) and linux:abi='ILP32'
         else:raise SMTGraphError('Clang proof target not covered by the current x86 ABI contract (including x32)')
         if backend in ('calls','list_calls','bv_calls'):
-            from .clang_memory_proof import normalize_calls
-            normalized,normalizers,entry=normalize_calls(front,function)
+            if project is not None:
+                normalized,normalizers,entry=project.normalize(function)
+            else:
+                from .clang_memory_proof import normalize_calls
+                normalized,normalizers,entry=normalize_calls(front,function)
         else:
             if backend in ('memory','list'):
                 from .clang_memory_proof import MemoryNormalizer
@@ -210,5 +222,6 @@ def prove_clang(source=None,source_file=None,function=None,clang=None,proof=None
             layout_correspondence=check_record_layouts(front,result,record_tags)
         statuses={'cfg':'PROVED_DEFINED_CLANG_SCALAR_CFG','nested':'PROVED_DEFINED_CLANG_SCALAR_NESTED','recurrence':'PROVED_DEFINED_CLANG_SCALAR_RECURRENCE','memory':'PROVED_DEFINED_CLANG_FINITE_MEMORY','calls':'PROVED_DEFINED_CLANG_CFG_CALLS','list':'PROVED_DEFINED_CLANG_LIST_HEAP','list_calls':'PROVED_DEFINED_CLANG_LIST_CALLS','bv_cfg':'PROVED_DEFINED_CLANG_BV_CFG','bv_calls':'PROVED_DEFINED_CLANG_BV_CALLS'}
         if success:result['status']=statuses[backend]
-        return {**result,'frontend':'clang_proof','clang_frontend':front,'normalization':{'method':'structural admitted Clang AST to typed C; Clang + normalizer are trusted frontend components','source':normalized,'source_sha256':hashlib.sha256(normalized.encode()).hexdigest(),'ast_sha256':hashlib.sha256(json.dumps([n.root for n in normalizers],sort_keys=True).encode()).hexdigest(),'type_environment_sha256':hashlib.sha256(json.dumps({key:front.get(key,[]) for key in ('typedefs','record_definitions','modeled_function_declarations','function_parameter_declarations','external_function_declarations')},sort_keys=True).encode()).hexdigest(),'alpha_renamed':renamed,'functions':[n.root['name'] for n in normalizers],'backend':backend,'external_call_frontiers':[f for n in normalizers for f in getattr(n,'external_frontiers',[])],'external_call_semantics_assumed':False,'bit_builtin_calls':[v for n in normalizers for v in getattr(n,'bit_builtin_calls',[])],'bit_builtin_models':list(next((n.bit_models.models for n in normalizers if getattr(n,'bit_models',None) is not None),{}).values()),'union_views':[v for n in normalizers for v in n.union_views],'abi':abi,'char_signed':char_signed,'record_layout_correspondence':layout_correspondence,'compiler_equivalence_machine_proved':False,'unsupported_constructs_rejected':True},'scope':'declared scalar input domain and selected typed backend contract; allocation assumptions and the selected shape/CFG proof boundary remain explicit; no general LLVM semantics or KLEE execution'}
-    except (SMTGraphError,ValueError,TypeError,KeyError,RecursionError) as exc:return {**failure,'reason':str(exc)}
+        if project is not None:project.check_snapshot()
+        return {**result,'frontend':'clang_proof','clang_frontend':front,'normalization':{'method':'structural admitted Clang AST to typed C; Clang + normalizer are trusted frontend components','source':normalized,'source_sha256':hashlib.sha256(normalized.encode()).hexdigest(),'ast_sha256':hashlib.sha256(json.dumps([n.root for n in normalizers],sort_keys=True).encode()).hexdigest(),'type_environment_sha256':hashlib.sha256(json.dumps(({key:front.get(key,[]) for key in ('typedefs','record_definitions','modeled_function_declarations','function_parameter_declarations','external_function_declarations')} if project is None else [{key:unit.get(key,[]) for key in ('typedefs','record_definitions','modeled_function_declarations','function_parameter_declarations','external_function_declarations')} for unit in project.units]),sort_keys=True).encode()).hexdigest(),'alpha_renamed':renamed,'functions':[n.root['name'] for n in normalizers],'backend':backend,'external_call_frontiers':[f for n in normalizers for f in getattr(n,'external_frontiers',[])],'external_call_semantics_assumed':False,'bit_builtin_calls':[v for n in normalizers for v in getattr(n,'bit_builtin_calls',[])],'bit_builtin_models':list(next((n.bit_models.models for n in normalizers if getattr(n,'bit_models',None) is not None),{}).values()),'union_views':[v for n in normalizers for v in n.union_views],'abi':abi,'char_signed':char_signed,'record_layout_correspondence':layout_correspondence,'compiler_equivalence_machine_proved':False,'unsupported_constructs_rejected':True,**({'translation_unit_linking':project.certificate} if project is not None else {})},'scope':'declared scalar input domain and selected typed backend contract; allocation assumptions and the selected shape/CFG proof boundary remain explicit; no general LLVM semantics or KLEE execution'}
+    except (SMTGraphError,OSError,ValueError,TypeError,KeyError,RecursionError) as exc:return {**failure,'reason':str(exc)}
