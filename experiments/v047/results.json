@@ -1,0 +1,434 @@
+{
+  "base_commit": "c5d4dc35d29256216f5593da2293e8441792113f",
+  "tested_commit": "eed93885f3980483ccf7d51efeb114473b8ed470",
+  "tested_tree": "f4e350729372634943a475677275ad22ebe8ccb8",
+  "validation_origin": "local frozen-source pytest workers, Clang and original/normalized/composed native UBSan checks",
+  "environment": {
+    "python": "3.12.14",
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.39",
+    "pytest": "9.1.1",
+    "sympy": "1.14.0",
+    "z3": "5.3.3",
+    "pycparser": "3.12",
+    "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+    "native_compiler": "cc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0"
+  },
+  "full_pytest": {
+    "command": [
+      "/tmp/llmloop-v047-env/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "--forked"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 673.743,
+    "log": "pytest.txt",
+    "passed": 2129,
+    "skipped": 0,
+    "expected_passed": 2129
+  },
+  "new_tests": 85,
+  "existing_tests_replaced": 0,
+  "linked": {
+    "case_count": 8,
+    "native_output_matches": 680,
+    "model_matches": 340,
+    "expected_ubsan_failures": 8,
+    "binding_refusals": 7
+  },
+  "commands": {
+    "full_pytest": {
+      "command": [
+        "/tmp/llmloop-v047-env/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--forked"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 673.743,
+      "log": "pytest.txt",
+      "passed": 2129,
+      "skipped": 0,
+      "expected_passed": 2129
+    },
+    "linked": {
+      "command": [
+        "/tmp/llmloop-v047-env/bin/python",
+        "scripts/check_clang_linked_native.py",
+        "--output",
+        "experiments/v047/linked.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 9.858,
+      "log": "linked.txt"
+    },
+    "linked_cli": {
+      "command": [
+        "/tmp/llmloop-v047-env/bin/python",
+        "-m",
+        "llmloop.symbolic_cli",
+        "examples/clang_linked_project/entry.c",
+        "--c-clang-proof",
+        "--function",
+        "entry",
+        "--clang-config",
+        "{\"compilation_database\": \"examples/clang_linked_project\", \"linked_sources\": [\"examples/clang_linked_project/support.c\"]}",
+        "--clang-proof-config",
+        "{\"backend\":\"calls\"}",
+        "--parameter-bounds",
+        "{\"n\":[0,100]}",
+        "--inputs",
+        "{\"n\":5}"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.768,
+      "log": "linked_cli.json"
+    },
+    "stateful": {
+      "command": [
+        "/tmp/llmloop-v047-env/bin/python",
+        "scripts/check_list_stateful_native.py",
+        "--output",
+        "experiments/v047/stateful.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 28.097,
+      "log": "stateful.txt"
+    },
+    "stateful_cli": {
+      "command": [
+        "/tmp/llmloop-v047-env/bin/python",
+        "-m",
+        "llmloop.symbolic_cli",
+        "examples/clang_list_stateful_consumer.c",
+        "--c-clang-proof",
+        "--function",
+        "entry",
+        "--clang-proof-config",
+        "{\"backend\": \"list_calls\", \"allocation_count\": 100}",
+        "--parameter-bounds",
+        "{\"n\":[0,1000000],\"delta\":[-3,3]}",
+        "--inputs",
+        "{\"n\":1000000,\"delta\":2}"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.219,
+      "log": "stateful_cli.json"
+    },
+    "builders": {
+      "command": [
+        "/tmp/llmloop-v047-env/bin/python",
+        "scripts/check_list_builders_native.py",
+        "--output",
+        "experiments/v047/builders.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 27.602,
+      "log": "builders.txt"
+    },
+    "builder_cli": {
+      "command": [
+        "/tmp/llmloop-v047-env/bin/python",
+        "-m",
+        "llmloop.symbolic_cli",
+        "examples/clang_list_builder_arguments.c",
+        "--c-clang-proof",
+        "--function",
+        "entry",
+        "--clang-proof-config",
+        "{\"backend\": \"list_calls\", \"allocation_count\": 100, \"loop_summaries\": {\"__list_scan\": {\"total\": \"__list_scan*(2*__list_length-__list_scan-1)//2+__list_scan*((delta+260)%256)\"}}}",
+        "--parameter-bounds",
+        "{\"n\":[0,1000000],\"delta\":[0,2]}",
+        "--inputs",
+        "{\"n\":1000000,\"delta\":2}"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.817,
+      "log": "builder_cli.json"
+    },
+    "consumers": {
+      "command": [
+        "/tmp/llmloop-v047-env/bin/python",
+        "scripts/check_list_consumers_native.py",
+        "--output",
+        "experiments/v047/consumers.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 25.949,
+      "log": "consumers.txt"
+    },
+    "upstream": {
+      "command": [
+        "/tmp/llmloop-v047-env/bin/python",
+        "scripts/check_llvm_builtins.py",
+        "--compare-baseline",
+        "--source-worker-timeout",
+        "120",
+        "--output",
+        "experiments/v047/upstream.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 65.713,
+      "log": "upstream.txt"
+    },
+    "bit_builtins": {
+      "command": [
+        "/tmp/llmloop-v047-env/bin/python",
+        "scripts/check_clang_bit_builtins.py",
+        "--output",
+        "experiments/v047/bit_builtins.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 28.106,
+      "log": "bit_builtins.txt"
+    },
+    "division": {
+      "command": [
+        "/tmp/llmloop-v047-env/bin/python",
+        "scripts/check_division_bv.py",
+        "--strategy",
+        "induction",
+        "--compare-baseline",
+        "--controls",
+        "--output",
+        "experiments/v047/division.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 130.592,
+      "log": "division.txt"
+    },
+    "arguments": {
+      "command": [
+        "/tmp/llmloop-v047-env/bin/python",
+        "scripts/check_list_arguments_native.py",
+        "--output",
+        "experiments/v047/arguments.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 28.314,
+      "log": "arguments.txt"
+    },
+    "payload_maps": {
+      "command": [
+        "/tmp/llmloop-v047-env/bin/python",
+        "scripts/check_list_payload_maps_native.py",
+        "--output",
+        "experiments/v047/payload_maps.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 17.129,
+      "log": "payload_maps.txt"
+    },
+    "reversal": {
+      "command": [
+        "/tmp/llmloop-v047-env/bin/python",
+        "scripts/check_list_reversal_native.py",
+        "--output",
+        "experiments/v047/reversal.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 13.307,
+      "log": "reversal.txt"
+    },
+    "consumer_cli": {
+      "command": [
+        "/tmp/llmloop-v047-env/bin/python",
+        "-m",
+        "llmloop.symbolic_cli",
+        "examples/clang_list_weighted_consumer.c",
+        "--c-clang-proof",
+        "--function",
+        "entry",
+        "--clang-proof-config",
+        "{\"backend\": \"list_calls\", \"allocation_count\": 100, \"loop_summaries\": {\"__list_scan\": {\"__list_call_total\": \"((delta+260)%256)*(__list_scan*(2*__list_length-__list_scan-1)//2)+__list_scan*(delta-1)\"}}}",
+        "--parameter-bounds",
+        "{\"n\":[0,1000000],\"delta\":[0,2]}",
+        "--inputs",
+        "{\"n\":1000000,\"delta\":2}"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.917,
+      "log": "consumer_cli.json"
+    }
+  },
+  "checks": {
+    "full_pytest": true,
+    "linked": true,
+    "linked_cli": true,
+    "stateful": true,
+    "sanitizer_frontiers_recorded": true,
+    "stateful_cli": true,
+    "builders": true,
+    "builder_cli": true,
+    "consumers": true,
+    "upstream": true,
+    "upstream_worker_ceiling": true,
+    "popcount_baseline_identity": true,
+    "bit_builtins": true,
+    "division": true,
+    "arguments": true,
+    "payload_maps": true,
+    "reversal": true,
+    "consumer_cli": true,
+    "frozen_source_unchanged": true
+  },
+  "stateful": {
+    "case_count": 10,
+    "correspondence_groups": 1512,
+    "native_output_matches": 4536,
+    "model_matches": 756,
+    "expected_ubsan_failures": 26,
+    "unobserved_ubsan_controls": 2,
+    "negative_source_controls": 7,
+    "arithmetic_audits_replayed": 7
+  },
+  "builders": {
+    "case_count": 10,
+    "correspondence_groups": 1548,
+    "native_output_matches": 4644,
+    "model_matches": 774,
+    "expected_ubsan_failures": 16
+  },
+  "consumers": {
+    "case_count": 10,
+    "correspondence_groups": 1800,
+    "native_output_matches": 5400,
+    "model_matches": 900,
+    "expected_ubsan_failures": 20
+  },
+  "legacy_native": {
+    "arguments": {
+      "correspondences": 1620,
+      "expected_ubsan_failures": 12
+    },
+    "payload_maps": {
+      "correspondences": 510,
+      "expected_ubsan_failures": 8
+    },
+    "reversal": {
+      "correspondences": 372,
+      "expected_ubsan_failures": 4
+    }
+  },
+  "upstream": {
+    "case_count": 15,
+    "upstream_functions": 13,
+    "safety_proved_cases": 14,
+    "safety_unknown_cases": 1,
+    "functional_proved_cases": 14,
+    "native_comparisons": 14848,
+    "model_comparisons": 1792,
+    "expected_ubsan_failures": 4,
+    "intended_abort_runs": 4,
+    "wrong_algorithm_native_refutations": 6
+  },
+  "bit_builtins": {
+    "source_proved_cases": 18,
+    "functional_proved_cases": 18,
+    "zero_source_refutations": 18,
+    "native_comparisons": 6144,
+    "expected_zero_ubsan_failures": 24,
+    "wrong_count_functional_refutations": 6
+  },
+  "division": {
+    "source_status": "PROVED_DEFINED_CLANG_BV_CALLS",
+    "functional_status": "PROVED_FUNCTIONAL_DIVISION_INDUCTION",
+    "functional_elapsed_seconds": 5.64705,
+    "total_functional_timeout_ms": 30000,
+    "direct_baseline_status": "UNKNOWN",
+    "functional_replay": {
+      "queries": 40,
+      "all_unsat": true,
+      "all_replayed": true,
+      "arithmetic_audits": 1,
+      "counter_cases": 31
+    },
+    "native_comparisons": 1024,
+    "model_comparisons": 64,
+    "expected_ubsan_failures": 2,
+    "wrong_algorithm_native_refutations": 2
+  },
+  "retained_pilot_domains": 15,
+  "source_domains_proved_with_explicit_backends": 15,
+  "functional_domains_proved_with_explicit_strategies": 15,
+  "frozen_manifest_paths": 690,
+  "frozen_source_unchanged": true,
+  "github_actions_used": false,
+  "ci_runs_used": 0,
+  "klee_used": false,
+  "complete_c_support": false,
+  "passed": true,
+  "source_identity": {
+    "local_tested_commit": "eed93885f3980483ccf7d51efeb114473b8ed470",
+    "local_tested_tree": "f4e350729372634943a475677275ad22ebe8ccb8",
+    "published_source_commit": "9b9b2dbd00d220176468dbca40c8da1f12f4b42f",
+    "published_source_tree": "f4e350729372634943a475677275ad22ebe8ccb8",
+    "git_tree_equal": true,
+    "publication": "GitHub connector; commit metadata may differ but every tracked path is identical"
+  },
+  "prior_prevalidation_attempt": {
+    "tested_commit": "5e59f73818d99d14cd2f2a61a2c545c7eb54bc8c",
+    "tested_tree": "6f14474278586319f3a1055341d0b399fe403710",
+    "published_source": "ff2bf50095a57c493cb58fc2268c475e66ea3efc",
+    "outcome": "intentionally interrupted before full suite completion; no merge",
+    "reason": "Manual Clang probe found static declaration followed by extern or unqualified definition retains internal linkage; definition-node storageClass alone incorrectly exported it. Fix canonical declaration-chain linkage and add regression controls.",
+    "pytest_partial_output": "........................................................................ [  3%]\n........................................................................ [  6%]\n........................................................................ [ 10%]\n........................................................................ [ 13%]\n........................................................................ [ 16%]\n........................................................................ [ 20%]\n.................",
+    "completed_prevalidation": {
+      "new_tests_passed": 81,
+      "native_output_matches": 680,
+      "model_matches": 340,
+      "ubsan_failures": 8,
+      "binding_refusals": 6
+    },
+    "ci_runs_used": 0,
+    "stop_method": "Validation command sessions were stopped using terminal interrupt; direct signal attempts from another process namespace did not reach them.",
+    "subsequent_interrupted_validation": {
+      "tested_commit": "eed93885f3980483ccf7d51efeb114473b8ed470",
+      "tested_tree": "f4e350729372634943a475677275ad22ebe8ccb8",
+      "published_source": "9b9b2dbd00d220176468dbca40c8da1f12f4b42f",
+      "outcome": "interrupted before completion; no result accepted",
+      "reason": "Earlier command remained active in a separate PID namespace and shared the output path. Both sessions were interrupted; clean frozen-source validation restarted with exclusive logs.",
+      "completed_prevalidation": {
+        "new_tests_passed": 85,
+        "native_output_matches": 680,
+        "model_matches": 340,
+        "ubsan_failures": 8,
+        "binding_refusals": 7
+      },
+      "ci_runs_used": 0
+    }
+  },
+  "evidence_sha256": {
+    "arguments.json": "af5aeeadf691344863e549a9603657394e4357389e7deee7776c8720d08d1af1",
+    "arguments.txt": "7446193b747bde45d24a4f6b0f6a252f45684612e758593aeaa4f964f81b7933",
+    "bit_builtins.json": "2b93756f5cea76c1864cd69c4919e636bab257e3fd5b48735146329b97e3d32a",
+    "bit_builtins.txt": "bb52f611cd30515dd5654508bbf581ea8cacd9ede6f268fb702dfe7335639405",
+    "builder_cli.json": "22b877fa0a68ada85a4f4e2949092565e76c4223d0b217de03a28cac59a8f28a",
+    "builders.json": "10a9ea22328101e035b0dd2948e8b25f8959847b207770e8a9740147bbb89887",
+    "builders.txt": "ed9e8a0818318e9baa35dd2307867504b7641ccae71ee2625e8b447c1f0197d7",
+    "consumer_cli.json": "2574e5305a7d0594322554f2c9136c1206cb1d3e11fde7c97b944ec428aa298f",
+    "consumers.json": "16dbc959b459ebe5efed736ba9ec2fdb0eb2b2328f84e356405710a3e56942d3",
+    "consumers.txt": "205ba8215c5b8eab7fab475eff39f845677076dd7a4a02b842d4daff0c8a3723",
+    "division.json": "89fe5e1b3f1cc363e25c468fc54261cd9728930f3306ac091242d9eb7b9cf04b",
+    "division.txt": "db1b687cb8abdb0893ad3c69d811c383dddbfab1afc0334573eac388fbc7ba3e",
+    "linked.json": "cb44628e949decdf2df62d48cbeb298c45f1497a60820bcb59be51e5cf10ac64",
+    "linked.txt": "3d9db9302b47801aa0367e0fc8379f9880ff64549d6117dc5eb7fd77fd237703",
+    "linked_cli.json": "303b1c615f8a6ad507b80339b99e94f42d03be4b1bfea9255b19db56b42a306e",
+    "payload_maps.json": "0f352ccc15938af4a624d6bbd211150a11888c0fe3be084ca17b1e6bf78fc146",
+    "payload_maps.txt": "c0b88af94377f575f421f57e6e0b382a2cc60d7f828c0f7fe8127e8971d60704",
+    "prevalidation_attempt.json": "5a4914e23e3138bfd0b3c2866c5aa337e52a09afb3d7125424f6074f0bf39f7a",
+    "pytest.txt": "1736c8a78ebdb949db25bcebc5de9cafb98c560747471d89b3439509997ee631",
+    "report.md": "38a77962ae4db0d571213b1176d8278f0ecc85c289c62d8da0b774c9b75bf460",
+    "reversal.json": "a9d5ab9745b7fd0c30fc818756389d6ba8e6f8d99d8c718f6a0a1a91ba7e8d6a",
+    "reversal.txt": "16cbe1825eeea1d4e83cced20fdb67bf4226dca4e16005a9e4343b92604626c9",
+    "source_identity.json": "741dc092bc25a956ed63e8c9a561ef1daf0b7083d8a913fb10ab37aaf3d10585",
+    "source_manifest.json": "5ec99f99add55012f3b4e10d1fc2e4feeeaa0c269f2e774ed5efc8b04afcfa28",
+    "stateful.json": "707174aeee214eed691cf843d747450ed4d3061c1dccac05ed4688b5280b1b9a",
+    "stateful.txt": "550aaef0c3a610e212f2070cc72dbc9c98cfade77d0d793fb016163f60bfd8d6",
+    "stateful_cli.json": "b8b0e9582f0e7f2069556dc3a7555f255cac80a01d54723c2d70a37bc0f376b3",
+    "upstream.json": "1e4598d620975402b0583793f42b93681bcb816b6a107c313d16cc2e04fcb321",
+    "upstream.txt": "f1b19005a2d3ae0a0999fe4d4f5c4244d1b2b13fca2c33c09809d6d1ce03b2f4"
+  }
+}

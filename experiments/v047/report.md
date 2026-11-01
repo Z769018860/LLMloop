@@ -1,0 +1,23 @@
+# v0.47 source-backed calls across Clang translation units
+
+Tested source `eed93885f3980483ccf7d51efeb114473b8ed470`, frozen tree `f4e350729372634943a475677275ad22ebe8ccb8`, published checkpoint `9b9b2dbd00d220176468dbca40c8da1f12f4b42f`, base v0.46 `c5d4dc35d29256216f5593da2293e8441792113f`. Validation: **local frozen-source pytest workers, Clang and original/normalized/composed native UBSan checks**. Published and tested trees must be identical.
+
+Additional C files are ingested independently with their own compilation-database command and typedef/declaration/AST-ID context. Caller references, all caller/provider redeclarations and supplied definitions must agree on canonical integer/pointer C types. Private static functions are isolated by unit; undefined internal functions cannot acquire another unit body. Compiler target/layout/version and char semantics must match. Existing complete-exit, arithmetic/memory, step/path, call-depth and recursion obligations remain unchanged. No external function semantics are assumed.
+
+Full regression: **2129 passed**, **0 skipped**, exit 0, 673.743 seconds. Added 85 tests; no existing test was removed/replaced. Tests cover three ABIs, separate typedefs, narrowing, static collisions/entries, incompatible integer/pointer types, original pointer declarations, header/command selection, heap alias/lifetime/failure cases, recursive frontiers, sequenced/nested calls, bit models, source changes and metadata/aggregate limits.
+
+New native experiment: **8 cases**, **680 original/normalized output matches**, **340 independent model matches**, **8 required UBSan failures**, **7 invalid bindings refused**. Original units are compiled into separate objects then linked, preserving static linkage; normalized C is compiled separately. Both forms run at GCC O0/O2. Independent models check narrowing, lazy/nested calls, static symbols, pointer aliases, allocation failures/free counts/live footprint, mutual recursion and bit counts. Signed overflow and division-by-zero controls must trap in both forms. Native observations supplement scoped source obligations.
+
+Compilation-database/header CLI: `PROVED_DEFINED_CLANG_CFG_CALLS`, value 19. Two private adjust functions keep separate identities and per-file macro values. No object/dependency outputs from ingestion are created.
+
+Retained stateful folds: 4536 native/756 model matches, 26 UBSan failures, 7 replayed arithmetic audits. Two original/normalized GCC O2 overwritten-overflow sanitizer non-observations remain explicitly recorded as frontiers, never positive correspondences; the source proof rejects their definedness. Retained builders/consumers: 4644/5400 native matches. Older argument/map/reversal groups remain 1620/510/372.
+
+The same 13 LLVM public functions and 15 domains remain. Default source proofs: 14, UNKNOWN: 1; independent functional proofs: 14. Explicit division source `PROVED_DEFINED_CLANG_BV_CALLS`, functional `PROVED_FUNCTIONAL_DIVISION_INDUCTION` closes the fifteenth domain with 40 replayed UNSAT queries, 31 counter cases and 1 arithmetic audit. Direct baseline remains `UNKNOWN`. Query budgets stay 5000 ms, division functional total 30000 ms and source-worker wall ceiling 120 seconds. No equal-budget speed comparison is claimed. Vendor sources/headers and baseline identities are unchanged. Bit builtin functional queries and native controls are retained.
+
+Frozen source: 690 paths, unchanged **True**. Evidence is excluded and added separately. GitHub Actions used: False; CI runs: 0; KLEE: False. Commands, environment, source identity and evidence hashes are recorded.
+
+Cross-unit record compatibility, general globals/linker/interposition semantics, external contracts, unrestricted side effects/recursion, arbitrary heap shapes/ownership, general recurrences, wider data models and complete C/LLVM support remain open. Headers/compiler/environment must remain stable across stages. Closed-component source binding and normalization remain trusted, not machine-verified native-linker/compiler equivalence.
+
+Checks: `{"arguments": true, "bit_builtins": true, "builder_cli": true, "builders": true, "consumer_cli": true, "consumers": true, "division": true, "frozen_source_unchanged": true, "full_pytest": true, "linked": true, "linked_cli": true, "payload_maps": true, "popcount_baseline_identity": true, "reversal": true, "sanitizer_frontiers_recorded": true, "stateful": true, "stateful_cli": true, "upstream": true, "upstream_worker_ceiling": true}`. Passed: **True**.
+
+An earlier attempt is retained in prevalidation_attempt.json; this run is validated afresh.
