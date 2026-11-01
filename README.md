@@ -776,6 +776,20 @@ See the [Clang example](examples/clang_list_argument_conversions.c),
 [v0.36 experiments](experiments/v036/report.md). General alias/call/graph and
 complete C/LLVM requirements remain open; no KLEE.
 
+## v0.46: checked scalar-state list consumers
+
+Owned-chain consumers now support up to eight initialized integer states and
+sixteen ordered assignments per node. Typed source induction checks coupled
+prefix histories, nonzero initializers, feedback assignments, state/return
+conversions, all allocation prefixes and complete consumption. Exact replayable
+integer-valued polynomial audits and bounded residue partitions supplement SMT
+successor checks; source safety remains independent. General heap/call contracts
+and complete C/LLVM remain open.
+
+See [the contract and runnable example](docs/STATEFUL_LIST_CONSUMERS.md),
+[v0.46 evidence](experiments/v046/report.md), or run
+`python scripts/check_list_stateful_native.py --output /tmp/stateful.json`.
+
 ## v0.45: checked scalar builder arguments
 
 List builders now accept eagerly checked pure scalar expressions, retaining

@@ -13,7 +13,7 @@ from pycparser import c_ast, c_generator, c_parser
 
 from .c_integers import IntegerABI
 from .c_validation import validate_automatic_locals
-from .list_heap import ListHeapProgram, check_list_map, check_list_reversal, identifier, items, pointer_tag
+from .list_heap import ListHeapProgram, check_list_map, check_list_reversal, fold_suffix, identifier, items, pointer_tag
 from .smt_spath import SMTGraphError
 from .typed_c import c_type
 from .typed_cfg_heap import TypedCFGHeap
@@ -270,7 +270,7 @@ class ListHeapCallsProgram:
                 'source_sha256':hashlib.sha256(self.generator.visit(helper).encode()).hexdigest(),
                 'unique_owned_chain_precondition':True,'same_footprint_and_payloads_returned':True}
             self.reversal_helpers.append(metadata);self.heap_helpers.append(metadata)
-        if len(suffix) not in (1,3):raise SMTGraphError('List ownership pipeline must end in head return or checked fold/free')
+        if len(suffix) != 1 and not fold_suffix(suffix):raise SMTGraphError('List ownership pipeline must end in head return or fold/free with one to eight scalar states')
         if len(suffix) == 1 and isinstance(suffix[0], c_ast.Return):
             caller_return=copy.deepcopy(suffix[0].expr)
             value = caller_return
@@ -311,8 +311,8 @@ class ListHeapCallsProgram:
                     for formal,expression in bindings.items())
                 if estimate>100000:raise SMTGraphError('Bound consumer argument substitution exceeds the source budget')
                 suffix = bind_expressions(renamed,bindings).block_items or []
-                if len(suffix) != 3 or not isinstance(suffix[-1], c_ast.Return):
-                    raise SMTGraphError('List consumer must have the checked accumulator, fold/free and return suffix')
+                if not fold_suffix(suffix):
+                    raise SMTGraphError('List consumer must have one to eight initialized scalar states, fold/free and return')
                 # Reify the callee's return conversion before any caller casts
                 # and the caller's own return conversion. Neither may be erased.
                 converted = c_parser.CParser().parse('int x(void){return ('+return_type.name+')0;}').ext[0].body.block_items[0].expr
@@ -444,5 +444,5 @@ class ListHeapCallsProgram:
         result['status'] = 'PROVED_DEFINED_TYPED_C_LIST_CALLS'
         result['interprocedural_heap_summary'] = True
         result['certificate']['composition'] = {**self.contract,'builder_proof':builder}
-        result['scope'] = 'one fresh prepend builder transfers its footprint through checked reversal and nonescaping borrowed pointwise-map stages; builder/map/consumer pure scalar arguments are eagerly checked with retained parameter conversions; forwarding or pure additive fold/free and scalar return; no arbitrary aliases, calls, recursion or shapes'
+        result['scope'] = 'one fresh prepend builder transfers its footprint through checked reversal and nonescaping borrowed pointwise-map stages; builder/map/consumer pure scalar arguments are eagerly checked with retained parameter conversions; forwarding or typed scalar-state fold/free and scalar return; no arbitrary aliases, calls, recursion or shapes'
         return result

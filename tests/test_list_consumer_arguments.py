@@ -137,10 +137,10 @@ def test_consumer_effects_calls_memory_and_pointer_actuals_are_rejected(actual):
 
 @pytest.mark.parametrize('step,returned',[
     ('q->next->value','total'),('tail->value','total'),('q->value++','total'),
-    ('total+q->value','total'),('consume(q,scale)','total'),('q->value','q!=0'),
+    ('consume(q,scale)','total'),('q->value','q!=0'),
     ('q->value','tail->value'),('q->value','(scale=1)'),
 ])
-def test_fold_cannot_observe_other_nodes_accumulator_in_step_or_hidden_effects(step,returned):
+def test_fold_cannot_observe_other_nodes_or_hidden_effects(step,returned):
     with pytest.raises(SMTGraphError):ListHeapCallsProgram(program(step=step,returned=returned),function='entry',parameter_bounds={'n':[0,20],'delta':[0,2]})
 
 

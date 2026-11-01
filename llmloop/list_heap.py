@@ -7,6 +7,7 @@ are delegated to the existing C kernel.
 """
 import copy
 import hashlib
+import math
 
 from pycparser import c_ast, c_generator, c_parser
 import z3
@@ -27,6 +28,75 @@ class _ListFoldTrajectory(TypedCNested):
     integer_engine = WideningIntegerLift
     def summary_term(self,expression,mapping):
         return exact_term(expression,mapping,integer_modulo=True)
+
+
+class _StatefulListIntegers(WideningIntegerLift):
+    """Same-type stores preserve a typed value and its complete safety guard.
+
+    Only the source kernel may use this profile: parameter/state ranges and
+    every executed arithmetic operation are checked independently. Generic
+    arbitrary-integer conversion semantics remain unchanged.
+    """
+    def convert(self, term, target):
+        if term.type == target:
+            return term
+        return super().convert(term, target)
+
+
+def _interval_relations(node):
+    """Expose negated ordered comparisons without changing their meaning."""
+    if z3.is_and(node):return z3.And(*[_interval_relations(child) for child in node.children()])
+    if z3.is_not(node):
+        child=node.arg(0)
+        if child.decl().kind() in (z3.Z3_OP_LE,z3.Z3_OP_LT,z3.Z3_OP_GE,z3.Z3_OP_GT):
+            a,b=child.children()
+            return {z3.Z3_OP_LE:lambda:a>b,z3.Z3_OP_LT:lambda:a>=b,
+                z3.Z3_OP_GE:lambda:a<b,z3.Z3_OP_GT:lambda:a<=b}[child.decl().kind()]()
+    return node
+
+
+class _StatefulListTrajectory(_ListFoldTrajectory):
+    integer_engine = _StatefulListIntegers
+
+    def check(self, label, premise, claim):
+        if label.endswith('executed operations defined') or label.startswith('function return '):
+            from .interval_certificate import prove_interval
+            interval=prove_interval(_interval_relations(z3.simplify(premise)),_interval_relations(z3.simplify(claim)))
+            if interval is not None:
+                self.checks.append({'obligation':label,'proved':True,'certificate':interval,
+                    'application':'original typed arithmetic safety guards'})
+                return
+        # Nonlinear integer-valued prefix polynomials can contain several
+        # related floors. Partition a successor obligation *before* solving,
+        # never retrying a timed-out query or increasing a query deadline.
+        counters = [value for name,value in self.witness.items() if name not in self.parameters]
+        if not (label.endswith(' successor') and len(counters)==1):
+            return super().check(label,premise,claim)
+        from .integer_polynomial_audit import audit_integer_polynomial_identity
+        audit=audit_integer_polynomial_identity(claim)
+        if audit is not None:
+            replay=z3.Solver();replay.add(claim)
+            audit['replay_query_smt2']=replay.to_smt2()
+            self.checks.append({'obligation':label,'proved':True,'certificate':audit})
+            return
+        modulus=1;pending=[claim];seen=set()
+        while pending and len(seen)<4096:
+            node=pending.pop()
+            if node.get_id() in seen:continue
+            seen.add(node.get_id())
+            denominator=1
+            if z3.is_rational_value(node):denominator=node.denominator_as_long()
+            elif node.decl().kind()==z3.Z3_OP_IDIV and z3.is_int_value(node.arg(1)):
+                denominator=abs(node.arg(1).as_long())
+            if 1<denominator<=12:modulus=math.lcm(modulus,denominator)
+            pending.extend(node.children())
+        if not 1<modulus<=12:
+            return super().check(label,premise,claim)
+        counter=counters[0]
+        residues=[counter%modulus==r for r in range(modulus)]
+        super().check(label+' residue cover',premise,z3.Or(*residues))
+        for r,residue in enumerate(residues):
+            super().check(label+' residue '+str(r)+'/'+str(modulus),z3.And(premise,residue),claim)
 
 
 def list_shape_certificate():
@@ -120,6 +190,14 @@ def check_fold_value(node, parameters, model, head=None, field=None):
         c_type(node.to_type, model)
         check_fold_value(node.expr, parameters, model, head, field);return
     raise SMTGraphError('List fold expressions require immutable scalar parameters and the current initialized payload; return may also read the accumulator')
+
+
+def fold_suffix(statements):
+    """One to eight scalar states, one complete consumption and final return."""
+    return (3 <= len(statements) <= 10
+            and all(isinstance(node, c_ast.Decl) for node in statements[:-2])
+            and isinstance(statements[-2], c_ast.While)
+            and isinstance(statements[-1], c_ast.Return))
 
 
 def check_list_reversal(statements, head, tag, link):
@@ -385,7 +463,8 @@ class ListHeapProgram:
             stage={'kind':'reversal','source_contract':source_contract,'proof':proof}
             self.reversals.append(stage);self.stages.append(stage)
             self.orientation=proof['output_orientation'];suffix=suffix[3:]
-        if len(suffix) not in (1,3):raise SMTGraphError('Expected pointer return or scalar fold/free after heap stages')
+        if len(suffix) != 1 and not fold_suffix(suffix):
+            raise SMTGraphError('Expected pointer return or fold/free with one to eight scalar states after heap stages')
         self.mode = 'escape' if len(suffix) == 1 else 'fold_free'
         if self.mode == 'escape':
             if not isinstance(suffix[0], c_ast.Return) or not identifier(suffix[0].expr, self.head) or pointer_tag(self.func.decl.type) != self.tag:
@@ -565,23 +644,30 @@ class ListHeapProgram:
         self.payload_expr=expression
 
     def parse_fold(self, suffix):
-        accumulator, loop, returned = suffix
-        if not isinstance(accumulator, c_ast.Decl) or _lit(accumulator.init) != 0:
-            raise SMTGraphError('List fold requires a zero-initialized scalar accumulator')
-        c_type(accumulator, self.model)
-        self.accumulator = accumulator
+        self.accumulators, loop, returned = suffix[:-2], suffix[-2], suffix[-1]
+        visible = set(self.parameters)
+        for accumulator in self.accumulators:
+            c_type(accumulator, self.model)
+            if accumulator.init is None:
+                raise SMTGraphError('Every list fold state requires a pure initialized integer value')
+            check_fold_value(accumulator.init, visible, self.model)
+            visible.add(accumulator.name)
+        state_names = {node.name for node in self.accumulators}
         if not isinstance(loop, c_ast.While) or not nonnull(loop.cond, self.head):
             raise SMTGraphError('List consumption requires while(head)')
         statements = items(loop.stmt)
-        if len(statements) != 4:
-            raise SMTGraphError('List fold requires next load, payload addition, free and head advance')
-        saved, addition, release, advance = statements
+        if not 4 <= len(statements) <= 19:
+            raise SMTGraphError('List fold requires next load, one to sixteen scalar updates, free and head advance')
+        saved, updates, release, advance = statements[0], statements[1:-2], statements[-2], statements[-1]
         if not isinstance(saved, c_ast.Decl) or pointer_tag(saved) != self.tag or not member(saved.init, self.head, self.link):
             raise SMTGraphError('Next link must be saved before free')
-        if not isinstance(addition, c_ast.Assignment) or addition.op != '+=' or not identifier(addition.lvalue, accumulator.name):
-            raise SMTGraphError('List fold must add a pure current-payload/scalar expression to its accumulator')
-        check_fold_value(addition.rvalue, self.parameters, self.model, self.head, self.value)
-        self.fold_addition = copy.deepcopy(addition)
+        for update in updates:
+            if (not isinstance(update, c_ast.Assignment) or not isinstance(update.lvalue, c_ast.ID)
+                    or update.lvalue.name not in state_names
+                    or update.op not in ('=', '+=', '-=', '*=', '/=', '%=', '<<=', '>>=', '&=', '|=', '^=')):
+                raise SMTGraphError('List fold updates must assign only declared scalar states')
+            check_fold_value(update.rvalue, visible, self.model, self.head, self.value)
+        self.fold_updates = copy.deepcopy(updates)
         args = release.args.exprs if isinstance(release, c_ast.FuncCall) and release.args else []
         if not isinstance(release, c_ast.FuncCall) or not identifier(release.name, 'free') or len(args) != 1 or not identifier(args[0], self.head):
             raise SMTGraphError('List fold must free exactly the current head')
@@ -589,14 +675,27 @@ class ListHeapProgram:
             raise SMTGraphError('List head must advance to the saved live tail')
         if not isinstance(returned, c_ast.Return):
             raise SMTGraphError('List fold must return a checked scalar expression')
-        check_fold_value(returned.expr, set(self.parameters) | {accumulator.name}, self.model)
+        check_fold_value(returned.expr, visible, self.model)
         self.fold_return = copy.deepcopy(returned.expr)
-        self.fold_contract = {'step_expression':self.generator.visit(addition.rvalue),
+        def reads_state(node):
+            return isinstance(node,c_ast.ID) and node.name in state_names or any(reads_state(child) for _,child in node.children())
+        self.fold_contract = {'step_expression':self.generator.visit(updates[0].rvalue) if len(updates)==1 else None,
+            'state_initializers':[self.generator.visit(node) for node in self.accumulators],
+            'state_types':{node.name:c_type(node,self.model).name for node in self.accumulators},
+            'source_ordered_updates':[self.generator.visit(node) for node in updates],
+            'state_budget':8, 'update_budget_per_node':16,
             'return_expression':self.generator.visit(returned.expr),
-            'pure_current_payload_and_immutable_scalars_only':True,
+            'pure_current_payload_and_immutable_scalars_only':not any(reads_state(node.rvalue) for node in updates),
+            'pure_current_payload_immutable_scalars_and_initialized_state_only':True,
+            'state_reads_and_source_order_preserved':True,
+            'initializers_checked_even_for_empty_chain':True,
             'all_original_operations_and_conversions_retained':True,
             'candidate_positive_integer_modulo':'Euclidean remainder; other proof kernels retain their default translation',
             'return_checked_even_for_empty_chain':True}
+        self.legacy_additive_fold = (len(self.accumulators)==1 and _lit(self.accumulators[0].init)==0
+            and len(updates)==1 and updates[0].op=='+='
+            and self.fold_contract['pure_current_payload_and_immutable_scalars_only'])
+        self.fold_contract['typed_same_type_store_identity'] = not self.legacy_additive_fold
 
     def make_fold(self, max_paths, summaries):
         self.length_name, scan, temporary = self.fresh('length'), self.fresh('scan'), self.fresh('loaded')
@@ -615,7 +714,7 @@ class ListHeapProgram:
             return result
         expression = self.generator.visit(replace(self.payload_expr))
         name = self.fresh('fold_check')
-        addition = copy.deepcopy(self.fold_addition)
+        updates = copy.deepcopy(self.fold_updates)
         def load(node):
             if member(node,self.head,self.value):return c_ast.ID(temporary)
             result=copy.deepcopy(node)
@@ -625,9 +724,13 @@ class ListHeapProgram:
                 if isinstance(value,c_ast.Node):setattr(result,slot,load(value))
                 elif isinstance(value,list):setattr(result,slot,[load(v) if isinstance(v,c_ast.Node) else v for v in value])
             return result
-        addition.rvalue = load(addition.rvalue)
-        self.fold_source = self.return_type.name+' '+name+'('+self.parameter_source+', int '+self.length_name+'){'+self.generator.visit(self.accumulator)+';for(int '+scan+'=0;'+scan+'<'+self.length_name+';'+scan+'++){'+self.payload_type_source+' '+temporary+'='+expression+';'+self.generator.visit(addition)+';}return '+self.generator.visit(self.fold_return)+';}'
-        self.fold_engine = _ListFoldTrajectory(self.fold_source, summaries, function=name,
+        for update in updates:
+            update.rvalue = load(update.rvalue)
+        declarations = ''.join(self.generator.visit(node)+';' for node in self.accumulators)
+        steps = ''.join(self.generator.visit(node)+';' for node in updates)
+        self.fold_source = self.return_type.name+' '+name+'('+self.parameter_source+', int '+self.length_name+'){'+declarations+'for(int '+scan+'=0;'+scan+'<'+self.length_name+';'+scan+'++){'+self.payload_type_source+' '+temporary+'='+expression+';'+steps+'}return '+self.generator.visit(self.fold_return)+';}'
+        trajectory_engine = _ListFoldTrajectory if self.legacy_additive_fold else _StatefulListTrajectory
+        self.fold_engine = trajectory_engine(self.fold_source, summaries, function=name,
             parameter_bounds={**self.bounds,self.length_name:[0,self.max_length]}, abi=self.abi,
             char_signed=self.char_signed, max_paths=max_paths)
 
@@ -672,7 +775,7 @@ class ListHeapProgram:
                 'fold_expression_contract':self.fold_contract if fold else None,
                 'immutable_count_expression':self.count_contract,
                 'fold_domain_overapproximates_all_failure_prefix_lengths':True if fold else None},
-            'scope':'fresh acyclic two-field prepend lists with failure-prefix exits; checked in-place reversals, pure pointwise payload maps and optional additive fold/free; no external aliases or arbitrary heap updates'}
+            'scope':'fresh acyclic two-field prepend lists with failure-prefix exits; checked reversals, pure pointwise payload maps and optional typed scalar-state fold/free; no external aliases or arbitrary heap updates'}
         if inputs is None:
             if allocation_count is not None:raise SMTGraphError('allocation_count requires inputs')
         else:

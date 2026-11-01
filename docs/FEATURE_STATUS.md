@@ -1,4 +1,4 @@
-# Feature status after v0.45
+# Feature status after v0.46
 
 This inventory distinguishes certified capabilities from outstanding general
 requirements. The project remains a restricted research prototype.
@@ -19,7 +19,7 @@ particular exit condition terminates. `UNKNOWN` is an explicit unsupported or
 unproved result, not a valid summary.
 
 See [v0.14 recurrence and experiment contracts](GUARDED_RECURRENCES_AND_EXPERIMENTS.md)
-and the committed [latest experiment report](../experiments/v045/report.md).
+and the committed [latest experiment report](../experiments/v046/report.md).
 
 See [unroll-free typed scalar C contracts](TYPED_UNBOUNDED_RECURRENCES.md) for the new machine-integer certificate. It does not certify general heap memory.
 
@@ -108,3 +108,9 @@ actuals, preserved formal conversions, exact caller-domain instantiation,
 converted signed-int counts and independently certified count bounds. This
 removes the identity-only argument restriction within the same owned-chain
 source contract; general heap/call contracts and complete C remain open.
+
+See [typed scalar-state consumers](STATEFUL_LIST_CONSUMERS.md) for up to eight
+initialized states and sixteen source-ordered updates per node, typed feedback
+trajectories, independently checked source safety, exact integer-valued
+polynomial successor audits and bounded complete residue cases. This extends
+one owned-chain traversal, not arbitrary stateful heap/call contracts.

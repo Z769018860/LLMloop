@@ -6,6 +6,10 @@ boundaries. It has no represented-node or iteration-count cutoff. Allocation
 failure is always modeled as every successful-allocation prefix. It is a
 restricted ownership rule, not a general interprocedural heap analyzer.
 
+The v0.46 [scalar-state consumer extension](STATEFUL_LIST_CONSUMERS.md) also
+supports multiple initialized integer states and ordered pure scalar updates,
+with the same complete traversal, ownership and failure-prefix obligations.
+
 The v0.34 [reversal extension](OWNED_LIST_REVERSAL.md) also admits up to eight
 checked in-place reversal stages between construction and return/consumption,
 including repeated direct helpers and reversals inside the builder. Final

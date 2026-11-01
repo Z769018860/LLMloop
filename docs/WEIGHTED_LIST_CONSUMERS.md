@@ -1,5 +1,9 @@
 # Checked scalar arguments and weighted list consumers (v0.44)
 
+From v0.46, [typed scalar-state consumers](STATEFUL_LIST_CONSUMERS.md) extend the
+zero-initialized additive restriction described here with nonzero initializers,
+multiple scalar states and checked source-ordered assignments.
+
 The `list_calls` backend now binds pure integer expressions to scalar parameters
 following a consumer's unique owned head. It preserves C parameter conversions,
 checks every eager actual independently of chain length or formal use, and
