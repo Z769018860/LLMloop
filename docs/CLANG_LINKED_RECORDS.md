@@ -86,3 +86,12 @@ See [v0.48 evidence](../experiments/v048/report.md) and
 [remaining requirements](C_COVERAGE.md). General shapes/alias footprints,
 unbounded ownership composition, globals, external libraries, cross-unit unions,
 byte memory and complete C/LLVM semantics remain open. KLEE is not used.
+
+The v0.48 validation also exposes `--source-backend calls|bv_calls` in the
+bit-builtin experiment. Its default remains calls; this release explicitly
+selects bv_calls before all eighteen workers. A prior full regression passed,
+but the default calls LP64 ctzll source-definedness query timed out; that failed
+validation is retained in the experiment archive. The BV run checks the same
+source/helper hashes and full nonzero domains, keeps zero-input counterexamples,
+and retains independent functional/native controls. No query timeout is raised
+and no automatic fallback/retry is added.

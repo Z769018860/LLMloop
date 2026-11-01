@@ -1,0 +1,464 @@
+{
+  "base_commit": "4acab858ab297b6b379452d6c791ba2e7ce4f6fe",
+  "tested_commit": "8ee900a968ac4d41d7574bbc994082d608dfe4e7",
+  "tested_tree": "e8dab0a61205c230eaa8fdd815410f9fd2457b77",
+  "validation_origin": "local frozen-source pytest workers, Clang and original/normalized/composed native UBSan checks",
+  "environment": {
+    "python": "3.12.14",
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.39",
+    "pytest": "9.1.1",
+    "sympy": "1.14.0",
+    "z3": "5.3.3",
+    "pycparser": "3.12",
+    "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+    "native_compiler": "cc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0"
+  },
+  "full_pytest": {
+    "command": [
+      "/tmp/llmloop-v048-env/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "--forked"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 1162.575,
+    "log": "pytest.txt",
+    "passed": 2206,
+    "skipped": 0,
+    "expected_passed": 2206
+  },
+  "new_tests": 77,
+  "existing_tests_replaced": 0,
+  "linked_records": {
+    "case_count": 8,
+    "native_output_matches": 800,
+    "model_matches": 400,
+    "native_layout_matches": 36,
+    "expected_sanitizer_failures": 16,
+    "record_refusals": 6
+  },
+  "linked": {
+    "case_count": 8,
+    "native_output_matches": 680,
+    "model_matches": 340,
+    "expected_ubsan_failures": 8,
+    "binding_refusals": 7
+  },
+  "commands": {
+    "full_pytest": {
+      "command": [
+        "/tmp/llmloop-v048-env/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--forked"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1162.575,
+      "log": "pytest.txt",
+      "passed": 2206,
+      "skipped": 0,
+      "expected_passed": 2206
+    },
+    "linked_records": {
+      "command": [
+        "/tmp/llmloop-v048-env/bin/python",
+        "scripts/check_clang_linked_records_native.py",
+        "--output",
+        "experiments/v048/linked_records.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 29.405,
+      "log": "linked_records.txt"
+    },
+    "record_cli": {
+      "command": [
+        "/tmp/llmloop-v048-env/bin/python",
+        "-m",
+        "llmloop.symbolic_cli",
+        "examples/clang_linked_records/entry.c",
+        "--c-clang-proof",
+        "--function",
+        "entry",
+        "--clang-config",
+        "{\"compilation_database\": \"examples/clang_linked_records\", \"linked_sources\": [\"examples/clang_linked_records/build.c\", \"examples/clang_linked_records/consume.c\"]}",
+        "--clang-proof-config",
+        "{\"backend\":\"calls\",\"max_steps\":512}",
+        "--parameter-bounds",
+        "{\"n\":[0,10]}",
+        "--inputs",
+        "{\"n\":3}"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.821,
+      "log": "record_cli.json"
+    },
+    "linked": {
+      "command": [
+        "/tmp/llmloop-v048-env/bin/python",
+        "scripts/check_clang_linked_native.py",
+        "--output",
+        "experiments/v048/linked.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 13.814,
+      "log": "linked.txt"
+    },
+    "linked_cli": {
+      "command": [
+        "/tmp/llmloop-v048-env/bin/python",
+        "-m",
+        "llmloop.symbolic_cli",
+        "examples/clang_linked_project/entry.c",
+        "--c-clang-proof",
+        "--function",
+        "entry",
+        "--clang-config",
+        "{\"compilation_database\": \"examples/clang_linked_project\", \"linked_sources\": [\"examples/clang_linked_project/support.c\"]}",
+        "--clang-proof-config",
+        "{\"backend\":\"calls\"}",
+        "--parameter-bounds",
+        "{\"n\":[0,100]}",
+        "--inputs",
+        "{\"n\":5}"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.448,
+      "log": "linked_cli.json"
+    },
+    "stateful": {
+      "command": [
+        "/tmp/llmloop-v048-env/bin/python",
+        "scripts/check_list_stateful_native.py",
+        "--output",
+        "experiments/v048/stateful.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 48.115,
+      "log": "stateful.txt"
+    },
+    "stateful_cli": {
+      "command": [
+        "/tmp/llmloop-v048-env/bin/python",
+        "-m",
+        "llmloop.symbolic_cli",
+        "examples/clang_list_stateful_consumer.c",
+        "--c-clang-proof",
+        "--function",
+        "entry",
+        "--clang-proof-config",
+        "{\"backend\": \"list_calls\", \"allocation_count\": 100}",
+        "--parameter-bounds",
+        "{\"n\":[0,1000000],\"delta\":[-3,3]}",
+        "--inputs",
+        "{\"n\":1000000,\"delta\":2}"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.771,
+      "log": "stateful_cli.json"
+    },
+    "builders": {
+      "command": [
+        "/tmp/llmloop-v048-env/bin/python",
+        "scripts/check_list_builders_native.py",
+        "--output",
+        "experiments/v048/builders.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 45.966,
+      "log": "builders.txt"
+    },
+    "builder_cli": {
+      "command": [
+        "/tmp/llmloop-v048-env/bin/python",
+        "-m",
+        "llmloop.symbolic_cli",
+        "examples/clang_list_builder_arguments.c",
+        "--c-clang-proof",
+        "--function",
+        "entry",
+        "--clang-proof-config",
+        "{\"backend\": \"list_calls\", \"allocation_count\": 100, \"loop_summaries\": {\"__list_scan\": {\"total\": \"__list_scan*(2*__list_length-__list_scan-1)//2+__list_scan*((delta+260)%256)\"}}}",
+        "--parameter-bounds",
+        "{\"n\":[0,1000000],\"delta\":[0,2]}",
+        "--inputs",
+        "{\"n\":1000000,\"delta\":2}"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.771,
+      "log": "builder_cli.json"
+    },
+    "consumers": {
+      "command": [
+        "/tmp/llmloop-v048-env/bin/python",
+        "scripts/check_list_consumers_native.py",
+        "--output",
+        "experiments/v048/consumers.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 44.112,
+      "log": "consumers.txt"
+    },
+    "upstream": {
+      "command": [
+        "/tmp/llmloop-v048-env/bin/python",
+        "scripts/check_llvm_builtins.py",
+        "--compare-baseline",
+        "--source-worker-timeout",
+        "120",
+        "--output",
+        "experiments/v048/upstream.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 115.61,
+      "log": "upstream.txt"
+    },
+    "bit_builtins": {
+      "command": [
+        "/tmp/llmloop-v048-env/bin/python",
+        "scripts/check_clang_bit_builtins.py",
+        "--output",
+        "experiments/v048/bit_builtins.json"
+      ],
+      "exit_code": 1,
+      "elapsed_seconds": 38.117,
+      "log": "bit_builtins.txt"
+    },
+    "division": {
+      "command": [
+        "/tmp/llmloop-v048-env/bin/python",
+        "scripts/check_division_bv.py",
+        "--strategy",
+        "induction",
+        "--compare-baseline",
+        "--controls",
+        "--output",
+        "experiments/v048/division.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 170.398,
+      "log": "division.txt"
+    },
+    "arguments": {
+      "command": [
+        "/tmp/llmloop-v048-env/bin/python",
+        "scripts/check_list_arguments_native.py",
+        "--output",
+        "experiments/v048/arguments.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 45.996,
+      "log": "arguments.txt"
+    },
+    "payload_maps": {
+      "command": [
+        "/tmp/llmloop-v048-env/bin/python",
+        "scripts/check_list_payload_maps_native.py",
+        "--output",
+        "experiments/v048/payload_maps.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 28.672,
+      "log": "payload_maps.txt"
+    },
+    "reversal": {
+      "command": [
+        "/tmp/llmloop-v048-env/bin/python",
+        "scripts/check_list_reversal_native.py",
+        "--output",
+        "experiments/v048/reversal.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 21.401,
+      "log": "reversal.txt"
+    },
+    "consumer_cli": {
+      "command": [
+        "/tmp/llmloop-v048-env/bin/python",
+        "-m",
+        "llmloop.symbolic_cli",
+        "examples/clang_list_weighted_consumer.c",
+        "--c-clang-proof",
+        "--function",
+        "entry",
+        "--clang-proof-config",
+        "{\"backend\": \"list_calls\", \"allocation_count\": 100, \"loop_summaries\": {\"__list_scan\": {\"__list_call_total\": \"((delta+260)%256)*(__list_scan*(2*__list_length-__list_scan-1)//2)+__list_scan*(delta-1)\"}}}",
+        "--parameter-bounds",
+        "{\"n\":[0,1000000],\"delta\":[0,2]}",
+        "--inputs",
+        "{\"n\":1000000,\"delta\":2}"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.371,
+      "log": "consumer_cli.json"
+    }
+  },
+  "checks": {
+    "full_pytest": true,
+    "linked_records": true,
+    "record_cli": true,
+    "linked": true,
+    "linked_cli": true,
+    "stateful": true,
+    "sanitizer_frontiers_recorded": true,
+    "stateful_cli": true,
+    "builders": true,
+    "builder_cli": true,
+    "consumers": true,
+    "upstream": true,
+    "upstream_worker_ceiling": true,
+    "popcount_baseline_identity": true,
+    "bit_builtins": false,
+    "division": true,
+    "arguments": true,
+    "payload_maps": true,
+    "reversal": true,
+    "consumer_cli": true,
+    "frozen_source_unchanged": true
+  },
+  "stateful": {
+    "case_count": 10,
+    "correspondence_groups": 1512,
+    "native_output_matches": 4536,
+    "model_matches": 756,
+    "expected_ubsan_failures": 26,
+    "unobserved_ubsan_controls": 2,
+    "negative_source_controls": 7,
+    "arithmetic_audits_replayed": 7
+  },
+  "builders": {
+    "case_count": 10,
+    "correspondence_groups": 1548,
+    "native_output_matches": 4644,
+    "model_matches": 774,
+    "expected_ubsan_failures": 16
+  },
+  "consumers": {
+    "case_count": 10,
+    "correspondence_groups": 1800,
+    "native_output_matches": 5400,
+    "model_matches": 900,
+    "expected_ubsan_failures": 20
+  },
+  "legacy_native": {
+    "arguments": {
+      "correspondences": 1620,
+      "expected_ubsan_failures": 12
+    },
+    "payload_maps": {
+      "correspondences": 510,
+      "expected_ubsan_failures": 8
+    },
+    "reversal": {
+      "correspondences": 372,
+      "expected_ubsan_failures": 4
+    }
+  },
+  "upstream": {
+    "case_count": 15,
+    "upstream_functions": 13,
+    "safety_proved_cases": 14,
+    "safety_unknown_cases": 1,
+    "functional_proved_cases": 14,
+    "native_comparisons": 14848,
+    "model_comparisons": 1792,
+    "expected_ubsan_failures": 4,
+    "intended_abort_runs": 4,
+    "wrong_algorithm_native_refutations": 6
+  },
+  "bit_builtins": {
+    "source_proved_cases": null,
+    "functional_proved_cases": null,
+    "zero_source_refutations": null,
+    "native_comparisons": null,
+    "expected_zero_ubsan_failures": null,
+    "wrong_count_functional_refutations": null
+  },
+  "division": {
+    "source_status": "PROVED_DEFINED_CLANG_BV_CALLS",
+    "functional_status": "PROVED_FUNCTIONAL_DIVISION_INDUCTION",
+    "functional_elapsed_seconds": 10.511476,
+    "total_functional_timeout_ms": 30000,
+    "direct_baseline_status": "UNKNOWN",
+    "functional_replay": {
+      "queries": 40,
+      "all_unsat": true,
+      "all_replayed": true,
+      "arithmetic_audits": 1,
+      "counter_cases": 31
+    },
+    "native_comparisons": 1024,
+    "model_comparisons": 64,
+    "expected_ubsan_failures": 2,
+    "wrong_algorithm_native_refutations": 2
+  },
+  "retained_pilot_domains": 15,
+  "source_domains_proved_with_explicit_backends": 15,
+  "functional_domains_proved_with_explicit_strategies": 15,
+  "frozen_manifest_paths": 730,
+  "frozen_source_unchanged": true,
+  "github_actions_used": false,
+  "ci_runs_used": 0,
+  "klee_used": false,
+  "complete_c_support": false,
+  "passed": false,
+  "source_identity": {
+    "local_tested_commit": "8ee900a968ac4d41d7574bbc994082d608dfe4e7",
+    "local_tested_tree": "e8dab0a61205c230eaa8fdd815410f9fd2457b77",
+    "published_source_commit": "cf0d0e1b17d5e145819386e774ce44b73d4416ad",
+    "published_source_tree": "e8dab0a61205c230eaa8fdd815410f9fd2457b77",
+    "git_tree_equal": true,
+    "publication": "GitHub connector; commit metadata may differ but every tracked path is identical"
+  },
+  "prior_prevalidation_attempt": {
+    "tested_commit": "50395828a25ff8c3e03b315e7ffe13151fbd0ee7",
+    "tested_tree": "73304b2830f8680b52dc7dd5c66bfa1bc5089c7a",
+    "published_source": "dc1f87b571f072463365e82f5dbf9fb0f0f92f6f",
+    "outcome": "intentionally interrupted before completion; no merge",
+    "reason": "Review found that an unused function-local same-tag complete record could be used to fill a file-scope incomplete interface. The observed probe was defined and proved, but opaque/incomplete interfaces are outside the advertised contract. Enforce file-scope complete definitions and add scope controls before fresh validation.",
+    "partial_pytest_output": "........................................................................ [  3%]\n........................................................................ [  6%]\n........................................................................ [  9%]\n..........................................................",
+    "completed_prevalidation": {
+      "new_tests_passed": 75,
+      "native_output_matches": 800,
+      "model_matches": 400,
+      "native_layout_matches": 36,
+      "expected_sanitizer_failures": 16,
+      "record_refusals": 6
+    },
+    "ci_runs_used": 0
+  },
+  "evidence_sha256": {
+    "arguments.json": "8679d8aa750c37da8f2262b239773f7aef9ed2eb2dde4664033368c367923b51",
+    "arguments.txt": "7446193b747bde45d24a4f6b0f6a252f45684612e758593aeaa4f964f81b7933",
+    "bit_builtins.txt": "58f491e46e0b409a3c41d5b448a7d9889fe8df7d30a70c731282808453c83eae",
+    "builder_cli.json": "22b4661dd8ac4be3075913f96771bf38eba0e6f736253ec24709d45c75767c5f",
+    "builders.json": "656935e1f205a2c74924d1e630ba55851fcb9da3a60d869e7cbcace3a99b581a",
+    "builders.txt": "ed9e8a0818318e9baa35dd2307867504b7641ccae71ee2625e8b447c1f0197d7",
+    "consumer_cli.json": "40c884458fbe34e12c03be1258b538e709c5170d170a218987969f04cef97791",
+    "consumers.json": "85e6bd26d844cf85406e4ef9926f429d44b2ac918b74539bbb3bbd294ced40a6",
+    "consumers.txt": "205ba8215c5b8eab7fab475eff39f845677076dd7a4a02b842d4daff0c8a3723",
+    "division.json": "e406d1d6a91374dfda242c41ee65b4d05624ae627b52d7c92ea2c9171ef62670",
+    "division.txt": "4d28514d1eabf3b660e7a057468fab09d2cf789f9bac6801e196d786936c1d11",
+    "linked.json": "c0751e74fcba1106e3240017759791878b207206e997dac50188af9c1c814fd2",
+    "linked.txt": "3d9db9302b47801aa0367e0fc8379f9880ff64549d6117dc5eb7fd77fd237703",
+    "linked_cli.json": "d998da471072bb77f39bd799209f30932b389dcfaea4456f41fdf59b3b8632bb",
+    "linked_records.json": "910966b261b94aa75d7978973414c7bda297a7630dd052089ef01edd5f8595bf",
+    "linked_records.txt": "ef9684726251a19b306337f587ebdde6566e6a879ae3193bb3dd65ba01eda4ad",
+    "payload_maps.json": "50fac56a1a472b69588b1b69c8ef7c0057c73dcbc023d97d28afcb2ba76a8a56",
+    "payload_maps.txt": "c0b88af94377f575f421f57e6e0b382a2cc60d7f828c0f7fe8127e8971d60704",
+    "prevalidation_attempt.json": "6a71db1413989ca372f766e617431c2992c3ca69719325d0c8ddfaa19a1eb401",
+    "pytest.txt": "e531a8128050a3cbab552accd47862974ceef356d14c108c7d3cb4cc70a12e94",
+    "record_cli.json": "f44e7913217b8ec8170b42240ec3a8c86a401921ee86aad0284825c8a7035f11",
+    "report.md": "1d22ffd2e7511a2b4f5c9fe401b9cbe81f22f7b2196311a468c63655a9a6a9ca",
+    "reversal.json": "f2c32d6af1b27373ca383c8e5c444cb387ba8062261befb2ce654a076dd57dfe",
+    "reversal.txt": "16cbe1825eeea1d4e83cced20fdb67bf4226dca4e16005a9e4343b92604626c9",
+    "source_identity.json": "d09a6fb41dadb214d9626b104968a7b14be17111ef29e203c37ea23fb77128fc",
+    "source_manifest.json": "b42b1cc7b003317271f2d1a2290c186d35f7c663e8c1a5afa07fe7b26ae4b173",
+    "stateful.json": "8051b6a3d55ca412eca74228bd2934d4fe287ae84111ef6a422bd5e4377df0ee",
+    "stateful.txt": "550aaef0c3a610e212f2070cc72dbc9c98cfade77d0d793fb016163f60bfd8d6",
+    "stateful_cli.json": "a163c74a32c01dc030e1d4e81243f272f0d56abfd2b1c60725a9afbb1b5fb6d7",
+    "upstream.json": "ef0dd41bee3d049f6655e721cdecc39e963bbacf79ae365e8ade60e671ef8af1",
+    "upstream.txt": "f1b19005a2d3ae0a0999fe4d4f5c4244d1b2b13fca2c33c09809d6d1ce03b2f4"
+  }
+}

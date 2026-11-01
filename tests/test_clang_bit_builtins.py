@@ -205,3 +205,21 @@ def test_builtin_cli_exports_replayable_source_functional_and_native_evidence(tm
     row, = result['cases']
     solver = z3.SolverFor('QF_BV'); solver.set(timeout=5000); solver.from_string(row['functional']['refutation_smt2'])
     assert solver.check() == z3.unsat
+
+
+def test_builtin_cli_explicit_bv_source_strategy_keeps_full_domain_and_zero_control(tmp_path):
+    import json
+    import subprocess
+    import sys
+    from llmloop.llvm_benchmarks import ROOT
+    output=tmp_path/'bv-builtins.json'
+    command=[sys.executable,str(ROOT/'scripts/check_clang_bit_builtins.py'),'--source-backend','bv_calls','--builtin','__builtin_ctzll','--target','x86_64-unknown-linux-gnu','--output',str(output)]
+    run=subprocess.run(command,capture_output=True,text=True,timeout=120)
+    assert run.returncode==0,run.stderr
+    result=json.loads(output.read_text());row,=result['cases']
+    assert result['passed'] and result['source_analysis_backend']=='bv_calls' and result['source_analysis_retries']==0
+    assert row['request']['proof']=={'backend':'bv_calls','parameter_bounds':{'x':[1,None]}}
+    assert row['source_safety']['status']=='PROVED_DEFINED_CLANG_BV_CALLS'
+    assert row['zero_control']['status']=='UNKNOWN' and row['zero_control']['counterexample']['x']==0
+    assert row['functional']['status']=='PROVED_FUNCTIONAL_QF_BV' and row['functional']['replay_result']=='unsat'
+    assert result['native_comparisons']==1024 and result['expected_zero_ubsan_failures']==4

@@ -1,0 +1,25 @@
+# v0.48 checked named records across C translation units
+
+Tested source `8ee900a968ac4d41d7574bbc994082d608dfe4e7`, frozen tree `e8dab0a61205c230eaa8fdd815410f9fd2457b77`, published checkpoint `cf0d0e1b17d5e145819386e774ce44b73d4416ad`, base v0.47 `4acab858ab297b6b379452d6c791ba2e7ce4f6fe`. Validation: **local frozen-source pytest workers, Clang and original/normalized/composed native UBSan checks**. Published and tested trees must be identical.
+
+The closed supplied-source bridge now admits the existing finite named-record heap/call fragment. Every used same-tag definition must match ordered field names and canonical C member types, including recursive pointer graphs and integer signedness/rank. Compiler sizes/alignments/member offsets must agree; each participating unit is then independently checked against the successful proof model, including provider-private records absent from the caller. Matching corrupted compiler layouts cannot inherit success. Opaque, by-value/embedded, union, attributed, array/VLA and qualified records remain outside this contract. The scalar-only BV backend is unchanged.
+
+Full regression: **2206 passed**, **0 skipped**, exit 0, 1162.575 seconds. Added 77 tests; no existing tests replaced. Tests cover three ABIs, integer fields, typedef/header contexts, self/mutual type graphs, private-tag conflicts, missing/duplicate/corrupted layouts, finite heap aliases/failures and unsafe/incomplete executions. Eight tags, eight fields and three pointer levels retain the prior model limits; object/cell, path/step and call budgets are unchanged.
+
+New separate-object native experiment: **8 cases**, **800 original/normalized output matches**, **400 independent model matches**, **36 GCC/model layout correspondences**, **16 required UBSan/ASan failures**, **6 incompatible bindings refused**. Both original units and normalized C run at GCC O0/O2. Native sizes/alignments/offsets and scalar values, allocation attempts, live footprint, free identities and free order are checked. Failure points include first/second allocation failure and unexecuted later failure points. Member overflow/division, freed-member access and alias double-free must trap in both forms. Native observations supplement bounded source obligations.
+
+Three-unit/header/compilation-database CLI: `PROVED_DEFINED_CLANG_CFG_CALLS`; all three Clang/model layout contexts checked. For n=3, successful two-node allocation returns 7 and first/second failure returns -1; the evaluation remains explicitly allocation-dependent. No successful-allocation assumption or unbounded ownership claim is added.
+
+Retained v0.47 scalar/pointer native checks: 680 native and 340 model matches, 8 UBSan failures and 7 binding refusals. Existing static linkage/declaration-chain, type, call sequencing, source identity and builtin contracts remain checked.
+
+Retained stateful folds: 4536 native/756 model matches, 26 UBSan failures, 7 replayed arithmetic audits. Two GCC O2 discarded-overflow sanitizer non-observations remain explicit frontiers, never positive correspondences; source definedness rejects them. Builders/consumers retain 4644/5400 native matches. Older argument/map/reversal groups remain 1620/510/372.
+
+The same 13 LLVM public functions and 15 domains remain. Default source proofs: 14, UNKNOWN: 1; independent functional proofs: 14. Explicit division source `PROVED_DEFINED_CLANG_BV_CALLS`, functional `PROVED_FUNCTIONAL_DIVISION_INDUCTION` closes the fifteenth domain with 40 replayed UNSAT queries, 31 counter cases and 1 arithmetic audit. Direct baseline remains `UNKNOWN`. Query budgets stay 5000 ms, division functional total 30000 ms and source-worker wall ceiling 120 seconds. Vendor/baseline identities, builtin controls and query replays remain checked. No equal-budget performance comparison is claimed.
+
+Frozen source: 730 paths, unchanged **True**. Evidence added separately. GitHub Actions used: False; CI runs: 0; KLEE: False. Commands, environment, source identity and evidence hashes are recorded.
+
+General heap/alias footprints and unbounded ownership composition, globals, external contracts, native linker/interposition semantics, general unions/byte memory, unrestricted recursion/side effects, arbitrary recurrence discovery and complete C/LLVM support remain open. Headers/compiler/environment must remain stable across stages. Compiler, source normalization, compatibility checks and typed kernels remain trusted components.
+
+Checks: `{"arguments": true, "bit_builtins": false, "builder_cli": true, "builders": true, "consumer_cli": true, "consumers": true, "division": true, "frozen_source_unchanged": true, "full_pytest": true, "linked": true, "linked_cli": true, "linked_records": true, "payload_maps": true, "popcount_baseline_identity": true, "record_cli": true, "reversal": true, "sanitizer_frontiers_recorded": true, "stateful": true, "stateful_cli": true, "upstream": true, "upstream_worker_ceiling": true}`. Passed: **False**.
+
+An earlier interrupted attempt is retained in prevalidation_attempt.json; this run is validated afresh.

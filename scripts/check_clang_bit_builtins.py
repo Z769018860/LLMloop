@@ -48,19 +48,22 @@ def functional(model, abi, source=None):
     return result
 
 
-def worker(name, target):
+def worker(name, target, source_backend='calls'):
+    if source_backend not in ('calls','bv_calls'): raise ValueError('Unsupported source backend')
     unused, ctype = BIT_BUILTINS[name]
     source = 'int entry(' + ctype + ' x){return ' + name + '(x);}'
     request = {'source': source, 'function': 'entry', 'frontend': 'clang_proof', 'clang': {'target': target},
-               'proof': {'backend': 'calls', 'parameter_bounds': {'x': [1, None]}}}
+               'proof': {'backend': source_backend, 'parameter_bounds': {'x': [1, None]}}}
     started = time.monotonic(); report = analyze_request(request); elapsed = round(time.monotonic() - started, 6)
-    if report['status'] != 'PROVED_DEFINED_CLANG_CFG_CALLS': raise AssertionError(report)
+    expected_status = {'calls':'PROVED_DEFINED_CLANG_CFG_CALLS','bv_calls':'PROVED_DEFINED_CLANG_BV_CALLS'}[source_backend]
+    if report['status'] != expected_status: raise AssertionError(report)
     model, = report['normalization']['bit_builtin_models']
     query = functional(model, TARGETS[target])
     if query['status'] != 'PROVED_FUNCTIONAL_QF_BV' or query['replay_result'] != 'unsat': raise AssertionError(query)
-    zero_request = {**request, 'proof': {'backend': 'calls', 'parameter_bounds': {'x': [0, 0]}}}
+    zero_request = {**request, 'proof': {'backend': source_backend, 'parameter_bounds': {'x': [0, 0]}}}
     zero = analyze_request(zero_request)
-    if zero['status'] != 'UNKNOWN' or zero.get('failed_obligation') != 'all original executed operations defined' or int(zero.get('counterexample', {}).get('x', -1)) != 0: raise AssertionError(zero)
+    zero_obligation = {'calls':'all original executed operations defined','bv_calls':'executed C integer operation defined'}[source_backend]
+    if zero['status'] != 'UNKNOWN' or zero.get('failed_obligation') != zero_obligation or int(zero.get('counterexample', {}).get('x', -1)) != 0: raise AssertionError(zero)
     front = report['clang_frontend']
     compact = lambda value: {k: v for k, v in value.items() if k != 'clang_frontend'}
     return {'builtin': name, 'target': target, 'abi': TARGETS[target], 'request': request, 'source_safety': compact(report),
@@ -108,12 +111,13 @@ def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--builtin', choices=list(BIT_BUILTINS))
     parser.add_argument('--target', choices=list(TARGETS))
+    parser.add_argument('--source-backend',choices=['calls','bv_calls'],default='calls',help='Explicit source proof strategy; fixed before workers, no fallback/retries')
     parser.add_argument('--worker', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('--output', type=Path)
     args = parser.parse_args(argv)
     if args.worker:
         if not args.builtin or not args.target: parser.error('worker requires builtin and target')
-        print(json.dumps(worker(args.builtin, args.target))); return 0
+        print(json.dumps(worker(args.builtin, args.target, args.source_backend))); return 0
     names = [args.builtin] if args.builtin else list(BIT_BUILTINS)
     targets = [args.target] if args.target else list(TARGETS)
     rows = []
@@ -121,7 +125,7 @@ def main(argv=None):
         directory = Path(directory)
         for name in names:
             for target in targets:
-                command = [sys.executable, str(Path(__file__).resolve()), '--worker', '--builtin', name, '--target', target]
+                command = [sys.executable, str(Path(__file__).resolve()), '--worker', '--builtin', name, '--target', target, '--source-backend', args.source_backend]
                 run = subprocess.run(command, cwd=ROOT, text=True, capture_output=True, timeout=120)
                 if run.returncode: raise AssertionError((command, run.stderr, run.stdout))
                 row = json.loads(run.stdout); row['worker_command'] = command; rows.append(row)
@@ -135,7 +139,8 @@ def main(argv=None):
                     if mutant['status'] != 'REFUTED' or mutant['replay_result'] != 'sat' or mutant['actual'] == mutant['expected']: raise AssertionError(mutant)
                     row['wrong_count_control'] = mutant
     result = {'source_proved_cases': len(rows), 'functional_proved_cases': len(rows), 'zero_source_refutations': len(rows),
-              'source_analysis_process_isolation': True, 'source_analysis_retries': 0,
+              'source_analysis_process_isolation': True, 'source_analysis_retries': 0, 'source_analysis_backend': args.source_backend,
+              'source_analysis_strategy':'explicit fixed backend selected before workers; no automatic fallback',
               'native_comparisons': sum(run['comparisons'] for row in rows for run in row.get('native', [])),
               'expected_zero_ubsan_failures': sum(len(row.get('native', [])) for row in rows),
               'wrong_count_functional_refutations': sum('wrong_count_control' in row for row in rows),
