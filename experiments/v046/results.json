@@ -1,0 +1,634 @@
+{
+  "base_commit": "a7ad2c359d9bb7a8a0a8c2136c1deed947e2fb5f",
+  "tested_commit": "00dbabb2ccaf35119c795a787a678e564a87cd91",
+  "tested_tree": "c942dd71b06aa8d4ab677e100dd110f33b5b70d3",
+  "validation_origin": "GitHub Actions fallback after primary execution environment loss; frozen-source pytest workers, Clang and native UBSan",
+  "environment": {
+    "python": "3.12.15",
+    "platform": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39",
+    "pytest": "9.1.1",
+    "sympy": "1.14.0",
+    "z3": "5.3.3",
+    "pycparser": "3.12",
+    "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+    "native_compiler": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0"
+  },
+  "full_pytest": {
+    "command": [
+      "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "--forked"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 571.502,
+    "log": "pytest.txt",
+    "passed": 2044,
+    "skipped": 0,
+    "expected_passed": 2044
+  },
+  "new_tests": 81,
+  "previous_accumulator_read_rejection_cases_replaced": 1,
+  "commands": {
+    "full_pytest": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--forked"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 571.502,
+      "log": "pytest.txt",
+      "passed": 2044,
+      "skipped": 0,
+      "expected_passed": 2044
+    },
+    "stateful": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "scripts/check_list_stateful_native.py",
+        "--output",
+        "experiments/v046/stateful.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 21.957,
+      "log": "stateful.txt"
+    },
+    "stateful_cli": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "-m",
+        "llmloop.symbolic_cli",
+        "examples/clang_list_stateful_consumer.c",
+        "--c-clang-proof",
+        "--function",
+        "entry",
+        "--clang-proof-config",
+        "{\"backend\": \"list_calls\", \"allocation_count\": 100}",
+        "--parameter-bounds",
+        "{\"n\":[0,1000000],\"delta\":[-3,3]}",
+        "--inputs",
+        "{\"n\":1000000,\"delta\":2}"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.066,
+      "log": "stateful_cli.json"
+    },
+    "builders": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "scripts/check_list_builders_native.py",
+        "--output",
+        "experiments/v046/builders.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 19.952,
+      "log": "builders.txt"
+    },
+    "builder_cli": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "-m",
+        "llmloop.symbolic_cli",
+        "examples/clang_list_builder_arguments.c",
+        "--c-clang-proof",
+        "--function",
+        "entry",
+        "--clang-proof-config",
+        "{\"backend\": \"list_calls\", \"allocation_count\": 100, \"loop_summaries\": {\"__list_scan\": {\"total\": \"__list_scan*(2*__list_length-__list_scan-1)//2+__list_scan*((delta+260)%256)\"}}}",
+        "--parameter-bounds",
+        "{\"n\":[0,1000000],\"delta\":[0,2]}",
+        "--inputs",
+        "{\"n\":1000000,\"delta\":2}"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.715,
+      "log": "builder_cli.json"
+    },
+    "consumers": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "scripts/check_list_consumers_native.py",
+        "--output",
+        "experiments/v046/consumers.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 20.001,
+      "log": "consumers.txt"
+    },
+    "upstream": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "scripts/check_llvm_builtins.py",
+        "--compare-baseline",
+        "--source-worker-timeout",
+        "120",
+        "--output",
+        "experiments/v046/upstream.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 54.566,
+      "log": "upstream.txt"
+    },
+    "bit_builtins": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "scripts/check_clang_bit_builtins.py",
+        "--output",
+        "experiments/v046/bit_builtins.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 21.96,
+      "log": "bit_builtins.txt"
+    },
+    "division": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "scripts/check_division_bv.py",
+        "--strategy",
+        "induction",
+        "--compare-baseline",
+        "--controls",
+        "--output",
+        "experiments/v046/division.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 103.908,
+      "log": "division.txt"
+    },
+    "arguments": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "scripts/check_list_arguments_native.py",
+        "--output",
+        "experiments/v046/arguments.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 23.117,
+      "log": "arguments.txt"
+    },
+    "payload_maps": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "scripts/check_list_payload_maps_native.py",
+        "--output",
+        "experiments/v046/payload_maps.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 12.991,
+      "log": "payload_maps.txt"
+    },
+    "reversal": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "scripts/check_list_reversal_native.py",
+        "--output",
+        "experiments/v046/reversal.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 10.787,
+      "log": "reversal.txt"
+    },
+    "consumer_cli": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "-m",
+        "llmloop.symbolic_cli",
+        "examples/clang_list_weighted_consumer.c",
+        "--c-clang-proof",
+        "--function",
+        "entry",
+        "--clang-proof-config",
+        "{\"backend\": \"list_calls\", \"allocation_count\": 100, \"loop_summaries\": {\"__list_scan\": {\"__list_call_total\": \"((delta+260)%256)*(__list_scan*(2*__list_length-__list_scan-1)//2)+__list_scan*(delta-1)\"}}}",
+        "--parameter-bounds",
+        "{\"n\":[0,1000000],\"delta\":[0,2]}",
+        "--inputs",
+        "{\"n\":1000000,\"delta\":2}"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.716,
+      "log": "consumer_cli.json"
+    }
+  },
+  "checks": {
+    "full_pytest": true,
+    "stateful": true,
+    "sanitizer_frontiers_recorded": true,
+    "stateful_cli": true,
+    "builders": true,
+    "builder_cli": true,
+    "consumers": true,
+    "upstream": true,
+    "upstream_worker_ceiling": true,
+    "popcount_baseline_identity": true,
+    "bit_builtins": true,
+    "division": true,
+    "arguments": true,
+    "payload_maps": true,
+    "reversal": true,
+    "consumer_cli": true,
+    "frozen_source_unchanged": true
+  },
+  "stateful": {
+    "case_count": 10,
+    "correspondence_groups": 1512,
+    "native_output_matches": 4536,
+    "model_matches": 756,
+    "expected_ubsan_failures": 26,
+    "unobserved_ubsan_controls": 2,
+    "negative_source_controls": 7,
+    "arithmetic_audits_replayed": 7
+  },
+  "builders": {
+    "case_count": 10,
+    "correspondence_groups": 1548,
+    "native_output_matches": 4644,
+    "model_matches": 774,
+    "expected_ubsan_failures": 16
+  },
+  "consumers": {
+    "case_count": 10,
+    "correspondence_groups": 1800,
+    "native_output_matches": 5400,
+    "model_matches": 900,
+    "expected_ubsan_failures": 20
+  },
+  "legacy_native": {
+    "arguments": {
+      "correspondences": 1620,
+      "expected_ubsan_failures": 12
+    },
+    "payload_maps": {
+      "correspondences": 510,
+      "expected_ubsan_failures": 8
+    },
+    "reversal": {
+      "correspondences": 372,
+      "expected_ubsan_failures": 4
+    }
+  },
+  "upstream": {
+    "case_count": 15,
+    "upstream_functions": 13,
+    "safety_proved_cases": 14,
+    "safety_unknown_cases": 1,
+    "functional_proved_cases": 14,
+    "native_comparisons": 14848,
+    "model_comparisons": 1792,
+    "expected_ubsan_failures": 4,
+    "intended_abort_runs": 4,
+    "wrong_algorithm_native_refutations": 6
+  },
+  "bit_builtins": {
+    "source_proved_cases": 18,
+    "functional_proved_cases": 18,
+    "zero_source_refutations": 18,
+    "native_comparisons": 6144,
+    "expected_zero_ubsan_failures": 24,
+    "wrong_count_functional_refutations": 6
+  },
+  "division": {
+    "source_status": "PROVED_DEFINED_CLANG_BV_CALLS",
+    "functional_status": "PROVED_FUNCTIONAL_DIVISION_INDUCTION",
+    "functional_elapsed_seconds": 5.094027,
+    "total_functional_timeout_ms": 30000,
+    "direct_baseline_status": "UNKNOWN",
+    "functional_replay": {
+      "queries": 40,
+      "all_unsat": true,
+      "all_replayed": true,
+      "arithmetic_audits": 1,
+      "counter_cases": 31
+    },
+    "native_comparisons": 1024,
+    "model_comparisons": 64,
+    "expected_ubsan_failures": 2,
+    "wrong_algorithm_native_refutations": 2
+  },
+  "retained_pilot_domains": 15,
+  "source_domains_proved_with_explicit_backends": 15,
+  "functional_domains_proved_with_explicit_strategies": 15,
+  "frozen_manifest_paths": 653,
+  "frozen_source_unchanged": true,
+  "github_actions_used": true,
+  "ci_runs_used": 1,
+  "klee_used": false,
+  "complete_c_support": false,
+  "passed": true,
+  "source_identity": {
+    "local_tested_commit": "00dbabb2ccaf35119c795a787a678e564a87cd91",
+    "local_tested_tree": "c942dd71b06aa8d4ab677e100dd110f33b5b70d3",
+    "published_source_commit": "00dbabb2ccaf35119c795a787a678e564a87cd91",
+    "published_source_tree": "c942dd71b06aa8d4ab677e100dd110f33b5b70d3",
+    "git_tree_equal": true,
+    "publication": "GitHub connector; commit metadata may differ but every tracked path is identical"
+  },
+  "prior_prevalidation_attempt": {
+    "attempt": 1,
+    "tested_commit": "6f764a6aabe19d6f69754b0db492372ba060a0a4",
+    "tested_tree": "7a7a75ec3d3b3a3f57030471c94a320f75ad6ed0",
+    "published_source_commit": "ca01ce0b42ce91421a869bbbc1cceaa24ff9922f",
+    "full_pytest": {
+      "command": [
+        "/tmp/llmloop-v046-env/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--forked"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1177.31,
+      "log": "pytest.txt",
+      "passed": 2042,
+      "skipped": 0,
+      "expected_passed": 2042
+    },
+    "checks": {
+      "full_pytest": true,
+      "stateful": true,
+      "sanitizer_frontiers_recorded": true,
+      "stateful_cli": true,
+      "builders": true,
+      "builder_cli": true,
+      "consumers": false,
+      "upstream": false,
+      "popcount_baseline_identity": false,
+      "bit_builtins": true,
+      "division": true,
+      "arguments": true,
+      "payload_maps": true,
+      "reversal": true,
+      "consumer_cli": true,
+      "frozen_source_unchanged": true
+    },
+    "frozen_source_unchanged": true,
+    "overall_passed": false,
+    "commands": {
+      "full_pytest": {
+        "command": [
+          "/tmp/llmloop-v046-env/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "--forked"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 1177.31,
+        "log": "pytest.txt",
+        "passed": 2042,
+        "skipped": 0,
+        "expected_passed": 2042
+      },
+      "stateful": {
+        "command": [
+          "/tmp/llmloop-v046-env/bin/python",
+          "scripts/check_list_stateful_native.py",
+          "--output",
+          "experiments/v046/stateful.json"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 45.16,
+        "log": "stateful.txt"
+      },
+      "stateful_cli": {
+        "command": [
+          "/tmp/llmloop-v046-env/bin/python",
+          "-m",
+          "llmloop.symbolic_cli",
+          "examples/clang_list_stateful_consumer.c",
+          "--c-clang-proof",
+          "--function",
+          "entry",
+          "--clang-proof-config",
+          "{\"backend\": \"list_calls\", \"allocation_count\": 100}",
+          "--parameter-bounds",
+          "{\"n\":[0,1000000],\"delta\":[-3,3]}",
+          "--inputs",
+          "{\"n\":1000000,\"delta\":2}"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 1.722,
+        "log": "stateful_cli.json"
+      },
+      "builders": {
+        "command": [
+          "/tmp/llmloop-v046-env/bin/python",
+          "scripts/check_list_builders_native.py",
+          "--output",
+          "experiments/v046/builders.json"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 41.818,
+        "log": "builders.txt"
+      },
+      "builder_cli": {
+        "command": [
+          "/tmp/llmloop-v046-env/bin/python",
+          "-m",
+          "llmloop.symbolic_cli",
+          "examples/clang_list_builder_arguments.c",
+          "--c-clang-proof",
+          "--function",
+          "entry",
+          "--clang-proof-config",
+          "{\"backend\": \"list_calls\", \"allocation_count\": 100, \"loop_summaries\": {\"__list_scan\": {\"total\": \"__list_scan*(2*__list_length-__list_scan-1)//2+__list_scan*((delta+260)%256)\"}}}",
+          "--parameter-bounds",
+          "{\"n\":[0,1000000],\"delta\":[0,2]}",
+          "--inputs",
+          "{\"n\":1000000,\"delta\":2}"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 1.269,
+        "log": "builder_cli.json"
+      },
+      "consumers": {
+        "command": [
+          "/tmp/llmloop-v046-env/bin/python",
+          "scripts/check_list_consumers_native.py",
+          "--output",
+          "experiments/v046/consumers.json"
+        ],
+        "exit_code": 1,
+        "elapsed_seconds": 42.561,
+        "log": "consumers.txt"
+      },
+      "upstream": {
+        "command": [
+          "/tmp/llmloop-v046-env/bin/python",
+          "scripts/check_llvm_builtins.py",
+          "--compare-baseline",
+          "--output",
+          "experiments/v046/upstream.json"
+        ],
+        "exit_code": 1,
+        "elapsed_seconds": 81.885,
+        "log": "upstream.txt"
+      },
+      "bit_builtins": {
+        "command": [
+          "/tmp/llmloop-v046-env/bin/python",
+          "scripts/check_clang_bit_builtins.py",
+          "--output",
+          "experiments/v046/bit_builtins.json"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 42.296,
+        "log": "bit_builtins.txt"
+      },
+      "division": {
+        "command": [
+          "/tmp/llmloop-v046-env/bin/python",
+          "scripts/check_division_bv.py",
+          "--strategy",
+          "induction",
+          "--compare-baseline",
+          "--controls",
+          "--output",
+          "experiments/v046/division.json"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 155.665,
+        "log": "division.txt"
+      },
+      "arguments": {
+        "command": [
+          "/tmp/llmloop-v046-env/bin/python",
+          "scripts/check_list_arguments_native.py",
+          "--output",
+          "experiments/v046/arguments.json"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 44.532,
+        "log": "arguments.txt"
+      },
+      "payload_maps": {
+        "command": [
+          "/tmp/llmloop-v046-env/bin/python",
+          "scripts/check_list_payload_maps_native.py",
+          "--output",
+          "experiments/v046/payload_maps.json"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 27.109,
+        "log": "payload_maps.txt"
+      },
+      "reversal": {
+        "command": [
+          "/tmp/llmloop-v046-env/bin/python",
+          "scripts/check_list_reversal_native.py",
+          "--output",
+          "experiments/v046/reversal.json"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 22.176,
+        "log": "reversal.txt"
+      },
+      "consumer_cli": {
+        "command": [
+          "/tmp/llmloop-v046-env/bin/python",
+          "-m",
+          "llmloop.symbolic_cli",
+          "examples/clang_list_weighted_consumer.c",
+          "--c-clang-proof",
+          "--function",
+          "entry",
+          "--clang-proof-config",
+          "{\"backend\": \"list_calls\", \"allocation_count\": 100, \"loop_summaries\": {\"__list_scan\": {\"__list_call_total\": \"((delta+260)%256)*(__list_scan*(2*__list_length-__list_scan-1)//2)+__list_scan*(delta-1)\"}}}",
+          "--parameter-bounds",
+          "{\"n\":[0,1000000],\"delta\":[0,2]}",
+          "--inputs",
+          "{\"n\":1000000,\"delta\":2}"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 3.598,
+        "log": "consumer_cli.json"
+      }
+    },
+    "failures": [
+      {
+        "experiment": "consumers",
+        "case": "map_reverse_consume",
+        "status": "UNKNOWN",
+        "failed_obligation": "__list_scan path 0 successor",
+        "reason": "timeout",
+        "profile": "legacy additive list fold"
+      },
+      {
+        "experiment": "upstream",
+        "case": "builtin_loop_udiv32",
+        "reason": "experiment source worker exceeded 60-second process wall limit",
+        "expected_source_classification": "UNKNOWN",
+        "not_an_smt_query_budget_change": true
+      }
+    ],
+    "correction": "Use checked typed same-type store identities and exact successor audits for all list folds; keep generic/other kernels unchanged. Add an explicit 120-second source-worker wall option and 1800-second full-pytest process ceiling; SMT query and functional proof budgets unchanged.",
+    "previous_results_sha256": "c0cceccfeb2c748d50f15089b76bb459617d88854919bf9eb28b8c686d7842a6"
+  },
+  "evidence_sha256": {
+    "arguments.json": "8bb6fd006bef62ae3ae0a94f9aabba8fa8f62187802133011a8ab690fe4d0d90",
+    "arguments.txt": "7446193b747bde45d24a4f6b0f6a252f45684612e758593aeaa4f964f81b7933",
+    "bit_builtins.json": "0d6cf192d78ff6769aab9506d514a3ccf8062b48d621f5e12df1925bfd5aa5cf",
+    "bit_builtins.txt": "bb52f611cd30515dd5654508bbf581ea8cacd9ede6f268fb702dfe7335639405",
+    "builder_cli.json": "96ce0436da704d5450fe1748f3f7269288413b0660c2a19003ce129eb7f4bbcd",
+    "builders.json": "f41ce49e443b5424998568470f334a92ca3cc6bbc7c780fb37fbd6b1d100dc47",
+    "builders.txt": "2d0ce29f13bfbe39ccebd6ef7930049ce70d6de3041c8fdc2a49897190565957",
+    "consumer_cli.json": "717f4c277fd5ffd0914574206b23c875092ece8fa39b297cf89ffb77def1649e",
+    "consumers.json": "105b70f89fc5f0a0b6515ccfd7ec18bc2a80a04cb149c4dc309ea69977072b74",
+    "consumers.txt": "e191a47c16586a8d886ecb966d233b48a72eb0b3cd900557428d59d14ca81282",
+    "division.json": "609c8da75fcf15af90e0b86623d2e83831d754dafd3a00d9f07d40afa428dc81",
+    "division.txt": "6d30aa54d48c5228a340474cc00579e9d76f96fd8d736bb4c270ffdea1f72796",
+    "payload_maps.json": "1740531c1285eafbb7b00aee1d364aa76e42e78531e8200433112f9107008872",
+    "payload_maps.txt": "c0b88af94377f575f421f57e6e0b382a2cc60d7f828c0f7fe8127e8971d60704",
+    "prevalidation_attempt.json": "c93c95da4c5fe4365df80df37f0eb5c0965575af3b40b247ca4a31bed4d6f34b",
+    "pytest.txt": "bf5e70599831b14d4a9fb35893dfcbc0478ca747f1a3136a5c1cfb4dbf4c8dd4",
+    "report.md": "15e66da94efcd00ec69df6f2233f2880f808bc51eee964666090f5c5b050a9a7",
+    "reversal.json": "409d1086c9c48e5d87162283e91aaf072251fade0e9c9380c63c581f8f13cf7b",
+    "reversal.txt": "16cbe1825eeea1d4e83cced20fdb67bf4226dca4e16005a9e4343b92604626c9",
+    "source_identity.json": "a97bdc47df48ef80e1ad175d27bc44f9709faf7f11ab05625654e8bb5c69bdb9",
+    "source_manifest.json": "6d68148b35d4183593c5bc56943d37132f80d28c5c442e78cf77502203f2b35f",
+    "stateful.json": "e5d6496552ce9632594c553c968a3b88f03216efa42f86f5a3eadb703d0d76bc",
+    "stateful.txt": "b17d365abf3e2f0233a03243d7ac6196c815b7772a52f1255452f5cbbdfc3765",
+    "stateful_cli.json": "e1c8c3702e573ea493f58f07a66f230ca26863c999f989e85d9e24a358337e60",
+    "upstream.json": "0df91d047f22f83e1c71d4322c511b519e231377a6af444b543d31e60f666f85",
+    "upstream.txt": "586bce8d2d9eaf15a29e7ef288ebb834dc6fb1d1b0814ee969705b58c9cd28d8",
+    "validation_ci.json": "2dc981f481a5f4efcdc41b1281b250a42bb6b0bb7a7ecd39d7a72b94dc0eda2a"
+  },
+  "validation_ci": {
+    "passed": true,
+    "validation_origin": "GitHub Actions fallback after primary execution environment loss",
+    "run_url": "https://github.com/Z769018860/LLMloop/actions/runs/41314722864",
+    "run_id": "41314722864",
+    "run_attempt": "1",
+    "ci_runs_used": 1,
+    "validation_commit": "00dbabb2ccaf35119c795a787a678e564a87cd91",
+    "validation_tree": "c942dd71b06aa8d4ab677e100dd110f33b5b70d3",
+    "application_code_checkpoint": "888a6f7c99d4972d3ba8191ae369459c84061b13",
+    "application_code_tree": "c4d8a5e7cdf7e0a2fbe5af6a06b44e4e79f11c81",
+    "only_isolated_validation_workflow_changed": true,
+    "general_kernels_and_protected_regressions_unchanged": true,
+    "list_fold_same_type_identity_retains_safety": true,
+    "source_worker_wall_seconds": 120,
+    "full_pytest_wall_seconds": 1800,
+    "smt_query_budget_ms": 5000,
+    "division_functional_total_budget_ms": 30000,
+    "earlier_corrected_local_attempt": {
+      "tested_commit": "768292b62b0e09c153cac9b7e749cb690c72cd86",
+      "tested_tree": "c4d8a5e7cdf7e0a2fbe5af6a06b44e4e79f11c81",
+      "completed": false,
+      "last_observed_full_pytest_progress_percent": 31,
+      "failure_observed": false,
+      "reason": "exec-server transport disconnected; environment marked unavailable",
+      "targeted_tests_passed": 245,
+      "legacy_consumer_native_output_matches": 5400,
+      "legacy_consumer_expected_ubsan_failures": 20,
+      "upstream_standalone_passed": true,
+      "no_complete_local_pass_claimed": true
+    },
+    "first_frozen_attempt_record": "prevalidation_attempt.json",
+    "frozen_paths_verified": 653,
+    "evidence_files_added": 28
+  }
+}
