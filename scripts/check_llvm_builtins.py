@@ -70,11 +70,11 @@ def baseline_case(name,database):
             'request':request,'elapsed_seconds':elapsed,'report':compact_report(report)}
 
 
-def isolated_analyze_case(case,database,source_file=None):
+def isolated_analyze_case(case,database,source_file=None,worker_timeout=60):
     """One fresh process/query context per source analysis; never retry."""
     command=[sys.executable,str(Path(__file__).resolve()),'--analyze-case',json.dumps(case),'--database',str(database)]
     if source_file is not None:command+=['--analyze-source',str(source_file)]
-    run=subprocess.run(command,capture_output=True,text=True,timeout=60)
+    run=subprocess.run(command,capture_output=True,text=True,timeout=worker_timeout)
     if run.returncode:raise AssertionError(('isolated source analysis failed',run.stderr))
     return json.loads(run.stdout)
 
@@ -82,7 +82,8 @@ def isolated_analyze_case(case,database,source_file=None):
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--output',type=Path);parser.add_argument('--samples',type=int,default=256)
     parser.add_argument('--compare-baseline',action='store_true');parser.add_argument('--baseline-case',choices=['clzsi2_positive','ctzsi2_positive'])
-    parser.add_argument('--database',type=Path);parser.add_argument('--functional-baseline',action='store_true');parser.add_argument('--analyze-case');parser.add_argument('--analyze-source',type=Path);args=parser.parse_args()
+    parser.add_argument('--database',type=Path);parser.add_argument('--functional-baseline',action='store_true');parser.add_argument('--analyze-case');parser.add_argument('--analyze-source',type=Path);parser.add_argument('--source-worker-timeout',type=int,default=60,help='Per-source process wall ceiling; individual SMT budgets are unchanged');args=parser.parse_args()
+    if not 1<=args.source_worker_timeout<=300:parser.error('source-worker-timeout must be 1..300 seconds')
     provenance=verify_vendor()
     if args.analyze_case:
         request,report,elapsed=analyze_case(json.loads(args.analyze_case),args.database,args.analyze_source)
@@ -102,7 +103,7 @@ def main():
         path=Path(directory);database=compilation_database(path)
         for case in cases():
             inputs=sample_inputs(case,args.samples);expected=[independent_value(case,row) for row in inputs]
-            request,report,elapsed=isolated_analyze_case(case,database)
+            request,report,elapsed=isolated_analyze_case(case,database,worker_timeout=args.source_worker_timeout)
             if report['status']!=case['expected_safety']:raise AssertionError((case['name'],report['status'],report.get('reason')))
             proved=report['status'].startswith('PROVED_DEFINED_')
             if not proved and any(report.get(k,False) for k in ('c_overflow_verified','memory_safety_verified','termination_proved')):raise AssertionError(report)
@@ -144,7 +145,7 @@ def main():
         # A defined algorithm can be wrong. Safety is not its functional spec.
         case=next(c for c in cases() if c['name']=='popcount32')
         wrong=path/'wrong_popcount.c';wrong.write_text((VENDOR/case['file']).read_text().replace('0x55555555','0x55555554'))
-        request,report,elapsed=isolated_analyze_case(case,database,wrong)
+        request,report,elapsed=isolated_analyze_case(case,database,wrong,worker_timeout=args.source_worker_timeout)
         if report['status']!='PROVED_DEFINED_CLANG_SCALAR_CFG':raise AssertionError(report)
         query,unused=functional_proof(case,report['normalization']['source'])
         if query['status']!='REFUTED_FUNCTIONAL_QF_BV':raise AssertionError(query)
@@ -158,7 +159,7 @@ def main():
                          'analysis':compact_report(report),'functional':query,'independent_expected':expected,'native':native})
         case=next(c for c in cases() if c['name']=='popcount64')
         wrong64=path/'wrong_popcount64.c';wrong64.write_text((VENDOR/case['file']).read_text().replace('0x5555555555555555','0x5555555555555554'))
-        request,report,unused=isolated_analyze_case(case,database,wrong64)
+        request,report,unused=isolated_analyze_case(case,database,wrong64,worker_timeout=args.source_worker_timeout)
         if report['status']!='PROVED_DEFINED_CLANG_SCALAR_CFG':raise AssertionError(report)
         query,unused=functional_proof(case,report['normalization']['source'])
         if query['status']!='REFUTED_FUNCTIONAL_QF_BV':raise AssertionError(query)
@@ -177,7 +178,7 @@ def main():
         original_normalized=original_row['analysis']['normalization']['source']
         wrong_view=path/'wrong_union_view.c';wrong_view.write_text(original_normalized.replace(' >> 32',' >> 0'))
         if wrong_view.read_text()==original_normalized:raise AssertionError('Union offset mutation did not change the source')
-        request,report,unused=isolated_analyze_case(case,database,wrong_view)
+        request,report,unused=isolated_analyze_case(case,database,wrong_view,worker_timeout=args.source_worker_timeout)
         if report['status']!='PROVED_DEFINED_CLANG_CFG_CALLS':raise AssertionError(report)
         query,unused=functional_proof(case,report['normalization']['source'])
         if query['status']!='REFUTED_FUNCTIONAL_QF_BV':raise AssertionError(query)
@@ -191,7 +192,7 @@ def main():
                          'source_sha256':hashlib.sha256(wrong_view.read_bytes()).hexdigest(),'analysis':compact_report(report),
                          'functional':query,'independent_expected':expected,'native':native})
         uninitialized=path/'uninitialized_union.c';uninitialized.write_text((VENDOR/case['file']).read_text().replace('x.all = a;',''))
-        request,report,unused=isolated_analyze_case(case,database,uninitialized)
+        request,report,unused=isolated_analyze_case(case,database,uninitialized,worker_timeout=args.source_worker_timeout)
         if report['status']!='UNKNOWN' or report.get('c_overflow_verified') or not report.get('normalization',{}).get('union_views'):raise AssertionError(report)
         controls.append({'control':'uninitialized_union_read','request':request,'source':uninitialized.read_text(),
                          'source_sha256':hashlib.sha256(uninitialized.read_bytes()).hexdigest(),'analysis':compact_report(report),
@@ -200,7 +201,7 @@ def main():
         case=copy.deepcopy(next(c for c in cases() if c['name']=='bswap32'))
         case.update(name='signed_shift_mutation',types={'u':(32,True)},bounds={'u':[0,255]})
         unsafe=path/'unsafe_bswap.c';unsafe.write_text((VENDOR/case['file']).read_text().replace('uint32_t u','int32_t u'))
-        request,report,elapsed=isolated_analyze_case(case,database,unsafe)
+        request,report,elapsed=isolated_analyze_case(case,database,unsafe,worker_timeout=args.source_worker_timeout)
         if report['status']!='UNKNOWN' or report.get('c_overflow_verified'):raise AssertionError(report)
         normalized=path/'unsafe_bswap_normalized.c';normalized.write_text(report['normalization']['source']);native=[]
         for opt in ('-O0','-O2'):
@@ -213,7 +214,7 @@ def main():
         # The abort is an intended library effect, not an undefined operation.
         for case in [c for c in cases() if c['oracle'] in ('abs','negate')]:
             wide=copy.deepcopy(case);wide['bounds']={'a':[-2147483648,2147483647]}
-            wide_request,wide_report,unused=isolated_analyze_case(wide,database)
+            wide_request,wide_report,unused=isolated_analyze_case(wide,database,worker_timeout=args.source_worker_timeout)
             if wide_report['status']!='UNKNOWN' or wide_report.get('analysis_limit')!='external_call_frontier':raise AssertionError(wide_report)
             if int(wide_report.get('counterexample',{}).get('a',0))!=-2147483648:raise AssertionError(wide_report)
             native=[]
@@ -233,7 +234,7 @@ def main():
                 if run.returncode:raise AssertionError(run.stderr)
                 old=json.loads(run.stdout)
                 case=copy.deepcopy(next(c for c in cases() if c['name']==name));case['bounds']={'a':[-2147483648,2147483647]}
-                request,report,elapsed=isolated_analyze_case(case,database)
+                request,report,elapsed=isolated_analyze_case(case,database,worker_timeout=args.source_worker_timeout)
                 if report['status']!='PROVED_DEFINED_CLANG_SCALAR_CFG':raise AssertionError(report)
                 baseline.append({'case':name,'baseline':old,'current':{'request':request,'elapsed_seconds':elapsed,'report':compact_report(report)},
                                  'solver_timeout_unchanged_ms':5000})
@@ -247,7 +248,7 @@ def main():
             'case_optimization_correspondences':correspondences,'native_comparisons':native_comparisons,'model_comparisons':model_comparisons,
             'expected_ubsan_failures':4,'intended_abort_runs':4,'wrong_algorithm_native_refutations':6,
             'baseline':baseline,'functional_baseline':functional_baseline,'functional_methods':{name:sum(r['functional'] is not None and r['functional']['status']==name for r in rows) for name in ('PROVED_FUNCTIONAL_QF_BV','PROVED_FUNCTIONAL_BV_CUTS')},'cases':rows,'controls':controls,'compiler':subprocess.check_output(['cc','--version'],text=True).splitlines()[0],
-            'source_analysis_process_isolation':True,'source_analysis_retries':0,'scope':'pinned compiler-rt integer pilot; unsupported rows retained; native LP64; not representative whole-C/library coverage'}
+            'source_worker_timeout_seconds':args.source_worker_timeout,'source_analysis_process_isolation':True,'source_analysis_retries':0,'scope':'pinned compiler-rt integer pilot; unsupported rows retained; native LP64; not representative whole-C/library coverage'}
     if args.output:
         args.output.parent.mkdir(parents=True,exist_ok=True);args.output.write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps({k:v for k,v in result.items() if k not in ('cases','controls','baseline','functional_baseline')},indent=2),flush=True)

@@ -233,6 +233,26 @@ def test_multiple_state_names_cannot_capture_owned_head_or_record_members():
     assert '->value' in r['certificate']['composition']['composed_source']
 
 
+def test_direct_additive_state_named_like_payload_is_not_a_scalar_read_in_member_position():
+    code=program('long long value=0;','value+=q->value;','value',local=True)
+    r=ListHeapProgram(code,function='entry',parameter_bounds={'n':[0,100]}).report({'n':100,'delta':2},17)
+    assert r['status']=='PROVED_DEFINED_TYPED_C_LIST_HEAP',r
+    assert r['evaluation']['value']==136
+    contract=r['certificate']['fold_expression_contract']
+    assert contract['legacy_zero_additive_pattern'] and contract['pure_current_payload_and_immutable_scalars_only']
+
+
+def test_legacy_map_reverse_weighted_consumer_uses_checked_algebra_without_timeout_retry():
+    from scripts.check_list_consumers_native import fixtures
+    case=fixtures()[-1]
+    request={'source':case['source'],'function':'entry','frontend':'clang_proof','proof':{'backend':'list_calls','parameter_bounds':{'n':[-3,1000000],'delta':[-3,3]},'loop_summaries':case['summary'],'inputs':{'n':1000000,'delta':2},'allocation_count':17}}
+    r=analyze_request(request)
+    assert r['status']=='PROVED_DEFINED_CLANG_LIST_CALLS',r
+    assert r['evaluation']['value']==1043
+    audits=[o['certificate'] for o in r['certificate']['fold_proof']['certificate']['obligations'] if o.get('certificate',{}).get('method')=='exact integer-valued polynomial successor audit']
+    assert audits and all(replay_integer_polynomial_audit(a) for a in audits)
+
+
 @pytest.mark.parametrize('target,size',[('x86_64-unknown-linux-gnu',16),('i386-unknown-linux-gnu',8),('x86_64-w64-windows-gnu',16)])
 def test_clang_multistate_consumer_preserves_layout_and_source_order(target,size):
     code='typedef __SIZE_TYPE__ Size;void*calloc(Size,Size);void free(void*);'+program()

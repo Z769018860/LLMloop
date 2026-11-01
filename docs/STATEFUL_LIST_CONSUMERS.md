@@ -50,8 +50,8 @@ branching state recurrences may remain `UNKNOWN`.
 
 ## Scoped proof representations and audits
 
-The original zero-initialized single additive fold keeps its previous integer
-profile. New stateful folds use a separate profile in which assignment to the
+All list folds, including the original zero-initialized additive fold, use a
+scoped typed profile in which assignment to the
 same C integer type preserves an already represented typed value and its entire
 safety guard. Parameter and candidate ranges and every source arithmetic guard
 are checked independently; unsafe intermediate arithmetic is never repaired.
@@ -112,4 +112,10 @@ positive in an explicit two-node domain. Million-node parity feedback and couple
 prefix histories are separate positive cases; general exponential discovery is
 not claimed. Multiple owners, arbitrary graph updates, recursive heap induction,
 external contracts, wider C/LLVM semantics and broader libraries remain open.
-No KLEE. See [coverage](C_COVERAGE.md) and [v0.46 results](../experiments/v046/report.md).
+The experiment driver can select a source-worker process wall ceiling explicitly;
+the default remains 60 seconds, while this release selects 120 seconds and an
+1800-second full-pytest process ceiling. These process limits are separate from
+unchanged SMT query and total functional proof budgets. The first unsuccessful
+frozen validation is retained in the final attempt record; no merge follows a
+partial pass or a timeout. No KLEE. See [coverage](C_COVERAGE.md) and
+[v0.46 results](../experiments/v046/report.md).

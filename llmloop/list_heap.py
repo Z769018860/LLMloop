@@ -678,6 +678,7 @@ class ListHeapProgram:
         check_fold_value(returned.expr, visible, self.model)
         self.fold_return = copy.deepcopy(returned.expr)
         def reads_state(node):
+            if isinstance(node,c_ast.StructRef):return reads_state(node.name)
             return isinstance(node,c_ast.ID) and node.name in state_names or any(reads_state(child) for _,child in node.children())
         self.fold_contract = {'step_expression':self.generator.visit(updates[0].rvalue) if len(updates)==1 else None,
             'state_initializers':[self.generator.visit(node) for node in self.accumulators],
@@ -695,7 +696,8 @@ class ListHeapProgram:
         self.legacy_additive_fold = (len(self.accumulators)==1 and _lit(self.accumulators[0].init)==0
             and len(updates)==1 and updates[0].op=='+='
             and self.fold_contract['pure_current_payload_and_immutable_scalars_only'])
-        self.fold_contract['typed_same_type_store_identity'] = not self.legacy_additive_fold
+        self.fold_contract['legacy_zero_additive_pattern'] = self.legacy_additive_fold
+        self.fold_contract['typed_same_type_store_identity'] = True
 
     def make_fold(self, max_paths, summaries):
         self.length_name, scan, temporary = self.fresh('length'), self.fresh('scan'), self.fresh('loaded')
@@ -729,8 +731,7 @@ class ListHeapProgram:
         declarations = ''.join(self.generator.visit(node)+';' for node in self.accumulators)
         steps = ''.join(self.generator.visit(node)+';' for node in updates)
         self.fold_source = self.return_type.name+' '+name+'('+self.parameter_source+', int '+self.length_name+'){'+declarations+'for(int '+scan+'=0;'+scan+'<'+self.length_name+';'+scan+'++){'+self.payload_type_source+' '+temporary+'='+expression+';'+steps+'}return '+self.generator.visit(self.fold_return)+';}'
-        trajectory_engine = _ListFoldTrajectory if self.legacy_additive_fold else _StatefulListTrajectory
-        self.fold_engine = trajectory_engine(self.fold_source, summaries, function=name,
+        self.fold_engine = _StatefulListTrajectory(self.fold_source, summaries, function=name,
             parameter_bounds={**self.bounds,self.length_name:[0,self.max_length]}, abi=self.abi,
             char_signed=self.char_signed, max_paths=max_paths)
 
