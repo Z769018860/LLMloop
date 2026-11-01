@@ -238,3 +238,15 @@ def test_unused_conflicting_tags_do_not_enter_the_selected_component(tmp_path,cl
     main=ALLOC+NODE+'struct Unused{int value;};'+ENTRY
     helper=ALLOC+NODE+'struct Unused{unsigned int value;};'+MAKE
     c=proved(check(tmp_path,clang,main,helper));assert set(c['records'])=={'Node'}
+
+
+@pytest.mark.parametrize('unit',[0,1])
+def test_unused_function_local_record_cannot_complete_file_scope_interface(tmp_path,clang,unit):
+    opaque='struct Node;int unused(void){struct Node{int value;};return 0;}'
+    if unit==0:
+        main=opaque+'struct Node *make(int);int entry(int n){return make(n)==0;}'
+        helper='struct Node{int value;};struct Node *make(int n){return 0;}'
+    else:
+        main='struct Node{int value;};struct Node *make(int);int entry(int n){return make(n)==0;}'
+        helper=opaque+'struct Node *make(int n){return 0;}'
+    unknown(check(tmp_path,clang,main,helper),'file scope')

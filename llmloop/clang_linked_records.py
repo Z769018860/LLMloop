@@ -16,6 +16,12 @@ class LinkedRecordTypes:
     def __init__(self, units, canonical_type):
         self.units = units
         self.canonical_type = canonical_type
+        from .clang_proof import nodes
+        self.function_scope_records = []
+        for unit in units:
+            functions = [f['ast'] for f in unit['functions']] + unit.get('external_function_declarations', [])
+            self.function_scope_records.append({n.get('id') for function in functions for n in nodes(function)
+                                               if n.get('kind') == 'RecordDecl' and n.get('completeDefinition')})
         self.active = set()
         self.complete = set()
         self.schemas = {}
@@ -37,6 +43,8 @@ class LinkedRecordTypes:
         if len(definitions) != 1 or definitions[0].get('tagUsed') != 'struct':
             raise SMTGraphError('Linked records require one complete named struct definition per used unit: ' + tag)
         record = definitions[0]
+        if record['id'] in self.function_scope_records[unit]:
+            raise SMTGraphError('Linked record definitions must have file scope: ' + tag)
         fields = record.get('inner', [])
         if not 1 <= len(fields) <= 8:
             raise SMTGraphError('Linked records require one to eight unqualified named scalar/pointer fields')
@@ -72,7 +80,7 @@ class LinkedRecordTypes:
             prior = self.schemas[tag] = {'members': members, 'compiler_layout': profile, 'definitions': []}
             if len(self.schemas) > 8:
                 raise SMTGraphError('Linked record graph budget is eight tags')
-        prior['definitions'].append({'unit': unit, 'record_id': record['id'],
+        prior['definitions'].append({'unit': unit, 'record_id': record['id'], 'definition_scope': 'file',
                                     'ast_sha256': hashlib.sha256(json.dumps(record, sort_keys=True).encode()).hexdigest()})
         self.unit_tags.setdefault(unit, set()).add(tag)
         self.active.remove(key)

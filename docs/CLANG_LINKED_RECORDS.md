@@ -24,7 +24,8 @@ the C files under the existing original-parameter-declaration restriction.
 ## Exact compatibility contract
 
 A shared spelling or `sizeof` is insufficient. Every used unit must supply one
-complete definition for each used named tag. The bridge walks the complete
+complete file-scope definition for each used named tag. A same-tag definition
+inside an unused function cannot complete an opaque file-scope interface. The bridge walks the complete
 member-pointer graph, including self references and explicit mutually forward-
 declared tags. Each same-tag definition must agree on ordered field names and
 canonical C field types. Integer signedness/rank, plain char versus signed char,
