@@ -15,6 +15,12 @@ declarator checks. Adjusted arrays, static array lengths, VLA bounds/entry
 effects and unsupported qualifiers/attributes remain UNKNOWN. Named records
 still require compatible ordered fields and each unit's compiler/model layout.
 
+Parameter attributes are checked separately from source ranges: Clang can end
+a parameter's text range before a trailing `align_value(32)` attribute. Selected
+functions, reachable redeclarations and modeled allocator declarations reject
+such unmodeled entry promises in both default and snapshot modes. A successful
+literal text/type match alone is insufficient.
+
 For a header containing `int api(int *);`, a provider containing
 `int api(int *p){return p[0]+1;}`, and an entry returning `api(a)` for a local
 `int a[1]={n};`, use:

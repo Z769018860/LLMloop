@@ -83,7 +83,7 @@ class LinkedClangProject:
             return {**failure,'reason':str(exc),'translation_units':self.units}
 
     def normalize(self,function):
-        from .clang_proof import nodes
+        from .clang_proof import nodes, check_parameter_attributes
         from .clang_memory_proof import MemoryNormalizer,BUILTINS
         from .clang_bit_builtins import BIT_BUILTINS,BitBuiltinModels
         # Keep every per-TU declaration/type context separate, including IDs
@@ -180,6 +180,7 @@ class LinkedClangProject:
             if node.get('inline') and roots[index].get(node['id']) not in internal[index]:
                 raise SMTGraphError('External inline linkage is outside the closed linked component')
             params=[p for p in node.get('inner',[]) if p.get('kind')=='ParmVarDecl']
+            check_parameter_attributes(params)
             canonical=type_signature(node.get('type',{}),index)
             if canonical[1]!=tuple(scalar_type(p['type'],index) for p in params):
                 raise SMTGraphError('Linked function type and parameter declaration metadata differ')

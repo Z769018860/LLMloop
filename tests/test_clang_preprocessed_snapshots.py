@@ -214,3 +214,42 @@ def test_preprocessor_failure_is_unknown_without_proof_flags(clang):
     r=ClangAdapter(source='#error deliberate\nint entry(void){return 0;}',options={'executable':clang,'preprocess':True}).report()
     unknown(r)
     assert r['commands'][-1]['stage']=='preprocess' and r['commands'][-1]['exit_code']!=0
+
+
+@pytest.mark.parametrize('preprocess',[False,True])
+@pytest.mark.parametrize('linked',[False,True])
+@pytest.mark.parametrize('where',['prototype','definition','both'])
+def test_trailing_parameter_attributes_are_checked_in_every_redeclaration(tmp_path,clang,preprocess,linked,where):
+    attr=' __attribute__((align_value(32)))'
+    prototype='int api(int *p'+(attr if where in ('prototype','both') else '')+');'
+    definition='int api(int *p'+(attr if where in ('definition','both') else '')+'){return p[0];}'
+    entry='int entry(int n){int a[1]={n};return api(a);}'
+    options={'executable':clang,'preprocess':preprocess}
+    source=prototype+entry
+    if linked:
+        provider=tmp_path/'provider.c';provider.write_text(definition)
+        options['linked_sources']=[str(provider)]
+    else:source=prototype+definition+entry
+    r=analyze_request({'source':source,'frontend':'clang_proof','function':'entry','clang':options,
+        'proof':{'backend':'calls','parameter_bounds':{'n':[0,2]}}})
+    unknown(r)
+    assert 'parameter attributes' in r['reason']
+
+
+@pytest.mark.parametrize('preprocess',[False,True])
+def test_scalar_entry_parameter_attributes_are_explicitly_refused(clang,preprocess):
+    r=analyze_request({'source':'int entry(int n __attribute__((unused))){return n;}',
+        'frontend':'clang_proof','function':'entry','clang':{'executable':clang,'preprocess':preprocess},
+        'proof':{'backend':'cfg','parameter_bounds':{'n':[0,2]}}})
+    unknown(r)
+    assert 'parameter attributes' in r['reason']
+
+
+@pytest.mark.parametrize('preprocess',[False,True])
+def test_allocator_redeclarations_cannot_hide_parameter_alignment_promises(clang,preprocess):
+    source='void *calloc(__SIZE_TYPE__,__SIZE_TYPE__);void free(void *p __attribute__((align_value(32))));void free(void *);int entry(int n){int *p=calloc(1,sizeof(int));if(p)free(p);return n;}'
+    r=analyze_request({'source':source,'frontend':'clang_proof','function':'entry',
+        'clang':{'executable':clang,'preprocess':preprocess},
+        'proof':{'backend':'calls','parameter_bounds':{'n':[0,2]}}})
+    unknown(r)
+    assert 'parameter attributes' in r['reason']

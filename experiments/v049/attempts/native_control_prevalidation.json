@@ -1,0 +1,10 @@
+{
+  "status": "PREVALIDATION_CONTROL_CORRECTED",
+  "observed_failure": "AssertionError: ('alignment sanitizer trap missing', '-O0', 0)",
+  "provider_used_at_failure": "#include \"api.h\"\nint api(int *p){return p[0];}\n",
+  "header_used_at_failure": "int api(int *p __attribute__((align_value(32))));\n",
+  "correction": "Put align_value on the provider definition as well as the header. Retain explicit _Alignas(32) storage plus one int in the native harness. The corrected control traps at O0/O2.",
+  "scope": "Local preliminary native-oracle calibration before the guarded source freeze; not a solver retry or a proof acceptance.",
+  "complete_failed_temporary_outputs_retained": false,
+  "missing_raw_outputs_reconstructed": false
+}

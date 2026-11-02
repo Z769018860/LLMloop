@@ -21,6 +21,14 @@ def nodes(root):
         n=pending.pop();yield n;pending.extend(reversed(n.get('inner',[])))
 
 
+def check_parameter_attributes(parameters):
+    # Clang's ParmVarDecl range may end at the name, before trailing
+    # attributes. Literal spelling/type checks alone cannot see promises such
+    # as align_value; their entry obligations are not in the typed model.
+    if any(child.get('kind')!='FullComment' for param in parameters for child in param.get('inner',[])):
+        raise SMTGraphError('Clang parameter attributes/entry expressions unsupported')
+
+
 class ScalarNormalizer:
     def __init__(self,frontend):
         if len(frontend['functions'])!=1 or 'ast' not in frontend['functions'][0]:raise SMTGraphError('Clang proof requires one selected function and include_ast=true')
@@ -147,6 +155,7 @@ class ScalarNormalizer:
         if '...' in signature:raise SMTGraphError('Variadic Clang proof entry unsupported')
         result=self.type(signature.split('(',1)[0].strip())
         params=[n for n in children if n.get('kind')=='ParmVarDecl']
+        check_parameter_attributes(params)
         declarations=', '.join(self.type(n['type'])+' '+self.names[n['id']] for n in params) or 'void'
         return result+' '+self.root['name']+'('+declarations+') '+self.stmt(bodies[0])+'\n'
 

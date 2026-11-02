@@ -958,3 +958,7 @@ cause refusal. Defaults, finite memory/call limits and proof budgets are
 unchanged. See [the contract](docs/CLANG_PREPROCESSED_SNAPSHOTS.md) and
 [validation evidence](experiments/v049/report.md). General C/LLVM and arbitrary
 heap/ownership support remain open.
+
+The same release fixes ignored trailing parameter attributes: unmodeled
+alignment promises now return UNKNOWN in both ingestion modes, including
+reachable redeclaration chains and modeled allocator parameters.

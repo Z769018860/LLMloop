@@ -1,0 +1,33 @@
+{
+  "source": "int api(int *p __attribute__((align_value(32)))){return p[0];}\nint entry(int n){int a[1]={n};return api(a);}\nint main(void){return entry(1);}\n",
+  "rows": [
+    {
+      "command": [
+        "/tmp/llmloop-v049-bin/clang",
+        "-O0",
+        "-fsanitize=undefined",
+        "-fsanitize-trap=all",
+        "/tmp/v049-alignment-native/bad.c",
+        "-o",
+        "/tmp/v049-alignment-native/bad"
+      ],
+      "exit_code": -4,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/tmp/llmloop-v049-bin/clang",
+        "-O2",
+        "-fsanitize=undefined",
+        "-fsanitize-trap=all",
+        "/tmp/v049-alignment-native/bad.c",
+        "-o",
+        "/tmp/v049-alignment-native/bad"
+      ],
+      "exit_code": -4,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

@@ -5,7 +5,7 @@ typed kernels retain their finite memory, alias, lifetime and call budgets.
 """
 import re
 
-from .clang_proof import nodes
+from .clang_proof import nodes, check_parameter_attributes
 from .clang_union_views import UnionViewNormalizer
 from .smt_spath import SMTGraphError
 
@@ -76,6 +76,9 @@ class MemoryNormalizer(UnionViewNormalizer):
         allowed = {'ParmVarDecl', 'BuiltinAttr', 'AllocSizeAttr', 'RestrictAttr', 'NoThrowAttr', 'WarnUnusedResultAttr', 'ReturnsNonNullAttr'}
         if any(child.get('kind') not in allowed for child in declaration.get('inner', [])):
             raise SMTGraphError('Unsupported attributes/body on modeled allocator declaration')
+        for original in self.builtins.values():
+            if original.get('name')==ref.get('name'):
+                check_parameter_attributes([n for n in original.get('inner',[]) if n.get('kind')=='ParmVarDecl'])
         triple = self.frontend['target']['triple']
         size_type = 'unsigned long long' if triple.startswith('x86_64-') and '-windows-' in triple else 'unsigned long' if triple.startswith('x86_64-') else 'unsigned int'
         signature = ref['type'].get('desugaredQualType', ref['type']['qualType'])
@@ -313,6 +316,7 @@ class MemoryNormalizer(UnionViewNormalizer):
         if not declarations_to_check:
             raise SMTGraphError('Clang original parameter declaration metadata required')
         for declaration in declarations_to_check:
+            check_parameter_attributes(declaration['parameters'])
             spellings = declaration['parameter_spellings']
             for param in declaration['parameters']:
                 resolved = self.memory_type(param['type'])

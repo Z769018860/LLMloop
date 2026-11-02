@@ -1,0 +1,3 @@
+# Superseded snapshot checkpoint
+
+The original 2260-test run completed and its raw results remain unchanged. It is not release acceptance: ignored_parameter_attribute_definition.json records an incorrectly certified trailing alignment attribute on the provider definition, whose LLVM IR includes alignment-assumption sanitizer checks. The earlier prototype-only probe is retained separately; a prototype attribute need not transfer to the definition. alignment_native_before_fix.json records the directly attributed native definition trapping at O0/O2. The guarded source is validated afresh without increasing budgets.
