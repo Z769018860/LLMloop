@@ -961,4 +961,5 @@ heap/ownership support remain open.
 
 The same release fixes ignored trailing parameter attributes: unmodeled
 alignment promises now return UNKNOWN in both ingestion modes, including
-reachable redeclaration chains and modeled allocator parameters.
+reachable redeclaration chains, modeled allocator parameters and used typedef
+chains whose attributes Clang's desugared spelling can hide.

@@ -19,7 +19,7 @@ from llmloop.clang_adapter import compiler_path
 
 
 ROOT=Path(__file__).resolve().parents[1]
-EXPECTED_TESTS=2276
+EXPECTED_TESTS=2286
 
 
 def main():
@@ -60,7 +60,7 @@ def main():
     snapshots,records=data('snapshots'),data('linked_records')
     checks={'full_pytest':commands['full_pytest']['exit_code']==0 and full['passed']==EXPECTED_TESTS and skipped==0,
         'snapshot_native':commands['snapshots']['exit_code']==0 and snapshots.get('passed') is True
-            and all(snapshots.get(k)==v for k,v in {'case_count':3,'native_output_matches':408,'model_matches':136,'expected_ubsan_failures':12,'parameter_attribute_refusals':1,'expected_alignment_traps':2}.items()),
+            and all(snapshots.get(k)==v for k,v in {'case_count':3,'native_output_matches':408,'model_matches':136,'expected_ubsan_failures':12,'parameter_attribute_refusals':1,'attributed_typedef_refusals':1,'expected_alignment_traps':4}.items()),
         'retained_record_native':commands['linked_records']['exit_code']==0 and records.get('passed') is True
             and all(records.get(k)==v for k,v in {'case_count':8,'native_output_matches':800,'model_matches':400,'native_layout_matches':36,'expected_sanitizer_failures':16,'record_refusals':6}.items()),
         'frozen_source_unchanged':all(hashlib.sha256(Path(p).read_bytes()).hexdigest()==sha for p,sha in hashes.items()),
@@ -73,7 +73,7 @@ def main():
     ci_runs=int(os.environ.get('GITHUB_RUN_ATTEMPT','1')) if github_actions else 0
     result={'passed':all(checks.values()),'checks':checks,'tested_commit':tested,'tested_tree':tree,
         'published_source_commit':published,'source_tree_equal':True,'environment':environment,
-        'full_pytest':full,'new_tests':51,'existing_tests_replaced':0,'commands':commands,
+        'full_pytest':full,'new_tests':61,'existing_tests_replaced':0,'commands':commands,
         'source_path_count':len(paths),'historical_evidence_path_count':len(prior),
         'github_actions_used':github_actions,'ci_runs_used':ci_runs,'klee_used':False,
         'complete_c_support':False,'proof_query_budget_increased':False}
@@ -89,7 +89,7 @@ checked spellings. Default ingestion, finite heap/call budgets and proof-query
 limits are unchanged. Arrays/VLAs and unsupported source-location builtins are
 refused. This is a trusted compiler bridge, not general C or LLVM equivalence.
 
-Full regression: **{full['passed']} passed**, **{skipped} skipped**; 51 tests
+Full regression: **{full['passed']} passed**, **{skipped} skipped**; 61 tests
 added, no old tests replaced. New cases cover three record ABIs, headers/macros,
 database selection, unsafe bodies, unchanged defaults and snapshot integrity.
 
@@ -97,13 +97,16 @@ Parameter attributes are checked independently of text ranges in selected
 functions, reachable redeclaration chains and allocator declarations. Trailing
 `align_value` promises could previously escape the raw declarator check; these
 unmodeled obligations now return UNKNOWN in both ingestion modes.
+Attributes on used typedefs are also retained and checked through transitive
+alias chains before Clang's desugared spelling can erase them. Unused attributed
+typedefs do not poison unrelated selected components.
 
 New native experiment: {snapshots.get('native_output_matches')} output matches,
 {snapshots.get('model_matches')} independent model matches and
 {snapshots.get('expected_ubsan_failures')} required UBSan failures across original
 separate units, expanded text and normalized C. Repeated normalized executions
 are checked but counted only once. Native samples supplement source obligations.
-An additional refused alignment interface has
+Two additional refused direct/typedef alignment interfaces have
 {snapshots.get('expected_alignment_traps')} Clang sanitizer traps at O0/O2 with
 an explicitly misaligned argument. This control has no normalized execution
 and is not counted as a positive correspondence.
@@ -118,7 +121,11 @@ the prior matrix. All {len(prior)} historical evidence paths are hash checked.
 The first snapshot checkpoint passed 2260 existing/new tests but is superseded
 by the parameter-attribute counterexample, retained under
 `attempts/e365_before_parameter_attribute_guard/`; it is not release acceptance.
-The guarded source is validated afresh. This release does not rerun
+The intermediate direct-attribute checkpoint is also superseded by the
+hidden-typedef counterexample retained under
+`attempts/5007_before_typedef_attribute_guard/`. All three full runs are local.
+Only the final source discharges both added refusal controls. The final guarded
+source is validated afresh. We do not rerun
 the older complete LLVM/bit-builtin experiment matrix. CI runs: {ci_runs}; no
 KLEE or larger query budget. General heap ownership, external contracts, unrestricted
 recursion/side effects and complete C/LLVM support remain open.

@@ -33,16 +33,20 @@ def observe(path,source,snapshots,normalized,entry,values,opt,heap=False,negativ
     return {**first,'preprocessed':second['original']},commands+more
 
 
-def alignment_control(path):
+def alignment_control(path,typedef=False):
     path.mkdir()
     header='int api(int *p __attribute__((align_value(32))));\n'
     provider='#include "api.h"\nint api(int *p __attribute__((align_value(32)))){return p[0];}\n'
+    if typedef:
+        header='typedef int *Ptr __attribute__((align_value(32)));int api(Ptr);\n'
+        provider='#include "api.h"\nint api(Ptr p){return p[0];}\n'
     entry='#include "api.h"\nint entry(int n){int a[1]={n};return api(a);}\n'
     (path/'api.h').write_text(header);(path/'provider.c').write_text(provider)
     report=analyze_request({'source':entry,'frontend':'clang_proof','function':'entry',
         'clang':{'preprocess':True,'args':['-I'+str(path)],'linked_sources':[str(path/'provider.c')]},
         'proof':{'backend':'calls','parameter_bounds':{'n':[0,2]}}})
-    if report['status']!='UNKNOWN' or 'parameter attributes' not in report.get('reason','') or any(report.get(k) for k in ('c_overflow_verified','memory_safety_verified','termination_proved')):
+    reason='Attributed Clang typedefs' if typedef else 'parameter attributes'
+    if report['status']!='UNKNOWN' or reason not in report.get('reason','') or any(report.get(k) for k in ('c_overflow_verified','memory_safety_verified','termination_proved')):
         raise AssertionError('Unmodeled parameter alignment promise accepted')
     # Explicit alignment makes data+1 violate the promise independently of
     # incidental stack placement. This is a refused interface, not a proof.
@@ -106,17 +110,18 @@ def main():
                 'preprocessed_units':[u['preprocessing'] for u in units],
                 'original_sha256':[hashlib.sha256(s.encode()).hexdigest() for s in source],
                 'proof':compact(r),'observations':observations})
-        alignment=alignment_control(root/'alignment_control')
+        alignment=[alignment_control(root/'alignment_control'),alignment_control(root/'typedef_alignment_control',typedef=True)]
     result={'passed':True,'case_count':3,'native_output_matches':native,'model_matches':models,
         'expected_ubsan_failures':len(controls),'forms':['original','preprocessed','normalized'],
         'separate_original_object_compilation':True,'optimizations':['-O0','-O2'],
         'compiler':run(['cc','--version']).stdout.splitlines()[0],'cases':cases,'negative_controls':controls,
-        'parameter_attribute_refusals':1,'expected_alignment_traps':alignment['native_traps'],'alignment_control':alignment,
+        'parameter_attribute_refusals':1,'attributed_typedef_refusals':1,
+        'expected_alignment_traps':sum(c['native_traps'] for c in alignment),'alignment_controls':alignment,
         'scope':'native LP64 observations and independent finite arithmetic/allocation oracles supplement bounded source obligations; no general preprocessing/compiler equivalence theorem'}
     assert (native,models,len(controls))==(408,136,12),(native,models,len(controls))
     if args.output:
         args.output.parent.mkdir(parents=True,exist_ok=True);args.output.write_text(json.dumps(result,indent=2)+'\n')
-    print(json.dumps({k:v for k,v in result.items() if k not in ('cases','negative_controls','alignment_control')}),flush=True)
+    print(json.dumps({k:v for k,v in result.items() if k not in ('cases','negative_controls','alignment_controls')}),flush=True)
 
 
 if __name__=='__main__':main()

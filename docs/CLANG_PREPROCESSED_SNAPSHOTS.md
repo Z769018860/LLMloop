@@ -21,6 +21,10 @@ functions, reachable redeclarations and modeled allocator declarations reject
 such unmodeled entry promises in both default and snapshot modes. A successful
 literal text/type match alone is insufficient.
 
+Attributes attached to used typedef declarations are retained too. Direct and
+transitive aliases are checked before desugared types erase their names;
+unused attributed typedefs do not reject unrelated selected components.
+
 For a header containing `int api(int *);`, a provider containing
 `int api(int *p){return p[0]+1;}`, and an entry returning `api(a)` for a local
 `int a[1]={n};`, use:

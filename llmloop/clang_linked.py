@@ -83,7 +83,7 @@ class LinkedClangProject:
             return {**failure,'reason':str(exc),'translation_units':self.units}
 
     def normalize(self,function):
-        from .clang_proof import nodes, check_parameter_attributes
+        from .clang_proof import nodes, check_parameter_attributes, check_typedef_attributes
         from .clang_memory_proof import MemoryNormalizer,BUILTINS
         from .clang_bit_builtins import BIT_BUILTINS,BitBuiltinModels
         # Keep every per-TU declaration/type context separate, including IDs
@@ -175,6 +175,7 @@ class LinkedClangProject:
             return scalar_type(match[1].strip(),index),parameters
 
         def signature(node,index):
+            check_typedef_attributes(units[index],node)
             if any(n.get('kind') not in ('ParmVarDecl','CompoundStmt','FullComment') for n in node.get('inner',[])):
                 raise SMTGraphError('Attributed linked function declarations/definitions unsupported')
             if node.get('inline') and roots[index].get(node['id']) not in internal[index]:

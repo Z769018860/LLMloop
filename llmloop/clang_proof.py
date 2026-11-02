@@ -29,10 +29,32 @@ def check_parameter_attributes(parameters):
         raise SMTGraphError('Clang parameter attributes/entry expressions unsupported')
 
 
+def check_typedef_attributes(frontend,root):
+    # Preserve raw alias names before desugaredQualType erases declaration
+    # attributes. Propagate through pointer/alias chains, not just direct uses.
+    typedefs=frontend.get('typedefs',[])
+    attributed={n['name'] for n in typedefs if n.get('attributes')}
+    def names(text):return set(re.findall(r'[A-Za-z_][A-Za-z0-9_]*',text))
+    if not attributed:return
+    dependents={}
+    for alias in typedefs:
+        for dependency in names(alias.get('type',{}).get('qualType','')):
+            dependents.setdefault(dependency,set()).add(alias['name'])
+    pending=list(attributed)
+    while pending:
+        for alias in dependents.get(pending.pop(),set())-attributed:
+            attributed.add(alias);pending.append(alias)
+    for node in nodes(root):
+        for value in node.values():
+            if isinstance(value,dict) and names(value.get('qualType','')) & attributed:
+                raise SMTGraphError('Attributed Clang typedefs unsupported in selected declarations/body')
+
+
 class ScalarNormalizer:
     def __init__(self,frontend):
         if len(frontend['functions'])!=1 or 'ast' not in frontend['functions'][0]:raise SMTGraphError('Clang proof requires one selected function and include_ast=true')
         self.frontend=frontend;self.root=frontend['functions'][0]['ast'];self.names={};self.labels={};self.renamed=[];self.operations=0
+        check_typedef_attributes(frontend,self.root)
         declarations=[n for n in nodes(self.root) if n.get('kind') in ('ParmVarDecl','VarDecl')]
         counts=Counter(n.get('name') for n in declarations);self.used={n.get('name') for n in nodes(self.root) if n.get('name')};self.serial=0
         for n in declarations:

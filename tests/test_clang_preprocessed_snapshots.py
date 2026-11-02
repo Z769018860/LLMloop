@@ -253,3 +253,32 @@ def test_allocator_redeclarations_cannot_hide_parameter_alignment_promises(clang
         'proof':{'backend':'calls','parameter_bounds':{'n':[0,2]}}})
     unknown(r)
     assert 'parameter attributes' in r['reason']
+
+
+@pytest.mark.parametrize('preprocess',[False,True])
+@pytest.mark.parametrize('linked',[False,True])
+@pytest.mark.parametrize('depth',[1,2])
+def test_typedef_alignment_promises_survive_desugaring_checks(tmp_path,clang,preprocess,linked,depth):
+    typedef='typedef int *Ptr __attribute__((align_value(32)));'
+    alias='Ptr'
+    if depth==2:typedef+='typedef Ptr Second;';alias='Second'
+    prototype='int api('+alias+');'
+    helper='int api('+alias+' p){return p[0];}'
+    entry='int entry(int n){int a[1]={n};return api(a);}'
+    options={'executable':clang,'preprocess':preprocess}
+    source=typedef+prototype+entry
+    if linked:
+        p=tmp_path/'provider.c';p.write_text(typedef+helper);options['linked_sources']=[str(p)]
+    else:source=typedef+prototype+helper+entry
+    r=analyze_request({'source':source,'function':'entry','frontend':'clang_proof','clang':options,
+        'proof':{'backend':'calls','parameter_bounds':{'n':[0,2]}}})
+    unknown(r)
+    assert 'Attributed Clang typedefs' in r['reason']
+
+
+@pytest.mark.parametrize('preprocess',[False,True])
+def test_unused_attributed_typedef_does_not_poison_the_component(clang,preprocess):
+    r=analyze_request({'source':'typedef int *Unused __attribute__((align_value(32)));int entry(int n){return n+1;}',
+        'frontend':'clang_proof','function':'entry','clang':{'executable':clang,'preprocess':preprocess},
+        'proof':{'backend':'cfg','parameter_bounds':{'n':[0,2]}}})
+    assert r['status']=='PROVED_DEFINED_CLANG_SCALAR_CFG',r.get('reason')

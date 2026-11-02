@@ -226,7 +226,8 @@ class ClangAdapter:
                             part=pending_types.pop()
                             if part.get('kind')=='RecordType' and part.get('decl',{}).get('kind')=='RecordDecl':record_ids.add(part['decl']['id'])
                             pending_types.extend(part.get('inner',[]))
-                        typedefs.append({'name':node.get('name'),'type':node.get('type',{}),'location':node.get('loc'),'record_ids':sorted(record_ids)})
+                        typedefs.append({'name':node.get('name'),'type':node.get('type',{}),'location':node.get('loc'),'record_ids':sorted(record_ids),
+                            'attributes':[child.get('kind') for child in node.get('inner',[]) if child.get('kind','').endswith('Attr')]})
                     if node.get('kind')=='FunctionDecl' and node.get('name') in ('malloc','calloc','free'):modeled_declarations.append(node)
                     if node.get('kind')=='RecordDecl' and node.get('completeDefinition'):
                         loc=node.get('loc',{});line=loc.get('line')
