@@ -1,0 +1,122 @@
+{
+  "passed": true,
+  "checks": {
+    "full_pytest": true,
+    "array_native": true,
+    "snapshot_native": true,
+    "retained_record_native": true,
+    "array_cli": true,
+    "frozen_source_unchanged": true,
+    "prior_evidence_unchanged": true
+  },
+  "tested_commit": "6294d9b39ab55efdf6b42b6d303b5373fd192c86",
+  "tested_tree": "e888933851c3d10f3dbc4febe2631f4df8cee488",
+  "published_source_commit": "6294d9b39ab55efdf6b42b6d303b5373fd192c86",
+  "source_tree_equal": true,
+  "environment": {
+    "python": "3.12.14",
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.39",
+    "pytest": "9.1.1",
+    "sympy": "1.14.0",
+    "pycparser": "3.12",
+    "z3": "5.3.3",
+    "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+    "native_compiler": "cc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0"
+  },
+  "full_pytest": {
+    "passed": 2361,
+    "skipped": 0,
+    "expected": 2361
+  },
+  "new_tests": 75,
+  "existing_parameterized_test_functions_updated": 1,
+  "existing_cases_deleted": 0,
+  "commands": {
+    "full_pytest": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--forked"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 751.048,
+      "log": "pytest.txt"
+    },
+    "arrays": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_clang_arrays_native.py",
+        "--output",
+        "experiments/v050/arrays.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 17.992,
+      "log": "arrays.txt"
+    },
+    "snapshots": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_clang_snapshots_native.py",
+        "--output",
+        "experiments/v050/snapshots.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 7.851,
+      "log": "snapshots.txt"
+    },
+    "linked_records": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_clang_linked_records_native.py",
+        "--output",
+        "experiments/v050/linked_records.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 15.491,
+      "log": "linked_records.txt"
+    },
+    "array_cli": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-m",
+        "llmloop.symbolic_cli",
+        "examples/clang_array_parameters/entry.c",
+        "--c-clang-proof",
+        "--function",
+        "entry",
+        "--clang-config",
+        "{\"preprocess\": true, \"compilation_database\": \"examples/clang_array_parameters\", \"linked_sources\": [\"examples/clang_array_parameters/worker.c\"]}",
+        "--clang-proof-config",
+        "{\"backend\":\"calls\"}",
+        "--parameter-bounds",
+        "{\"n\":[0,10]}",
+        "--inputs",
+        "{\"n\":3}"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.767,
+      "log": "array_cli.json"
+    }
+  },
+  "source_path_count": 398,
+  "historical_evidence_path_count": 493,
+  "github_actions_used": false,
+  "ci_runs_used": 0,
+  "klee_used": false,
+  "complete_c_support": false,
+  "proof_query_budget_increased": false,
+  "evidence_sha256": {
+    "array_cli.json": "9e9b91c32bb5fb4e7568cbf5919bfbd5379bcb0f27525c2291c2ab7ef617bf3e",
+    "arrays.json": "e8e284f20aea8fe48c7f39e8b406b7b30ab5c44a794920901caaa0359fc96795",
+    "arrays.txt": "a8a88fd6797bf2a84e5b07d77341bb82c41ddfc103acba49944b7b4a80db2729",
+    "linked_records.json": "124999da5e16fb76d79f9c4d5a16de0098a6ae68c659dc6224b1669548c2ca8c",
+    "linked_records.txt": "ef9684726251a19b306337f587ebdde6566e6a879ae3193bb3dd65ba01eda4ad",
+    "pytest.txt": "c0a64c6f71fd3d0778d684769f21858d582f72cb2e9776214343520a700f8716",
+    "report.md": "ec8b64d26e22c5dcd409eb9c9c4a35f5e8d6390b8f39c7e237742f95ccc40cc4",
+    "snapshots.json": "a9ffb71e537502b2c3652d2c88b28c75def4b815e560cc0fa95517a875c2e56d",
+    "snapshots.txt": "6d1c076b608f186f23cb74c51aa7df5baad0b8fe4ac52b895462ca14c1f4b441",
+    "source_manifest.json": "7f1b38211b0762cae1903fcac144766d5540de38f50ff299a6fc7b16d25f6b25"
+  }
+}
