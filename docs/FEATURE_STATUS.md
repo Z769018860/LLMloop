@@ -132,3 +132,8 @@ See [opt-in preprocessed snapshots](CLANG_PREPROCESSED_SNAPSHOTS.md) for checked
 header/macro pointer spellings from one compiler-expanded input per unit.
 Arrays/VLAs, unsupported source-location builtins and general ownership remain
 outside this extension; default ingestion and proof budgets are unchanged.
+
+See [ordinary array parameters](CLANG_ARRAY_PARAMETERS.md) for checked pointer
+adjustment of one `[]`/positive decimal outer bound, actual-object obligations
+and literal-zero record-member syntax. This does not add static/VLA entry
+contracts, general record arrays or larger memory/call/solver budgets.

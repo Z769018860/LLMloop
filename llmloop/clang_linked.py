@@ -12,6 +12,7 @@ from pathlib import Path
 
 from .clang_adapter import ClangAdapter
 from .smt_spath import SMTGraphError
+from .clang_parameters import checked_pointer_parameter
 
 
 def digest(value):
@@ -119,7 +120,7 @@ class LinkedClangProject:
         if len(primary)!=1:raise SMTGraphError('Select one defined entry in the primary translation unit')
         entry_key,entry_fn=primary[0]
         source_entry=entry_fn['name']
-        emitted={};renames=[]
+        emitted={};renames=[];array_parameters={}
         for key,fn in definitions.items():
             name=fn['name']
             if key[1] in internal[key[0]]:
@@ -192,12 +193,10 @@ class LinkedClangProject:
                 resolved=scalar_type(param['type'],index)
                 if '*' not in resolved:continue
                 raw=metadata.get(node['id'],{}).get('parameter_spellings',{}).get(param['id'],'')
-                if param.get('name'):
-                    match=re.fullmatch(r'([A-Za-z_][A-Za-z0-9_\s*]*?)\s*\b'+re.escape(param['name'])+r'\s*',raw)
-                    prefix=match[1].strip() if match else ''
-                else:prefix=raw if re.fullmatch(r'[A-Za-z_][A-Za-z0-9_\s*]*',raw) else ''
-                if not prefix or scalar_type(prefix,index)!=resolved:
-                    raise SMTGraphError('Linked pointer parameters require literal declarations; adjusted arrays/VLAs and macro/header spellings unsupported')
+                adjustment=checked_pointer_parameter(param,raw,resolved,lambda value:scalar_type(value,index))
+                if adjustment is not None:
+                    array_parameters[(index,node['id'],param['id'])]={'unit':index,
+                        'function':node['name'],'declaration_id':node['id'],**adjustment}
             return canonical
 
         selected=set();pending=[entry_key];bindings=[];checked=set();targets={}
@@ -288,6 +287,7 @@ class LinkedClangProject:
             'source_snapshots_checked':True,'closed_world_function_binding':True,'external_semantics_assumed':False,
             'dynamic_interposition_modeled':False,'general_linker_or_C_support':False,
             'normalized_source_sha256':hashlib.sha256(normalized.encode()).hexdigest(),
+            **({'array_parameter_adjustments':list(array_parameters.values())} if array_parameters else {}),
             **({'record_compatibility':record_types.certificate} if record_types.schemas else {})}
         self.check_snapshot()
         return normalized,normalizers,emitted[entry_key]

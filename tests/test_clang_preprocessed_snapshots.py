@@ -89,11 +89,14 @@ def test_shared_record_header_retains_cross_unit_layout_checks(tmp_path,clang,ta
     'int api(int n,int p[n]);', 'int api(int n,int p[n++]);',
     '#define BOUND(n) ((n)++)\nint api(int n,int p[BOUND(n)]);',
 ])
-def test_header_and_macro_arrays_or_vla_entry_effects_remain_refused(tmp_path,clang,declaration):
+def test_header_and_macro_array_declarators_preserve_entry_obligations(tmp_path,clang,declaration):
     has_n='int n,' in declaration
     helper='int api(int n,int *p){return p[0];}' if has_n else 'int api(int *p){return p[0];}'
     call='api(n,a)' if has_n else 'api(a)'
     r=analyze(tmp_path,clang,declaration,helper,'int entry(int n){int a[1]={n};return '+call+';}')
+    if declaration=='int api(int p[1]);':
+        proved(r)
+        return
     unknown(r)
     assert 'literal' in r['reason']
 

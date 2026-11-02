@@ -76,13 +76,12 @@ function pointers and external pointer layouts are refused. `max_steps`, `max_pa
 `max_call_depth` and `allow_recursion` are proof options. Recursion needs explicit
 opt-in and every depth frontier must be proved unreachable.
 
-Only literal main-file pointer parameter declarators are currently admitted.
-The raw spelling in every original declaration, including forward prototypes,
-must resolve to the same pointer type. Array/VLA parameter
-declarators and macro/header pointer-parameter spellings are refused because
-Clang's adjusted pointer type omits array-entry evaluations and `static` minimum
-length requirements. Scalar header-defined helpers remain subject to the
-ordinary AST checks. A rejection is explicit `UNKNOWN`.
+Literal pointer and [ordinary outer array parameter](CLANG_ARRAY_PARAMETERS.md)
+declarators are checked in every original declaration, including forward
+prototypes. Only `[]` and positive unsuffixed decimal bounds adjust to pointers;
+no object extent is inferred. Static/VLA/qualified forms remain UNKNOWN.
+Header/macro spellings require the [opt-in compiler snapshot](CLANG_PREPROCESSED_SNAPSHOTS.md).
+Attributes and used typedef chains retain their own refusal checks.
 
 `malloc`, `calloc` and `free` use the existing standard-library contracts. Their
 Clang declarations must match the target ABI signatures; user-defined bodies,

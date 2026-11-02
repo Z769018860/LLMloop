@@ -1,0 +1,98 @@
+..........................FFF........................................... [ 57%]
+......................................................                   [100%]
+=================================== FAILURES ===================================
+_ test_record_elements_keep_checked_layouts_and_allocation_failure[x86_64-unknown-linux-gnu] _
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_record_elements_keep_chec0')
+clang = '/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang'
+target = 'x86_64-unknown-linux-gnu'
+
+    @pytest.mark.parametrize('target',[ 'x86_64-unknown-linux-gnu','i386-unknown-linux-gnu','x86_64-w64-windows-gnu'])
+    def test_record_elements_keep_checked_layouts_and_allocation_failure(tmp_path,clang,target):
+        header='typedef __SIZE_TYPE__ Size;void *calloc(Size,Size);void free(void *);struct Box{long value;};int api(struct Box p[9]);'
+        (tmp_path/'api.h').write_text(header)
+        provider=tmp_path/'provider.c';provider.write_text('#include "api.h"\nint api(struct Box p[]){return p[0].value+1;}')
+        r=analyze_request({'source':'#include "api.h"\nint entry(int n){struct Box *p=calloc(1,sizeof(struct Box));if(!p)return -1;p->value=n;int x=api(p);free(p);return x;}',
+            'function':'entry','frontend':'clang_proof','clang':{'executable':clang,'target':target,'preprocess':True,'args':['-I'+str(tmp_path)],'linked_sources':[str(provider)]},
+            'proof':{'backend':'calls','parameter_bounds':{'n':[0,2]},'inputs':{'n':2},'max_steps':256}})
+>       proved(r)
+
+tests/test_clang_array_parameters.py:135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+r = {'schema_version': 1, 'status': 'UNKNOWN', 'frontend': 'clang_proof', 'c_overflow_verified': False, ...}
+
+    def proved(r):
+>       assert r['status']=='PROVED_DEFINED_CLANG_CFG_CALLS',r.get('reason',r.get('failed_obligation'))
+E       AssertionError: Unsupported Clang proof expression: MemberExpr
+E       assert 'UNKNOWN' == 'PROVED_DEFIN...ANG_CFG_CALLS'
+E         
+E         - PROVED_DEFINED_CLANG_CFG_CALLS
+E         + UNKNOWN
+
+tests/test_clang_array_parameters.py:37: AssertionError
+_ test_record_elements_keep_checked_layouts_and_allocation_failure[i386-unknown-linux-gnu] _
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_record_elements_keep_chec1')
+clang = '/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang'
+target = 'i386-unknown-linux-gnu'
+
+    @pytest.mark.parametrize('target',[ 'x86_64-unknown-linux-gnu','i386-unknown-linux-gnu','x86_64-w64-windows-gnu'])
+    def test_record_elements_keep_checked_layouts_and_allocation_failure(tmp_path,clang,target):
+        header='typedef __SIZE_TYPE__ Size;void *calloc(Size,Size);void free(void *);struct Box{long value;};int api(struct Box p[9]);'
+        (tmp_path/'api.h').write_text(header)
+        provider=tmp_path/'provider.c';provider.write_text('#include "api.h"\nint api(struct Box p[]){return p[0].value+1;}')
+        r=analyze_request({'source':'#include "api.h"\nint entry(int n){struct Box *p=calloc(1,sizeof(struct Box));if(!p)return -1;p->value=n;int x=api(p);free(p);return x;}',
+            'function':'entry','frontend':'clang_proof','clang':{'executable':clang,'target':target,'preprocess':True,'args':['-I'+str(tmp_path)],'linked_sources':[str(provider)]},
+            'proof':{'backend':'calls','parameter_bounds':{'n':[0,2]},'inputs':{'n':2},'max_steps':256}})
+>       proved(r)
+
+tests/test_clang_array_parameters.py:135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+r = {'schema_version': 1, 'status': 'UNKNOWN', 'frontend': 'clang_proof', 'c_overflow_verified': False, ...}
+
+    def proved(r):
+>       assert r['status']=='PROVED_DEFINED_CLANG_CFG_CALLS',r.get('reason',r.get('failed_obligation'))
+E       AssertionError: Unsupported Clang proof expression: MemberExpr
+E       assert 'UNKNOWN' == 'PROVED_DEFIN...ANG_CFG_CALLS'
+E         
+E         - PROVED_DEFINED_CLANG_CFG_CALLS
+E         + UNKNOWN
+
+tests/test_clang_array_parameters.py:37: AssertionError
+_ test_record_elements_keep_checked_layouts_and_allocation_failure[x86_64-w64-windows-gnu] _
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_record_elements_keep_chec2')
+clang = '/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang'
+target = 'x86_64-w64-windows-gnu'
+
+    @pytest.mark.parametrize('target',[ 'x86_64-unknown-linux-gnu','i386-unknown-linux-gnu','x86_64-w64-windows-gnu'])
+    def test_record_elements_keep_checked_layouts_and_allocation_failure(tmp_path,clang,target):
+        header='typedef __SIZE_TYPE__ Size;void *calloc(Size,Size);void free(void *);struct Box{long value;};int api(struct Box p[9]);'
+        (tmp_path/'api.h').write_text(header)
+        provider=tmp_path/'provider.c';provider.write_text('#include "api.h"\nint api(struct Box p[]){return p[0].value+1;}')
+        r=analyze_request({'source':'#include "api.h"\nint entry(int n){struct Box *p=calloc(1,sizeof(struct Box));if(!p)return -1;p->value=n;int x=api(p);free(p);return x;}',
+            'function':'entry','frontend':'clang_proof','clang':{'executable':clang,'target':target,'preprocess':True,'args':['-I'+str(tmp_path)],'linked_sources':[str(provider)]},
+            'proof':{'backend':'calls','parameter_bounds':{'n':[0,2]},'inputs':{'n':2},'max_steps':256}})
+>       proved(r)
+
+tests/test_clang_array_parameters.py:135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+r = {'schema_version': 1, 'status': 'UNKNOWN', 'frontend': 'clang_proof', 'c_overflow_verified': False, ...}
+
+    def proved(r):
+>       assert r['status']=='PROVED_DEFINED_CLANG_CFG_CALLS',r.get('reason',r.get('failed_obligation'))
+E       AssertionError: Unsupported Clang proof expression: MemberExpr
+E       assert 'UNKNOWN' == 'PROVED_DEFIN...ANG_CFG_CALLS'
+E         
+E         - PROVED_DEFINED_CLANG_CFG_CALLS
+E         + UNKNOWN
+
+tests/test_clang_array_parameters.py:37: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_clang_array_parameters.py::test_record_elements_keep_checked_layouts_and_allocation_failure[x86_64-unknown-linux-gnu]
+FAILED tests/test_clang_array_parameters.py::test_record_elements_keep_checked_layouts_and_allocation_failure[i386-unknown-linux-gnu]
+FAILED tests/test_clang_array_parameters.py::test_record_elements_keep_checked_layouts_and_allocation_failure[x86_64-w64-windows-gnu]
+3 failed, 123 passed in 35.73s

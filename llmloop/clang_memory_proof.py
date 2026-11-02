@@ -6,6 +6,7 @@ typed kernels retain their finite memory, alias, lifetime and call budgets.
 import re
 
 from .clang_proof import nodes, check_parameter_attributes, check_typedef_attributes
+from .clang_parameters import checked_pointer_parameter
 from .clang_union_views import UnionViewNormalizer
 from .smt_spath import SMTGraphError
 
@@ -28,6 +29,8 @@ class MemoryNormalizer(UnionViewNormalizer):
         self.external_frontiers = []
         self.bit_models = bit_models
         self.bit_builtin_calls = []
+        self.array_parameter_adjustments = []
+        self.zero_record_member_adjustments = []
         for record in frontend.get('record_definitions', []):
             self.record_defs.setdefault(record.get('name'), []).append(record)
 
@@ -179,6 +182,20 @@ class MemoryNormalizer(UnionViewNormalizer):
         if kind == 'ArraySubscriptExpr' and len(children) == 2:
             self.memory_used = True
             return '(' + self.expr(children[0]) + ')[' + self.expr(children[1]) + ']'
+        if kind == 'MemberExpr' and not node.get('isArrow') and len(children) == 1:
+            array=children[0];parts=array.get('inner',[])
+            if (array.get('kind')=='ArraySubscriptExpr' and len(parts)==2
+                    and parts[1].get('kind')=='IntegerLiteral' and parts[1].get('value')=='0'):
+                element=self.memory_type(array['type'])
+                pointer=self.memory_type(parts[0]['type'])
+                if element.startswith('struct ') and '*' not in element and pointer==element+' *':
+                    # A literal zeroth-record lvalue uses the exact existing
+                    # arrow guards: valid object, offset, initialization and
+                    # lifetime. No record array extent or index is invented.
+                    self.zero_record_member_adjustments.append({'ast_id':node.get('id'),
+                        'member':node.get('name'),'record_type':element,'index_literal':0,
+                        'method':'zeroth-record member to checked arrow member'})
+                    return self.expr({**node,'isArrow':True,'inner':[parts[0]]})
         if kind == 'MemberExpr' and node.get('isArrow') and len(children) == 1:
             name = node.get('name', '')
             if not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', name):
@@ -325,13 +342,10 @@ class MemoryNormalizer(UnionViewNormalizer):
                 if '*' not in resolved:
                     continue
                 raw = spellings.get(param['id'], '')
-                if param.get('name'):
-                    match = re.fullmatch(r'([A-Za-z_][A-Za-z0-9_\s*]*?)\s*\b' + re.escape(param['name']) + r'\s*', raw)
-                    prefix = match[1].strip() if match else ''
-                else:
-                    prefix = raw if re.fullmatch(r'[A-Za-z_][A-Za-z0-9_\s*]*', raw) else ''
-                if not prefix or self.memory_type(prefix) != resolved:
-                    raise SMTGraphError('Clang pointer parameters require literal pointer declarators in every original declaration; adjusted arrays/VLAs and macro/header spellings unsupported')
+                adjustment=checked_pointer_parameter(param,raw,resolved,self.memory_type)
+                if adjustment is not None:
+                    self.array_parameter_adjustments.append({'function':self.root['name'],
+                        'declaration_id':declaration['id'],**adjustment})
         declarations = ', '.join(self.memory_type(n['type']) + ' ' + self.names[n['id']] for n in params) or 'void'
         return result + ' ' + self.root['name'] + '(' + declarations + ') ' + self.stmt(bodies[0]) + '\n'
 

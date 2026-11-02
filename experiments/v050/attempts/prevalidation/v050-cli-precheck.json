@@ -1,0 +1,3358 @@
+{
+  "schema_version": 1,
+  "status": "PROVED_DEFINED_CLANG_CFG_CALLS",
+  "abi": "LP64",
+  "function": "entry",
+  "c_overflow_verified": true,
+  "memory_safety_verified": true,
+  "termination_proved": true,
+  "allocation_failure_modeled": true,
+  "allocation_success_assumed": false,
+  "domain_smt2": "(and (>= typed_loop_n!0 0) (<= typed_loop_n!0 10))",
+  "semantics": "typed C integer semantics with explicit implementation choices",
+  "parameter_symbols": {
+    "n": "typed_loop_n!0"
+  },
+  "leak_freedom_proved": false,
+  "unbounded_summary": false,
+  "certificate": {
+    "method": "exhaustive original CFG execution with proved complete exit for declared domain",
+    "obligations": [
+      {
+        "obligation": "control-flow step budget",
+        "proved": true
+      },
+      {
+        "obligation": "control-flow step budget",
+        "proved": true
+      },
+      {
+        "obligation": "control-flow step budget",
+        "proved": true
+      },
+      {
+        "obligation": "control-flow step budget",
+        "proved": true
+      },
+      {
+        "obligation": "control-flow step budget",
+        "proved": true
+      },
+      {
+        "obligation": "control-flow step budget",
+        "proved": true
+      },
+      {
+        "obligation": "control-flow step budget",
+        "proved": true
+      },
+      {
+        "obligation": "control-flow step budget",
+        "proved": true
+      },
+      {
+        "obligation": "control-flow step budget",
+        "proved": true
+      },
+      {
+        "obligation": "control-flow step budget",
+        "proved": true
+      },
+      {
+        "obligation": "control-flow step budget",
+        "proved": true
+      },
+      {
+        "obligation": "control-flow step budget",
+        "proved": true
+      },
+      {
+        "obligation": "all original executed operations defined",
+        "proved": true
+      },
+      {
+        "obligation": "returned paths cover parameter and allocation domain",
+        "proved": true
+      }
+    ],
+    "executed_cfg_nodes": 12,
+    "max_steps_per_path": 128,
+    "max_paths": 48,
+    "represented_object_instances": 1
+  },
+  "memory_model": {
+    "pointer_rebinding_supported": true,
+    "block_escape_supported": true,
+    "dynamic_lengths_supported": true,
+    "max_object_instances": 8,
+    "max_cells_per_object": 8,
+    "max_total_cells": 64,
+    "adjacent_distinct_object_boundary_comparisons": "unsupported",
+    "external_pointer_parameters_supported": false,
+    "pointer_cells_supported": true,
+    "structs_supported": true,
+    "struct_model": "named single allocated records with integer/data-pointer fields",
+    "struct_layouts": {},
+    "max_pointer_indirection": 3,
+    "calloc_pointer_cells_implicitly_null": false
+  },
+  "implementation_choices": {
+    "signed_cast": "two-complement modular",
+    "signed_right_shift": "arithmetic",
+    "pointer_width_bits": 64
+  },
+  "scope": "declared scalar input domain and selected typed backend contract; allocation assumptions and the selected shape/CFG proof boundary remain explicit; no general LLVM semantics or KLEE execution",
+  "return_smt2": "(+ (- 2147483648) (mod (+ 2147483650 (* 2 typed_loop_n!0)) 4294967296))",
+  "evaluation": {
+    "value": 8
+  },
+  "call_model": {
+    "method": "hygienic sequenced direct-call expansion with typed parameters/returns and frame lifetime edges",
+    "eager_single_call_expressions": true,
+    "stable_scalar_operands_only": false,
+    "stable_eager_sibling_operands_only": true,
+    "sequenced_lazy_expressions": true,
+    "nested_argument_calls": true,
+    "loop_header_calls": true,
+    "independent_pure_sibling_calls": true,
+    "scalar_pure_functions": [],
+    "expression_expansion": [],
+    "expanded_source": "int entry(int n)\n{\n  int a[2] = {n, n + 1};\n  int __cfg_call_result_3 = 0;\n  int __cfg_call_returned_4 = 0;\n  {\n    int *__cfg_call_arg_1 = a;\n    {\n      __cfg_call_arg_1[1] += 1;\n      __cfg_call_result_3 = __cfg_call_arg_1[0] + __cfg_call_arg_1[1];\n      __cfg_call_returned_4 = 1;\n      goto __cfg_call_exit_2;\n    }\n    __cfg_call_exit_2:\n    ;\n\n  }\n  int __cfg_call_return_guard_5 = 1 / __cfg_call_returned_4;\n  return __cfg_call_result_3;\n}\n\n",
+    "expanded_source_sha256": "7852896fec1f896f0ef924c61a8110b503bca27d713917d0c8fbeb5d392be7c8",
+    "source_equivalence_machine_proved": false,
+    "expanded_sites": [
+      {
+        "callee": "visit",
+        "depth": 1,
+        "recursive_edge": false,
+        "parameter_count": 1,
+        "pointer_return": false,
+        "void_return": false,
+        "exit_label": "__cfg_call_exit_2"
+      }
+    ],
+    "max_depth": 3,
+    "recursion_supported": false,
+    "bounded_recursion_enabled": false,
+    "depth_frontiers": [],
+    "external_frontiers": [],
+    "external_policy": "entire call evaluation must be unreachable; no external semantics assumed",
+    "unreachable_external_calls_supported": true,
+    "all_frontiers_proved_unreachable": true,
+    "external_calls_supported": false,
+    "pointer_return_supported": true,
+    "nonvoid_return_marker_checked": true
+  },
+  "frontend": "clang_proof",
+  "clang_frontend": {
+    "status": "CLANG_FRONTEND_READY",
+    "frontend": "clang",
+    "analysis_status": "NOT_PROVED",
+    "c_overflow_verified": false,
+    "memory_safety_verified": false,
+    "termination_proved": false,
+    "unbounded_summary": false,
+    "commands": [
+      {
+        "stage": "version",
+        "argv": [
+          "/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang",
+          "--version"
+        ],
+        "directory": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters",
+        "exit_code": 0,
+        "diagnostics": "",
+        "stdout_sha256": "9b65cb8279dcd1a273fe8ad0b1395d8ff32810c15d614c551c92958bbbda1a54"
+      },
+      {
+        "stage": "preprocess",
+        "argv": [
+          "/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang",
+          "-std=c11",
+          "-I.",
+          "-O0",
+          "-gline-tables-only",
+          "-fsanitize=undefined",
+          "-fno-sanitize-recover=all",
+          "-x",
+          "c",
+          "-fno-color-diagnostics",
+          "-E",
+          "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c"
+        ],
+        "directory": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters",
+        "exit_code": 0,
+        "diagnostics": "",
+        "stdout_sha256": "acf7b5091e0f2359d0681a54dbd51e55e1bbd3c8b942fb40d414b69a2a5f915c"
+      },
+      {
+        "stage": "ast",
+        "argv": [
+          "/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang",
+          "-std=c11",
+          "-I.",
+          "-O0",
+          "-gline-tables-only",
+          "-fsanitize=undefined",
+          "-fno-sanitize-recover=all",
+          "-x",
+          "cpp-output",
+          "-fno-color-diagnostics",
+          "-fsyntax-only",
+          "-Xclang",
+          "-ast-dump=json",
+          "/tmp/llmloop-clang-976a71t7/snapshot.i"
+        ],
+        "directory": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters",
+        "exit_code": 0,
+        "diagnostics": "clang: warning: argument unused during compilation: '-I .' [-Wunused-command-line-argument]\n",
+        "stdout_sha256": "bf8b3489ebbe94782e2a72879f3a0ee86a84f21df59941e74b7dff63f3d6ac39"
+      },
+      {
+        "stage": "layouts",
+        "argv": [
+          "/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang",
+          "-std=c11",
+          "-I.",
+          "-O0",
+          "-gline-tables-only",
+          "-fsanitize=undefined",
+          "-fno-sanitize-recover=all",
+          "-x",
+          "cpp-output",
+          "-fno-color-diagnostics",
+          "-fsyntax-only",
+          "-Xclang",
+          "-fdump-record-layouts-complete",
+          "/tmp/llmloop-clang-976a71t7/snapshot.i"
+        ],
+        "directory": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters",
+        "exit_code": 0,
+        "diagnostics": "clang: warning: argument unused during compilation: '-I .' [-Wunused-command-line-argument]\n",
+        "stdout_sha256": "a5bd015f43002b99341d7903b06a75483332d9ef01390c18a0ccd842d0227616"
+      },
+      {
+        "stage": "llvm",
+        "argv": [
+          "/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang",
+          "-std=c11",
+          "-I.",
+          "-O0",
+          "-gline-tables-only",
+          "-fsanitize=undefined",
+          "-fno-sanitize-recover=all",
+          "-x",
+          "cpp-output",
+          "-fno-color-diagnostics",
+          "-fno-discard-value-names",
+          "-S",
+          "-emit-llvm",
+          "/tmp/llmloop-clang-976a71t7/snapshot.i",
+          "-o",
+          "/tmp/llmloop-clang-976a71t7/module.ll"
+        ],
+        "directory": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters",
+        "exit_code": 0,
+        "diagnostics": "clang: warning: argument unused during compilation: '-I .' [-Wunused-command-line-argument]\n",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "source_compiles": true,
+    "compiler": {
+      "executable": "/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang",
+      "version": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /workspace/scratch/26b59f7180c2/runtime-v050/clang/usr/lib/llvm-18/bin"
+    },
+    "source": {
+      "path": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c",
+      "sha256": "822410636c8145c7a98a59a314c783d787ab05fbc6779ceb5942606f2c22994c"
+    },
+    "preprocessing": {
+      "method": "single Clang -E snapshot with line markers; all later stages use -x cpp-output",
+      "source": "# 1 \"/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c\"\n# 1 \"<built-in>\" 1\n# 1 \"<built-in>\" 3\n# 388 \"<built-in>\" 3\n# 1 \"<command line>\" 1\n# 1 \"<built-in>\" 2\n# 1 \"/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c\" 2\n# 1 \"/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/api.h\" 1\n\n\ntypedef int Cell;\nint visit(Cell p[5]);\n# 2 \"/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c\" 2\nint entry(int n) {\n    Cell a[2] = {n, n + 1};\n    return visit(a);\n}\n",
+      "sha256": "acf7b5091e0f2359d0681a54dbd51e55e1bbd3c8b942fb40d414b69a2a5f915c",
+      "bytes": 581,
+      "input_sha256": "822410636c8145c7a98a59a314c783d787ab05fbc6779ceb5942606f2c22994c",
+      "line_markers_preserved": true,
+      "source_location_builtins_supported": false
+    },
+    "compilation_database": {
+      "path": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/compile_commands.json",
+      "sha256": "78f8a242e1445a8c9045296a1f9bd78f0932e98cb86c1c35dec2fb7cd66f14e1",
+      "command_index": 0,
+      "original_arguments": [
+        "cc",
+        "-std=c11",
+        "-I.",
+        "-c",
+        "entry.c"
+      ]
+    },
+    "effective_flags": [
+      "-std=c11",
+      "-I.",
+      "-O0",
+      "-gline-tables-only",
+      "-fsanitize=undefined",
+      "-fno-sanitize-recover=all"
+    ],
+    "ignored_build_flags": [
+      "-c",
+      "entry.c"
+    ],
+    "target": {
+      "triple": "x86_64-pc-linux-gnu",
+      "data_layout": "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+    },
+    "functions": [
+      {
+        "name": "entry",
+        "linkage_name": "entry",
+        "type": {
+          "qualType": "int (int)"
+        },
+        "location": {
+          "offset": 515,
+          "line": 14,
+          "presumedFile": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c",
+          "presumedLine": 2,
+          "col": 5,
+          "tokLen": 5
+        },
+        "range": {
+          "begin": {
+            "offset": 511,
+            "col": 1,
+            "tokLen": 3
+          },
+          "end": {
+            "offset": 579,
+            "line": 17,
+            "presumedLine": 5,
+            "col": 1,
+            "tokLen": 1
+          }
+        },
+        "parameter_spellings": {
+          "0x5627b6d545a8": "int n"
+        },
+        "ast": {
+          "id": "0x5627b6d54678",
+          "kind": "FunctionDecl",
+          "loc": {
+            "offset": 515,
+            "line": 14,
+            "presumedFile": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c",
+            "presumedLine": 2,
+            "col": 5,
+            "tokLen": 5
+          },
+          "range": {
+            "begin": {
+              "offset": 511,
+              "col": 1,
+              "tokLen": 3
+            },
+            "end": {
+              "offset": 579,
+              "line": 17,
+              "presumedLine": 5,
+              "col": 1,
+              "tokLen": 1
+            }
+          },
+          "name": "entry",
+          "mangledName": "entry",
+          "type": {
+            "qualType": "int (int)"
+          },
+          "inner": [
+            {
+              "id": "0x5627b6d545a8",
+              "kind": "ParmVarDecl",
+              "loc": {
+                "offset": 525,
+                "line": 14,
+                "presumedLine": 2,
+                "col": 15,
+                "tokLen": 1
+              },
+              "range": {
+                "begin": {
+                  "offset": 521,
+                  "col": 11,
+                  "tokLen": 3
+                },
+                "end": {
+                  "offset": 525,
+                  "col": 15,
+                  "tokLen": 1
+                }
+              },
+              "isUsed": true,
+              "name": "n",
+              "type": {
+                "qualType": "int"
+              }
+            },
+            {
+              "id": "0x5627b6d54af8",
+              "kind": "CompoundStmt",
+              "range": {
+                "begin": {
+                  "offset": 528,
+                  "col": 18,
+                  "tokLen": 1
+                },
+                "end": {
+                  "offset": 579,
+                  "line": 17,
+                  "presumedLine": 5,
+                  "col": 1,
+                  "tokLen": 1
+                }
+              },
+              "inner": [
+                {
+                  "id": "0x5627b6d549d8",
+                  "kind": "DeclStmt",
+                  "range": {
+                    "begin": {
+                      "offset": 534,
+                      "line": 15,
+                      "presumedLine": 3,
+                      "col": 5,
+                      "tokLen": 4
+                    },
+                    "end": {
+                      "offset": 556,
+                      "col": 27,
+                      "tokLen": 1
+                    }
+                  },
+                  "inner": [
+                    {
+                      "id": "0x5627b6d54810",
+                      "kind": "VarDecl",
+                      "loc": {
+                        "offset": 539,
+                        "col": 10,
+                        "tokLen": 1
+                      },
+                      "range": {
+                        "begin": {
+                          "offset": 534,
+                          "col": 5,
+                          "tokLen": 4
+                        },
+                        "end": {
+                          "offset": 555,
+                          "col": 26,
+                          "tokLen": 1
+                        }
+                      },
+                      "isUsed": true,
+                      "name": "a",
+                      "type": {
+                        "qualType": "Cell[2]"
+                      },
+                      "init": "c",
+                      "inner": [
+                        {
+                          "id": "0x5627b6d54970",
+                          "kind": "InitListExpr",
+                          "range": {
+                            "begin": {
+                              "offset": 546,
+                              "col": 17,
+                              "tokLen": 1
+                            },
+                            "end": {
+                              "offset": 555,
+                              "col": 26,
+                              "tokLen": 1
+                            }
+                          },
+                          "type": {
+                            "qualType": "Cell[2]"
+                          },
+                          "valueCategory": "prvalue",
+                          "inner": [
+                            {
+                              "id": "0x5627b6d549c0",
+                              "kind": "ImplicitCastExpr",
+                              "range": {
+                                "begin": {
+                                  "offset": 547,
+                                  "col": 18,
+                                  "tokLen": 1
+                                },
+                                "end": {
+                                  "offset": 547,
+                                  "col": 18,
+                                  "tokLen": 1
+                                }
+                              },
+                              "type": {
+                                "qualType": "int"
+                              },
+                              "valueCategory": "prvalue",
+                              "castKind": "LValueToRValue",
+                              "inner": [
+                                {
+                                  "id": "0x5627b6d54878",
+                                  "kind": "DeclRefExpr",
+                                  "range": {
+                                    "begin": {
+                                      "offset": 547,
+                                      "col": 18,
+                                      "tokLen": 1
+                                    },
+                                    "end": {
+                                      "offset": 547,
+                                      "col": 18,
+                                      "tokLen": 1
+                                    }
+                                  },
+                                  "type": {
+                                    "qualType": "int"
+                                  },
+                                  "valueCategory": "lvalue",
+                                  "referencedDecl": {
+                                    "id": "0x5627b6d545a8",
+                                    "kind": "ParmVarDecl",
+                                    "name": "n",
+                                    "type": {
+                                      "qualType": "int"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            {
+                              "id": "0x5627b6d548f0",
+                              "kind": "BinaryOperator",
+                              "range": {
+                                "begin": {
+                                  "offset": 550,
+                                  "col": 21,
+                                  "tokLen": 1
+                                },
+                                "end": {
+                                  "offset": 554,
+                                  "col": 25,
+                                  "tokLen": 1
+                                }
+                              },
+                              "type": {
+                                "qualType": "int"
+                              },
+                              "valueCategory": "prvalue",
+                              "opcode": "+",
+                              "inner": [
+                                {
+                                  "id": "0x5627b6d548d8",
+                                  "kind": "ImplicitCastExpr",
+                                  "range": {
+                                    "begin": {
+                                      "offset": 550,
+                                      "col": 21,
+                                      "tokLen": 1
+                                    },
+                                    "end": {
+                                      "offset": 550,
+                                      "col": 21,
+                                      "tokLen": 1
+                                    }
+                                  },
+                                  "type": {
+                                    "qualType": "int"
+                                  },
+                                  "valueCategory": "prvalue",
+                                  "castKind": "LValueToRValue",
+                                  "inner": [
+                                    {
+                                      "id": "0x5627b6d54898",
+                                      "kind": "DeclRefExpr",
+                                      "range": {
+                                        "begin": {
+                                          "offset": 550,
+                                          "col": 21,
+                                          "tokLen": 1
+                                        },
+                                        "end": {
+                                          "offset": 550,
+                                          "col": 21,
+                                          "tokLen": 1
+                                        }
+                                      },
+                                      "type": {
+                                        "qualType": "int"
+                                      },
+                                      "valueCategory": "lvalue",
+                                      "referencedDecl": {
+                                        "id": "0x5627b6d545a8",
+                                        "kind": "ParmVarDecl",
+                                        "name": "n",
+                                        "type": {
+                                          "qualType": "int"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "id": "0x5627b6d548b8",
+                                  "kind": "IntegerLiteral",
+                                  "range": {
+                                    "begin": {
+                                      "offset": 554,
+                                      "col": 25,
+                                      "tokLen": 1
+                                    },
+                                    "end": {
+                                      "offset": 554,
+                                      "col": 25,
+                                      "tokLen": 1
+                                    }
+                                  },
+                                  "type": {
+                                    "qualType": "int"
+                                  },
+                                  "valueCategory": "prvalue",
+                                  "value": "1"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "0x5627b6d54ae8",
+                  "kind": "ReturnStmt",
+                  "range": {
+                    "begin": {
+                      "offset": 562,
+                      "line": 16,
+                      "presumedLine": 4,
+                      "col": 5,
+                      "tokLen": 6
+                    },
+                    "end": {
+                      "offset": 576,
+                      "col": 19,
+                      "tokLen": 1
+                    }
+                  },
+                  "inner": [
+                    {
+                      "id": "0x5627b6d54aa8",
+                      "kind": "CallExpr",
+                      "range": {
+                        "begin": {
+                          "offset": 569,
+                          "col": 12,
+                          "tokLen": 5
+                        },
+                        "end": {
+                          "offset": 576,
+                          "col": 19,
+                          "tokLen": 1
+                        }
+                      },
+                      "type": {
+                        "qualType": "int"
+                      },
+                      "valueCategory": "prvalue",
+                      "inner": [
+                        {
+                          "id": "0x5627b6d54a90",
+                          "kind": "ImplicitCastExpr",
+                          "range": {
+                            "begin": {
+                              "offset": 569,
+                              "col": 12,
+                              "tokLen": 5
+                            },
+                            "end": {
+                              "offset": 569,
+                              "col": 12,
+                              "tokLen": 5
+                            }
+                          },
+                          "type": {
+                            "qualType": "int (*)(Cell *)"
+                          },
+                          "valueCategory": "prvalue",
+                          "castKind": "FunctionToPointerDecay",
+                          "inner": [
+                            {
+                              "id": "0x5627b6d549f0",
+                              "kind": "DeclRefExpr",
+                              "range": {
+                                "begin": {
+                                  "offset": 569,
+                                  "col": 12,
+                                  "tokLen": 5
+                                },
+                                "end": {
+                                  "offset": 569,
+                                  "col": 12,
+                                  "tokLen": 5
+                                }
+                              },
+                              "type": {
+                                "qualType": "int (Cell *)"
+                              },
+                              "valueCategory": "prvalue",
+                              "referencedDecl": {
+                                "id": "0x5627b6d54498",
+                                "kind": "FunctionDecl",
+                                "name": "visit",
+                                "type": {
+                                  "qualType": "int (Cell *)"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "id": "0x5627b6d54ad0",
+                          "kind": "ImplicitCastExpr",
+                          "range": {
+                            "begin": {
+                              "offset": 575,
+                              "col": 18,
+                              "tokLen": 1
+                            },
+                            "end": {
+                              "offset": 575,
+                              "col": 18,
+                              "tokLen": 1
+                            }
+                          },
+                          "type": {
+                            "qualType": "Cell *"
+                          },
+                          "valueCategory": "prvalue",
+                          "castKind": "ArrayToPointerDecay",
+                          "inner": [
+                            {
+                              "id": "0x5627b6d54a10",
+                              "kind": "DeclRefExpr",
+                              "range": {
+                                "begin": {
+                                  "offset": 575,
+                                  "col": 18,
+                                  "tokLen": 1
+                                },
+                                "end": {
+                                  "offset": 575,
+                                  "col": 18,
+                                  "tokLen": 1
+                                }
+                              },
+                              "type": {
+                                "qualType": "Cell[2]"
+                              },
+                              "valueCategory": "lvalue",
+                              "referencedDecl": {
+                                "id": "0x5627b6d54810",
+                                "kind": "VarDecl",
+                                "name": "a",
+                                "type": {
+                                  "qualType": "Cell[2]"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "typedefs": [
+      {
+        "name": "__int128_t",
+        "type": {
+          "qualType": "__int128"
+        },
+        "location": {},
+        "record_ids": [],
+        "attributes": []
+      },
+      {
+        "name": "__uint128_t",
+        "type": {
+          "qualType": "unsigned __int128"
+        },
+        "location": {},
+        "record_ids": [],
+        "attributes": []
+      },
+      {
+        "name": "__NSConstantString",
+        "type": {
+          "qualType": "struct __NSConstantString_tag"
+        },
+        "location": {},
+        "record_ids": [
+          "0x5627b6cf5920"
+        ],
+        "attributes": []
+      },
+      {
+        "name": "__builtin_ms_va_list",
+        "type": {
+          "qualType": "char *"
+        },
+        "location": {},
+        "record_ids": [],
+        "attributes": []
+      },
+      {
+        "name": "__builtin_va_list",
+        "type": {
+          "qualType": "struct __va_list_tag[1]"
+        },
+        "location": {},
+        "record_ids": [
+          "0x5627b6cf5cd0"
+        ],
+        "attributes": []
+      },
+      {
+        "name": "Cell",
+        "type": {
+          "qualType": "int"
+        },
+        "location": {
+          "offset": 390,
+          "file": "/tmp/llmloop-clang-976a71t7/snapshot.i",
+          "line": 11,
+          "presumedFile": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/api.h",
+          "presumedLine": 3,
+          "col": 13,
+          "tokLen": 4,
+          "includedFrom": {
+            "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c"
+          }
+        },
+        "record_ids": [],
+        "attributes": []
+      }
+    ],
+    "modeled_function_declarations": [],
+    "external_function_declarations": [
+      {
+        "id": "0x5627b6d54498",
+        "kind": "FunctionDecl",
+        "loc": {
+          "offset": 400,
+          "line": 12,
+          "presumedLine": 4,
+          "col": 5,
+          "tokLen": 5,
+          "includedFrom": {
+            "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c"
+          }
+        },
+        "range": {
+          "begin": {
+            "offset": 396,
+            "col": 1,
+            "tokLen": 3,
+            "includedFrom": {
+              "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c"
+            }
+          },
+          "end": {
+            "offset": 415,
+            "col": 20,
+            "tokLen": 1,
+            "includedFrom": {
+              "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c"
+            }
+          }
+        },
+        "isUsed": true,
+        "name": "visit",
+        "mangledName": "visit",
+        "type": {
+          "qualType": "int (Cell *)"
+        },
+        "inner": [
+          {
+            "id": "0x5627b6d54380",
+            "kind": "ParmVarDecl",
+            "loc": {
+              "offset": 411,
+              "col": 16,
+              "tokLen": 1,
+              "includedFrom": {
+                "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c"
+              }
+            },
+            "range": {
+              "begin": {
+                "offset": 406,
+                "col": 11,
+                "tokLen": 4,
+                "includedFrom": {
+                  "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c"
+                }
+              },
+              "end": {
+                "offset": 414,
+                "col": 19,
+                "tokLen": 1,
+                "includedFrom": {
+                  "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c"
+                }
+              }
+            },
+            "name": "p",
+            "type": {
+              "qualType": "Cell *"
+            }
+          }
+        ]
+      }
+    ],
+    "record_definitions": [],
+    "function_parameter_declarations": [
+      {
+        "id": "0x5627b6d54498",
+        "name": "visit",
+        "parameters": [
+          {
+            "id": "0x5627b6d54380",
+            "kind": "ParmVarDecl",
+            "loc": {
+              "offset": 411,
+              "col": 16,
+              "tokLen": 1,
+              "includedFrom": {
+                "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c"
+              }
+            },
+            "range": {
+              "begin": {
+                "offset": 406,
+                "col": 11,
+                "tokLen": 4,
+                "includedFrom": {
+                  "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c"
+                }
+              },
+              "end": {
+                "offset": 414,
+                "col": 19,
+                "tokLen": 1,
+                "includedFrom": {
+                  "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c"
+                }
+              }
+            },
+            "name": "p",
+            "type": {
+              "qualType": "Cell *"
+            }
+          }
+        ],
+        "parameter_spellings": {
+          "0x5627b6d54380": "Cell p[5]"
+        }
+      },
+      {
+        "id": "0x5627b6d54678",
+        "name": "entry",
+        "parameters": [
+          {
+            "id": "0x5627b6d545a8",
+            "kind": "ParmVarDecl",
+            "loc": {
+              "offset": 525,
+              "line": 14,
+              "presumedLine": 2,
+              "col": 15,
+              "tokLen": 1
+            },
+            "range": {
+              "begin": {
+                "offset": 521,
+                "col": 11,
+                "tokLen": 3
+              },
+              "end": {
+                "offset": 525,
+                "col": 15,
+                "tokLen": 1
+              }
+            },
+            "isUsed": true,
+            "name": "n",
+            "type": {
+              "qualType": "int"
+            }
+          }
+        ],
+        "parameter_spellings": {
+          "0x5627b6d545a8": "int n"
+        }
+      }
+    ],
+    "ast_nodes": 35,
+    "record_layouts": [
+      {
+        "name": "struct __NSConstantString_tag",
+        "size_bytes": 32,
+        "alignment_bytes": 8,
+        "members": [
+          {
+            "offset_bytes": 0,
+            "declaration": "const int * isa",
+            "depth": 1
+          },
+          {
+            "offset_bytes": 8,
+            "declaration": "int flags",
+            "depth": 1
+          },
+          {
+            "offset_bytes": 16,
+            "declaration": "const char * str",
+            "depth": 1
+          },
+          {
+            "offset_bytes": 24,
+            "declaration": "long length",
+            "depth": 1
+          }
+        ]
+      },
+      {
+        "name": "struct __va_list_tag",
+        "size_bytes": 24,
+        "alignment_bytes": 8,
+        "members": [
+          {
+            "offset_bytes": 0,
+            "declaration": "unsigned int gp_offset",
+            "depth": 1
+          },
+          {
+            "offset_bytes": 4,
+            "declaration": "unsigned int fp_offset",
+            "depth": 1
+          },
+          {
+            "offset_bytes": 8,
+            "declaration": "void * overflow_arg_area",
+            "depth": 1
+          },
+          {
+            "offset_bytes": 16,
+            "declaration": "void * reg_save_area",
+            "depth": 1
+          }
+        ]
+      }
+    ],
+    "record_layout_dump": "\n*** Dumping AST Record Layout\n         0 | struct __NSConstantString_tag\n         0 |   const int * isa\n         8 |   int flags\n        16 |   const char * str\n        24 |   long length\n           | [sizeof=32, align=8]\n\n*** Dumping AST Record Layout\n         0 | struct __va_list_tag\n         0 |   unsigned int gp_offset\n         4 |   unsigned int fp_offset\n         8 |   void * overflow_arg_area\n        16 |   void * reg_save_area\n           | [sizeof=24, align=8]\n",
+    "llvm_ir": "; ModuleID = '/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c'\nsource_filename = \"/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c\"\ntarget datalayout = \"e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128\"\ntarget triple = \"x86_64-pc-linux-gnu\"\n\n@.src = private unnamed_addr constant [85 x i8] c\"/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c\\00\", align 1\n@0 = private unnamed_addr constant { i16, i16, [6 x i8] } { i16 0, i16 11, [6 x i8] c\"'int'\\00\" }\n@1 = private unnamed_addr global { { ptr, i32, i32 }, ptr } { { ptr, i32, i32 } { ptr @.src, i32 3, i32 23 }, ptr @0 }\n\n; Function Attrs: noinline nounwind optnone uwtable\ndefine dso_local i32 @entry(i32 noundef %n) #0 !dbg !10 !func_sanitize !14 {\nentry:\n  %n.addr = alloca i32, align 4\n  %a = alloca [2 x i32], align 4\n  store i32 %n, ptr %n.addr, align 4\n  %arrayinit.begin = getelementptr inbounds [2 x i32], ptr %a, i64 0, i64 0, !dbg !15\n  %0 = load i32, ptr %n.addr, align 4, !dbg !16\n  store i32 %0, ptr %arrayinit.begin, align 4, !dbg !15\n  %arrayinit.element = getelementptr inbounds i32, ptr %arrayinit.begin, i64 1, !dbg !15\n  %1 = load i32, ptr %n.addr, align 4, !dbg !17\n  %2 = call { i32, i1 } @llvm.sadd.with.overflow.i32(i32 %1, i32 1), !dbg !18, !nosanitize !13\n  %3 = extractvalue { i32, i1 } %2, 0, !dbg !18, !nosanitize !13\n  %4 = extractvalue { i32, i1 } %2, 1, !dbg !18, !nosanitize !13\n  %5 = xor i1 %4, true, !dbg !18, !nosanitize !13\n  br i1 %5, label %cont, label %handler.add_overflow, !dbg !18, !prof !19, !nosanitize !13\n\nhandler.add_overflow:                             ; preds = %entry\n  %6 = zext i32 %1 to i64, !dbg !18, !nosanitize !13\n  call void @__ubsan_handle_add_overflow_abort(ptr @1, i64 %6, i64 1) #4, !dbg !18, !nosanitize !13\n  unreachable, !dbg !18, !nosanitize !13\n\ncont:                                             ; preds = %entry\n  store i32 %3, ptr %arrayinit.element, align 4, !dbg !15\n  %arraydecay = getelementptr inbounds [2 x i32], ptr %a, i64 0, i64 0, !dbg !20\n  %call = call i32 @visit(ptr noundef %arraydecay), !dbg !21\n  ret i32 %call, !dbg !22\n}\n\n; Function Attrs: nocallback nofree nosync nounwind speculatable willreturn memory(none)\ndeclare { i32, i1 } @llvm.sadd.with.overflow.i32(i32, i32) #1\n\n; Function Attrs: noreturn nounwind uwtable\ndeclare void @__ubsan_handle_add_overflow_abort(ptr, i64, i64) #2\n\ndeclare i32 @visit(ptr noundef) #3\n\nattributes #0 = { noinline nounwind optnone uwtable \"frame-pointer\"=\"all\" \"min-legal-vector-width\"=\"0\" \"no-trapping-math\"=\"true\" \"stack-protector-buffer-size\"=\"8\" \"target-cpu\"=\"x86-64\" \"target-features\"=\"+cmov,+cx8,+fxsr,+mmx,+sse,+sse2,+x87\" \"tune-cpu\"=\"generic\" }\nattributes #1 = { nocallback nofree nosync nounwind speculatable willreturn memory(none) }\nattributes #2 = { noreturn nounwind uwtable }\nattributes #3 = { \"frame-pointer\"=\"all\" \"no-trapping-math\"=\"true\" \"stack-protector-buffer-size\"=\"8\" \"target-cpu\"=\"x86-64\" \"target-features\"=\"+cmov,+cx8,+fxsr,+mmx,+sse,+sse2,+x87\" \"tune-cpu\"=\"generic\" }\nattributes #4 = { noreturn nounwind }\n\n!llvm.dbg.cu = !{!0}\n!llvm.module.flags = !{!2, !3, !4, !5, !6, !7, !8}\n!llvm.ident = !{!9}\n\n!0 = distinct !DICompileUnit(language: DW_LANG_C11, file: !1, producer: \"Ubuntu clang version 18.1.3 (1ubuntu1)\", isOptimized: false, runtimeVersion: 0, emissionKind: LineTablesOnly, splitDebugInlining: false, nameTableKind: None)\n!1 = !DIFile(filename: \"/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c\", directory: \"/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters\")\n!2 = !{i32 7, !\"Dwarf Version\", i32 5}\n!3 = !{i32 2, !\"Debug Info Version\", i32 3}\n!4 = !{i32 1, !\"wchar_size\", i32 4}\n!5 = !{i32 8, !\"PIC Level\", i32 2}\n!6 = !{i32 7, !\"PIE Level\", i32 2}\n!7 = !{i32 7, !\"uwtable\", i32 2}\n!8 = !{i32 7, !\"frame-pointer\", i32 2}\n!9 = !{!\"Ubuntu clang version 18.1.3 (1ubuntu1)\"}\n!10 = distinct !DISubprogram(name: \"entry\", scope: !11, file: !11, line: 2, type: !12, scopeLine: 2, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0)\n!11 = !DIFile(filename: \"entry.c\", directory: \"/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters\")\n!12 = !DISubroutineType(types: !13)\n!13 = !{}\n!14 = !{i32 -1056584962, i32 -897942929}\n!15 = !DILocation(line: 3, column: 17, scope: !10)\n!16 = !DILocation(line: 3, column: 18, scope: !10)\n!17 = !DILocation(line: 3, column: 21, scope: !10)\n!18 = !DILocation(line: 3, column: 23, scope: !10)\n!19 = !{!\"branch_weights\", i32 1048575, i32 1}\n!20 = !DILocation(line: 4, column: 18, scope: !10)\n!21 = !DILocation(line: 4, column: 12, scope: !10)\n!22 = !DILocation(line: 4, column: 5, scope: !10)\n",
+    "llvm_ir_sha256": "6ee3a6b2e56517668fdad18fed662e4ba64636b6481b1a3ccb2c3bd45e600a5d",
+    "llvm_cfg": [
+      {
+        "name": "entry",
+        "blocks": [
+          {
+            "name": "entry",
+            "successors": [
+              "cont",
+              "handler.add_overflow"
+            ]
+          },
+          {
+            "name": "handler.add_overflow",
+            "successors": []
+          },
+          {
+            "name": "cont",
+            "successors": []
+          }
+        ]
+      }
+    ],
+    "ubsan_instrumentation_requested": true,
+    "proof_boundary": "closed supplied function component; Clang/source binding trusted; no assumed external semantics, native linker, dynamic interposition or whole C/LLVM proof",
+    "input_consistency": "all supplied main source files checked unchanged across project ingestion and proof; included headers/environment must remain stable",
+    "linked_translation_units": [
+      {
+        "status": "CLANG_FRONTEND_READY",
+        "frontend": "clang",
+        "analysis_status": "NOT_PROVED",
+        "c_overflow_verified": false,
+        "memory_safety_verified": false,
+        "termination_proved": false,
+        "unbounded_summary": false,
+        "commands": [
+          {
+            "stage": "version",
+            "argv": [
+              "/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang",
+              "--version"
+            ],
+            "directory": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters",
+            "exit_code": 0,
+            "diagnostics": "",
+            "stdout_sha256": "9b65cb8279dcd1a273fe8ad0b1395d8ff32810c15d614c551c92958bbbda1a54"
+          },
+          {
+            "stage": "preprocess",
+            "argv": [
+              "/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang",
+              "-std=c11",
+              "-I.",
+              "-O0",
+              "-gline-tables-only",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-x",
+              "c",
+              "-fno-color-diagnostics",
+              "-E",
+              "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c"
+            ],
+            "directory": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters",
+            "exit_code": 0,
+            "diagnostics": "",
+            "stdout_sha256": "acf7b5091e0f2359d0681a54dbd51e55e1bbd3c8b942fb40d414b69a2a5f915c"
+          },
+          {
+            "stage": "ast",
+            "argv": [
+              "/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang",
+              "-std=c11",
+              "-I.",
+              "-O0",
+              "-gline-tables-only",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-x",
+              "cpp-output",
+              "-fno-color-diagnostics",
+              "-fsyntax-only",
+              "-Xclang",
+              "-ast-dump=json",
+              "/tmp/llmloop-clang-976a71t7/snapshot.i"
+            ],
+            "directory": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters",
+            "exit_code": 0,
+            "diagnostics": "clang: warning: argument unused during compilation: '-I .' [-Wunused-command-line-argument]\n",
+            "stdout_sha256": "bf8b3489ebbe94782e2a72879f3a0ee86a84f21df59941e74b7dff63f3d6ac39"
+          },
+          {
+            "stage": "layouts",
+            "argv": [
+              "/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang",
+              "-std=c11",
+              "-I.",
+              "-O0",
+              "-gline-tables-only",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-x",
+              "cpp-output",
+              "-fno-color-diagnostics",
+              "-fsyntax-only",
+              "-Xclang",
+              "-fdump-record-layouts-complete",
+              "/tmp/llmloop-clang-976a71t7/snapshot.i"
+            ],
+            "directory": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters",
+            "exit_code": 0,
+            "diagnostics": "clang: warning: argument unused during compilation: '-I .' [-Wunused-command-line-argument]\n",
+            "stdout_sha256": "a5bd015f43002b99341d7903b06a75483332d9ef01390c18a0ccd842d0227616"
+          },
+          {
+            "stage": "llvm",
+            "argv": [
+              "/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang",
+              "-std=c11",
+              "-I.",
+              "-O0",
+              "-gline-tables-only",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-x",
+              "cpp-output",
+              "-fno-color-diagnostics",
+              "-fno-discard-value-names",
+              "-S",
+              "-emit-llvm",
+              "/tmp/llmloop-clang-976a71t7/snapshot.i",
+              "-o",
+              "/tmp/llmloop-clang-976a71t7/module.ll"
+            ],
+            "directory": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters",
+            "exit_code": 0,
+            "diagnostics": "clang: warning: argument unused during compilation: '-I .' [-Wunused-command-line-argument]\n",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ],
+        "source_compiles": true,
+        "compiler": {
+          "executable": "/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang",
+          "version": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /workspace/scratch/26b59f7180c2/runtime-v050/clang/usr/lib/llvm-18/bin"
+        },
+        "source": {
+          "path": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c",
+          "sha256": "822410636c8145c7a98a59a314c783d787ab05fbc6779ceb5942606f2c22994c"
+        },
+        "preprocessing": {
+          "method": "single Clang -E snapshot with line markers; all later stages use -x cpp-output",
+          "source": "# 1 \"/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c\"\n# 1 \"<built-in>\" 1\n# 1 \"<built-in>\" 3\n# 388 \"<built-in>\" 3\n# 1 \"<command line>\" 1\n# 1 \"<built-in>\" 2\n# 1 \"/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c\" 2\n# 1 \"/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/api.h\" 1\n\n\ntypedef int Cell;\nint visit(Cell p[5]);\n# 2 \"/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c\" 2\nint entry(int n) {\n    Cell a[2] = {n, n + 1};\n    return visit(a);\n}\n",
+          "sha256": "acf7b5091e0f2359d0681a54dbd51e55e1bbd3c8b942fb40d414b69a2a5f915c",
+          "bytes": 581,
+          "input_sha256": "822410636c8145c7a98a59a314c783d787ab05fbc6779ceb5942606f2c22994c",
+          "line_markers_preserved": true,
+          "source_location_builtins_supported": false
+        },
+        "compilation_database": {
+          "path": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/compile_commands.json",
+          "sha256": "78f8a242e1445a8c9045296a1f9bd78f0932e98cb86c1c35dec2fb7cd66f14e1",
+          "command_index": 0,
+          "original_arguments": [
+            "cc",
+            "-std=c11",
+            "-I.",
+            "-c",
+            "entry.c"
+          ]
+        },
+        "effective_flags": [
+          "-std=c11",
+          "-I.",
+          "-O0",
+          "-gline-tables-only",
+          "-fsanitize=undefined",
+          "-fno-sanitize-recover=all"
+        ],
+        "ignored_build_flags": [
+          "-c",
+          "entry.c"
+        ],
+        "target": {
+          "triple": "x86_64-pc-linux-gnu",
+          "data_layout": "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+        },
+        "functions": [
+          {
+            "name": "entry",
+            "linkage_name": "entry",
+            "type": {
+              "qualType": "int (int)"
+            },
+            "location": {
+              "offset": 515,
+              "line": 14,
+              "presumedFile": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c",
+              "presumedLine": 2,
+              "col": 5,
+              "tokLen": 5
+            },
+            "range": {
+              "begin": {
+                "offset": 511,
+                "col": 1,
+                "tokLen": 3
+              },
+              "end": {
+                "offset": 579,
+                "line": 17,
+                "presumedLine": 5,
+                "col": 1,
+                "tokLen": 1
+              }
+            },
+            "parameter_spellings": {
+              "0x5627b6d545a8": "int n"
+            },
+            "ast": {
+              "id": "0x5627b6d54678",
+              "kind": "FunctionDecl",
+              "loc": {
+                "offset": 515,
+                "line": 14,
+                "presumedFile": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c",
+                "presumedLine": 2,
+                "col": 5,
+                "tokLen": 5
+              },
+              "range": {
+                "begin": {
+                  "offset": 511,
+                  "col": 1,
+                  "tokLen": 3
+                },
+                "end": {
+                  "offset": 579,
+                  "line": 17,
+                  "presumedLine": 5,
+                  "col": 1,
+                  "tokLen": 1
+                }
+              },
+              "name": "entry",
+              "mangledName": "entry",
+              "type": {
+                "qualType": "int (int)"
+              },
+              "inner": [
+                {
+                  "id": "0x5627b6d545a8",
+                  "kind": "ParmVarDecl",
+                  "loc": {
+                    "offset": 525,
+                    "line": 14,
+                    "presumedLine": 2,
+                    "col": 15,
+                    "tokLen": 1
+                  },
+                  "range": {
+                    "begin": {
+                      "offset": 521,
+                      "col": 11,
+                      "tokLen": 3
+                    },
+                    "end": {
+                      "offset": 525,
+                      "col": 15,
+                      "tokLen": 1
+                    }
+                  },
+                  "isUsed": true,
+                  "name": "n",
+                  "type": {
+                    "qualType": "int"
+                  }
+                },
+                {
+                  "id": "0x5627b6d54af8",
+                  "kind": "CompoundStmt",
+                  "range": {
+                    "begin": {
+                      "offset": 528,
+                      "col": 18,
+                      "tokLen": 1
+                    },
+                    "end": {
+                      "offset": 579,
+                      "line": 17,
+                      "presumedLine": 5,
+                      "col": 1,
+                      "tokLen": 1
+                    }
+                  },
+                  "inner": [
+                    {
+                      "id": "0x5627b6d549d8",
+                      "kind": "DeclStmt",
+                      "range": {
+                        "begin": {
+                          "offset": 534,
+                          "line": 15,
+                          "presumedLine": 3,
+                          "col": 5,
+                          "tokLen": 4
+                        },
+                        "end": {
+                          "offset": 556,
+                          "col": 27,
+                          "tokLen": 1
+                        }
+                      },
+                      "inner": [
+                        {
+                          "id": "0x5627b6d54810",
+                          "kind": "VarDecl",
+                          "loc": {
+                            "offset": 539,
+                            "col": 10,
+                            "tokLen": 1
+                          },
+                          "range": {
+                            "begin": {
+                              "offset": 534,
+                              "col": 5,
+                              "tokLen": 4
+                            },
+                            "end": {
+                              "offset": 555,
+                              "col": 26,
+                              "tokLen": 1
+                            }
+                          },
+                          "isUsed": true,
+                          "name": "a",
+                          "type": {
+                            "qualType": "Cell[2]"
+                          },
+                          "init": "c",
+                          "inner": [
+                            {
+                              "id": "0x5627b6d54970",
+                              "kind": "InitListExpr",
+                              "range": {
+                                "begin": {
+                                  "offset": 546,
+                                  "col": 17,
+                                  "tokLen": 1
+                                },
+                                "end": {
+                                  "offset": 555,
+                                  "col": 26,
+                                  "tokLen": 1
+                                }
+                              },
+                              "type": {
+                                "qualType": "Cell[2]"
+                              },
+                              "valueCategory": "prvalue",
+                              "inner": [
+                                {
+                                  "id": "0x5627b6d549c0",
+                                  "kind": "ImplicitCastExpr",
+                                  "range": {
+                                    "begin": {
+                                      "offset": 547,
+                                      "col": 18,
+                                      "tokLen": 1
+                                    },
+                                    "end": {
+                                      "offset": 547,
+                                      "col": 18,
+                                      "tokLen": 1
+                                    }
+                                  },
+                                  "type": {
+                                    "qualType": "int"
+                                  },
+                                  "valueCategory": "prvalue",
+                                  "castKind": "LValueToRValue",
+                                  "inner": [
+                                    {
+                                      "id": "0x5627b6d54878",
+                                      "kind": "DeclRefExpr",
+                                      "range": {
+                                        "begin": {
+                                          "offset": 547,
+                                          "col": 18,
+                                          "tokLen": 1
+                                        },
+                                        "end": {
+                                          "offset": 547,
+                                          "col": 18,
+                                          "tokLen": 1
+                                        }
+                                      },
+                                      "type": {
+                                        "qualType": "int"
+                                      },
+                                      "valueCategory": "lvalue",
+                                      "referencedDecl": {
+                                        "id": "0x5627b6d545a8",
+                                        "kind": "ParmVarDecl",
+                                        "name": "n",
+                                        "type": {
+                                          "qualType": "int"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "id": "0x5627b6d548f0",
+                                  "kind": "BinaryOperator",
+                                  "range": {
+                                    "begin": {
+                                      "offset": 550,
+                                      "col": 21,
+                                      "tokLen": 1
+                                    },
+                                    "end": {
+                                      "offset": 554,
+                                      "col": 25,
+                                      "tokLen": 1
+                                    }
+                                  },
+                                  "type": {
+                                    "qualType": "int"
+                                  },
+                                  "valueCategory": "prvalue",
+                                  "opcode": "+",
+                                  "inner": [
+                                    {
+                                      "id": "0x5627b6d548d8",
+                                      "kind": "ImplicitCastExpr",
+                                      "range": {
+                                        "begin": {
+                                          "offset": 550,
+                                          "col": 21,
+                                          "tokLen": 1
+                                        },
+                                        "end": {
+                                          "offset": 550,
+                                          "col": 21,
+                                          "tokLen": 1
+                                        }
+                                      },
+                                      "type": {
+                                        "qualType": "int"
+                                      },
+                                      "valueCategory": "prvalue",
+                                      "castKind": "LValueToRValue",
+                                      "inner": [
+                                        {
+                                          "id": "0x5627b6d54898",
+                                          "kind": "DeclRefExpr",
+                                          "range": {
+                                            "begin": {
+                                              "offset": 550,
+                                              "col": 21,
+                                              "tokLen": 1
+                                            },
+                                            "end": {
+                                              "offset": 550,
+                                              "col": 21,
+                                              "tokLen": 1
+                                            }
+                                          },
+                                          "type": {
+                                            "qualType": "int"
+                                          },
+                                          "valueCategory": "lvalue",
+                                          "referencedDecl": {
+                                            "id": "0x5627b6d545a8",
+                                            "kind": "ParmVarDecl",
+                                            "name": "n",
+                                            "type": {
+                                              "qualType": "int"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "id": "0x5627b6d548b8",
+                                      "kind": "IntegerLiteral",
+                                      "range": {
+                                        "begin": {
+                                          "offset": 554,
+                                          "col": 25,
+                                          "tokLen": 1
+                                        },
+                                        "end": {
+                                          "offset": 554,
+                                          "col": 25,
+                                          "tokLen": 1
+                                        }
+                                      },
+                                      "type": {
+                                        "qualType": "int"
+                                      },
+                                      "valueCategory": "prvalue",
+                                      "value": "1"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "0x5627b6d54ae8",
+                      "kind": "ReturnStmt",
+                      "range": {
+                        "begin": {
+                          "offset": 562,
+                          "line": 16,
+                          "presumedLine": 4,
+                          "col": 5,
+                          "tokLen": 6
+                        },
+                        "end": {
+                          "offset": 576,
+                          "col": 19,
+                          "tokLen": 1
+                        }
+                      },
+                      "inner": [
+                        {
+                          "id": "0x5627b6d54aa8",
+                          "kind": "CallExpr",
+                          "range": {
+                            "begin": {
+                              "offset": 569,
+                              "col": 12,
+                              "tokLen": 5
+                            },
+                            "end": {
+                              "offset": 576,
+                              "col": 19,
+                              "tokLen": 1
+                            }
+                          },
+                          "type": {
+                            "qualType": "int"
+                          },
+                          "valueCategory": "prvalue",
+                          "inner": [
+                            {
+                              "id": "0x5627b6d54a90",
+                              "kind": "ImplicitCastExpr",
+                              "range": {
+                                "begin": {
+                                  "offset": 569,
+                                  "col": 12,
+                                  "tokLen": 5
+                                },
+                                "end": {
+                                  "offset": 569,
+                                  "col": 12,
+                                  "tokLen": 5
+                                }
+                              },
+                              "type": {
+                                "qualType": "int (*)(Cell *)"
+                              },
+                              "valueCategory": "prvalue",
+                              "castKind": "FunctionToPointerDecay",
+                              "inner": [
+                                {
+                                  "id": "0x5627b6d549f0",
+                                  "kind": "DeclRefExpr",
+                                  "range": {
+                                    "begin": {
+                                      "offset": 569,
+                                      "col": 12,
+                                      "tokLen": 5
+                                    },
+                                    "end": {
+                                      "offset": 569,
+                                      "col": 12,
+                                      "tokLen": 5
+                                    }
+                                  },
+                                  "type": {
+                                    "qualType": "int (Cell *)"
+                                  },
+                                  "valueCategory": "prvalue",
+                                  "referencedDecl": {
+                                    "id": "0x5627b6d54498",
+                                    "kind": "FunctionDecl",
+                                    "name": "visit",
+                                    "type": {
+                                      "qualType": "int (Cell *)"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            {
+                              "id": "0x5627b6d54ad0",
+                              "kind": "ImplicitCastExpr",
+                              "range": {
+                                "begin": {
+                                  "offset": 575,
+                                  "col": 18,
+                                  "tokLen": 1
+                                },
+                                "end": {
+                                  "offset": 575,
+                                  "col": 18,
+                                  "tokLen": 1
+                                }
+                              },
+                              "type": {
+                                "qualType": "Cell *"
+                              },
+                              "valueCategory": "prvalue",
+                              "castKind": "ArrayToPointerDecay",
+                              "inner": [
+                                {
+                                  "id": "0x5627b6d54a10",
+                                  "kind": "DeclRefExpr",
+                                  "range": {
+                                    "begin": {
+                                      "offset": 575,
+                                      "col": 18,
+                                      "tokLen": 1
+                                    },
+                                    "end": {
+                                      "offset": 575,
+                                      "col": 18,
+                                      "tokLen": 1
+                                    }
+                                  },
+                                  "type": {
+                                    "qualType": "Cell[2]"
+                                  },
+                                  "valueCategory": "lvalue",
+                                  "referencedDecl": {
+                                    "id": "0x5627b6d54810",
+                                    "kind": "VarDecl",
+                                    "name": "a",
+                                    "type": {
+                                      "qualType": "Cell[2]"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "typedefs": [
+          {
+            "name": "__int128_t",
+            "type": {
+              "qualType": "__int128"
+            },
+            "location": {},
+            "record_ids": [],
+            "attributes": []
+          },
+          {
+            "name": "__uint128_t",
+            "type": {
+              "qualType": "unsigned __int128"
+            },
+            "location": {},
+            "record_ids": [],
+            "attributes": []
+          },
+          {
+            "name": "__NSConstantString",
+            "type": {
+              "qualType": "struct __NSConstantString_tag"
+            },
+            "location": {},
+            "record_ids": [
+              "0x5627b6cf5920"
+            ],
+            "attributes": []
+          },
+          {
+            "name": "__builtin_ms_va_list",
+            "type": {
+              "qualType": "char *"
+            },
+            "location": {},
+            "record_ids": [],
+            "attributes": []
+          },
+          {
+            "name": "__builtin_va_list",
+            "type": {
+              "qualType": "struct __va_list_tag[1]"
+            },
+            "location": {},
+            "record_ids": [
+              "0x5627b6cf5cd0"
+            ],
+            "attributes": []
+          },
+          {
+            "name": "Cell",
+            "type": {
+              "qualType": "int"
+            },
+            "location": {
+              "offset": 390,
+              "file": "/tmp/llmloop-clang-976a71t7/snapshot.i",
+              "line": 11,
+              "presumedFile": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/api.h",
+              "presumedLine": 3,
+              "col": 13,
+              "tokLen": 4,
+              "includedFrom": {
+                "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c"
+              }
+            },
+            "record_ids": [],
+            "attributes": []
+          }
+        ],
+        "modeled_function_declarations": [],
+        "external_function_declarations": [
+          {
+            "id": "0x5627b6d54498",
+            "kind": "FunctionDecl",
+            "loc": {
+              "offset": 400,
+              "line": 12,
+              "presumedLine": 4,
+              "col": 5,
+              "tokLen": 5,
+              "includedFrom": {
+                "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c"
+              }
+            },
+            "range": {
+              "begin": {
+                "offset": 396,
+                "col": 1,
+                "tokLen": 3,
+                "includedFrom": {
+                  "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c"
+                }
+              },
+              "end": {
+                "offset": 415,
+                "col": 20,
+                "tokLen": 1,
+                "includedFrom": {
+                  "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c"
+                }
+              }
+            },
+            "isUsed": true,
+            "name": "visit",
+            "mangledName": "visit",
+            "type": {
+              "qualType": "int (Cell *)"
+            },
+            "inner": [
+              {
+                "id": "0x5627b6d54380",
+                "kind": "ParmVarDecl",
+                "loc": {
+                  "offset": 411,
+                  "col": 16,
+                  "tokLen": 1,
+                  "includedFrom": {
+                    "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c"
+                  }
+                },
+                "range": {
+                  "begin": {
+                    "offset": 406,
+                    "col": 11,
+                    "tokLen": 4,
+                    "includedFrom": {
+                      "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c"
+                    }
+                  },
+                  "end": {
+                    "offset": 414,
+                    "col": 19,
+                    "tokLen": 1,
+                    "includedFrom": {
+                      "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c"
+                    }
+                  }
+                },
+                "name": "p",
+                "type": {
+                  "qualType": "Cell *"
+                }
+              }
+            ]
+          }
+        ],
+        "record_definitions": [],
+        "function_parameter_declarations": [
+          {
+            "id": "0x5627b6d54498",
+            "name": "visit",
+            "parameters": [
+              {
+                "id": "0x5627b6d54380",
+                "kind": "ParmVarDecl",
+                "loc": {
+                  "offset": 411,
+                  "col": 16,
+                  "tokLen": 1,
+                  "includedFrom": {
+                    "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c"
+                  }
+                },
+                "range": {
+                  "begin": {
+                    "offset": 406,
+                    "col": 11,
+                    "tokLen": 4,
+                    "includedFrom": {
+                      "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c"
+                    }
+                  },
+                  "end": {
+                    "offset": 414,
+                    "col": 19,
+                    "tokLen": 1,
+                    "includedFrom": {
+                      "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c"
+                    }
+                  }
+                },
+                "name": "p",
+                "type": {
+                  "qualType": "Cell *"
+                }
+              }
+            ],
+            "parameter_spellings": {
+              "0x5627b6d54380": "Cell p[5]"
+            }
+          },
+          {
+            "id": "0x5627b6d54678",
+            "name": "entry",
+            "parameters": [
+              {
+                "id": "0x5627b6d545a8",
+                "kind": "ParmVarDecl",
+                "loc": {
+                  "offset": 525,
+                  "line": 14,
+                  "presumedLine": 2,
+                  "col": 15,
+                  "tokLen": 1
+                },
+                "range": {
+                  "begin": {
+                    "offset": 521,
+                    "col": 11,
+                    "tokLen": 3
+                  },
+                  "end": {
+                    "offset": 525,
+                    "col": 15,
+                    "tokLen": 1
+                  }
+                },
+                "isUsed": true,
+                "name": "n",
+                "type": {
+                  "qualType": "int"
+                }
+              }
+            ],
+            "parameter_spellings": {
+              "0x5627b6d545a8": "int n"
+            }
+          }
+        ],
+        "ast_nodes": 35,
+        "record_layouts": [
+          {
+            "name": "struct __NSConstantString_tag",
+            "size_bytes": 32,
+            "alignment_bytes": 8,
+            "members": [
+              {
+                "offset_bytes": 0,
+                "declaration": "const int * isa",
+                "depth": 1
+              },
+              {
+                "offset_bytes": 8,
+                "declaration": "int flags",
+                "depth": 1
+              },
+              {
+                "offset_bytes": 16,
+                "declaration": "const char * str",
+                "depth": 1
+              },
+              {
+                "offset_bytes": 24,
+                "declaration": "long length",
+                "depth": 1
+              }
+            ]
+          },
+          {
+            "name": "struct __va_list_tag",
+            "size_bytes": 24,
+            "alignment_bytes": 8,
+            "members": [
+              {
+                "offset_bytes": 0,
+                "declaration": "unsigned int gp_offset",
+                "depth": 1
+              },
+              {
+                "offset_bytes": 4,
+                "declaration": "unsigned int fp_offset",
+                "depth": 1
+              },
+              {
+                "offset_bytes": 8,
+                "declaration": "void * overflow_arg_area",
+                "depth": 1
+              },
+              {
+                "offset_bytes": 16,
+                "declaration": "void * reg_save_area",
+                "depth": 1
+              }
+            ]
+          }
+        ],
+        "record_layout_dump": "\n*** Dumping AST Record Layout\n         0 | struct __NSConstantString_tag\n         0 |   const int * isa\n         8 |   int flags\n        16 |   const char * str\n        24 |   long length\n           | [sizeof=32, align=8]\n\n*** Dumping AST Record Layout\n         0 | struct __va_list_tag\n         0 |   unsigned int gp_offset\n         4 |   unsigned int fp_offset\n         8 |   void * overflow_arg_area\n        16 |   void * reg_save_area\n           | [sizeof=24, align=8]\n",
+        "llvm_ir": "; ModuleID = '/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c'\nsource_filename = \"/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c\"\ntarget datalayout = \"e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128\"\ntarget triple = \"x86_64-pc-linux-gnu\"\n\n@.src = private unnamed_addr constant [85 x i8] c\"/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c\\00\", align 1\n@0 = private unnamed_addr constant { i16, i16, [6 x i8] } { i16 0, i16 11, [6 x i8] c\"'int'\\00\" }\n@1 = private unnamed_addr global { { ptr, i32, i32 }, ptr } { { ptr, i32, i32 } { ptr @.src, i32 3, i32 23 }, ptr @0 }\n\n; Function Attrs: noinline nounwind optnone uwtable\ndefine dso_local i32 @entry(i32 noundef %n) #0 !dbg !10 !func_sanitize !14 {\nentry:\n  %n.addr = alloca i32, align 4\n  %a = alloca [2 x i32], align 4\n  store i32 %n, ptr %n.addr, align 4\n  %arrayinit.begin = getelementptr inbounds [2 x i32], ptr %a, i64 0, i64 0, !dbg !15\n  %0 = load i32, ptr %n.addr, align 4, !dbg !16\n  store i32 %0, ptr %arrayinit.begin, align 4, !dbg !15\n  %arrayinit.element = getelementptr inbounds i32, ptr %arrayinit.begin, i64 1, !dbg !15\n  %1 = load i32, ptr %n.addr, align 4, !dbg !17\n  %2 = call { i32, i1 } @llvm.sadd.with.overflow.i32(i32 %1, i32 1), !dbg !18, !nosanitize !13\n  %3 = extractvalue { i32, i1 } %2, 0, !dbg !18, !nosanitize !13\n  %4 = extractvalue { i32, i1 } %2, 1, !dbg !18, !nosanitize !13\n  %5 = xor i1 %4, true, !dbg !18, !nosanitize !13\n  br i1 %5, label %cont, label %handler.add_overflow, !dbg !18, !prof !19, !nosanitize !13\n\nhandler.add_overflow:                             ; preds = %entry\n  %6 = zext i32 %1 to i64, !dbg !18, !nosanitize !13\n  call void @__ubsan_handle_add_overflow_abort(ptr @1, i64 %6, i64 1) #4, !dbg !18, !nosanitize !13\n  unreachable, !dbg !18, !nosanitize !13\n\ncont:                                             ; preds = %entry\n  store i32 %3, ptr %arrayinit.element, align 4, !dbg !15\n  %arraydecay = getelementptr inbounds [2 x i32], ptr %a, i64 0, i64 0, !dbg !20\n  %call = call i32 @visit(ptr noundef %arraydecay), !dbg !21\n  ret i32 %call, !dbg !22\n}\n\n; Function Attrs: nocallback nofree nosync nounwind speculatable willreturn memory(none)\ndeclare { i32, i1 } @llvm.sadd.with.overflow.i32(i32, i32) #1\n\n; Function Attrs: noreturn nounwind uwtable\ndeclare void @__ubsan_handle_add_overflow_abort(ptr, i64, i64) #2\n\ndeclare i32 @visit(ptr noundef) #3\n\nattributes #0 = { noinline nounwind optnone uwtable \"frame-pointer\"=\"all\" \"min-legal-vector-width\"=\"0\" \"no-trapping-math\"=\"true\" \"stack-protector-buffer-size\"=\"8\" \"target-cpu\"=\"x86-64\" \"target-features\"=\"+cmov,+cx8,+fxsr,+mmx,+sse,+sse2,+x87\" \"tune-cpu\"=\"generic\" }\nattributes #1 = { nocallback nofree nosync nounwind speculatable willreturn memory(none) }\nattributes #2 = { noreturn nounwind uwtable }\nattributes #3 = { \"frame-pointer\"=\"all\" \"no-trapping-math\"=\"true\" \"stack-protector-buffer-size\"=\"8\" \"target-cpu\"=\"x86-64\" \"target-features\"=\"+cmov,+cx8,+fxsr,+mmx,+sse,+sse2,+x87\" \"tune-cpu\"=\"generic\" }\nattributes #4 = { noreturn nounwind }\n\n!llvm.dbg.cu = !{!0}\n!llvm.module.flags = !{!2, !3, !4, !5, !6, !7, !8}\n!llvm.ident = !{!9}\n\n!0 = distinct !DICompileUnit(language: DW_LANG_C11, file: !1, producer: \"Ubuntu clang version 18.1.3 (1ubuntu1)\", isOptimized: false, runtimeVersion: 0, emissionKind: LineTablesOnly, splitDebugInlining: false, nameTableKind: None)\n!1 = !DIFile(filename: \"/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c\", directory: \"/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters\")\n!2 = !{i32 7, !\"Dwarf Version\", i32 5}\n!3 = !{i32 2, !\"Debug Info Version\", i32 3}\n!4 = !{i32 1, !\"wchar_size\", i32 4}\n!5 = !{i32 8, !\"PIC Level\", i32 2}\n!6 = !{i32 7, !\"PIE Level\", i32 2}\n!7 = !{i32 7, !\"uwtable\", i32 2}\n!8 = !{i32 7, !\"frame-pointer\", i32 2}\n!9 = !{!\"Ubuntu clang version 18.1.3 (1ubuntu1)\"}\n!10 = distinct !DISubprogram(name: \"entry\", scope: !11, file: !11, line: 2, type: !12, scopeLine: 2, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0)\n!11 = !DIFile(filename: \"entry.c\", directory: \"/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters\")\n!12 = !DISubroutineType(types: !13)\n!13 = !{}\n!14 = !{i32 -1056584962, i32 -897942929}\n!15 = !DILocation(line: 3, column: 17, scope: !10)\n!16 = !DILocation(line: 3, column: 18, scope: !10)\n!17 = !DILocation(line: 3, column: 21, scope: !10)\n!18 = !DILocation(line: 3, column: 23, scope: !10)\n!19 = !{!\"branch_weights\", i32 1048575, i32 1}\n!20 = !DILocation(line: 4, column: 18, scope: !10)\n!21 = !DILocation(line: 4, column: 12, scope: !10)\n!22 = !DILocation(line: 4, column: 5, scope: !10)\n",
+        "llvm_ir_sha256": "6ee3a6b2e56517668fdad18fed662e4ba64636b6481b1a3ccb2c3bd45e600a5d",
+        "llvm_cfg": [
+          {
+            "name": "entry",
+            "blocks": [
+              {
+                "name": "entry",
+                "successors": [
+                  "cont",
+                  "handler.add_overflow"
+                ]
+              },
+              {
+                "name": "handler.add_overflow",
+                "successors": []
+              },
+              {
+                "name": "cont",
+                "successors": []
+              }
+            ]
+          }
+        ],
+        "ubsan_instrumentation_requested": true,
+        "proof_boundary": "Clang semantics/AST/IR ingestion only; no LLMloop proof or KLEE execution; LLVM blocks include sanitizer branches and are not source MEMS counts",
+        "input_consistency": "main source and expanded snapshot checked unchanged; included headers/environment must remain stable during preprocessing"
+      },
+      {
+        "status": "CLANG_FRONTEND_READY",
+        "frontend": "clang",
+        "analysis_status": "NOT_PROVED",
+        "c_overflow_verified": false,
+        "memory_safety_verified": false,
+        "termination_proved": false,
+        "unbounded_summary": false,
+        "commands": [
+          {
+            "stage": "version",
+            "argv": [
+              "/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang",
+              "--version"
+            ],
+            "directory": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters",
+            "exit_code": 0,
+            "diagnostics": "",
+            "stdout_sha256": "9b65cb8279dcd1a273fe8ad0b1395d8ff32810c15d614c551c92958bbbda1a54"
+          },
+          {
+            "stage": "preprocess",
+            "argv": [
+              "/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang",
+              "-std=c11",
+              "-I.",
+              "-O0",
+              "-gline-tables-only",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-x",
+              "c",
+              "-fno-color-diagnostics",
+              "-E",
+              "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/worker.c"
+            ],
+            "directory": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters",
+            "exit_code": 0,
+            "diagnostics": "",
+            "stdout_sha256": "e811d3ad646080bea6141dfcceb5ec8f84e7a7c2dd000d5ab7a6686ae7a894a3"
+          },
+          {
+            "stage": "ast",
+            "argv": [
+              "/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang",
+              "-std=c11",
+              "-I.",
+              "-O0",
+              "-gline-tables-only",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-x",
+              "cpp-output",
+              "-fno-color-diagnostics",
+              "-fsyntax-only",
+              "-Xclang",
+              "-ast-dump=json",
+              "/tmp/llmloop-clang-484fuy0x/snapshot.i"
+            ],
+            "directory": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters",
+            "exit_code": 0,
+            "diagnostics": "clang: warning: argument unused during compilation: '-I .' [-Wunused-command-line-argument]\n",
+            "stdout_sha256": "e3a640943d603e6a7693cded9391eaa1ea60d2f290f2eafc2a3f4ee4df38b9b0"
+          },
+          {
+            "stage": "layouts",
+            "argv": [
+              "/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang",
+              "-std=c11",
+              "-I.",
+              "-O0",
+              "-gline-tables-only",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-x",
+              "cpp-output",
+              "-fno-color-diagnostics",
+              "-fsyntax-only",
+              "-Xclang",
+              "-fdump-record-layouts-complete",
+              "/tmp/llmloop-clang-484fuy0x/snapshot.i"
+            ],
+            "directory": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters",
+            "exit_code": 0,
+            "diagnostics": "clang: warning: argument unused during compilation: '-I .' [-Wunused-command-line-argument]\n",
+            "stdout_sha256": "a5bd015f43002b99341d7903b06a75483332d9ef01390c18a0ccd842d0227616"
+          },
+          {
+            "stage": "llvm",
+            "argv": [
+              "/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang",
+              "-std=c11",
+              "-I.",
+              "-O0",
+              "-gline-tables-only",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-x",
+              "cpp-output",
+              "-fno-color-diagnostics",
+              "-fno-discard-value-names",
+              "-S",
+              "-emit-llvm",
+              "/tmp/llmloop-clang-484fuy0x/snapshot.i",
+              "-o",
+              "/tmp/llmloop-clang-484fuy0x/module.ll"
+            ],
+            "directory": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters",
+            "exit_code": 0,
+            "diagnostics": "clang: warning: argument unused during compilation: '-I .' [-Wunused-command-line-argument]\n",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ],
+        "source_compiles": true,
+        "compiler": {
+          "executable": "/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang",
+          "version": "Ubuntu clang version 18.1.3 (1ubuntu1)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /workspace/scratch/26b59f7180c2/runtime-v050/clang/usr/lib/llvm-18/bin"
+        },
+        "source": {
+          "path": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/worker.c",
+          "sha256": "8b5be666c794ad051bf65a099f0fdee7bbbd77bf0304f849093e32d67aa1dc11"
+        },
+        "preprocessing": {
+          "method": "single Clang -E snapshot with line markers; all later stages use -x cpp-output",
+          "source": "# 1 \"/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/worker.c\"\n# 1 \"<built-in>\" 1\n# 1 \"<built-in>\" 3\n# 388 \"<built-in>\" 3\n# 1 \"<command line>\" 1\n# 1 \"<built-in>\" 2\n# 1 \"/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/worker.c\" 2\n# 1 \"/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/api.h\" 1\n\n\ntypedef int Cell;\nint visit(Cell p[5]);\n# 2 \"/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/worker.c\" 2\nint visit(Cell p[]) {\n    p[1] += 1;\n    return p[0] + p[1];\n}\n",
+          "sha256": "e811d3ad646080bea6141dfcceb5ec8f84e7a7c2dd000d5ab7a6686ae7a894a3",
+          "bytes": 577,
+          "input_sha256": "8b5be666c794ad051bf65a099f0fdee7bbbd77bf0304f849093e32d67aa1dc11",
+          "line_markers_preserved": true,
+          "source_location_builtins_supported": false
+        },
+        "compilation_database": {
+          "path": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/compile_commands.json",
+          "sha256": "78f8a242e1445a8c9045296a1f9bd78f0932e98cb86c1c35dec2fb7cd66f14e1",
+          "command_index": 0,
+          "original_arguments": [
+            "cc",
+            "-std=c11",
+            "-I.",
+            "-c",
+            "worker.c"
+          ]
+        },
+        "effective_flags": [
+          "-std=c11",
+          "-I.",
+          "-O0",
+          "-gline-tables-only",
+          "-fsanitize=undefined",
+          "-fno-sanitize-recover=all"
+        ],
+        "ignored_build_flags": [
+          "-c",
+          "worker.c"
+        ],
+        "target": {
+          "triple": "x86_64-pc-linux-gnu",
+          "data_layout": "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+        },
+        "functions": [
+          {
+            "name": "visit",
+            "linkage_name": "visit",
+            "type": {
+              "qualType": "int (Cell *)"
+            },
+            "location": {
+              "offset": 518,
+              "line": 14,
+              "presumedFile": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/worker.c",
+              "presumedLine": 2,
+              "col": 5,
+              "tokLen": 5
+            },
+            "range": {
+              "begin": {
+                "offset": 514,
+                "col": 1,
+                "tokLen": 3
+              },
+              "end": {
+                "offset": 575,
+                "line": 17,
+                "presumedLine": 5,
+                "col": 1,
+                "tokLen": 1
+              }
+            },
+            "parameter_spellings": {
+              "0x55942a75f640": "Cell p[]"
+            },
+            "ast": {
+              "id": "0x55942a75f718",
+              "kind": "FunctionDecl",
+              "loc": {
+                "offset": 518,
+                "line": 14,
+                "presumedFile": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/worker.c",
+                "presumedLine": 2,
+                "col": 5,
+                "tokLen": 5
+              },
+              "range": {
+                "begin": {
+                  "offset": 514,
+                  "col": 1,
+                  "tokLen": 3
+                },
+                "end": {
+                  "offset": 575,
+                  "line": 17,
+                  "presumedLine": 5,
+                  "col": 1,
+                  "tokLen": 1
+                }
+              },
+              "previousDecl": "0x55942a75f498",
+              "name": "visit",
+              "mangledName": "visit",
+              "type": {
+                "qualType": "int (Cell *)"
+              },
+              "inner": [
+                {
+                  "id": "0x55942a75f640",
+                  "kind": "ParmVarDecl",
+                  "loc": {
+                    "offset": 529,
+                    "line": 14,
+                    "presumedLine": 2,
+                    "col": 16,
+                    "tokLen": 1
+                  },
+                  "range": {
+                    "begin": {
+                      "offset": 524,
+                      "col": 11,
+                      "tokLen": 4
+                    },
+                    "end": {
+                      "offset": 531,
+                      "col": 18,
+                      "tokLen": 1
+                    }
+                  },
+                  "isUsed": true,
+                  "name": "p",
+                  "type": {
+                    "qualType": "Cell *"
+                  }
+                },
+                {
+                  "id": "0x55942a75f9e0",
+                  "kind": "CompoundStmt",
+                  "range": {
+                    "begin": {
+                      "offset": 534,
+                      "col": 21,
+                      "tokLen": 1
+                    },
+                    "end": {
+                      "offset": 575,
+                      "line": 17,
+                      "presumedLine": 5,
+                      "col": 1,
+                      "tokLen": 1
+                    }
+                  },
+                  "inner": [
+                    {
+                      "id": "0x55942a75f860",
+                      "kind": "CompoundAssignOperator",
+                      "range": {
+                        "begin": {
+                          "offset": 540,
+                          "line": 15,
+                          "presumedLine": 3,
+                          "col": 5,
+                          "tokLen": 1
+                        },
+                        "end": {
+                          "offset": 548,
+                          "col": 13,
+                          "tokLen": 1
+                        }
+                      },
+                      "type": {
+                        "desugaredQualType": "int",
+                        "qualType": "Cell",
+                        "typeAliasDeclId": "0x55942a75f150"
+                      },
+                      "valueCategory": "prvalue",
+                      "opcode": "+=",
+                      "computeLHSType": {
+                        "qualType": "int"
+                      },
+                      "computeResultType": {
+                        "qualType": "int"
+                      },
+                      "inner": [
+                        {
+                          "id": "0x55942a75f820",
+                          "kind": "ArraySubscriptExpr",
+                          "range": {
+                            "begin": {
+                              "offset": 540,
+                              "col": 5,
+                              "tokLen": 1
+                            },
+                            "end": {
+                              "offset": 543,
+                              "col": 8,
+                              "tokLen": 1
+                            }
+                          },
+                          "type": {
+                            "desugaredQualType": "int",
+                            "qualType": "Cell",
+                            "typeAliasDeclId": "0x55942a75f150"
+                          },
+                          "valueCategory": "lvalue",
+                          "inner": [
+                            {
+                              "id": "0x55942a75f808",
+                              "kind": "ImplicitCastExpr",
+                              "range": {
+                                "begin": {
+                                  "offset": 540,
+                                  "col": 5,
+                                  "tokLen": 1
+                                },
+                                "end": {
+                                  "offset": 540,
+                                  "col": 5,
+                                  "tokLen": 1
+                                }
+                              },
+                              "type": {
+                                "qualType": "Cell *"
+                              },
+                              "valueCategory": "prvalue",
+                              "castKind": "LValueToRValue",
+                              "inner": [
+                                {
+                                  "id": "0x55942a75f7c8",
+                                  "kind": "DeclRefExpr",
+                                  "range": {
+                                    "begin": {
+                                      "offset": 540,
+                                      "col": 5,
+                                      "tokLen": 1
+                                    },
+                                    "end": {
+                                      "offset": 540,
+                                      "col": 5,
+                                      "tokLen": 1
+                                    }
+                                  },
+                                  "type": {
+                                    "qualType": "Cell *"
+                                  },
+                                  "valueCategory": "lvalue",
+                                  "referencedDecl": {
+                                    "id": "0x55942a75f640",
+                                    "kind": "ParmVarDecl",
+                                    "name": "p",
+                                    "type": {
+                                      "qualType": "Cell *"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            {
+                              "id": "0x55942a75f7e8",
+                              "kind": "IntegerLiteral",
+                              "range": {
+                                "begin": {
+                                  "offset": 542,
+                                  "col": 7,
+                                  "tokLen": 1
+                                },
+                                "end": {
+                                  "offset": 542,
+                                  "col": 7,
+                                  "tokLen": 1
+                                }
+                              },
+                              "type": {
+                                "qualType": "int"
+                              },
+                              "valueCategory": "prvalue",
+                              "value": "1"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "0x55942a75f840",
+                          "kind": "IntegerLiteral",
+                          "range": {
+                            "begin": {
+                              "offset": 548,
+                              "col": 13,
+                              "tokLen": 1
+                            },
+                            "end": {
+                              "offset": 548,
+                              "col": 13,
+                              "tokLen": 1
+                            }
+                          },
+                          "type": {
+                            "qualType": "int"
+                          },
+                          "valueCategory": "prvalue",
+                          "value": "1"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "0x55942a75f9d0",
+                      "kind": "ReturnStmt",
+                      "range": {
+                        "begin": {
+                          "offset": 555,
+                          "line": 16,
+                          "presumedLine": 4,
+                          "col": 5,
+                          "tokLen": 6
+                        },
+                        "end": {
+                          "offset": 572,
+                          "col": 22,
+                          "tokLen": 1
+                        }
+                      },
+                      "inner": [
+                        {
+                          "id": "0x55942a75f9b0",
+                          "kind": "BinaryOperator",
+                          "range": {
+                            "begin": {
+                              "offset": 562,
+                              "col": 12,
+                              "tokLen": 1
+                            },
+                            "end": {
+                              "offset": 572,
+                              "col": 22,
+                              "tokLen": 1
+                            }
+                          },
+                          "type": {
+                            "desugaredQualType": "int",
+                            "qualType": "Cell",
+                            "typeAliasDeclId": "0x55942a75f150"
+                          },
+                          "valueCategory": "prvalue",
+                          "opcode": "+",
+                          "inner": [
+                            {
+                              "id": "0x55942a75f980",
+                              "kind": "ImplicitCastExpr",
+                              "range": {
+                                "begin": {
+                                  "offset": 562,
+                                  "col": 12,
+                                  "tokLen": 1
+                                },
+                                "end": {
+                                  "offset": 565,
+                                  "col": 15,
+                                  "tokLen": 1
+                                }
+                              },
+                              "type": {
+                                "desugaredQualType": "int",
+                                "qualType": "Cell",
+                                "typeAliasDeclId": "0x55942a75f150"
+                              },
+                              "valueCategory": "prvalue",
+                              "castKind": "LValueToRValue",
+                              "inner": [
+                                {
+                                  "id": "0x55942a75f8e8",
+                                  "kind": "ArraySubscriptExpr",
+                                  "range": {
+                                    "begin": {
+                                      "offset": 562,
+                                      "col": 12,
+                                      "tokLen": 1
+                                    },
+                                    "end": {
+                                      "offset": 565,
+                                      "col": 15,
+                                      "tokLen": 1
+                                    }
+                                  },
+                                  "type": {
+                                    "desugaredQualType": "int",
+                                    "qualType": "Cell",
+                                    "typeAliasDeclId": "0x55942a75f150"
+                                  },
+                                  "valueCategory": "lvalue",
+                                  "inner": [
+                                    {
+                                      "id": "0x55942a75f8d0",
+                                      "kind": "ImplicitCastExpr",
+                                      "range": {
+                                        "begin": {
+                                          "offset": 562,
+                                          "col": 12,
+                                          "tokLen": 1
+                                        },
+                                        "end": {
+                                          "offset": 562,
+                                          "col": 12,
+                                          "tokLen": 1
+                                        }
+                                      },
+                                      "type": {
+                                        "qualType": "Cell *"
+                                      },
+                                      "valueCategory": "prvalue",
+                                      "castKind": "LValueToRValue",
+                                      "inner": [
+                                        {
+                                          "id": "0x55942a75f890",
+                                          "kind": "DeclRefExpr",
+                                          "range": {
+                                            "begin": {
+                                              "offset": 562,
+                                              "col": 12,
+                                              "tokLen": 1
+                                            },
+                                            "end": {
+                                              "offset": 562,
+                                              "col": 12,
+                                              "tokLen": 1
+                                            }
+                                          },
+                                          "type": {
+                                            "qualType": "Cell *"
+                                          },
+                                          "valueCategory": "lvalue",
+                                          "referencedDecl": {
+                                            "id": "0x55942a75f640",
+                                            "kind": "ParmVarDecl",
+                                            "name": "p",
+                                            "type": {
+                                              "qualType": "Cell *"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "id": "0x55942a75f8b0",
+                                      "kind": "IntegerLiteral",
+                                      "range": {
+                                        "begin": {
+                                          "offset": 564,
+                                          "col": 14,
+                                          "tokLen": 1
+                                        },
+                                        "end": {
+                                          "offset": 564,
+                                          "col": 14,
+                                          "tokLen": 1
+                                        }
+                                      },
+                                      "type": {
+                                        "qualType": "int"
+                                      },
+                                      "valueCategory": "prvalue",
+                                      "value": "0"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "id": "0x55942a75f998",
+                              "kind": "ImplicitCastExpr",
+                              "range": {
+                                "begin": {
+                                  "offset": 569,
+                                  "col": 19,
+                                  "tokLen": 1
+                                },
+                                "end": {
+                                  "offset": 572,
+                                  "col": 22,
+                                  "tokLen": 1
+                                }
+                              },
+                              "type": {
+                                "desugaredQualType": "int",
+                                "qualType": "Cell",
+                                "typeAliasDeclId": "0x55942a75f150"
+                              },
+                              "valueCategory": "prvalue",
+                              "castKind": "LValueToRValue",
+                              "inner": [
+                                {
+                                  "id": "0x55942a75f960",
+                                  "kind": "ArraySubscriptExpr",
+                                  "range": {
+                                    "begin": {
+                                      "offset": 569,
+                                      "col": 19,
+                                      "tokLen": 1
+                                    },
+                                    "end": {
+                                      "offset": 572,
+                                      "col": 22,
+                                      "tokLen": 1
+                                    }
+                                  },
+                                  "type": {
+                                    "desugaredQualType": "int",
+                                    "qualType": "Cell",
+                                    "typeAliasDeclId": "0x55942a75f150"
+                                  },
+                                  "valueCategory": "lvalue",
+                                  "inner": [
+                                    {
+                                      "id": "0x55942a75f948",
+                                      "kind": "ImplicitCastExpr",
+                                      "range": {
+                                        "begin": {
+                                          "offset": 569,
+                                          "col": 19,
+                                          "tokLen": 1
+                                        },
+                                        "end": {
+                                          "offset": 569,
+                                          "col": 19,
+                                          "tokLen": 1
+                                        }
+                                      },
+                                      "type": {
+                                        "qualType": "Cell *"
+                                      },
+                                      "valueCategory": "prvalue",
+                                      "castKind": "LValueToRValue",
+                                      "inner": [
+                                        {
+                                          "id": "0x55942a75f908",
+                                          "kind": "DeclRefExpr",
+                                          "range": {
+                                            "begin": {
+                                              "offset": 569,
+                                              "col": 19,
+                                              "tokLen": 1
+                                            },
+                                            "end": {
+                                              "offset": 569,
+                                              "col": 19,
+                                              "tokLen": 1
+                                            }
+                                          },
+                                          "type": {
+                                            "qualType": "Cell *"
+                                          },
+                                          "valueCategory": "lvalue",
+                                          "referencedDecl": {
+                                            "id": "0x55942a75f640",
+                                            "kind": "ParmVarDecl",
+                                            "name": "p",
+                                            "type": {
+                                              "qualType": "Cell *"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "id": "0x55942a75f928",
+                                      "kind": "IntegerLiteral",
+                                      "range": {
+                                        "begin": {
+                                          "offset": 571,
+                                          "col": 21,
+                                          "tokLen": 1
+                                        },
+                                        "end": {
+                                          "offset": 571,
+                                          "col": 21,
+                                          "tokLen": 1
+                                        }
+                                      },
+                                      "type": {
+                                        "qualType": "int"
+                                      },
+                                      "valueCategory": "prvalue",
+                                      "value": "1"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "typedefs": [
+          {
+            "name": "__int128_t",
+            "type": {
+              "qualType": "__int128"
+            },
+            "location": {},
+            "record_ids": [],
+            "attributes": []
+          },
+          {
+            "name": "__uint128_t",
+            "type": {
+              "qualType": "unsigned __int128"
+            },
+            "location": {},
+            "record_ids": [],
+            "attributes": []
+          },
+          {
+            "name": "__NSConstantString",
+            "type": {
+              "qualType": "struct __NSConstantString_tag"
+            },
+            "location": {},
+            "record_ids": [
+              "0x55942a700920"
+            ],
+            "attributes": []
+          },
+          {
+            "name": "__builtin_ms_va_list",
+            "type": {
+              "qualType": "char *"
+            },
+            "location": {},
+            "record_ids": [],
+            "attributes": []
+          },
+          {
+            "name": "__builtin_va_list",
+            "type": {
+              "qualType": "struct __va_list_tag[1]"
+            },
+            "location": {},
+            "record_ids": [
+              "0x55942a700cd0"
+            ],
+            "attributes": []
+          },
+          {
+            "name": "Cell",
+            "type": {
+              "qualType": "int"
+            },
+            "location": {
+              "offset": 392,
+              "file": "/tmp/llmloop-clang-484fuy0x/snapshot.i",
+              "line": 11,
+              "presumedFile": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/api.h",
+              "presumedLine": 3,
+              "col": 13,
+              "tokLen": 4,
+              "includedFrom": {
+                "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/worker.c"
+              }
+            },
+            "record_ids": [],
+            "attributes": []
+          }
+        ],
+        "modeled_function_declarations": [],
+        "external_function_declarations": [
+          {
+            "id": "0x55942a75f498",
+            "kind": "FunctionDecl",
+            "loc": {
+              "offset": 402,
+              "line": 12,
+              "presumedLine": 4,
+              "col": 5,
+              "tokLen": 5,
+              "includedFrom": {
+                "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/worker.c"
+              }
+            },
+            "range": {
+              "begin": {
+                "offset": 398,
+                "col": 1,
+                "tokLen": 3,
+                "includedFrom": {
+                  "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/worker.c"
+                }
+              },
+              "end": {
+                "offset": 417,
+                "col": 20,
+                "tokLen": 1,
+                "includedFrom": {
+                  "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/worker.c"
+                }
+              }
+            },
+            "name": "visit",
+            "mangledName": "visit",
+            "type": {
+              "qualType": "int (Cell *)"
+            },
+            "inner": [
+              {
+                "id": "0x55942a75f380",
+                "kind": "ParmVarDecl",
+                "loc": {
+                  "offset": 413,
+                  "col": 16,
+                  "tokLen": 1,
+                  "includedFrom": {
+                    "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/worker.c"
+                  }
+                },
+                "range": {
+                  "begin": {
+                    "offset": 408,
+                    "col": 11,
+                    "tokLen": 4,
+                    "includedFrom": {
+                      "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/worker.c"
+                    }
+                  },
+                  "end": {
+                    "offset": 416,
+                    "col": 19,
+                    "tokLen": 1,
+                    "includedFrom": {
+                      "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/worker.c"
+                    }
+                  }
+                },
+                "name": "p",
+                "type": {
+                  "qualType": "Cell *"
+                }
+              }
+            ]
+          }
+        ],
+        "record_definitions": [],
+        "function_parameter_declarations": [
+          {
+            "id": "0x55942a75f498",
+            "name": "visit",
+            "parameters": [
+              {
+                "id": "0x55942a75f380",
+                "kind": "ParmVarDecl",
+                "loc": {
+                  "offset": 413,
+                  "col": 16,
+                  "tokLen": 1,
+                  "includedFrom": {
+                    "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/worker.c"
+                  }
+                },
+                "range": {
+                  "begin": {
+                    "offset": 408,
+                    "col": 11,
+                    "tokLen": 4,
+                    "includedFrom": {
+                      "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/worker.c"
+                    }
+                  },
+                  "end": {
+                    "offset": 416,
+                    "col": 19,
+                    "tokLen": 1,
+                    "includedFrom": {
+                      "file": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/worker.c"
+                    }
+                  }
+                },
+                "name": "p",
+                "type": {
+                  "qualType": "Cell *"
+                }
+              }
+            ],
+            "parameter_spellings": {
+              "0x55942a75f380": "Cell p[5]"
+            }
+          },
+          {
+            "id": "0x55942a75f718",
+            "name": "visit",
+            "parameters": [
+              {
+                "id": "0x55942a75f640",
+                "kind": "ParmVarDecl",
+                "loc": {
+                  "offset": 529,
+                  "line": 14,
+                  "presumedLine": 2,
+                  "col": 16,
+                  "tokLen": 1
+                },
+                "range": {
+                  "begin": {
+                    "offset": 524,
+                    "col": 11,
+                    "tokLen": 4
+                  },
+                  "end": {
+                    "offset": 531,
+                    "col": 18,
+                    "tokLen": 1
+                  }
+                },
+                "isUsed": true,
+                "name": "p",
+                "type": {
+                  "qualType": "Cell *"
+                }
+              }
+            ],
+            "parameter_spellings": {
+              "0x55942a75f640": "Cell p[]"
+            }
+          }
+        ],
+        "ast_nodes": 38,
+        "record_layouts": [
+          {
+            "name": "struct __NSConstantString_tag",
+            "size_bytes": 32,
+            "alignment_bytes": 8,
+            "members": [
+              {
+                "offset_bytes": 0,
+                "declaration": "const int * isa",
+                "depth": 1
+              },
+              {
+                "offset_bytes": 8,
+                "declaration": "int flags",
+                "depth": 1
+              },
+              {
+                "offset_bytes": 16,
+                "declaration": "const char * str",
+                "depth": 1
+              },
+              {
+                "offset_bytes": 24,
+                "declaration": "long length",
+                "depth": 1
+              }
+            ]
+          },
+          {
+            "name": "struct __va_list_tag",
+            "size_bytes": 24,
+            "alignment_bytes": 8,
+            "members": [
+              {
+                "offset_bytes": 0,
+                "declaration": "unsigned int gp_offset",
+                "depth": 1
+              },
+              {
+                "offset_bytes": 4,
+                "declaration": "unsigned int fp_offset",
+                "depth": 1
+              },
+              {
+                "offset_bytes": 8,
+                "declaration": "void * overflow_arg_area",
+                "depth": 1
+              },
+              {
+                "offset_bytes": 16,
+                "declaration": "void * reg_save_area",
+                "depth": 1
+              }
+            ]
+          }
+        ],
+        "record_layout_dump": "\n*** Dumping AST Record Layout\n         0 | struct __NSConstantString_tag\n         0 |   const int * isa\n         8 |   int flags\n        16 |   const char * str\n        24 |   long length\n           | [sizeof=32, align=8]\n\n*** Dumping AST Record Layout\n         0 | struct __va_list_tag\n         0 |   unsigned int gp_offset\n         4 |   unsigned int fp_offset\n         8 |   void * overflow_arg_area\n        16 |   void * reg_save_area\n           | [sizeof=24, align=8]\n",
+        "llvm_ir": "; ModuleID = '/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/worker.c'\nsource_filename = \"/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/worker.c\"\ntarget datalayout = \"e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128\"\ntarget triple = \"x86_64-pc-linux-gnu\"\n\n@.src = private unnamed_addr constant [86 x i8] c\"/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/worker.c\\00\", align 1\n@0 = private unnamed_addr global { { ptr, i32, i32 } } { { ptr, i32, i32 } { ptr @.src, i32 3, i32 5 } }\n@1 = private unnamed_addr constant { i16, i16, [19 x i8] } { i16 0, i16 11, [19 x i8] c\"'Cell' (aka 'int')\\00\" }\n@2 = private unnamed_addr global { { ptr, i32, i32 }, ptr, i8, i8 } { { ptr, i32, i32 } { ptr @.src, i32 3, i32 5 }, ptr @1, i8 2, i8 1 }\n@3 = private unnamed_addr constant { i16, i16, [6 x i8] } { i16 0, i16 11, [6 x i8] c\"'int'\\00\" }\n@4 = private unnamed_addr global { { ptr, i32, i32 }, ptr } { { ptr, i32, i32 } { ptr @.src, i32 3, i32 10 }, ptr @3 }\n@5 = private unnamed_addr global { { ptr, i32, i32 } } { { ptr, i32, i32 } { ptr @.src, i32 4, i32 12 } }\n@6 = private unnamed_addr global { { ptr, i32, i32 }, ptr, i8, i8 } { { ptr, i32, i32 } { ptr @.src, i32 4, i32 12 }, ptr @1, i8 2, i8 0 }\n@7 = private unnamed_addr global { { ptr, i32, i32 } } { { ptr, i32, i32 } { ptr @.src, i32 4, i32 19 } }\n@8 = private unnamed_addr global { { ptr, i32, i32 }, ptr, i8, i8 } { { ptr, i32, i32 } { ptr @.src, i32 4, i32 19 }, ptr @1, i8 2, i8 0 }\n@9 = private unnamed_addr global { { ptr, i32, i32 }, ptr } { { ptr, i32, i32 } { ptr @.src, i32 4, i32 17 }, ptr @1 }\n\n; Function Attrs: noinline nounwind optnone uwtable\ndefine dso_local i32 @visit(ptr noundef %p) #0 !dbg !10 !func_sanitize !14 {\nentry:\n  %p.addr = alloca ptr, align 8\n  store ptr %p, ptr %p.addr, align 8\n  %0 = load ptr, ptr %p.addr, align 8, !dbg !15\n  %arrayidx = getelementptr inbounds i32, ptr %0, i64 1, !dbg !16\n  %1 = ptrtoint ptr %0 to i64, !dbg !16, !nosanitize !13\n  %2 = add i64 %1, 4, !dbg !16, !nosanitize !13\n  %3 = icmp ne ptr %0, null, !dbg !16, !nosanitize !13\n  %4 = icmp ne i64 %2, 0, !dbg !16, !nosanitize !13\n  %5 = and i1 %3, %4, !dbg !16, !nosanitize !13\n  %6 = icmp uge i64 %2, %1, !dbg !16, !nosanitize !13\n  %7 = icmp ult i64 %2, %1, !dbg !16, !nosanitize !13\n  %8 = select i1 true, i1 %6, i1 %7, !dbg !16, !nosanitize !13\n  %9 = and i1 %8, true, !dbg !16, !nosanitize !13\n  %10 = and i1 %5, %9, !dbg !16, !nosanitize !13\n  br i1 %10, label %cont, label %handler.pointer_overflow, !dbg !16, !prof !17, !nosanitize !13\n\nhandler.pointer_overflow:                         ; preds = %entry\n  call void @__ubsan_handle_pointer_overflow_abort(ptr @0, i64 %1, i64 %2) #3, !dbg !16, !nosanitize !13\n  unreachable, !dbg !16, !nosanitize !13\n\ncont:                                             ; preds = %entry\n  %11 = icmp ne ptr %arrayidx, null, !dbg !16, !nosanitize !13\n  %12 = ptrtoint ptr %arrayidx to i64, !dbg !16, !nosanitize !13\n  %13 = and i64 %12, 3, !dbg !16, !nosanitize !13\n  %14 = icmp eq i64 %13, 0, !dbg !16, !nosanitize !13\n  %15 = and i1 %11, %14, !dbg !16, !nosanitize !13\n  br i1 %15, label %cont1, label %handler.type_mismatch, !dbg !16, !prof !17, !nosanitize !13\n\nhandler.type_mismatch:                            ; preds = %cont\n  call void @__ubsan_handle_type_mismatch_v1_abort(ptr @2, i64 %12) #3, !dbg !16, !nosanitize !13\n  unreachable, !dbg !16, !nosanitize !13\n\ncont1:                                            ; preds = %cont\n  %16 = load i32, ptr %arrayidx, align 4, !dbg !16\n  %17 = call { i32, i1 } @llvm.sadd.with.overflow.i32(i32 %16, i32 1), !dbg !16, !nosanitize !13\n  %18 = extractvalue { i32, i1 } %17, 0, !dbg !16, !nosanitize !13\n  %19 = extractvalue { i32, i1 } %17, 1, !dbg !16, !nosanitize !13\n  %20 = xor i1 %19, true, !dbg !16, !nosanitize !13\n  br i1 %20, label %cont2, label %handler.add_overflow, !dbg !16, !prof !17, !nosanitize !13\n\nhandler.add_overflow:                             ; preds = %cont1\n  %21 = zext i32 %16 to i64, !dbg !16, !nosanitize !13\n  call void @__ubsan_handle_add_overflow_abort(ptr @4, i64 %21, i64 1) #3, !dbg !16, !nosanitize !13\n  unreachable, !dbg !16, !nosanitize !13\n\ncont2:                                            ; preds = %cont1\n  store i32 %18, ptr %arrayidx, align 4, !dbg !16\n  %22 = load ptr, ptr %p.addr, align 8, !dbg !18\n  %arrayidx3 = getelementptr inbounds i32, ptr %22, i64 0, !dbg !18\n  %23 = ptrtoint ptr %22 to i64, !dbg !18, !nosanitize !13\n  %24 = add i64 %23, 0, !dbg !18, !nosanitize !13\n  %25 = icmp ne ptr %22, null, !dbg !18, !nosanitize !13\n  %26 = icmp ne i64 %24, 0, !dbg !18, !nosanitize !13\n  %27 = and i1 %25, %26, !dbg !18, !nosanitize !13\n  %28 = icmp uge i64 %24, %23, !dbg !18, !nosanitize !13\n  %29 = icmp ult i64 %24, %23, !dbg !18, !nosanitize !13\n  %30 = select i1 true, i1 %28, i1 %29, !dbg !18, !nosanitize !13\n  %31 = and i1 %30, true, !dbg !18, !nosanitize !13\n  %32 = and i1 %27, %31, !dbg !18, !nosanitize !13\n  br i1 %32, label %cont5, label %handler.pointer_overflow4, !dbg !18, !prof !17, !nosanitize !13\n\nhandler.pointer_overflow4:                        ; preds = %cont2\n  call void @__ubsan_handle_pointer_overflow_abort(ptr @5, i64 %23, i64 %24) #3, !dbg !18, !nosanitize !13\n  unreachable, !dbg !18, !nosanitize !13\n\ncont5:                                            ; preds = %cont2\n  %33 = icmp ne ptr %arrayidx3, null, !dbg !18, !nosanitize !13\n  %34 = ptrtoint ptr %arrayidx3 to i64, !dbg !18, !nosanitize !13\n  %35 = and i64 %34, 3, !dbg !18, !nosanitize !13\n  %36 = icmp eq i64 %35, 0, !dbg !18, !nosanitize !13\n  %37 = and i1 %33, %36, !dbg !18, !nosanitize !13\n  br i1 %37, label %cont7, label %handler.type_mismatch6, !dbg !18, !prof !17, !nosanitize !13\n\nhandler.type_mismatch6:                           ; preds = %cont5\n  call void @__ubsan_handle_type_mismatch_v1_abort(ptr @6, i64 %34) #3, !dbg !18, !nosanitize !13\n  unreachable, !dbg !18, !nosanitize !13\n\ncont7:                                            ; preds = %cont5\n  %38 = load i32, ptr %arrayidx3, align 4, !dbg !18\n  %39 = load ptr, ptr %p.addr, align 8, !dbg !19\n  %arrayidx8 = getelementptr inbounds i32, ptr %39, i64 1, !dbg !19\n  %40 = ptrtoint ptr %39 to i64, !dbg !19, !nosanitize !13\n  %41 = add i64 %40, 4, !dbg !19, !nosanitize !13\n  %42 = icmp ne ptr %39, null, !dbg !19, !nosanitize !13\n  %43 = icmp ne i64 %41, 0, !dbg !19, !nosanitize !13\n  %44 = and i1 %42, %43, !dbg !19, !nosanitize !13\n  %45 = icmp uge i64 %41, %40, !dbg !19, !nosanitize !13\n  %46 = icmp ult i64 %41, %40, !dbg !19, !nosanitize !13\n  %47 = select i1 true, i1 %45, i1 %46, !dbg !19, !nosanitize !13\n  %48 = and i1 %47, true, !dbg !19, !nosanitize !13\n  %49 = and i1 %44, %48, !dbg !19, !nosanitize !13\n  br i1 %49, label %cont10, label %handler.pointer_overflow9, !dbg !19, !prof !17, !nosanitize !13\n\nhandler.pointer_overflow9:                        ; preds = %cont7\n  call void @__ubsan_handle_pointer_overflow_abort(ptr @7, i64 %40, i64 %41) #3, !dbg !19, !nosanitize !13\n  unreachable, !dbg !19, !nosanitize !13\n\ncont10:                                           ; preds = %cont7\n  %50 = icmp ne ptr %arrayidx8, null, !dbg !19, !nosanitize !13\n  %51 = ptrtoint ptr %arrayidx8 to i64, !dbg !19, !nosanitize !13\n  %52 = and i64 %51, 3, !dbg !19, !nosanitize !13\n  %53 = icmp eq i64 %52, 0, !dbg !19, !nosanitize !13\n  %54 = and i1 %50, %53, !dbg !19, !nosanitize !13\n  br i1 %54, label %cont12, label %handler.type_mismatch11, !dbg !19, !prof !17, !nosanitize !13\n\nhandler.type_mismatch11:                          ; preds = %cont10\n  call void @__ubsan_handle_type_mismatch_v1_abort(ptr @8, i64 %51) #3, !dbg !19, !nosanitize !13\n  unreachable, !dbg !19, !nosanitize !13\n\ncont12:                                           ; preds = %cont10\n  %55 = load i32, ptr %arrayidx8, align 4, !dbg !19\n  %56 = call { i32, i1 } @llvm.sadd.with.overflow.i32(i32 %38, i32 %55), !dbg !20, !nosanitize !13\n  %57 = extractvalue { i32, i1 } %56, 0, !dbg !20, !nosanitize !13\n  %58 = extractvalue { i32, i1 } %56, 1, !dbg !20, !nosanitize !13\n  %59 = xor i1 %58, true, !dbg !20, !nosanitize !13\n  br i1 %59, label %cont14, label %handler.add_overflow13, !dbg !20, !prof !17, !nosanitize !13\n\nhandler.add_overflow13:                           ; preds = %cont12\n  %60 = zext i32 %38 to i64, !dbg !20, !nosanitize !13\n  %61 = zext i32 %55 to i64, !dbg !20, !nosanitize !13\n  call void @__ubsan_handle_add_overflow_abort(ptr @9, i64 %60, i64 %61) #3, !dbg !20, !nosanitize !13\n  unreachable, !dbg !20, !nosanitize !13\n\ncont14:                                           ; preds = %cont12\n  ret i32 %57, !dbg !21\n}\n\n; Function Attrs: nocallback nofree nosync nounwind speculatable willreturn memory(none)\ndeclare { i64, i1 } @llvm.sadd.with.overflow.i64(i64, i64) #1\n\n; Function Attrs: nocallback nofree nosync nounwind speculatable willreturn memory(none)\ndeclare { i64, i1 } @llvm.smul.with.overflow.i64(i64, i64) #1\n\n; Function Attrs: noreturn nounwind uwtable\ndeclare void @__ubsan_handle_pointer_overflow_abort(ptr, i64, i64) #2\n\n; Function Attrs: noreturn nounwind uwtable\ndeclare void @__ubsan_handle_type_mismatch_v1_abort(ptr, i64) #2\n\n; Function Attrs: nocallback nofree nosync nounwind speculatable willreturn memory(none)\ndeclare { i32, i1 } @llvm.sadd.with.overflow.i32(i32, i32) #1\n\n; Function Attrs: noreturn nounwind uwtable\ndeclare void @__ubsan_handle_add_overflow_abort(ptr, i64, i64) #2\n\nattributes #0 = { noinline nounwind optnone uwtable \"frame-pointer\"=\"all\" \"min-legal-vector-width\"=\"0\" \"no-trapping-math\"=\"true\" \"stack-protector-buffer-size\"=\"8\" \"target-cpu\"=\"x86-64\" \"target-features\"=\"+cmov,+cx8,+fxsr,+mmx,+sse,+sse2,+x87\" \"tune-cpu\"=\"generic\" }\nattributes #1 = { nocallback nofree nosync nounwind speculatable willreturn memory(none) }\nattributes #2 = { noreturn nounwind uwtable }\nattributes #3 = { noreturn nounwind }\n\n!llvm.dbg.cu = !{!0}\n!llvm.module.flags = !{!2, !3, !4, !5, !6, !7, !8}\n!llvm.ident = !{!9}\n\n!0 = distinct !DICompileUnit(language: DW_LANG_C11, file: !1, producer: \"Ubuntu clang version 18.1.3 (1ubuntu1)\", isOptimized: false, runtimeVersion: 0, emissionKind: LineTablesOnly, splitDebugInlining: false, nameTableKind: None)\n!1 = !DIFile(filename: \"/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/worker.c\", directory: \"/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters\")\n!2 = !{i32 7, !\"Dwarf Version\", i32 5}\n!3 = !{i32 2, !\"Debug Info Version\", i32 3}\n!4 = !{i32 1, !\"wchar_size\", i32 4}\n!5 = !{i32 8, !\"PIC Level\", i32 2}\n!6 = !{i32 7, !\"PIE Level\", i32 2}\n!7 = !{i32 7, !\"uwtable\", i32 2}\n!8 = !{i32 7, !\"frame-pointer\", i32 2}\n!9 = !{!\"Ubuntu clang version 18.1.3 (1ubuntu1)\"}\n!10 = distinct !DISubprogram(name: \"visit\", scope: !11, file: !11, line: 2, type: !12, scopeLine: 2, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0)\n!11 = !DIFile(filename: \"worker.c\", directory: \"/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters\")\n!12 = !DISubroutineType(types: !13)\n!13 = !{}\n!14 = !{i32 -1056584962, i32 1116732398}\n!15 = !DILocation(line: 3, column: 5, scope: !10)\n!16 = !DILocation(line: 3, column: 10, scope: !10)\n!17 = !{!\"branch_weights\", i32 1048575, i32 1}\n!18 = !DILocation(line: 4, column: 12, scope: !10)\n!19 = !DILocation(line: 4, column: 19, scope: !10)\n!20 = !DILocation(line: 4, column: 17, scope: !10)\n!21 = !DILocation(line: 4, column: 5, scope: !10)\n",
+        "llvm_ir_sha256": "f3e1d5c0bc80740eebd7e07e924b00401a706a7b4cabd776901568dd76b90435",
+        "llvm_cfg": [
+          {
+            "name": "visit",
+            "blocks": [
+              {
+                "name": "entry",
+                "successors": [
+                  "cont",
+                  "handler.pointer_overflow"
+                ]
+              },
+              {
+                "name": "handler.pointer_overflow",
+                "successors": []
+              },
+              {
+                "name": "cont",
+                "successors": [
+                  "cont1",
+                  "handler.type_mismatch"
+                ]
+              },
+              {
+                "name": "handler.type_mismatch",
+                "successors": []
+              },
+              {
+                "name": "cont1",
+                "successors": [
+                  "cont2",
+                  "handler.add_overflow"
+                ]
+              },
+              {
+                "name": "handler.add_overflow",
+                "successors": []
+              },
+              {
+                "name": "cont2",
+                "successors": [
+                  "cont5",
+                  "handler.pointer_overflow4"
+                ]
+              },
+              {
+                "name": "handler.pointer_overflow4",
+                "successors": []
+              },
+              {
+                "name": "cont5",
+                "successors": [
+                  "cont7",
+                  "handler.type_mismatch6"
+                ]
+              },
+              {
+                "name": "handler.type_mismatch6",
+                "successors": []
+              },
+              {
+                "name": "cont7",
+                "successors": [
+                  "cont10",
+                  "handler.pointer_overflow9"
+                ]
+              },
+              {
+                "name": "handler.pointer_overflow9",
+                "successors": []
+              },
+              {
+                "name": "cont10",
+                "successors": [
+                  "cont12",
+                  "handler.type_mismatch11"
+                ]
+              },
+              {
+                "name": "handler.type_mismatch11",
+                "successors": []
+              },
+              {
+                "name": "cont12",
+                "successors": [
+                  "cont14",
+                  "handler.add_overflow13"
+                ]
+              },
+              {
+                "name": "handler.add_overflow13",
+                "successors": []
+              },
+              {
+                "name": "cont14",
+                "successors": []
+              }
+            ]
+          }
+        ],
+        "ubsan_instrumentation_requested": true,
+        "proof_boundary": "Clang semantics/AST/IR ingestion only; no LLMloop proof or KLEE execution; LLVM blocks include sanitizer branches and are not source MEMS counts",
+        "input_consistency": "main source and expanded snapshot checked unchanged; included headers/environment must remain stable during preprocessing"
+      }
+    ]
+  },
+  "normalization": {
+    "method": "structural admitted Clang AST to typed C; Clang + normalizer are trusted frontend components",
+    "source": "int entry(int n);\nint visit(int * p);\nint entry(int n) {\nint a[2] = {n, (n + 1)};\nreturn visit(a);\n}\n\nint visit(int * p) {\n(p)[1] += 1;\nreturn ((p)[0] + (p)[1]);\n}\n",
+    "source_sha256": "c7bb6611c80705ddd146c1169cf23ff9ba20b719dc666fd2a90dbc06a4ca0997",
+    "ast_sha256": "c71700368a0487dbfa78cdb3ca80841733cf3caa302a73c6804fab4d3e4f4e25",
+    "type_environment_sha256": "a104e88b6678ad608d0bfb34d5205906cf7cb61f908f452b1f7230fd4a3810a9",
+    "alpha_renamed": [],
+    "functions": [
+      "entry",
+      "visit"
+    ],
+    "backend": "calls",
+    "external_call_frontiers": [],
+    "external_call_semantics_assumed": false,
+    "array_parameter_adjustments": [
+      {
+        "function": "visit",
+        "declaration_id": "0x55942a75f498",
+        "parameter_id": "0x55942a75f380",
+        "parameter_name": "p",
+        "source_spelling": "Cell p[5]",
+        "outer_array_bound": "5",
+        "adjusted_type": "int *",
+        "minimum_extent_assumed": false,
+        "bound_evaluation_required": false,
+        "rule": "C11 6.7.6.3p7 ordinary unqualified array parameter adjustment"
+      },
+      {
+        "function": "visit",
+        "declaration_id": "0x55942a75f718",
+        "parameter_id": "0x55942a75f640",
+        "parameter_name": "p",
+        "source_spelling": "Cell p[]",
+        "outer_array_bound": null,
+        "adjusted_type": "int *",
+        "minimum_extent_assumed": false,
+        "bound_evaluation_required": false,
+        "rule": "C11 6.7.6.3p7 ordinary unqualified array parameter adjustment"
+      }
+    ],
+    "zero_record_member_adjustments": [],
+    "bit_builtin_calls": [],
+    "bit_builtin_models": [],
+    "union_views": [],
+    "abi": "LP64",
+    "char_signed": true,
+    "record_layout_correspondence": {},
+    "compiler_equivalence_machine_proved": false,
+    "unsupported_constructs_rejected": true,
+    "translation_unit_linking": {
+      "method": "checked closed-component Clang function binding across translation units",
+      "entry": {
+        "source": "entry",
+        "unit": 0,
+        "normalized": "entry"
+      },
+      "units": [
+        {
+          "index": 0,
+          "source": {
+            "path": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/entry.c",
+            "sha256": "822410636c8145c7a98a59a314c783d787ab05fbc6779ceb5942606f2c22994c"
+          },
+          "target": {
+            "triple": "x86_64-pc-linux-gnu",
+            "data_layout": "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+          },
+          "effective_flags": [
+            "-std=c11",
+            "-I.",
+            "-O0",
+            "-gline-tables-only",
+            "-fsanitize=undefined",
+            "-fno-sanitize-recover=all"
+          ],
+          "compilation_database": {
+            "path": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/compile_commands.json",
+            "sha256": "78f8a242e1445a8c9045296a1f9bd78f0932e98cb86c1c35dec2fb7cd66f14e1",
+            "command_index": 0,
+            "original_arguments": [
+              "cc",
+              "-std=c11",
+              "-I.",
+              "-c",
+              "entry.c"
+            ]
+          },
+          "llvm_ir_sha256": "6ee3a6b2e56517668fdad18fed662e4ba64636b6481b1a3ccb2c3bd45e600a5d",
+          "function_ast_sha256": "0dbd1d4c28a4de4ad199968aa3492df2a87a61e59e18f095c9db13367729a4ac",
+          "preprocessed_snapshot_sha256": "acf7b5091e0f2359d0681a54dbd51e55e1bbd3c8b942fb40d414b69a2a5f915c"
+        },
+        {
+          "index": 1,
+          "source": {
+            "path": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/worker.c",
+            "sha256": "8b5be666c794ad051bf65a099f0fdee7bbbd77bf0304f849093e32d67aa1dc11"
+          },
+          "target": {
+            "triple": "x86_64-pc-linux-gnu",
+            "data_layout": "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+          },
+          "effective_flags": [
+            "-std=c11",
+            "-I.",
+            "-O0",
+            "-gline-tables-only",
+            "-fsanitize=undefined",
+            "-fno-sanitize-recover=all"
+          ],
+          "compilation_database": {
+            "path": "/workspace/scratch/26b59f7180c2/LLMloop-v050/examples/clang_array_parameters/compile_commands.json",
+            "sha256": "78f8a242e1445a8c9045296a1f9bd78f0932e98cb86c1c35dec2fb7cd66f14e1",
+            "command_index": 0,
+            "original_arguments": [
+              "cc",
+              "-std=c11",
+              "-I.",
+              "-c",
+              "worker.c"
+            ]
+          },
+          "llvm_ir_sha256": "f3e1d5c0bc80740eebd7e07e924b00401a706a7b4cabd776901568dd76b90435",
+          "function_ast_sha256": "a997f677a937cdb4cccbea49ba92d80dd9b4b601cd42c763eb95ec222cb251ab",
+          "preprocessed_snapshot_sha256": "e811d3ad646080bea6141dfcceb5ec8f84e7a7c2dd000d5ab7a6686ae7a894a3"
+        }
+      ],
+      "bindings": [
+        {
+          "caller_unit": 0,
+          "declaration_id": "0x5627b6d54498",
+          "callee": "visit",
+          "provider_unit": 1,
+          "provider_definition_id": "0x55942a75f718",
+          "normalized_callee": "visit",
+          "canonical_signature": [
+            "signed int",
+            [
+              "signed int *"
+            ]
+          ],
+          "declaration_checked": true,
+          "body_is_supplied_source": true
+        }
+      ],
+      "static_function_renames": [],
+      "reachable_functions": [
+        "entry",
+        "visit"
+      ],
+      "caller_provider_types_checked": true,
+      "per_unit_declaration_contexts_preserved": true,
+      "source_snapshots_checked": true,
+      "closed_world_function_binding": true,
+      "external_semantics_assumed": false,
+      "dynamic_interposition_modeled": false,
+      "general_linker_or_C_support": false,
+      "normalized_source_sha256": "c7bb6611c80705ddd146c1169cf23ff9ba20b719dc666fd2a90dbc06a4ca0997",
+      "array_parameter_adjustments": [
+        {
+          "unit": 0,
+          "function": "visit",
+          "declaration_id": "0x5627b6d54498",
+          "parameter_id": "0x5627b6d54380",
+          "parameter_name": "p",
+          "source_spelling": "Cell p[5]",
+          "outer_array_bound": "5",
+          "adjusted_type": "signed int *",
+          "minimum_extent_assumed": false,
+          "bound_evaluation_required": false,
+          "rule": "C11 6.7.6.3p7 ordinary unqualified array parameter adjustment"
+        },
+        {
+          "unit": 1,
+          "function": "visit",
+          "declaration_id": "0x55942a75f718",
+          "parameter_id": "0x55942a75f640",
+          "parameter_name": "p",
+          "source_spelling": "Cell p[]",
+          "outer_array_bound": null,
+          "adjusted_type": "signed int *",
+          "minimum_extent_assumed": false,
+          "bound_evaluation_required": false,
+          "rule": "C11 6.7.6.3p7 ordinary unqualified array parameter adjustment"
+        },
+        {
+          "unit": 1,
+          "function": "visit",
+          "declaration_id": "0x55942a75f498",
+          "parameter_id": "0x55942a75f380",
+          "parameter_name": "p",
+          "source_spelling": "Cell p[5]",
+          "outer_array_bound": "5",
+          "adjusted_type": "signed int *",
+          "minimum_extent_assumed": false,
+          "bound_evaluation_required": false,
+          "rule": "C11 6.7.6.3p7 ordinary unqualified array parameter adjustment"
+        }
+      ]
+    }
+  }
+}

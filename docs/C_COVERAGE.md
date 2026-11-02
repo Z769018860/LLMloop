@@ -67,7 +67,7 @@ See [feature inventory](FEATURE_STATUS.md),
 [borrowed payload-map contract](OWNED_LIST_PAYLOAD_MAPS.md) and
 [eager list-call arguments](EAGER_LIST_ARGUMENTS.md) and
 [finite choices and upstream integer pilot](FINITE_CHOICES_AND_UPSTREAM_BENCHMARKS.md) and
-[latest experiment report](../experiments/v046/report.md).
+[latest experiment report](../experiments/v050/report.md).
 
 [Stateful consumers](STATEFUL_LIST_CONSUMERS.md) admit nonzero initialized scalar
 states and sequential pure scalar updates within the same complete owned-chain
@@ -122,3 +122,13 @@ layout and LLVM stages, admitting checked header/macro pointer declarations.
 Array/VLA declarators and entry effects are still refused. See the
 [snapshot contract](CLANG_PREPROCESSED_SNAPSHOTS.md). General heap ownership,
 external contracts and complete C/LLVM support remain open.
+
+## v0.50 ordinary array parameter adjustment
+
+The `calls` bridge admits one ordinary unqualified `[]` or positive decimal
+literal bound in original parameter declarations. The adjusted pointer retains
+actual object/alias/initialization/lifetime checks; no extent is inferred from
+the bound. Named-record literal-zero member access reuses checked arrow access.
+Static/VLA/qualified/multidimensional forms, general record arrays and external
+pointer-entry contracts remain unsupported. See the
+[exact contract](CLANG_ARRAY_PARAMETERS.md) and [evidence](../experiments/v050/report.md).

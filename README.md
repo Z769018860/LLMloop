@@ -963,3 +963,13 @@ The same release fixes ignored trailing parameter attributes: unmodeled
 alignment promises now return UNKNOWN in both ingestion modes, including
 reachable redeclaration chains, modeled allocator parameters and used typedef
 chains whose attributes Clang's desugared spelling can hide.
+
+## v0.50: checked ordinary array parameters
+
+Ordinary `T p[]` and `T p[5]` parameters now adjust to the existing pointer
+model after every original declaration is checked. Actual object bounds,
+initialization and lifetime remain proof obligations; `static`/VLA/qualified
+and multidimensional forms remain UNKNOWN. Literal `p[0].field` access also
+uses existing checked record-member semantics. See [the contract and runnable
+example](docs/CLANG_ARRAY_PARAMETERS.md) and [evidence](experiments/v050/report.md).
+General heap ownership, broader C/LLVM and arbitrary recurrences remain open.
