@@ -114,3 +114,11 @@ remain open. See [the exact contract](CLANG_LINKED_RECORDS.md) and
 The [decision-tree bit-count lowering](BIT_COUNT_DECISION_MODELS.md) preserves
 prior helper semantics with replayed full-word equivalence and source proofs.
 It improves this modeled representation without adding general C/LLVM coverage.
+
+## v0.49 header and macro pointer declarations
+
+Opt-in `clang.preprocess: true` supplies one exact expanded snapshot to AST,
+layout and LLVM stages, admitting checked header/macro pointer declarations.
+Array/VLA declarators and entry effects are still refused. See the
+[snapshot contract](CLANG_PREPROCESSED_SNAPSHOTS.md). General heap ownership,
+external contracts and complete C/LLVM support remain open.

@@ -127,3 +127,8 @@ extends finite record calls without changing heap, call or execution budgets.
 
 See [literal bit-count models](BIT_COUNT_DECISION_MODELS.md) for full-word
 old/new model equivalence, source-definedness and independent native/spec checks.
+
+See [opt-in preprocessed snapshots](CLANG_PREPROCESSED_SNAPSHOTS.md) for checked
+header/macro pointer spellings from one compiler-expanded input per unit.
+Arrays/VLAs, unsupported source-location builtins and general ownership remain
+outside this extension; default ingestion and proof budgets are unchanged.

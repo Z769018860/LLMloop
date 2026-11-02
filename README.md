@@ -948,3 +948,13 @@ The same release uses [equivalent literal decision trees for bit counts](docs/BI
 with replayed all-word equivalence to prior helper bodies, separate source
 safety and unchanged proof budgets. Earlier unsuccessful validation attempts
 are retained in the experiment archive.
+
+## v0.49: opt-in compiler-expanded snapshots
+
+`clang.preprocess: true` expands each C file once and feeds that exact snapshot
+to AST, layout and LLVM stages. Project-header and macro pointer declarations
+can then retain checked source spellings; array/VLA entry obligations still
+cause refusal. Defaults, finite memory/call limits and proof budgets are
+unchanged. See [the contract](docs/CLANG_PREPROCESSED_SNAPSHOTS.md) and
+[validation evidence](experiments/v049/report.md). General C/LLVM and arbitrary
+heap/ownership support remain open.

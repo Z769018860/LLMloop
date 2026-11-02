@@ -147,11 +147,11 @@ class ClangAdapter:
         base={'status':'UNKNOWN','frontend':'clang','analysis_status':'NOT_PROVED','c_overflow_verified':False,'memory_safety_verified':False,'termination_proved':False,'unbounded_summary':False,'commands':self.commands}
         try:
             cfg=self.options
-            allowed={'executable','args','compilation_database','command_index','working_directory','target','standard','timeout','include_ast','sanitize'}
+            allowed={'executable','args','compilation_database','command_index','working_directory','target','standard','timeout','include_ast','sanitize','preprocess'}
             if not isinstance(cfg,dict) or set(cfg)-allowed:raise SMTGraphError('Invalid clang options')
             timeout=cfg.get('timeout',30)
             if type(timeout) is not int or not 1<=timeout<=60:raise SMTGraphError('Clang timeout must be 1..60 seconds per stage')
-            for key in ('include_ast','sanitize'):
+            for key in ('include_ast','sanitize','preprocess'):
                 if key in cfg and type(cfg[key]) is not bool:raise SMTGraphError('clang.'+key+' must be Boolean')
             if self.function is not None and (not isinstance(self.function,str) or not self.function):raise SMTGraphError('function must be a nonempty name')
             if (self.source is None)==(self.source_file is None):raise SMTGraphError('Provide exactly one source or source_file')
@@ -193,6 +193,26 @@ class ClangAdapter:
                 debug=[] if any(a.startswith('-g') for a in flags) else ['-gline-tables-only']
                 quote_fallback=['-iquote',str(directory)] if self.source_file is None else []
                 common=[executable,*flags,*optimization,*debug,*ir_flags,'-x','c','-fno-color-diagnostics',*quote_fallback]
+                input_path,input_before=path,before
+                preprocessing=None
+                if cfg.get('preprocess',False):
+                    # One compiler-owned expansion is the input of every later
+                    # stage. Never infer header/macro offsets in the main file.
+                    self.run([*common,'-E',str(path)],directory,'preprocess',workspace,timeout)
+                    before=(workspace/'preprocess.stdout').read_bytes()
+                    if len(before)>1024*1024 or b'\0' in before:
+                        raise SMTGraphError('Clang preprocessed source exceeds 1 MiB or contains NUL')
+                    expanded=before.decode('utf-8',errors='strict')
+                    # Reformatting expanded tokens can move source columns.
+                    # Do not silently change location-sensitive builtin values.
+                    if re.search(r'\b__builtin_(?:LINE|COLUMN|FILE|FILE_NAME|FUNCTION|source_location)\b',expanded):
+                        raise SMTGraphError('Source-location builtins unsupported in preprocessed snapshot mode')
+                    path=workspace/'snapshot.i';path.write_bytes(before)
+                    common=[executable,*flags,*optimization,*debug,*ir_flags,'-x','cpp-output','-fno-color-diagnostics']
+                    preprocessing={'method':'single Clang -E snapshot with line markers; all later stages use -x cpp-output',
+                        'source':expanded,'sha256':digest(before),'bytes':len(before),
+                        'input_sha256':digest(input_before),'line_markers_preserved':True,
+                        'source_location_builtins_supported':False}
                 raw=self.run([*common,'-fsyntax-only','-Xclang','-ast-dump=json',str(path)],directory,'ast',workspace,timeout)
                 try:ast=json.loads(raw)
                 except (ValueError,RecursionError) as exc:raise SMTGraphError('Invalid/over-deep Clang JSON AST') from exc
@@ -224,14 +244,17 @@ class ClangAdapter:
                 if not ir_file.is_file() or ir_file.stat().st_size>16*1024*1024:raise SMTGraphError('LLVM IR missing or exceeds output budget')
                 ir=ir_file.read_text();triple=re.search(r'^target triple = "([^"]+)"',ir,re.M);layout=re.search(r'^target datalayout = "([^"]+)"',ir,re.M)
                 if not triple or not layout:raise SMTGraphError('LLVM target metadata missing')
-                if path.read_bytes()!=before:raise SMTGraphError('Source changed during Clang ingestion')
+                if input_path.read_bytes()!=input_before or path.read_bytes()!=before:raise SMTGraphError('Source changed during Clang ingestion')
                 def parameter_spellings(function_node):
                     # Adjusted Clang parameter types omit array/VLA declarators.
-                    # Capture only literal main-file spellings, never guess through
-                    # macro locations or header offsets. Proof normalizers can
+                    # Capture literal physical-input spellings, never guess through
+                    # macro locations or header offsets. In snapshot mode Clang
+                    # line markers carry includedFrom but offsets address the one
+                    # physical snapshot. Proof normalizers can
                     # refuse syntax whose entry effects are no longer in the AST.
                     location=function_node.get('loc',{})
-                    if 'includedFrom' in location or 'spellingLoc' in location or 'expansionLoc' in location:return {}
+                    excluded=('spellingLoc','expansionLoc')+(() if preprocessing else ('includedFrom',))
+                    if any(k in location for k in excluded):return {}
                     if location.get('file') and Path(location['file']).resolve()!=path:return {}
                     offset=location.get('offset');name=function_node.get('name','').encode()
                     if type(offset) is not int or before[offset:offset+len(name)]!=name:return {}
@@ -239,7 +262,8 @@ class ClangAdapter:
                     for parameter in function_node.get('inner',[]):
                         if parameter.get('kind')!='ParmVarDecl':continue
                         start=parameter.get('range',{}).get('begin',{});end=parameter.get('range',{}).get('end',{})
-                        if any(key in loc for loc in (start,end) for key in ('spellingLoc','expansionLoc','includedFrom')):continue
+                        if any(key in loc for loc in (start,end) for key in excluded):continue
+                        if any(loc.get('file') and Path(loc['file']).resolve()!=path for loc in (start,end)):continue
                         if type(start.get('offset')) is not int or type(end.get('offset')) is not int:continue
                         a,b=start['offset'],end['offset']+end.get('tokLen',0)
                         if 0<=a<b<=len(before):result[parameter['id']]=before[a:b].decode(errors='strict')
@@ -247,5 +271,5 @@ class ClangAdapter:
                 functions=[{'name':n.get('name'),'linkage_name':n.get('mangledName',n.get('name')),'type':n.get('type'),'location':n.get('loc'),'range':n.get('range'),'parameter_spellings':parameter_spellings(n),**({'ast':n} if cfg.get('include_ast',True) else {})} for n in selected]
                 parameter_declarations=[{'id':n['id'],'name':n['name'],'parameters':[p for p in n.get('inner',[]) if p.get('kind')=='ParmVarDecl'],'parameter_spellings':parameter_spellings(n)} for n in function_declarations]
                 external_declarations=[n for n in function_declarations if not any(c.get('kind')=='CompoundStmt' for c in n.get('inner',[]))]
-                return {**base,'status':'CLANG_FRONTEND_READY','source_compiles':True,'compiler':self.compiler,'source':{'path':str(path) if self.source_file else '<inline>','sha256':digest(before)},'compilation_database':database,'effective_flags':[*flags,*optimization,*debug,*ir_flags],'ignored_build_flags':ignored,'target':{'triple':triple[1],'data_layout':layout[1]},'functions':functions,'typedefs':typedefs,'modeled_function_declarations':modeled_declarations,'external_function_declarations':external_declarations,'record_definitions':record_definitions,'function_parameter_declarations':parameter_declarations,'ast_nodes':count,'record_layouts':layouts_from_dump(layout_text),'record_layout_dump':layout_text,'llvm_ir':ir,'llvm_ir_sha256':digest(ir.encode()),'llvm_cfg':llvm_cfg(ir),'ubsan_instrumentation_requested':sanitize,'proof_boundary':'Clang semantics/AST/IR ingestion only; no LLMloop proof or KLEE execution; LLVM blocks include sanitizer branches and are not source MEMS counts','input_consistency':'main source checked unchanged; included headers/environment must remain stable across compiler stages'}
+                return {**base,'status':'CLANG_FRONTEND_READY','source_compiles':True,'compiler':self.compiler,'source':{'path':str(input_path) if self.source_file else '<inline>','sha256':digest(input_before)},**({'preprocessing':preprocessing} if preprocessing else {}),'compilation_database':database,'effective_flags':[*flags,*optimization,*debug,*ir_flags],'ignored_build_flags':ignored,'target':{'triple':triple[1],'data_layout':layout[1]},'functions':functions,'typedefs':typedefs,'modeled_function_declarations':modeled_declarations,'external_function_declarations':external_declarations,'record_definitions':record_definitions,'function_parameter_declarations':parameter_declarations,'ast_nodes':count,'record_layouts':layouts_from_dump(layout_text),'record_layout_dump':layout_text,'llvm_ir':ir,'llvm_ir_sha256':digest(ir.encode()),'llvm_cfg':llvm_cfg(ir),'ubsan_instrumentation_requested':sanitize,'proof_boundary':'Clang semantics/AST/IR ingestion only; no LLMloop proof or KLEE execution; LLVM blocks include sanitizer branches and are not source MEMS counts','input_consistency':('main source and expanded snapshot checked unchanged; included headers/environment must remain stable during preprocessing' if preprocessing else 'main source checked unchanged; included headers/environment must remain stable across compiler stages')}
         except (SMTGraphError,OSError,ValueError,TypeError,RecursionError) as exc:return {**base,'reason':str(exc),**({'compiler':self.compiler} if self.compiler else {})}
