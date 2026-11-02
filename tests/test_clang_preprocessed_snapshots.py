@@ -94,11 +94,13 @@ def test_header_and_macro_array_declarators_preserve_entry_obligations(tmp_path,
     helper='int api(int n,int *p){return p[0];}' if has_n else 'int api(int *p){return p[0];}'
     call='api(n,a)' if has_n else 'api(a)'
     r=analyze(tmp_path,clang,declaration,helper,'int entry(int n){int a[1]={n};return '+call+';}')
-    if declaration=='int api(int p[1]);':
+    if declaration in ('int api(int p[1]);','int api(int p[static 1]);'):
         proved(r)
         return
     unknown(r)
-    assert 'literal' in r['reason']
+    if declaration.startswith('#define PARAM'):
+        assert r['failed_obligation'].startswith('static array minimum extent')
+    else:assert 'literal' in r['reason']
 
 
 def test_single_unit_header_defined_helper_and_macro_pointer_are_supported(tmp_path,clang):

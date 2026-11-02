@@ -973,3 +973,17 @@ and multidimensional forms remain UNKNOWN. Literal `p[0].field` access also
 uses existing checked record-member semantics. See [the contract and runnable
 example](docs/CLANG_ARRAY_PARAMETERS.md) and [evidence](experiments/v050/report.md).
 General heap ownership, broader C/LLVM and arbitrary recurrences remain open.
+
+## v0.51: checked static array entry contracts
+
+`calls` now proves constant `T p[static N]` entry requirements for minima 1..8
+at every executed call, including contracts retained from header prototypes.
+Live nonnull whole-object bases and actual element counts are checked before
+the body, without reading cells or assuming the requirement. Guard SMT queries
+are retained for replay. See [the contract and example](docs/CLANG_STATIC_ARRAY_CONTRACTS.md)
+and [evidence](experiments/v051/report.md). Interior slices, VLA contracts,
+general ownership and complete C/LLVM remain open.
+
+The v0.51 audit also fixes erased runtime effects in unused variably modified
+typedefs: selected declarations such as `typedef int A[n++];` now return UNKNOWN
+instead of producing a scalar proof with the increment missing.

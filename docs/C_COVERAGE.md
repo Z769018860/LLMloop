@@ -67,7 +67,7 @@ See [feature inventory](FEATURE_STATUS.md),
 [borrowed payload-map contract](OWNED_LIST_PAYLOAD_MAPS.md) and
 [eager list-call arguments](EAGER_LIST_ARGUMENTS.md) and
 [finite choices and upstream integer pilot](FINITE_CHOICES_AND_UPSTREAM_BENCHMARKS.md) and
-[latest experiment report](../experiments/v050/report.md).
+[latest experiment report](../experiments/v051/report.md).
 
 [Stateful consumers](STATEFUL_LIST_CONSUMERS.md) admit nonzero initialized scalar
 states and sequential pure scalar updates within the same complete owned-chain
@@ -132,3 +132,13 @@ the bound. Named-record literal-zero member access reuses checked arrow access.
 Static/VLA/qualified/multidimensional forms, general record arrays and external
 pointer-entry contracts remain unsupported. See the
 [exact contract](CLANG_ARRAY_PARAMETERS.md) and [evidence](../experiments/v050/report.md).
+
+## v0.51 constant static array entry contracts
+
+The `calls` bridge retains constant static minima 1..8 across original
+declaration chains and checks each executed call's live nonnull whole-object
+base and actual capacity before its body. These are checked obligations, not
+assumptions or cell reads. Bounds/initialization/lifetime obligations remain.
+See [the precise fragment](CLANG_STATIC_ARRAY_CONTRACTS.md) and
+[evidence](../experiments/v051/report.md). Interior slices, VLA entry evaluation,
+general ownership and complete C/LLVM remain open.

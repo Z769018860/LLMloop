@@ -83,7 +83,7 @@ class LinkedClangProject:
         except (SMTGraphError,OSError,ValueError,TypeError,KeyError) as exc:
             return {**failure,'reason':str(exc),'translation_units':self.units}
 
-    def normalize(self,function):
+    def normalize(self,function,static_array_contracts=False):
         from .clang_proof import nodes, check_parameter_attributes, check_typedef_attributes
         from .clang_memory_proof import MemoryNormalizer,BUILTINS
         from .clang_bit_builtins import BIT_BUILTINS,BitBuiltinModels
@@ -120,7 +120,7 @@ class LinkedClangProject:
         if len(primary)!=1:raise SMTGraphError('Select one defined entry in the primary translation unit')
         entry_key,entry_fn=primary[0]
         source_entry=entry_fn['name']
-        emitted={};renames=[];array_parameters={}
+        emitted={};renames=[];array_parameters={};static_minima={}
         for key,fn in definitions.items():
             name=fn['name']
             if key[1] in internal[key[0]]:
@@ -175,7 +175,7 @@ class LinkedClangProject:
             if 'void' in parameters:raise SMTGraphError('Invalid linked void parameter')
             return scalar_type(match[1].strip(),index),parameters
 
-        def signature(node,index):
+        def signature(node,index,contract_target=None):
             check_typedef_attributes(units[index],node)
             if any(n.get('kind') not in ('ParmVarDecl','CompoundStmt','FullComment') for n in node.get('inner',[])):
                 raise SMTGraphError('Attributed linked function declarations/definitions unsupported')
@@ -189,14 +189,17 @@ class LinkedClangProject:
             # Adjusted pointer types erase array bounds/entry effects. Check
             # every original caller/provider declaration, not only definitions.
             metadata={d['id']:d for d in units[index].get('function_parameter_declarations',[])}
-            for param in params:
+            for position,param in enumerate(params):
                 resolved=scalar_type(param['type'],index)
                 if '*' not in resolved:continue
                 raw=metadata.get(node['id'],{}).get('parameter_spellings',{}).get(param['id'],'')
-                adjustment=checked_pointer_parameter(param,raw,resolved,lambda value:scalar_type(value,index))
+                adjustment=checked_pointer_parameter(param,raw,resolved,lambda value:scalar_type(value,index),static_array_contracts)
                 if adjustment is not None:
                     array_parameters[(index,node['id'],param['id'])]={'unit':index,
-                        'function':node['name'],'declaration_id':node['id'],**adjustment}
+                        'function':node['name'],'declaration_id':node['id'],'parameter_index':position,**adjustment}
+                    if contract_target is not None and 'minimum_extent_required' in adjustment:
+                        requirements=static_minima.setdefault(contract_target,{})
+                        requirements[position]=max(requirements.get(position,0),adjustment['minimum_extent_required'])
             return canonical
 
         selected=set();pending=[entry_key];bindings=[];checked=set();targets={}
@@ -211,12 +214,12 @@ class LinkedClangProject:
             declaration=tables[index][identifier];provider=definitions[key]['ast']
             if declaration.get('name')!=name or type_signature(ref.get('type',{}),index)!=signature(declaration,index):
                 raise SMTGraphError('Linked call reference and declaration metadata differ')
-            expected=signature(declaration,index);actual=signature(provider,key[0])
+            expected=signature(declaration,index,emitted[key]);actual=signature(provider,key[0],emitted[key])
             if expected!=actual:raise SMTGraphError('Linked caller/provider function types differ: '+str(name))
             # Every redeclaration in the caller's chain contributes obligations.
             for unit,identity in ((index,roots[index][identifier]),key):
                 for ident,root in roots[unit].items():
-                    if root==identity and signature(tables[unit][ident],unit)!=actual:
+                    if root==identity and signature(tables[unit][ident],unit,emitted[key])!=actual:
                         raise SMTGraphError('Incompatible linked redeclaration chain')
             marker=(index,identifier,key)
             if marker not in checked:
@@ -230,7 +233,7 @@ class LinkedClangProject:
             if key in selected:continue
             selected.add(key)
             if len(selected)>16:raise SMTGraphError('Linked call proof supports at most sixteen reachable functions')
-            signature(definitions[key]['ast'],key[0])
+            signature(definitions[key]['ast'],key[0],emitted[key])
             for node in nodes(definitions[key]['ast']):
                 if node.get('kind')!='DeclRefExpr' or node.get('referencedDecl',{}).get('kind')!='FunctionDecl':continue
                 ref=node['referencedDecl']
@@ -261,7 +264,7 @@ class LinkedClangProject:
             index=key[0];front=units[index]
             if index not in models_by_unit:
                 models=BitBuiltinModels(front,used);models.used=used;models.models=shared_models;models_by_unit[index]=models
-            normalizer=MemoryNormalizer({**front,'functions':[definitions[key]]},callable_names,models_by_unit[index])
+            normalizer=MemoryNormalizer({**front,'functions':[definitions[key]]},callable_names,models_by_unit[index],static_array_contracts)
             source=normalizer.source()
             if normalizer.union_views:
                 raise SMTGraphError('Linked union views are not yet admitted')
@@ -288,6 +291,8 @@ class LinkedClangProject:
             'dynamic_interposition_modeled':False,'general_linker_or_C_support':False,
             'normalized_source_sha256':hashlib.sha256(normalized.encode()).hexdigest(),
             **({'array_parameter_adjustments':list(array_parameters.values())} if array_parameters else {}),
+            **({'static_array_contracts':static_minima} if static_minima else {}),
             **({'record_compatibility':record_types.certificate} if record_types.schemas else {})}
         self.check_snapshot()
+        self.static_array_contracts=static_minima
         return normalized,normalizers,emitted[entry_key]

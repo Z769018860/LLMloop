@@ -7,6 +7,7 @@ External calls are admitted only after excluding their entire evaluation.
 """
 import copy
 import hashlib
+import json
 import z3
 from pycparser import c_ast,c_parser,c_generator
 from .typed_cfg_heap import TypedCFGHeap
@@ -69,7 +70,7 @@ def signature_key(decl):
 
 
 class CallExpansion:
-    def __init__(self,source,function=None,max_call_depth=3,allow_recursion=False):
+    def __init__(self,source,function=None,max_call_depth=3,allow_recursion=False,array_contracts=None):
         if type(max_call_depth) is not int or not 1<=max_call_depth<=8:raise SMTGraphError('max_call_depth must be 1..8')
         if type(allow_recursion) is not bool:raise SMTGraphError('allow_recursion must be Boolean')
         if len(source)>200000:raise SMTGraphError('Call source size budget exceeded')
@@ -101,6 +102,17 @@ class CallExpansion:
             if len(self.functions)!=1:raise SMTGraphError('Select the entry function for a multi-function source')
             function=next(iter(self.functions))
         if function not in self.functions:raise SMTGraphError('Unknown entry function')
+        self.array_contracts={} if array_contracts is None else copy.deepcopy(array_contracts)
+        if not isinstance(self.array_contracts,dict) or len(self.array_contracts)>16:raise SMTGraphError('Invalid static array contract map')
+        if function in self.array_contracts:raise SMTGraphError('Static entry contracts require a supplied caller object; external pointer entries unsupported')
+        for name,requirements in self.array_contracts.items():
+            if name not in self.functions or not isinstance(requirements,dict) or not requirements or len(requirements)>16:raise SMTGraphError('Static array contract requires supplied function and parameter positions')
+            params=self.functions[name].decl.type.args.params if self.functions[name].decl.type.args else []
+            for position,minimum in requirements.items():
+                if (type(position) is not int or not 0<=position<len(params) or type(minimum) is not int or not 1<=minimum<=8
+                        or not isinstance(params[position],c_ast.Decl) or not isinstance(params[position].type,(c_ast.PtrDecl,c_ast.ArrayDecl))):
+                    raise SMTGraphError('Static array contracts require pointer parameters and literal minimum 1..8')
+        self.array_guards={}
         self.entry=function;self.max_call_depth=max_call_depth;self.allow_recursion=allow_recursion;self.frontiers=[];self.events=[];self.used=set();self.serial=0
         self.scalar_names=set();non_scalar=set()
         pending=[(unit,0)];count=0
@@ -430,6 +442,12 @@ class CallExpansion:
             original=formal.name;formal.name=mapping[original]
             if isinstance(formal.type,c_ast.ArrayDecl):formal.type=c_ast.PtrDecl([],formal.type.type)
             declarator_name(formal.type,formal.name);formal.init=copy.deepcopy(actual);parameters.append(formal)
+        guards=[]
+        for position,minimum in sorted(self.array_contracts.get(name,{}).items()):
+            marker=self.fresh('array_contract')
+            self.array_guards[marker]={'callee':name,'parameter_index':position,'minimum':minimum,
+                'pointer_name':formals[position].name,'method':'live nonnull whole-object base and actual element count; no cell read'}
+            guards.append(declaration(marker,c_ast.TypeDecl(None,[],None,c_ast.IdentifierType(['int'])),c_ast.Constant('int','0')))
         ret=signature.type
         is_void=isinstance(ret,c_ast.TypeDecl) and isinstance(ret.type,c_ast.IdentifierType) and ret.type.names==['void']
         if is_void and need_value:raise SMTGraphError('Void helper used as a value')
@@ -441,7 +459,7 @@ class CallExpansion:
             prefix=[declaration(result,ret,c_ast.Constant('int','0')),declaration(flag,c_ast.TypeDecl(None,[],None,c_ast.IdentifierType(['int'])),c_ast.Constant('int','0'))]
         self.events.append({'callee':name,'depth':len(stack),'recursive_edge':name in stack,'parameter_count':len(formals),'pointer_return':isinstance(ret,c_ast.PtrDecl),'void_return':is_void,'exit_label':label})
         body=self.compound(function.body,stack+(name,),(result,flag,label,is_void))
-        frame=c_ast.Compound(parameters+[body,c_ast.Label(label,c_ast.EmptyStatement())]);prefix.append(frame)
+        frame=c_ast.Compound(parameters+guards+[body,c_ast.Label(label,c_ast.EmptyStatement())]);prefix.append(frame)
         if not is_void:
             # A generated marker obligation rejects a nonvoid helper that reaches
             # its end. It never removes or overwrites original source obligations.
@@ -469,13 +487,33 @@ class CallExpansion:
 
 
 class TypedCFGCalls(TypedCFGHeap):
-    def __init__(self,source,function=None,max_call_depth=3,allow_recursion=False,**options):
-        self.expansion=CallExpansion(source,function,max_call_depth,allow_recursion)
+    def __init__(self,source,function=None,max_call_depth=3,allow_recursion=False,array_contracts=None,**options):
+        self.expansion=CallExpansion(source,function,max_call_depth,allow_recursion,array_contracts)
         self.frontier_names={item['marker'] for item in self.expansion.frontiers}
         self.frontier_kinds={item['marker']:item.get('kind','depth') for item in self.expansion.frontiers}
+        self.array_contract_queries=[];self.array_contract_query_chars=0
         super().__init__(self.expansion.source,function=self.expansion.entry,**options)
 
+    def check_array_contract(self,label,premise,claim,contract,obj,offset):
+        solver=z3.Solver();solver.add(premise,z3.Not(claim));text=solver.to_smt2()
+        if len(self.array_contract_queries)>=4096 or self.array_contract_query_chars+len(text)>16*1024*1024:
+            raise SMTGraphError('Static array certificate budget exceeded')
+        record={'obligation':label,'callee':contract['callee'],'parameter_index':contract['parameter_index'],
+                'minimum':contract['minimum'],'object_name':obj.name if obj is not None else None,
+                'actual_length_smt2':obj.length.sexpr() if obj is not None else None,
+                'offset_smt2':offset.value.sexpr(),'smt2':text,'proved':False}
+        self.array_contract_queries.append(record);self.array_contract_query_chars+=len(text)
+        self.check(label,premise,claim);record['proved']=True
+
     def atom(self,node,states):
+        if isinstance(node,c_ast.Decl) and node.name in self.expansion.array_guards:
+            contract=self.expansion.array_guards[node.name]
+            for guard,env,_ in states:
+                obj,offset=self.pointer(c_ast.ID(contract['pointer_name']),env)
+                pre=z3.And(self.domain,guard)
+                self.check_array_contract('static array pointer valid and nonnull: '+node.name,pre,z3.And(offset.safe,z3.BoolVal(obj is not None)),contract,obj,offset)
+                self.check_array_contract('static array supported whole-object base: '+node.name,pre,offset.value==0,contract,obj,offset)
+                self.check_array_contract('static array minimum extent: '+node.name,pre,obj.length>=contract['minimum'] if obj is not None else z3.BoolVal(False),contract,obj,offset)
         if isinstance(node,c_ast.Decl) and node.name in self.frontier_names:
             label='external call frontier unreachable: ' if self.frontier_kinds[node.name]=='external' else 'call depth frontier unreachable: '
             for guard,_,_ in states:self.check(label+node.name,z3.And(self.domain,guard),z3.BoolVal(False))
@@ -503,6 +541,16 @@ class TypedCFGCalls(TypedCFGHeap):
                               'all_frontiers_proved_unreachable':result['status']=='PROVED_DEFINED_TYPED_C_CFG_CALLS',
                               'external_calls_supported':False,'pointer_return_supported':True,
                               'nonvoid_return_marker_checked':True}
+        if self.expansion.array_contracts:
+            result['call_model']['static_array_contracts']=self.expansion.array_contracts
+            result['call_model']['static_array_contracts_sha256']=hashlib.sha256(json.dumps(self.expansion.array_contracts,sort_keys=True).encode()).hexdigest()
+            result['call_model']['static_array_guards']=self.expansion.array_guards
+            result['call_model']['static_array_contracts_assumed']=False
+            result['call_model']['static_array_queries']=self.array_contract_queries
+            result['call_model']['static_array_certificate_limits']={'max_queries':4096,'max_chars':16*1024*1024,'solver_timeout_ms':5000}
+        if result.get('failed_obligation','').startswith('static array supported whole-object base'):
+            result['analysis_limit']='static_array_base_frontier'
+            result['counterexample_kind']='unsupported_static_array_interior_pointer'
         if result.get('failed_obligation','').startswith('call depth frontier'):result['analysis_limit']='call_depth_frontier'
         if result.get('failed_obligation','').startswith('external call frontier'):
             result['analysis_limit']='external_call_frontier'

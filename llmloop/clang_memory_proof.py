@@ -15,7 +15,7 @@ BUILTINS = {'malloc', 'calloc', 'free'}
 
 
 class MemoryNormalizer(UnionViewNormalizer):
-    def __init__(self, frontend, callables=(), bit_models=None):
+    def __init__(self, frontend, callables=(), bit_models=None,static_array_contracts=False):
         super().__init__(frontend)
         self.callables = set(callables)
         self.used.update(self.callables)
@@ -30,6 +30,8 @@ class MemoryNormalizer(UnionViewNormalizer):
         self.bit_models = bit_models
         self.bit_builtin_calls = []
         self.array_parameter_adjustments = []
+        self.static_array_contracts = {}
+        self.static_array_contracts_enabled = static_array_contracts
         self.zero_record_member_adjustments = []
         for record in frontend.get('record_definitions', []):
             self.record_defs.setdefault(record.get('name'), []).append(record)
@@ -337,20 +339,23 @@ class MemoryNormalizer(UnionViewNormalizer):
             check_typedef_attributes(self.frontend,{'inner':declaration['parameters']})
             check_parameter_attributes(declaration['parameters'])
             spellings = declaration['parameter_spellings']
-            for param in declaration['parameters']:
+            for position,param in enumerate(declaration['parameters']):
                 resolved = self.memory_type(param['type'])
                 if '*' not in resolved:
                     continue
                 raw = spellings.get(param['id'], '')
-                adjustment=checked_pointer_parameter(param,raw,resolved,self.memory_type)
+                adjustment=checked_pointer_parameter(param,raw,resolved,self.memory_type,self.static_array_contracts_enabled)
                 if adjustment is not None:
                     self.array_parameter_adjustments.append({'function':self.root['name'],
-                        'declaration_id':declaration['id'],**adjustment})
+                        'declaration_id':declaration['id'],'parameter_index':position,**adjustment})
+                    if 'minimum_extent_required' in adjustment:
+                        if len(declaration['parameters'])!=len(params):raise SMTGraphError('Static array declaration parameter count differs')
+                        self.static_array_contracts[position]=max(self.static_array_contracts.get(position,0),adjustment['minimum_extent_required'])
         declarations = ', '.join(self.memory_type(n['type']) + ' ' + self.names[n['id']] for n in params) or 'void'
         return result + ' ' + self.root['name'] + '(' + declarations + ') ' + self.stmt(bodies[0]) + '\n'
 
 
-def normalize_calls(frontend, function):
+def normalize_calls(frontend, function,static_array_contracts=False):
     from .clang_bit_builtins import BIT_BUILTINS, BitBuiltinModels
     functions = {fn['name']: fn for fn in frontend['functions']}
     if function is None:
@@ -382,7 +387,7 @@ def normalize_calls(frontend, function):
     used = {n['name'] for fn in frontend['functions'] for n in nodes(fn['ast']) if n.get('name')}
     used.update(n['name'] for n in frontend.get('external_function_declarations', []) if n.get('name'))
     bit_models = BitBuiltinModels(frontend, used)
-    normalizers = [MemoryNormalizer({**frontend, 'functions': [functions[name]]}, selected, bit_models) for name in sorted(selected)]
+    normalizers = [MemoryNormalizer({**frontend, 'functions': [functions[name]]}, selected, bit_models,static_array_contracts) for name in sorted(selected)]
     sources = [normalizer.source() for normalizer in normalizers]
     sources += [model['source'] for model in bit_models.models.values()]
     prototypes = [source.split('{', 1)[0].strip() + ';' for source in sources]

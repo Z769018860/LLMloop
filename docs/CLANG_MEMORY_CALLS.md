@@ -79,7 +79,9 @@ opt-in and every depth frontier must be proved unreachable.
 Literal pointer and [ordinary outer array parameter](CLANG_ARRAY_PARAMETERS.md)
 declarators are checked in every original declaration, including forward
 prototypes. Only `[]` and positive unsuffixed decimal bounds adjust to pointers;
-no object extent is inferred. Static/VLA/qualified forms remain UNKNOWN.
+no object extent is inferred. Constant static minima 1..8 instead use
+[checked entry contracts](CLANG_STATIC_ARRAY_CONTRACTS.md); VLA/qualified forms
+remain UNKNOWN.
 Header/macro spellings require the [opt-in compiler snapshot](CLANG_PREPROCESSED_SNAPSHOTS.md).
 Attributes and used typedef chains retain their own refusal checks.
 

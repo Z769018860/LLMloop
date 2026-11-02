@@ -55,6 +55,9 @@ class ScalarNormalizer:
         if len(frontend['functions'])!=1 or 'ast' not in frontend['functions'][0]:raise SMTGraphError('Clang proof requires one selected function and include_ast=true')
         self.frontend=frontend;self.root=frontend['functions'][0]['ast'];self.names={};self.labels={};self.renamed=[];self.operations=0
         check_typedef_attributes(frontend,self.root)
+        for declaration in nodes(self.root):
+            if declaration.get('kind')=='TypedefDecl' and any(n.get('kind')=='VariableArrayType' for n in nodes(declaration)):
+                raise SMTGraphError('Variably modified typedef declarations unsupported; bound evaluation cannot be erased')
         declarations=[n for n in nodes(self.root) if n.get('kind') in ('ParmVarDecl','VarDecl')]
         counts=Counter(n.get('name') for n in declarations);self.used={n.get('name') for n in nodes(self.root) if n.get('name')};self.serial=0
         for n in declarations:
@@ -210,10 +213,10 @@ def prove_clang(source=None,source_file=None,function=None,clang=None,proof=None
         else:raise SMTGraphError('Clang proof target not covered by the current x86 ABI contract (including x32)')
         if backend in ('calls','list_calls','bv_calls'):
             if project is not None:
-                normalized,normalizers,entry=project.normalize(function)
+                normalized,normalizers,entry=project.normalize(function,static_array_contracts=backend=='calls')
             else:
                 from .clang_memory_proof import normalize_calls
-                normalized,normalizers,entry=normalize_calls(front,function)
+                normalized,normalizers,entry=normalize_calls(front,function,static_array_contracts=backend=='calls')
         else:
             if backend in ('memory','list'):
                 from .clang_memory_proof import MemoryNormalizer
@@ -223,6 +226,9 @@ def prove_clang(source=None,source_file=None,function=None,clang=None,proof=None
                 normalizer=UnionViewNormalizer(front)
             normalized=normalizer.source();normalizers=[normalizer];entry=front['functions'][0]['name']
         renamed=[item for normalizer in normalizers for item in normalizer.renamed]
+        static_contracts=(project.static_array_contracts if project is not None else
+            {n.root['name']:n.static_array_contracts for n in normalizers if getattr(n,'static_array_contracts',{})})
+        if static_contracts and backend!='calls':raise SMTGraphError('Static array contracts require calls backend')
         if backend in ('nested','recurrence','memory') and renamed:raise SMTGraphError('Summary backends require unambiguous source scalar names')
         record_tags=set();layout_correspondence={}
         if backend in ('memory','calls','list','list_calls','bv_calls'):
@@ -250,7 +256,13 @@ def prove_clang(source=None,source_file=None,function=None,clang=None,proof=None
                 if key!='backend':request[key]=value
             if backend in ('nested','memory') and 'loop_summaries' not in proof:request['loop_summaries']='auto'
             from .api import analyze_request
-            result=analyze_request(request)
+            if static_contracts:
+                if set(request)-{'source','function','frontend','parameter_bounds','abi','char_signed','max_steps','max_paths','allocation_failure','max_call_depth','allow_recursion','inputs'}:
+                    raise SMTGraphError('Invalid static-array calls options')
+                from .typed_cfg_calls import TypedCFGCalls
+                result=TypedCFGCalls(normalized,function=entry,array_contracts=static_contracts,
+                    **{k:v for k,v in request.items() if k not in ('source','function','frontend','inputs')}).report(proof.get('inputs'))
+            else:result=analyze_request(request)
         success=result['status'].startswith('PROVED_DEFINED_TYPED_C_')
         if success and record_tags:
             from .clang_memory_proof import check_record_layouts
@@ -258,5 +270,5 @@ def prove_clang(source=None,source_file=None,function=None,clang=None,proof=None
         statuses={'cfg':'PROVED_DEFINED_CLANG_SCALAR_CFG','nested':'PROVED_DEFINED_CLANG_SCALAR_NESTED','recurrence':'PROVED_DEFINED_CLANG_SCALAR_RECURRENCE','memory':'PROVED_DEFINED_CLANG_FINITE_MEMORY','calls':'PROVED_DEFINED_CLANG_CFG_CALLS','list':'PROVED_DEFINED_CLANG_LIST_HEAP','list_calls':'PROVED_DEFINED_CLANG_LIST_CALLS','bv_cfg':'PROVED_DEFINED_CLANG_BV_CFG','bv_calls':'PROVED_DEFINED_CLANG_BV_CALLS'}
         if success:result['status']=statuses[backend]
         if project is not None:project.check_snapshot()
-        return {**result,'frontend':'clang_proof','clang_frontend':front,'normalization':{'method':'structural admitted Clang AST to typed C; Clang + normalizer are trusted frontend components','source':normalized,'source_sha256':hashlib.sha256(normalized.encode()).hexdigest(),'ast_sha256':hashlib.sha256(json.dumps([n.root for n in normalizers],sort_keys=True).encode()).hexdigest(),'type_environment_sha256':hashlib.sha256(json.dumps(({key:front.get(key,[]) for key in ('typedefs','record_definitions','modeled_function_declarations','function_parameter_declarations','external_function_declarations')} if project is None else [{key:unit.get(key,[]) for key in ('typedefs','record_definitions','modeled_function_declarations','function_parameter_declarations','external_function_declarations')} for unit in project.units]),sort_keys=True).encode()).hexdigest(),'alpha_renamed':renamed,'functions':[n.root['name'] for n in normalizers],'backend':backend,'external_call_frontiers':[f for n in normalizers for f in getattr(n,'external_frontiers',[])],'external_call_semantics_assumed':False,'array_parameter_adjustments':[v for n in normalizers for v in getattr(n,'array_parameter_adjustments',[])],'zero_record_member_adjustments':[v for n in normalizers for v in getattr(n,'zero_record_member_adjustments',[])],'bit_builtin_calls':[v for n in normalizers for v in getattr(n,'bit_builtin_calls',[])],'bit_builtin_models':list(next((n.bit_models.models for n in normalizers if getattr(n,'bit_models',None) is not None),{}).values()),'union_views':[v for n in normalizers for v in n.union_views],'abi':abi,'char_signed':char_signed,'record_layout_correspondence':layout_correspondence,'compiler_equivalence_machine_proved':False,'unsupported_constructs_rejected':True,**({'translation_unit_linking':project.certificate} if project is not None else {})},'scope':'declared scalar input domain and selected typed backend contract; allocation assumptions and the selected shape/CFG proof boundary remain explicit; no general LLVM semantics or KLEE execution'}
+        return {**result,'frontend':'clang_proof','clang_frontend':front,'normalization':{'method':'structural admitted Clang AST to typed C; Clang + normalizer are trusted frontend components','source':normalized,'source_sha256':hashlib.sha256(normalized.encode()).hexdigest(),'ast_sha256':hashlib.sha256(json.dumps([n.root for n in normalizers],sort_keys=True).encode()).hexdigest(),'type_environment_sha256':hashlib.sha256(json.dumps(({key:front.get(key,[]) for key in ('typedefs','record_definitions','modeled_function_declarations','function_parameter_declarations','external_function_declarations')} if project is None else [{key:unit.get(key,[]) for key in ('typedefs','record_definitions','modeled_function_declarations','function_parameter_declarations','external_function_declarations')} for unit in project.units]),sort_keys=True).encode()).hexdigest(),'alpha_renamed':renamed,'functions':[n.root['name'] for n in normalizers],'backend':backend,'external_call_frontiers':[f for n in normalizers for f in getattr(n,'external_frontiers',[])],'external_call_semantics_assumed':False,'array_parameter_adjustments':[v for n in normalizers for v in getattr(n,'array_parameter_adjustments',[])],'static_array_contracts':static_contracts,'static_array_contracts_sha256':hashlib.sha256(json.dumps(static_contracts,sort_keys=True).encode()).hexdigest(),'zero_record_member_adjustments':[v for n in normalizers for v in getattr(n,'zero_record_member_adjustments',[])],'bit_builtin_calls':[v for n in normalizers for v in getattr(n,'bit_builtin_calls',[])],'bit_builtin_models':list(next((n.bit_models.models for n in normalizers if getattr(n,'bit_models',None) is not None),{}).values()),'union_views':[v for n in normalizers for v in n.union_views],'abi':abi,'char_signed':char_signed,'record_layout_correspondence':layout_correspondence,'compiler_equivalence_machine_proved':False,'unsupported_constructs_rejected':True,**({'translation_unit_linking':project.certificate} if project is not None else {})},'scope':'declared scalar input domain and selected typed backend contract; allocation assumptions and the selected shape/CFG proof boundary remain explicit; no general LLVM semantics or KLEE execution'}
     except (SMTGraphError,OSError,ValueError,TypeError,KeyError,RecursionError) as exc:return {**failure,'reason':str(exc)}

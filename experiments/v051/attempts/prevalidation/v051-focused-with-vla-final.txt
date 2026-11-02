@@ -1,0 +1,32 @@
+........................................................................ [ 34%]
+..F..................................................................... [ 68%]
+...................................................................      [100%]
+=================================== FAILURES ===================================
+___________ test_unselected_helper_vla_typedef_does_not_poison_entry ___________
+
+clang = '/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang'
+
+    def test_unselected_helper_vla_typedef_does_not_poison_entry(clang):
+        source='int helper(int n){typedef int A[n++];return n;}int entry(int n){return n;}'
+        r=analyze_request({'source':source,'function':'entry','frontend':'clang_proof','clang':{'executable':clang},
+            'proof':{'backend':'calls','parameter_bounds':{'n':[1,2]},'inputs':{'n':1}}})
+>       proved(r);assert r['evaluation']['value']==1
+        ^^^^^^^^^
+
+tests/test_clang_static_arrays.py:294: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+r = {'schema_version': 1, 'status': 'PROVED_DEFINED_CLANG_CFG_CALLS', 'abi': 'LP64', 'function': 'entry', ...}
+
+    def proved(r):
+        assert r['status']=='PROVED_DEFINED_CLANG_CFG_CALLS',r.get('reason',r.get('failed_obligation'))
+        assert all(r[k] for k in ('c_overflow_verified','memory_safety_verified','termination_proved'))
+        model=r['call_model']
+>       assert model['static_array_contracts'] and model['static_array_guards']
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'static_array_contracts'
+
+tests/test_clang_static_arrays.py:37: KeyError
+=========================== short test summary info ============================
+FAILED tests/test_clang_static_arrays.py::test_unselected_helper_vla_typedef_does_not_poison_entry
+1 failed, 210 passed in 52.74s
