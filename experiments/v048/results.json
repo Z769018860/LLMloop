@@ -1,0 +1,800 @@
+{
+  "base_commit": "4acab858ab297b6b379452d6c791ba2e7ce4f6fe",
+  "tested_commit": "2dab98651be5e3e860ac519a02964dbc8e1fa83d",
+  "tested_tree": "afc6a0dfea2a7c5827394f4ef98cf7b0161dd7f3",
+  "validation_origin": "GitHub Actions fallback after primary execution environment loss; frozen-source pytest workers, Clang and native UBSan",
+  "environment": {
+    "python": "3.12.15",
+    "platform": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39",
+    "pytest": "9.1.1",
+    "sympy": "1.14.0",
+    "z3": "5.3.3",
+    "pycparser": "3.12",
+    "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+    "native_compiler": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0"
+  },
+  "full_pytest": {
+    "command": [
+      "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "--forked"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 561.438,
+    "log": "pytest.txt",
+    "passed": 2225,
+    "skipped": 0,
+    "expected_passed": 2225
+  },
+  "new_tests": 96,
+  "existing_tests_replaced": 0,
+  "bit_source_backend": "bv_calls",
+  "integer_bit_source_backend": "calls",
+  "linked_records": {
+    "case_count": 8,
+    "native_output_matches": 800,
+    "model_matches": 400,
+    "native_layout_matches": 36,
+    "expected_sanitizer_failures": 16,
+    "record_refusals": 6
+  },
+  "linked": {
+    "case_count": 8,
+    "native_output_matches": 680,
+    "model_matches": 340,
+    "expected_ubsan_failures": 8,
+    "binding_refusals": 7
+  },
+  "commands": {
+    "full_pytest": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--forked"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 561.438,
+      "log": "pytest.txt",
+      "passed": 2225,
+      "skipped": 0,
+      "expected_passed": 2225
+    },
+    "linked_records": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "scripts/check_clang_linked_records_native.py",
+        "--output",
+        "experiments/v048/linked_records.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 11.841,
+      "log": "linked_records.txt"
+    },
+    "record_cli": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "-m",
+        "llmloop.symbolic_cli",
+        "examples/clang_linked_records/entry.c",
+        "--c-clang-proof",
+        "--function",
+        "entry",
+        "--clang-config",
+        "{\"compilation_database\": \"examples/clang_linked_records\", \"linked_sources\": [\"examples/clang_linked_records/build.c\", \"examples/clang_linked_records/consume.c\"]}",
+        "--clang-proof-config",
+        "{\"backend\":\"calls\",\"max_steps\":512}",
+        "--parameter-bounds",
+        "{\"n\":[0,10]}",
+        "--inputs",
+        "{\"n\":3}"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.117,
+      "log": "record_cli.json"
+    },
+    "linked": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "scripts/check_clang_linked_native.py",
+        "--output",
+        "experiments/v048/linked.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 8.483,
+      "log": "linked.txt"
+    },
+    "linked_cli": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "-m",
+        "llmloop.symbolic_cli",
+        "examples/clang_linked_project/entry.c",
+        "--c-clang-proof",
+        "--function",
+        "entry",
+        "--clang-config",
+        "{\"compilation_database\": \"examples/clang_linked_project\", \"linked_sources\": [\"examples/clang_linked_project/support.c\"]}",
+        "--clang-proof-config",
+        "{\"backend\":\"calls\"}",
+        "--parameter-bounds",
+        "{\"n\":[0,100]}",
+        "--inputs",
+        "{\"n\":5}"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.766,
+      "log": "linked_cli.json"
+    },
+    "stateful": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "scripts/check_list_stateful_native.py",
+        "--output",
+        "experiments/v048/stateful.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 21.563,
+      "log": "stateful.txt"
+    },
+    "stateful_cli": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "-m",
+        "llmloop.symbolic_cli",
+        "examples/clang_list_stateful_consumer.c",
+        "--c-clang-proof",
+        "--function",
+        "entry",
+        "--clang-proof-config",
+        "{\"backend\": \"list_calls\", \"allocation_count\": 100}",
+        "--parameter-bounds",
+        "{\"n\":[0,1000000],\"delta\":[-3,3]}",
+        "--inputs",
+        "{\"n\":1000000,\"delta\":2}"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.067,
+      "log": "stateful_cli.json"
+    },
+    "builders": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "scripts/check_list_builders_native.py",
+        "--output",
+        "experiments/v048/builders.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 19.408,
+      "log": "builders.txt"
+    },
+    "builder_cli": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "-m",
+        "llmloop.symbolic_cli",
+        "examples/clang_list_builder_arguments.c",
+        "--c-clang-proof",
+        "--function",
+        "entry",
+        "--clang-proof-config",
+        "{\"backend\": \"list_calls\", \"allocation_count\": 100, \"loop_summaries\": {\"__list_scan\": {\"total\": \"__list_scan*(2*__list_length-__list_scan-1)//2+__list_scan*((delta+260)%256)\"}}}",
+        "--parameter-bounds",
+        "{\"n\":[0,1000000],\"delta\":[0,2]}",
+        "--inputs",
+        "{\"n\":1000000,\"delta\":2}"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.716,
+      "log": "builder_cli.json"
+    },
+    "consumers": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "scripts/check_list_consumers_native.py",
+        "--output",
+        "experiments/v048/consumers.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 18.854,
+      "log": "consumers.txt"
+    },
+    "upstream": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "scripts/check_llvm_builtins.py",
+        "--compare-baseline",
+        "--source-worker-timeout",
+        "120",
+        "--output",
+        "experiments/v048/upstream.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 33.795,
+      "log": "upstream.txt"
+    },
+    "bit_builtins": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "scripts/check_clang_bit_builtins.py",
+        "--source-backend",
+        "bv_calls",
+        "--output",
+        "experiments/v048/bit_builtins.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 18.756,
+      "log": "bit_builtins.txt"
+    },
+    "bit_builtins_integer": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "scripts/check_clang_bit_builtins.py",
+        "--source-backend",
+        "calls",
+        "--output",
+        "experiments/v048/bit_builtins_integer.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 20.808,
+      "log": "bit_builtins_integer.txt"
+    },
+    "division": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "scripts/check_division_bv.py",
+        "--strategy",
+        "induction",
+        "--compare-baseline",
+        "--controls",
+        "--output",
+        "experiments/v048/division.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 149.773,
+      "log": "division.txt"
+    },
+    "arguments": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "scripts/check_list_arguments_native.py",
+        "--output",
+        "experiments/v048/arguments.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 19.809,
+      "log": "arguments.txt"
+    },
+    "payload_maps": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "scripts/check_list_payload_maps_native.py",
+        "--output",
+        "experiments/v048/payload_maps.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 12.04,
+      "log": "payload_maps.txt"
+    },
+    "reversal": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "scripts/check_list_reversal_native.py",
+        "--output",
+        "experiments/v048/reversal.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 9.986,
+      "log": "reversal.txt"
+    },
+    "consumer_cli": {
+      "command": [
+        "/opt/hostedtoolcache/Python/3.12.15/x64/bin/python",
+        "-m",
+        "llmloop.symbolic_cli",
+        "examples/clang_list_weighted_consumer.c",
+        "--c-clang-proof",
+        "--function",
+        "entry",
+        "--clang-proof-config",
+        "{\"backend\": \"list_calls\", \"allocation_count\": 100, \"loop_summaries\": {\"__list_scan\": {\"__list_call_total\": \"((delta+260)%256)*(__list_scan*(2*__list_length-__list_scan-1)//2)+__list_scan*(delta-1)\"}}}",
+        "--parameter-bounds",
+        "{\"n\":[0,1000000],\"delta\":[0,2]}",
+        "--inputs",
+        "{\"n\":1000000,\"delta\":2}"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.716,
+      "log": "consumer_cli.json"
+    }
+  },
+  "checks": {
+    "full_pytest": true,
+    "linked_records": true,
+    "record_cli": true,
+    "linked": true,
+    "linked_cli": true,
+    "stateful": true,
+    "sanitizer_frontiers_recorded": true,
+    "stateful_cli": true,
+    "builders": true,
+    "builder_cli": true,
+    "consumers": true,
+    "upstream": true,
+    "upstream_worker_ceiling": true,
+    "popcount_baseline_identity": true,
+    "bit_builtins": true,
+    "bit_builtins_integer": true,
+    "bit_backend_source_identity": true,
+    "division": true,
+    "arguments": true,
+    "payload_maps": true,
+    "reversal": true,
+    "consumer_cli": true,
+    "bit_baseline_source_identity": true,
+    "frozen_source_unchanged": true
+  },
+  "stateful": {
+    "case_count": 10,
+    "correspondence_groups": 1512,
+    "native_output_matches": 4536,
+    "model_matches": 756,
+    "expected_ubsan_failures": 26,
+    "unobserved_ubsan_controls": 2,
+    "negative_source_controls": 7,
+    "arithmetic_audits_replayed": 7
+  },
+  "builders": {
+    "case_count": 10,
+    "correspondence_groups": 1548,
+    "native_output_matches": 4644,
+    "model_matches": 774,
+    "expected_ubsan_failures": 16
+  },
+  "consumers": {
+    "case_count": 10,
+    "correspondence_groups": 1800,
+    "native_output_matches": 5400,
+    "model_matches": 900,
+    "expected_ubsan_failures": 20
+  },
+  "legacy_native": {
+    "arguments": {
+      "correspondences": 1620,
+      "expected_ubsan_failures": 12
+    },
+    "payload_maps": {
+      "correspondences": 510,
+      "expected_ubsan_failures": 8
+    },
+    "reversal": {
+      "correspondences": 372,
+      "expected_ubsan_failures": 4
+    }
+  },
+  "upstream": {
+    "case_count": 15,
+    "upstream_functions": 13,
+    "safety_proved_cases": 14,
+    "safety_unknown_cases": 1,
+    "functional_proved_cases": 14,
+    "native_comparisons": 14848,
+    "model_comparisons": 1792,
+    "expected_ubsan_failures": 4,
+    "intended_abort_runs": 4,
+    "wrong_algorithm_native_refutations": 6
+  },
+  "bit_builtins": {
+    "source_proved_cases": 18,
+    "functional_proved_cases": 18,
+    "zero_source_refutations": 18,
+    "native_comparisons": 6144,
+    "expected_zero_ubsan_failures": 24,
+    "wrong_count_functional_refutations": 6,
+    "legacy_model_equivalence_proofs": 18,
+    "legacy_model_equivalence_replays": 18
+  },
+  "division": {
+    "source_status": "PROVED_DEFINED_CLANG_BV_CALLS",
+    "functional_status": "PROVED_FUNCTIONAL_DIVISION_INDUCTION",
+    "functional_elapsed_seconds": 4.726684,
+    "total_functional_timeout_ms": 30000,
+    "direct_baseline_status": "UNKNOWN",
+    "functional_replay": {
+      "queries": 40,
+      "all_unsat": true,
+      "all_replayed": true,
+      "arithmetic_audits": 1,
+      "counter_cases": 31
+    },
+    "native_comparisons": 1024,
+    "model_comparisons": 64,
+    "expected_ubsan_failures": 2,
+    "wrong_algorithm_native_refutations": 2
+  },
+  "retained_pilot_domains": 15,
+  "source_domains_proved_with_explicit_backends": 15,
+  "functional_domains_proved_with_explicit_strategies": 15,
+  "frozen_manifest_paths": 732,
+  "frozen_source_unchanged": true,
+  "github_actions_used": true,
+  "ci_runs_used": 1,
+  "klee_used": false,
+  "complete_c_support": false,
+  "passed": true,
+  "source_identity": {
+    "local_tested_commit": "2dab98651be5e3e860ac519a02964dbc8e1fa83d",
+    "local_tested_tree": "afc6a0dfea2a7c5827394f4ef98cf7b0161dd7f3",
+    "published_source_commit": "2dab98651be5e3e860ac519a02964dbc8e1fa83d",
+    "published_source_tree": "afc6a0dfea2a7c5827394f4ef98cf7b0161dd7f3",
+    "git_tree_equal": true,
+    "publication": "GitHub connector; commit metadata may differ but every tracked path is identical"
+  },
+  "prior_prevalidation_attempt": {
+    "previous_interrupted_scope_attempt": {
+      "tested_commit": "50395828a25ff8c3e03b315e7ffe13151fbd0ee7",
+      "tested_tree": "73304b2830f8680b52dc7dd5c66bfa1bc5089c7a",
+      "published_source": "dc1f87b571f072463365e82f5dbf9fb0f0f92f6f",
+      "outcome": "intentionally interrupted before completion; no merge",
+      "reason": "Review found that an unused function-local same-tag complete record could be used to fill a file-scope incomplete interface. The observed probe was defined and proved, but opaque/incomplete interfaces are outside the advertised contract. Enforce file-scope complete definitions and add scope controls before fresh validation.",
+      "partial_pytest_output": "........................................................................ [  3%]\n........................................................................ [  6%]\n........................................................................ [  9%]\n..........................................................",
+      "completed_prevalidation": {
+        "new_tests_passed": 75,
+        "native_output_matches": 800,
+        "model_matches": 400,
+        "native_layout_matches": 36,
+        "expected_sanitizer_failures": 16,
+        "record_refusals": 6
+      },
+      "ci_runs_used": 0
+    },
+    "failed_default_source_analysis": {
+      "source_commit": "cf0d0e1b17d5e145819386e774ce44b73d4416ad",
+      "source_tree": "e8dab0a61205c230eaa8fdd815410f9fd2457b77",
+      "archive_path": "experiments/v048/attempts/cf0_default_calls",
+      "full_pytest": {
+        "command": [
+          "/tmp/llmloop-v048-env/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "--forked"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 1162.575,
+        "log": "pytest.txt",
+        "passed": 2206,
+        "skipped": 0,
+        "expected_passed": 2206
+      },
+      "checks": {
+        "full_pytest": true,
+        "linked_records": true,
+        "record_cli": true,
+        "linked": true,
+        "linked_cli": true,
+        "stateful": true,
+        "sanitizer_frontiers_recorded": true,
+        "stateful_cli": true,
+        "builders": true,
+        "builder_cli": true,
+        "consumers": true,
+        "upstream": true,
+        "upstream_worker_ceiling": true,
+        "popcount_baseline_identity": true,
+        "bit_builtins": false,
+        "division": true,
+        "arguments": true,
+        "payload_maps": true,
+        "reversal": true,
+        "consumer_cli": true,
+        "frozen_source_unchanged": true
+      },
+      "reason": "Default calls LP64 __builtin_ctzll definedness query timed out at 5000 ms; all other frozen checks passed. No merge.",
+      "baseline_source_sha256": "bdbaea747c26d4de3d431f87c145b85db9d7c27637e351634e9efba018168a67",
+      "baseline_normalized_source_sha256": "01262dd6e18901cb069830bd21a072bd524e845f32c984d003ec8d74950eeff2",
+      "baseline_helper_source_sha256": "437ff747fe0b01646100ecedd79fb465c6135772eda1e3f539cd5e1530775232",
+      "status": "UNKNOWN",
+      "failed_obligation": "all original executed operations defined",
+      "backend": "calls",
+      "domain": "full unsigned long long nonzero range; zero is a negative control",
+      "archive_manifest_sha256": "c3d21d710e096cc2df807ee337e4767aec2a0a57d51d0a6646ff9fd7737ccc75"
+    },
+    "failed_division_source_query": {
+      "source_commit": "b783f33d0f01178b477335b2d5bb41b5fe217c5e",
+      "source_tree": "34410430e41f52f4c6ef3efa1c60b1e13a25399f",
+      "archive_path": "experiments/v048/attempts/b783_division_reachability",
+      "full_pytest": {
+        "passed": 2206,
+        "failed": 1,
+        "skipped": 0,
+        "elapsed_seconds": 1069.65,
+        "test": "tests/test_division_induction.py::test_real_original_source_cli_exports_complete_induction_and_direct_baseline",
+        "status": "UNKNOWN",
+        "failed_obligation": "CFG reachability",
+        "analysis_limit": "solver_unknown",
+        "query_timeout_ms": 5000,
+        "observed_query_seconds": 5.63562,
+        "later_experiments_interrupted": true
+      },
+      "status": "UNKNOWN",
+      "failed_obligation": "CFG reachability",
+      "reason": "timeout",
+      "query_timeout_ms": 5000,
+      "raw_data_availability": "partial; see recovery.json; latest unuploaded raw files unavailable after environment loss"
+    },
+    "primary_environment_loss": {
+      "event": "Primary execution environment became unavailable during publication of the final local checkpoint.",
+      "unpublished_local_commit": "19221127575c5f43e603bb0e75681222f55d290e",
+      "unpublished_local_tree": "e5bacf2f8551bbec2c8755a8887a5a642e68f26b",
+      "recovered_application_files": [
+        {
+          "path": "llmloop/clang_bit_builtins.py",
+          "actual": "c910fe5b62c1c310f3a2f3e269d19b9def6ac333",
+          "expected": "c910fe5b62c1c310f3a2f3e269d19b9def6ac333",
+          "match": true
+        },
+        {
+          "path": "scripts/check_clang_bit_builtins.py",
+          "actual": "a437ca4b9501d04a57bb72b7de69e10a083086de",
+          "expected": "a437ca4b9501d04a57bb72b7de69e10a083086de",
+          "match": true
+        },
+        {
+          "path": "tests/test_clang_bit_builtins.py",
+          "actual": "3ebd2243b969f9030326a1e4745492f1ce0edec5",
+          "expected": "3ebd2243b969f9030326a1e4745492f1ce0edec5",
+          "match": true
+        },
+        {
+          "path": "scripts/run_v048_experiments.py",
+          "actual": "c102640e178490d06ed2663c37bf0095b4a02f32",
+          "expected": "c102640e178490d06ed2663c37bf0095b4a02f32",
+          "match": true
+        },
+        {
+          "path": "README.md",
+          "actual": "e8a390bff7c451b6efc94b6c2f8fc96e266a9e02",
+          "expected": "e8a390bff7c451b6efc94b6c2f8fc96e266a9e02",
+          "match": true
+        },
+        {
+          "path": "docs/FEATURE_STATUS.md",
+          "actual": "38ade1193dd1b59e93ae154f5bfa3c4be15b252d",
+          "expected": "38ade1193dd1b59e93ae154f5bfa3c4be15b252d",
+          "match": true
+        },
+        {
+          "path": "docs/C_COVERAGE.md",
+          "actual": "908455066259ce9c249b4cc9a14677c4d556f3af",
+          "expected": "908455066259ce9c249b4cc9a14677c4d556f3af",
+          "match": true
+        },
+        {
+          "path": "docs/CLANG_LINKED_RECORDS.md",
+          "actual": "3ad9c74de69506bad772e73feaa6a2eee555557a",
+          "expected": "3ad9c74de69506bad772e73feaa6a2eee555557a",
+          "match": true
+        },
+        {
+          "path": "docs/BIT_COUNT_DECISION_MODELS.md",
+          "actual": "c86fc87de3f2d62dbadaf3e8d8093a43f4fa3057",
+          "expected": "c86fc87de3f2d62dbadaf3e8d8093a43f4fa3057",
+          "match": true
+        }
+      ],
+      "all_application_files_exact": true,
+      "last_complete_remote_checkpoint": "b783f33d0f01178b477335b2d5bb41b5fe217c5e",
+      "previous_cf0_archive": "complete original failed-validation files retained in attempts/cf0_default_calls",
+      "b783_archive_available_original_files": [
+        {
+          "path": "experiments/v048/attempts/b783_division_reachability/builders.txt",
+          "sha": "9cb5883e50e43a547f61f6a5b682cfdc734dbb5f"
+        },
+        {
+          "path": "experiments/v048/attempts/b783_division_reachability/consumers.txt",
+          "sha": "dbc11e72e02adf5690e69f737a496b542e4a74a5"
+        },
+        {
+          "path": "experiments/v048/attempts/b783_division_reachability/linked.txt",
+          "sha": "092fca78799891a56be8051cc4d271b11f6cab7e"
+        },
+        {
+          "path": "experiments/v048/attempts/b783_division_reachability/linked_records.txt",
+          "sha": "53c2589b141d31b5fe7951fb8fc15db1d66b8784"
+        },
+        {
+          "path": "experiments/v048/attempts/b783_division_reachability/stateful.txt",
+          "sha": "ff063714a5c991d9893b63a44e2b959cffcd1160"
+        },
+        {
+          "path": "experiments/v048/attempts/b783_division_reachability/upstream.txt",
+          "sha": "76c16f2715ff8e5407d113081044330526a4e16a"
+        },
+        {
+          "path": "experiments/v048/attempts/b783_division_reachability/division.txt",
+          "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+        }
+      ],
+      "b783_archive_unavailable_original_files": [
+        {
+          "path": "experiments/v048/attempts/b783_division_reachability/archive_manifest.json",
+          "sha": "368427c23f8a4fbbe62fe09be83541d35288f2f5"
+        },
+        {
+          "path": "experiments/v048/attempts/b783_division_reachability/bit_builtins.json",
+          "sha": "e041ef07266e406754ae77618a0d78d2e5ef9077"
+        },
+        {
+          "path": "experiments/v048/attempts/b783_division_reachability/bit_builtins.txt",
+          "sha": "c653d218fc6c5585d545b3d29414da0f37553faf"
+        },
+        {
+          "path": "experiments/v048/attempts/b783_division_reachability/builder_cli.json",
+          "sha": "61700ed13e5236bb13d8df40ba79644623ef5991"
+        },
+        {
+          "path": "experiments/v048/attempts/b783_division_reachability/builders.json",
+          "sha": "56b49d088a81c5e51ab322a76edcfefeb41c0c15"
+        },
+        {
+          "path": "experiments/v048/attempts/b783_division_reachability/consumers.json",
+          "sha": "3d4c592a4058e6cc3d0ca3f3fe8ddbc715b12201"
+        },
+        {
+          "path": "experiments/v048/attempts/b783_division_reachability/division_timeout_report.json",
+          "sha": "b92dbb3be5b7b89ede0450dc95b6570febc6be77"
+        },
+        {
+          "path": "experiments/v048/attempts/b783_division_reachability/linked.json",
+          "sha": "8dceacb6dcaf962847003bb47fc69c89f4457aad"
+        },
+        {
+          "path": "experiments/v048/attempts/b783_division_reachability/linked_cli.json",
+          "sha": "a153d63b2776529a6c7b5d2c4650d083f94798c1"
+        },
+        {
+          "path": "experiments/v048/attempts/b783_division_reachability/linked_records.json",
+          "sha": "ab8d2e1822cb0004191c881297772a5c3e865370"
+        },
+        {
+          "path": "experiments/v048/attempts/b783_division_reachability/prevalidation_attempt.json",
+          "sha": "55e732fe8318499ee7fc97e8e00086ccf67ec655"
+        },
+        {
+          "path": "experiments/v048/attempts/b783_division_reachability/pytest.txt",
+          "sha": "f7aff4aeb213482594bcf23b5c252d7e40fa08a5"
+        },
+        {
+          "path": "experiments/v048/attempts/b783_division_reachability/record_cli.json",
+          "sha": "d65a3fb6cbe26b16e1ea99b3f0b9c28470ba1ddb"
+        },
+        {
+          "path": "experiments/v048/attempts/b783_division_reachability/source_identity.json",
+          "sha": "8fa7f1e8de44ade6698709f7c6093aa9ca6b1a74"
+        },
+        {
+          "path": "experiments/v048/attempts/b783_division_reachability/source_manifest.json",
+          "sha": "0b91951fb3319b40761b19a861c8aba641071614"
+        },
+        {
+          "path": "experiments/v048/attempts/b783_division_reachability/stateful.json",
+          "sha": "89ac40157fe967909116d23af190d8146bd5cd11"
+        },
+        {
+          "path": "experiments/v048/attempts/b783_division_reachability/stateful_cli.json",
+          "sha": "29c9437fb7365824f7d6fda29db2e45ac668fad8"
+        },
+        {
+          "path": "experiments/v048/attempts/b783_division_reachability/upstream.json",
+          "sha": "01bd5d106f6ecd10f82aa1d3f93915949d9c0a64"
+        }
+      ],
+      "lost_files_policy": "Only observed summaries and pre-loss Git blob hashes are retained for unavailable raw files. No raw logs or SMT certificates are fabricated.",
+      "observed_failed_b783_validation": {
+        "passed": 2206,
+        "failed": 1,
+        "skipped": 0,
+        "elapsed_seconds": 1069.65,
+        "test": "tests/test_division_induction.py::test_real_original_source_cli_exports_complete_induction_and_direct_baseline",
+        "status": "UNKNOWN",
+        "failed_obligation": "CFG reachability",
+        "analysis_limit": "solver_unknown",
+        "query_timeout_ms": 5000,
+        "observed_query_seconds": 5.63562,
+        "later_experiments_interrupted": true
+      },
+      "observed_unfrozen_decision_model_prevalidation": {
+        "bit_unit_tests_passed": 117,
+        "record_unit_tests_passed": 77,
+        "source_backends": [
+          "calls",
+          "bv_calls"
+        ],
+        "source_proved_cases_per_backend": 18,
+        "functional_proved_cases_per_backend": 18,
+        "legacy_model_equivalences_per_backend": 18,
+        "native_comparisons_per_backend": 6144,
+        "expected_zero_ubsan_failures_per_backend": 24,
+        "division_source_status": "PROVED_DEFINED_CLANG_BV_CALLS",
+        "division_functional_status": "PROVED_FUNCTIONAL_DIVISION_INDUCTION",
+        "division_source_seconds": 3.609772,
+        "division_induction_replay": {
+          "queries": 40,
+          "all_unsat": true,
+          "all_replayed": true,
+          "arithmetic_audits": 1,
+          "counter_cases": 31
+        }
+      },
+      "acceptance": "Prevalidation observations are not final release acceptance. Rerun the entire frozen application in one isolated CI fallback after the observed environment loss.",
+      "klee_used": false,
+      "previous_ci_runs": 0
+    },
+    "ci_runs_used": 0
+  },
+  "evidence_sha256": {
+    "arguments.json": "9f02d4aa326dbbc10814a61aec50cba282c055d68613b085b4c7f6713d57e307",
+    "arguments.txt": "7446193b747bde45d24a4f6b0f6a252f45684612e758593aeaa4f964f81b7933",
+    "bit_builtins.json": "fa547e637ae6e316ebe3c837df92b14cc4abc6f16a44f4d24d3b49bd332ca8f1",
+    "bit_builtins.txt": "f19cb3b3d93e3adaf5c1798057e4b35f4e5132bb95ab9f21ee971af27c041993",
+    "bit_builtins_integer.json": "464e7a572281954139d718d716b6a4112aba952090d2066a315a3508c446d8f1",
+    "bit_builtins_integer.txt": "c1d11e223e3ae6fec7615d1d298b7968738321de8e5fa9abd5a0d3497fa18606",
+    "builder_cli.json": "44d0b38b8319c1627b9e9d9a122106fc671feb81b662ecf228d9569fc2170fb9",
+    "builders.json": "878aae0731ee81dd2b308999768df330e5f5455ac7fff3f63cdc39aea0cd3751",
+    "builders.txt": "2d0ce29f13bfbe39ccebd6ef7930049ce70d6de3041c8fdc2a49897190565957",
+    "consumer_cli.json": "a509cce28cfd340552272ef97f1d6880edda47159e2b3040359246956be815e6",
+    "consumers.json": "07fe888fd067afe4369c08e5f897ee85423950450bf15950f16b9ebf44d61826",
+    "consumers.txt": "e191a47c16586a8d886ecb966d233b48a72eb0b3cd900557428d59d14ca81282",
+    "division.json": "25bd62cd154115ecec6403ee9f01c86d221d3fa909c6c7823b07ba99aad7394b",
+    "division.txt": "7fbb75090f62dfaf3096850cc6d49534b9f46d11e51e567e823a07e7cbb3ff2c",
+    "linked.json": "cb6d179e1d315b92dfc6b1adb4c1355b8178e87765158ee8f51b55d737c79e41",
+    "linked.txt": "ba0b2323ebb5004847e3ddeb84a8d6353e99a5460dd64c1f4439bd98324bc5cb",
+    "linked_cli.json": "3b71fb79e5ee11170bc601f55e3a46125fbd707d6fa8559d2d573b4f2b2e17ff",
+    "linked_records.json": "af9246fee49330a45b5d03a382a18f50f1422542d2da13fa5b6335b3327acdf7",
+    "linked_records.txt": "4a2d0767aa5bc1e6973d2890bef4c929cec6d68aeeb7a4fbbf6b437aaad575c4",
+    "payload_maps.json": "36f8359c850098db804900a1147e5dbb99a0b50f289e9a8d16b288d58f1700f1",
+    "payload_maps.txt": "c0b88af94377f575f421f57e6e0b382a2cc60d7f828c0f7fe8127e8971d60704",
+    "prevalidation_attempt.json": "2941bd4ff0a73292f87fb4c89fd41e12758761a6723a762c9027cff90eadb13e",
+    "pytest.txt": "d8c4c090f71404efa999285d9eee3c2d95404ede287c1ee9661fd06b9ca7154c",
+    "record_cli.json": "bbe8e5cd6a89867683e58f5c37b557df592dcb1df4462dcda07fe4cf81bab6dd",
+    "report.md": "2de7a8f4282b7c03d7da243b25559920b0256cf41cfb0f09909ec470d2e38afa",
+    "reversal.json": "11c8304c10d6179f5c216f5515224b4d70dad158c3e95b9a3482326bd43487ac",
+    "reversal.txt": "16cbe1825eeea1d4e83cced20fdb67bf4226dca4e16005a9e4343b92604626c9",
+    "source_identity.json": "2799143696886df7cec17ff467910c43402d3b967f66d24a9d4b0e3665e54b62",
+    "source_manifest.json": "b5dcef24d3a1c7a9b6755e3270452fd26a3af55a9895985f1ea29b76556dc93f",
+    "stateful.json": "becfd03a1f777ed8ee87bdf09063189c4ba98d7bab64ba5fe5409d0c05fe7c94",
+    "stateful.txt": "b17d365abf3e2f0233a03243d7ac6196c815b7772a52f1255452f5cbbdfc3765",
+    "stateful_cli.json": "b98f3a1d2474bd0649f7a0ce9934c82e605ddd711fcedb66e02b42b8284b269a",
+    "upstream.json": "597cfa383120055cdac214dc4b40966704de6b72a4b2fd44dbb6a4c9d35ddf7a",
+    "upstream.txt": "586bce8d2d9eaf15a29e7ef288ebb834dc6fb1d1b0814ee969705b58c9cd28d8",
+    "validation_ci.json": "0e86cabf9e74b28b074a8be43a37adeda96e87756159dc31cb68e283f0dc9bd8"
+  },
+  "validation_ci": {
+    "passed": true,
+    "run_url": "https://github.com/Z769018860/LLMloop/actions/runs/41367163017",
+    "run_id": "41367163017",
+    "run_attempt": "1",
+    "validation_origin": "GitHub Actions fallback after observed primary environment unavailability",
+    "validation_commit": "2dab98651be5e3e860ac519a02964dbc8e1fa83d",
+    "validation_tree": "afc6a0dfea2a7c5827394f4ef98cf7b0161dd7f3",
+    "application_checkpoint": "c5ac38066ee5440fd3d3145d872424dd7bed2aa0",
+    "original_local_application_commit": "19221127575c5f43e603bb0e75681222f55d290e",
+    "original_local_full_tree": "e5bacf2f8551bbec2c8755a8887a5a642e68f26b",
+    "exact_original_application_blobs_verified": 9,
+    "only_validation_workflow_changed_since_recovery": true,
+    "old_cf0_archive_complete": true,
+    "later_b783_original_files_available": 7,
+    "later_b783_raw_files_unavailable": 18,
+    "missing_raw_data_fabricated": false,
+    "full_pytest_passed": 2225,
+    "skipped": 0,
+    "ci_runs_used": 1,
+    "smt_query_budget_ms": 5000,
+    "division_functional_total_budget_ms": 30000,
+    "klee_used": false
+  }
+}
