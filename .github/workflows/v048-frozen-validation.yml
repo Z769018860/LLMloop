@@ -1,0 +1,127 @@
+name: v0.48 frozen validation
+on:
+  push:
+    branches: [codex/v048-linked-records]
+    paths: [.github/workflows/v048-frozen-validation.yml]
+permissions:
+  contents: write
+concurrency:
+  group: llmloop-v048-frozen-validation
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 70
+    env:
+      APPLICATION_CHECKPOINT: c5ac38066ee5440fd3d3145d872424dd7bed2aa0
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install matching compiler and Python dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y clang-18
+          python -m pip install -e '.[test,smt]'
+          mkdir -p /tmp/llmloop-ci-bin
+          ln -s "$(command -v clang-18)" /tmp/llmloop-ci-bin/clang
+          echo /tmp/llmloop-ci-bin >> "$GITHUB_PATH"
+      - name: Verify exact recovery and preserve honest prior-attempt metadata
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,subprocess
+          from pathlib import Path
+          expected=json.loads(r'''{"llmloop/clang_bit_builtins.py":"c910fe5b62c1c310f3a2f3e269d19b9def6ac333","scripts/check_clang_bit_builtins.py":"a437ca4b9501d04a57bb72b7de69e10a083086de","tests/test_clang_bit_builtins.py":"3ebd2243b969f9030326a1e4745492f1ce0edec5","scripts/run_v048_experiments.py":"c102640e178490d06ed2663c37bf0095b4a02f32","README.md":"e8a390bff7c451b6efc94b6c2f8fc96e266a9e02","docs/FEATURE_STATUS.md":"38ade1193dd1b59e93ae154f5bfa3c4be15b252d","docs/C_COVERAGE.md":"908455066259ce9c249b4cc9a14677c4d556f3af","docs/CLANG_LINKED_RECORDS.md":"3ad9c74de69506bad772e73feaa6a2eee555557a","docs/BIT_COUNT_DECISION_MODELS.md":"c86fc87de3f2d62dbadaf3e8d8093a43f4fa3057"}''')
+          for p,sha in expected.items():
+              actual=subprocess.check_output(['git','rev-parse','HEAD:'+p],text=True).strip()
+              assert actual==sha,(p,actual,sha)
+          changed=subprocess.check_output(['git','diff','--name-only',os.environ['APPLICATION_CHECKPOINT'],os.environ['GITHUB_SHA']],text=True).splitlines()
+          assert changed==['.github/workflows/v048-frozen-validation.yml'],changed
+          prior=json.loads(Path('experiments/v048/attempts/environment_loss.json').read_text())
+          cf=Path(prior['failed_default_source_analysis']['archive_path'])
+          manifest=json.loads((cf/'archive_manifest.json').read_text())
+          for p,sha in manifest['sha256'].items():assert hashlib.sha256((cf/p).read_bytes()).hexdigest()==sha,p
+          prior['failed_default_source_analysis']['archive_manifest_sha256']=hashlib.sha256((cf/'archive_manifest.json').read_bytes()).hexdigest()
+          recovery=json.loads(Path('experiments/v048/attempts/b783_division_reachability/recovery.json').read_text())
+          assert recovery['all_application_files_exact'] and len(recovery['recovered_application_files'])==9
+          for item in recovery['b783_archive_available_original_files']:
+              assert subprocess.check_output(['git','hash-object',item['path']],text=True).strip()==item['sha']
+          for item in recovery['b783_archive_unavailable_original_files']:assert not Path(item['path']).exists(),item['path']
+          assert len(recovery['b783_archive_available_original_files'])==7
+          assert len(recovery['b783_archive_unavailable_original_files'])==18
+          Path('/tmp/v048-prior-ci.json').write_text(json.dumps(prior,indent=2)+'\n')
+          print(json.dumps({'exact_original_application_blobs_verified':9,'complete_cf0_archive_verified':True,'later_original_files_available':7,'later_raw_files_unavailable':18,'only_validation_workflow_changed':True}))
+          PY
+      - name: Validate the full frozen source without retries or proof-budget increases
+        run: python scripts/run_v048_experiments.py --published-source "$GITHUB_SHA" --previous-attempt /tmp/v048-prior-ci.json
+      - name: Audit every result and source/evidence hash
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,subprocess
+          from pathlib import Path
+          out=Path('experiments/v048')
+          r=json.loads((out/'results.json').read_text());m=json.loads((out/'source_manifest.json').read_text())
+          assert r['passed'] and all(r['checks'].values())
+          assert all(c['exit_code']==0 for c in r['commands'].values())
+          assert r['full_pytest']['passed']==2225 and r['full_pytest']['skipped']==0 and r['new_tests']==96 and r['existing_tests_replaced']==0
+          assert r['ci_runs_used']==int(os.environ['GITHUB_RUN_ATTEMPT']) and r['github_actions_used']
+          assert not r['klee_used'] and not r['complete_c_support']
+          assert r['bit_source_backend']=='bv_calls' and r['integer_bit_source_backend']=='calls'
+          assert r['checks']['bit_backend_source_identity'] and r['checks']['bit_baseline_source_identity']
+          assert r['linked_records']=={'case_count':8,'native_output_matches':800,'model_matches':400,'native_layout_matches':36,'expected_sanitizer_failures':16,'record_refusals':6}
+          assert r['division']['functional_replay']=={'queries':40,'all_unsat':True,'all_replayed':True,'arithmetic_audits':1,'counter_cases':31}
+          assert r['source_domains_proved_with_explicit_backends']==r['functional_domains_proved_with_explicit_strategies']==15
+          head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          tree=subprocess.check_output(['git','rev-parse','HEAD^{tree}'],text=True).strip()
+          assert head==os.environ['GITHUB_SHA']==r['tested_commit']==m['tested_commit']
+          assert tree==r['tested_tree']==m['tested_tree']
+          assert r['source_identity']['git_tree_equal'] and r['source_identity']['published_source_commit']==head
+          assert len(m['sha256'])==732,len(m['sha256'])
+          for p,sha in m['sha256'].items():assert hashlib.sha256(Path(p).read_bytes()).hexdigest()==sha,p
+          for p,sha in r['evidence_sha256'].items():assert hashlib.sha256((out/p).read_bytes()).hexdigest()==sha,p
+          assert {p.name for p in out.iterdir() if p.is_file()}==set(r['evidence_sha256'])|{'results.json'}
+          assert b'\0' not in (out/'pytest.txt').read_bytes()
+          url='https://github.com/'+os.environ['GITHUB_REPOSITORY']+'/actions/runs/'+os.environ['GITHUB_RUN_ID']
+          ci={'passed':True,'run_url':url,'run_id':os.environ['GITHUB_RUN_ID'],'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],
+              'validation_origin':'GitHub Actions fallback after observed primary environment unavailability',
+              'validation_commit':head,'validation_tree':tree,'application_checkpoint':os.environ['APPLICATION_CHECKPOINT'],
+              'original_local_application_commit':'19221127575c5f43e603bb0e75681222f55d290e',
+              'original_local_full_tree':'e5bacf2f8551bbec2c8755a8887a5a642e68f26b',
+              'exact_original_application_blobs_verified':9,'only_validation_workflow_changed_since_recovery':True,
+              'old_cf0_archive_complete':True,'later_b783_original_files_available':7,'later_b783_raw_files_unavailable':18,
+              'missing_raw_data_fabricated':False,'full_pytest_passed':2225,'skipped':0,'ci_runs_used':int(os.environ['GITHUB_RUN_ATTEMPT']),
+              'smt_query_budget_ms':5000,'division_functional_total_budget_ms':30000,'klee_used':False}
+          (out/'validation_ci.json').write_text(json.dumps(ci,indent=2)+'\n')
+          r['validation_ci']=ci
+          with (out/'report.md').open('a') as handle:
+              handle.write('\nFinal validation: **isolated GitHub Actions fallback** after the primary environment became unavailable. All nine changed application/experiment/test/documentation files exactly match their pre-loss Git blob hashes. The original local full tree could not be recovered in full: seven later-attempt raw files are retained, eighteen are unavailable and explicitly listed in attempts/b783_division_reachability/recovery.json. Missing logs or certificates are not fabricated; only observed failed-run summaries and expected blob hashes are recorded. The earlier cf0 failed attempt remains complete. Fresh CI results provide final acceptance.\n')
+              handle.write('\nCI: '+url+'. One CI attempt; no KLEE and no larger proof-query budget. All '+str(len(m['sha256']))+' frozen non-evidence paths and the preserved archives were checked. The recovered application checkpoint is '+os.environ['APPLICATION_CHECKPOINT']+'; only this isolated workflow differs in the tested source.\n')
+          r['evidence_sha256']['validation_ci.json']=hashlib.sha256((out/'validation_ci.json').read_bytes()).hexdigest()
+          r['evidence_sha256']['report.md']=hashlib.sha256((out/'report.md').read_bytes()).hexdigest()
+          (out/'results.json').write_text(json.dumps(r,indent=2)+'\n')
+          for p,sha in r['evidence_sha256'].items():assert hashlib.sha256((out/p).read_bytes()).hexdigest()==sha,p
+          print(json.dumps({'passed':True,'tests':2225,'skipped':0,'source_paths':len(m['sha256']),'run_url':url,'tree':tree}))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v048-frozen-evidence
+          path: experiments/v048/
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Commit only validated evidence to the feature branch
+        run: |
+          git diff --exit-code HEAD
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add experiments/v048
+          python - <<'PY'
+          import subprocess
+          paths=subprocess.check_output(['git','diff','--cached','--name-only'],text=True).splitlines()
+          assert paths and all(p.startswith('experiments/v048/') for p in paths),paths
+          PY
+          git commit -m 'Record verified v0.48 fallback CI evidence [skip ci]'
+          git push origin HEAD:refs/heads/codex/v048-linked-records
