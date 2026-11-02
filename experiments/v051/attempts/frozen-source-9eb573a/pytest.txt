@@ -1,0 +1,153 @@
+........................................................................ [  2%]
+........................................................................ [  5%]
+........................................................................ [  8%]
+........................................................................ [ 11%]
+........................................................................ [ 14%]
+........................................................................ [ 17%]
+........................................................................ [ 20%]
+........................................................................ [ 23%]
+...........FF........................................................... [ 26%]
+........................................F............................... [ 29%]
+........................................................................ [ 32%]
+........................................................................ [ 35%]
+........................................................................ [ 38%]
+........................................................................ [ 41%]
+........................................................................ [ 44%]
+........................................................................ [ 47%]
+........................................................................ [ 50%]
+........................................................................ [ 53%]
+........................................................................ [ 56%]
+............................................F........................... [ 59%]
+........................................................................ [ 62%]
+........................................................................ [ 65%]
+........................................................................ [ 67%]
+........................................................................ [ 70%]
+........................................................................ [ 73%]
+........................................................................ [ 76%]
+........................................................................ [ 79%]
+........................................................................ [ 82%]
+........................................................................ [ 85%]
+........................................................................ [ 88%]
+........................................................................ [ 91%]
+........................................................................ [ 94%]
+........................................................................ [ 97%]
+............................................................             [100%]
+=================================== FAILURES ===================================
+_ test_adjusted_pointer_declarations_in_either_unit_refused[int api(int p[static 5]);-int api(int *p){return p[0];}] _
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-518/test_adjusted_pointer_declarat0')
+clang = '/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang'
+prototype = 'int api(int p[static 5]);'
+definition = 'int api(int *p){return p[0];}'
+
+    @pytest.mark.parametrize('prototype,definition',[
+        ('int api(int p[static 5]);','int api(int *p){return p[0];}'),
+        ('int api(int *);','int api(int p[static 5]){return p[0];}'),
+        ('int api(int *);','#define P int *p\nint api(P){return p[0];}'),
+        ('#define P int *p\nint api(P);','int api(int *p){return p[0];}'),
+    ])
+    def test_adjusted_pointer_declarations_in_either_unit_refused(tmp_path,clang,prototype,definition):
+>       unknown(request(tmp_path,clang,prototype+'\nint entry(void){int a[1]={7};return api(a);}',definition),'literal')
+
+tests/test_clang_linked.py:147: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+r = {'schema_version': 1, 'status': 'UNKNOWN', 'abi': 'LP64', 'function': 'entry', ...}
+reason = 'literal'
+
+    def unknown(r, reason=None):
+        assert r['status']=='UNKNOWN',r['status']
+        assert not any(r.get(k,False) for k in ('c_overflow_verified','memory_safety_verified','termination_proved'))
+>       if reason:assert reason.lower() in r.get('reason','').lower(),r.get('reason')
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: counterexample to the universal obligation
+E       assert 'literal' in 'counterexample to the universal obligation'
+E        +  where 'literal' = <built-in method lower of str object at 0x7fc1f7e53810>()
+E        +    where <built-in method lower of str object at 0x7fc1f7e53810> = 'literal'.lower
+E        +  and   'counterexample to the universal obligation' = <built-in method lower of str object at 0x7fc1f3f61fb0>()
+E        +    where <built-in method lower of str object at 0x7fc1f3f61fb0> = 'counterexample to the universal obligation'.lower
+E        +      where 'counterexample to the universal obligation' = <built-in method get of dict object at 0x7fc1f3cb0bc0>('reason', '')
+E        +        where <built-in method get of dict object at 0x7fc1f3cb0bc0> = {'schema_version': 1, 'status': 'UNKNOWN', 'abi': 'LP64', 'function': 'entry', ...}.get
+
+tests/test_clang_linked.py:43: AssertionError
+_ test_adjusted_pointer_declarations_in_either_unit_refused[int api(int *);-int api(int p[static 5]){return p[0];}] _
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-519/test_adjusted_pointer_declarat0')
+clang = '/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang'
+prototype = 'int api(int *);'
+definition = 'int api(int p[static 5]){return p[0];}'
+
+    @pytest.mark.parametrize('prototype,definition',[
+        ('int api(int p[static 5]);','int api(int *p){return p[0];}'),
+        ('int api(int *);','int api(int p[static 5]){return p[0];}'),
+        ('int api(int *);','#define P int *p\nint api(P){return p[0];}'),
+        ('#define P int *p\nint api(P);','int api(int *p){return p[0];}'),
+    ])
+    def test_adjusted_pointer_declarations_in_either_unit_refused(tmp_path,clang,prototype,definition):
+>       unknown(request(tmp_path,clang,prototype+'\nint entry(void){int a[1]={7};return api(a);}',definition),'literal')
+
+tests/test_clang_linked.py:147: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+r = {'schema_version': 1, 'status': 'UNKNOWN', 'abi': 'LP64', 'function': 'entry', ...}
+reason = 'literal'
+
+    def unknown(r, reason=None):
+        assert r['status']=='UNKNOWN',r['status']
+        assert not any(r.get(k,False) for k in ('c_overflow_verified','memory_safety_verified','termination_proved'))
+>       if reason:assert reason.lower() in r.get('reason','').lower(),r.get('reason')
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: counterexample to the universal obligation
+E       assert 'literal' in 'counterexample to the universal obligation'
+E        +  where 'literal' = <built-in method lower of str object at 0x7fc1f7e53810>()
+E        +    where <built-in method lower of str object at 0x7fc1f7e53810> = 'literal'.lower
+E        +  and   'counterexample to the universal obligation' = <built-in method lower of str object at 0x7fc1f3f61fb0>()
+E        +    where <built-in method lower of str object at 0x7fc1f3f61fb0> = 'counterexample to the universal obligation'.lower
+E        +      where 'counterexample to the universal obligation' = <built-in method get of dict object at 0x7fc1f3cb0300>('reason', '')
+E        +        where <built-in method get of dict object at 0x7fc1f3cb0300> = {'schema_version': 1, 'status': 'UNKNOWN', 'abi': 'LP64', 'function': 'entry', ...}.get
+
+tests/test_clang_linked.py:43: AssertionError
+____ test_record_pointer_parameters_keep_original_array_declaration_checks _____
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-611/test_record_pointer_parameters0')
+clang = '/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang'
+
+    def test_record_pointer_parameters_keep_original_array_declaration_checks(tmp_path,clang):
+        helper=NODE+'int api(struct Node p[static 5]){return p->value;}'
+        main=ALLOC+NODE+'int api(struct Node *);int entry(int n){struct Node *p=calloc(1,sizeof(struct Node));if(!p)return -1;p->value=n;int x=api(p);free(p);return x;}'
+>       unknown(check(tmp_path,clang,main,helper),'literal')
+
+tests/test_clang_linked_records.py:190: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+r = {'schema_version': 1, 'status': 'UNKNOWN', 'abi': 'LP64', 'function': 'entry', ...}
+reason = 'literal'
+
+    def unknown(r,reason=None):
+        assert r['status']=='UNKNOWN',r['status']
+        assert not any(r.get(k,False) for k in ('c_overflow_verified','memory_safety_verified','termination_proved'))
+>       if reason:assert reason.lower() in r.get('reason','').lower(),r.get('reason')
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: counterexample to the universal obligation
+E       assert 'literal' in 'counterexample to the universal obligation'
+E        +  where 'literal' = <built-in method lower of str object at 0x7fc1f7e53810>()
+E        +    where <built-in method lower of str object at 0x7fc1f7e53810> = 'literal'.lower
+E        +  and   'counterexample to the universal obligation' = <built-in method lower of str object at 0x7fc1f3f61fb0>()
+E        +    where <built-in method lower of str object at 0x7fc1f3f61fb0> = 'counterexample to the universal obligation'.lower
+E        +      where 'counterexample to the universal obligation' = <built-in method get of dict object at 0x7fc1f2997b40>('reason', '')
+E        +        where <built-in method get of dict object at 0x7fc1f2997b40> = {'schema_version': 1, 'status': 'UNKNOWN', 'abi': 'LP64', 'function': 'entry', ...}.get
+
+tests/test_clang_linked_records.py:47: AssertionError
+____ test_clang_adjusted_array_parameter_is_not_treated_as_literal_pointer _____
+def test_clang_adjusted_array_parameter_is_not_treated_as_literal_pointer():
+        source='typedef __SIZE_TYPE__ Size;void*calloc(Size,Size);void free(void*);'+program().replace('struct Node*q,int d','struct Node q[static 1],int d')
+        result=analyze_request({'source':source,'function':'entry','frontend':'clang_proof','proof':{'backend':'list_calls'}})
+>       assert result['status']=='UNKNOWN' and 'literal pointer' in result['reason']
+E       AssertionError: assert ('UNKNOWN' == 'UNKNOWN'
+E         
+E           UNKNOWN and 'literal pointer' in 'Clang static array contracts require calls backend and literal minimum 1..8')
+
+tests/test_list_call_arguments.py:197: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_clang_linked.py::test_adjusted_pointer_declarations_in_either_unit_refused[int api(int p[static 5]);-int api(int *p){return p[0];}]
+FAILED tests/test_clang_linked.py::test_adjusted_pointer_declarations_in_either_unit_refused[int api(int *);-int api(int p[static 5]){return p[0];}]
+FAILED tests/test_clang_linked_records.py::test_record_pointer_parameters_keep_original_array_declaration_checks
+FAILED tests/test_list_call_arguments.py::test_clang_adjusted_array_parameter_is_not_treated_as_literal_pointer
+4 failed, 2432 passed in 776.95s (0:12:56)

@@ -144,7 +144,12 @@ def test_cross_unit_memory_ub_not_certified(tmp_path,clang,caller,helper):
     ('#define P int *p\nint api(P);','int api(int *p){return p[0];}'),
 ])
 def test_adjusted_pointer_declarations_in_either_unit_refused(tmp_path,clang,prototype,definition):
-    unknown(request(tmp_path,clang,prototype+'\nint entry(void){int a[1]={7};return api(a);}',definition),'literal')
+    r=request(tmp_path,clang,prototype+'\nint entry(void){int a[1]={7};return api(a);}',definition)
+    if 'static 5' in prototype+definition:
+        unknown(r)
+        assert r['failed_obligation'].startswith('static array minimum extent:')
+        assert r['call_model']['static_array_contracts']=={'api':{0:5}}
+    else:unknown(r,'literal')
 
 
 def test_header_pointer_prototype_remains_conservative(tmp_path,clang):

@@ -1,0 +1,3509 @@
+{
+  "passed": true,
+  "case_count": 3,
+  "native_output_matches": 408,
+  "model_matches": 136,
+  "expected_ubsan_failures": 12,
+  "forms": [
+    "original",
+    "preprocessed",
+    "normalized"
+  ],
+  "separate_original_object_compilation": true,
+  "optimizations": [
+    "-O0",
+    "-O2"
+  ],
+  "compiler": "cc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0",
+  "cases": [
+    {
+      "name": "macro_pointer_alias",
+      "negative": false,
+      "header": "#define PTR(name) int *name\nint *api(PTR());",
+      "original_units": [
+        "#include \"/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/api.h\"\nint entry(int n){int a[3]={3,5,7};int *q=api(a);q[0]=n;return a[0]+a[1]+a[2];}",
+        "#include \"/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/api.h\"\nint *api(PTR(p)){p[0]+=1;return p+1;}"
+      ],
+      "preprocessed_units": [
+        {
+          "method": "single Clang -E snapshot with line markers; all later stages use -x cpp-output",
+          "source": "# 1 \"/tmp/llmloop-clang-ml430rr1/input.c\"\n# 1 \"<built-in>\" 1\n# 1 \"<built-in>\" 3\n# 388 \"<built-in>\" 3\n# 1 \"<command line>\" 1\n# 1 \"<built-in>\" 2\n# 1 \"/tmp/llmloop-clang-ml430rr1/input.c\" 2\n# 1 \"/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/api.h\" 1\n\nint *api(int *);\n# 2 \"/tmp/llmloop-clang-ml430rr1/input.c\" 2\nint entry(int n){int a[3]={3,5,7};int *q=api(a);q[0]=n;return a[0]+a[1]+a[2];}\n",
+          "sha256": "9346ee2a81acf6f460a05b1e4457dd32303e5e3706f7e8e961760a704dd6484f",
+          "bytes": 400,
+          "input_sha256": "183604147afc4589d719dcc05f078f5bdfdcf56382ff56ac548b854db4a2bda4",
+          "line_markers_preserved": true,
+          "source_location_builtins_supported": false
+        },
+        {
+          "method": "single Clang -E snapshot with line markers; all later stages use -x cpp-output",
+          "source": "# 1 \"/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/provider.c\"\n# 1 \"<built-in>\" 1\n# 1 \"<built-in>\" 3\n# 388 \"<built-in>\" 3\n# 1 \"<command line>\" 1\n# 1 \"<built-in>\" 2\n# 1 \"/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/provider.c\" 2\n# 1 \"/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/api.h\" 1\n\nint *api(int *);\n# 2 \"/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/provider.c\" 2\nint *api(int *p){p[0]+=1;return p+1;}\n",
+          "sha256": "5e52140baacffd19a631ccfb6f1acc92ceaa9b13a36b5887ac5b67373510f0ee",
+          "bytes": 458,
+          "input_sha256": "2aed2963b5b7436e7e44368488cc923a92e21d0e2f719305d5cffcb6b76fac87",
+          "line_markers_preserved": true,
+          "source_location_builtins_supported": false
+        }
+      ],
+      "original_sha256": [
+        "183604147afc4589d719dcc05f078f5bdfdcf56382ff56ac548b854db4a2bda4",
+        "2aed2963b5b7436e7e44368488cc923a92e21d0e2f719305d5cffcb6b76fac87"
+      ],
+      "proof": {
+        "schema_version": 1,
+        "status": "PROVED_DEFINED_CLANG_CFG_CALLS",
+        "abi": "LP64",
+        "function": "entry",
+        "c_overflow_verified": true,
+        "memory_safety_verified": true,
+        "termination_proved": true,
+        "allocation_failure_modeled": true,
+        "allocation_success_assumed": false,
+        "domain_smt2": "(and (>= typed_loop_n!0 0) (<= typed_loop_n!0 16))",
+        "semantics": "typed C integer semantics with explicit implementation choices",
+        "parameter_symbols": {
+          "n": "typed_loop_n!0"
+        },
+        "leak_freedom_proved": false,
+        "unbounded_summary": false,
+        "certificate": {
+          "method": "exhaustive original CFG execution with proved complete exit for declared domain",
+          "obligations": [
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "all original executed operations defined",
+              "proved": true
+            },
+            {
+              "obligation": "returned paths cover parameter and allocation domain",
+              "proved": true
+            }
+          ],
+          "executed_cfg_nodes": 14,
+          "max_steps_per_path": 256,
+          "max_paths": 48,
+          "represented_object_instances": 1
+        },
+        "memory_model": {
+          "pointer_rebinding_supported": true,
+          "block_escape_supported": true,
+          "dynamic_lengths_supported": true,
+          "max_object_instances": 8,
+          "max_cells_per_object": 8,
+          "max_total_cells": 64,
+          "adjacent_distinct_object_boundary_comparisons": "unsupported",
+          "external_pointer_parameters_supported": false,
+          "pointer_cells_supported": true,
+          "structs_supported": true,
+          "struct_model": "named single allocated records with integer/data-pointer fields",
+          "struct_layouts": {},
+          "max_pointer_indirection": 3,
+          "calloc_pointer_cells_implicitly_null": false
+        },
+        "implementation_choices": {
+          "signed_cast": "two-complement modular",
+          "signed_right_shift": "arithmetic",
+          "pointer_width_bits": 64
+        },
+        "scope": "declared scalar input domain and selected typed backend contract; allocation assumptions and the selected shape/CFG proof boundary remain explicit; no general LLVM semantics or KLEE execution",
+        "return_smt2": "(+ (- 2147483648) (mod (+ 2147483659 typed_loop_n!0) 4294967296))",
+        "evaluation": {
+          "value": 27
+        },
+        "call_model": {
+          "method": "hygienic sequenced direct-call expansion with typed parameters/returns and frame lifetime edges",
+          "eager_single_call_expressions": true,
+          "stable_scalar_operands_only": false,
+          "stable_eager_sibling_operands_only": true,
+          "sequenced_lazy_expressions": true,
+          "nested_argument_calls": true,
+          "loop_header_calls": true,
+          "independent_pure_sibling_calls": true,
+          "scalar_pure_functions": [],
+          "expression_expansion": [],
+          "expanded_source": "int entry(int n)\n{\n  int a[3] = {3, 5, 7};\n  int *__cfg_call_result_3 = 0;\n  int __cfg_call_returned_4 = 0;\n  {\n    int *__cfg_call_arg_1 = a;\n    {\n      __cfg_call_arg_1[0] += 1;\n      __cfg_call_result_3 = __cfg_call_arg_1 + 1;\n      __cfg_call_returned_4 = 1;\n      goto __cfg_call_exit_2;\n    }\n    __cfg_call_exit_2:\n    ;\n\n  }\n  int __cfg_call_return_guard_5 = 1 / __cfg_call_returned_4;\n  int *q = __cfg_call_result_3;\n  q[0] = n;\n  return (a[0] + a[1]) + a[2];\n}\n\n",
+          "expanded_source_sha256": "900bd4bdc106b04ba8c6341128704c14f292f08b8ca4800b3fe928ecc15eaca0",
+          "source_equivalence_machine_proved": false,
+          "expanded_sites": [
+            {
+              "callee": "api",
+              "depth": 1,
+              "recursive_edge": false,
+              "parameter_count": 1,
+              "pointer_return": true,
+              "void_return": false,
+              "exit_label": "__cfg_call_exit_2"
+            }
+          ],
+          "max_depth": 3,
+          "recursion_supported": false,
+          "bounded_recursion_enabled": false,
+          "depth_frontiers": [],
+          "external_frontiers": [],
+          "external_policy": "entire call evaluation must be unreachable; no external semantics assumed",
+          "unreachable_external_calls_supported": true,
+          "all_frontiers_proved_unreachable": true,
+          "external_calls_supported": false,
+          "pointer_return_supported": true,
+          "nonvoid_return_marker_checked": true
+        },
+        "frontend": "clang_proof",
+        "normalization": {
+          "method": "structural admitted Clang AST to typed C; Clang + normalizer are trusted frontend components",
+          "source": "int * api(int * p);\nint entry(int n);\nint * api(int * p) {\n(p)[0] += 1;\nreturn (p+1);\n}\n\nint entry(int n) {\nint a[3] = {3, 5, 7};\nint * q = api(a);\n(q)[0] = n;\nreturn (((a)[0] + (a)[1]) + (a)[2]);\n}\n",
+          "source_sha256": "136ed98d3c04e24d09819bb876e280f48f75a4b1182d830685de0e320e6a3c86",
+          "ast_sha256": "fd2cbbf2100d7c95339ed8775f8706c7f5b5c34f020b62bcc62c6b36955c5a49",
+          "type_environment_sha256": "103e6558a3a44650a30829da4e7a5eab5177f0522be559737fe9d6ad22576da1",
+          "alpha_renamed": [],
+          "functions": [
+            "api",
+            "entry"
+          ],
+          "backend": "calls",
+          "external_call_frontiers": [],
+          "external_call_semantics_assumed": false,
+          "array_parameter_adjustments": [],
+          "static_array_contracts": {},
+          "static_array_contracts_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "zero_record_member_adjustments": [],
+          "bit_builtin_calls": [],
+          "bit_builtin_models": [],
+          "union_views": [],
+          "abi": "LP64",
+          "char_signed": true,
+          "record_layout_correspondence": {},
+          "compiler_equivalence_machine_proved": false,
+          "unsupported_constructs_rejected": true,
+          "translation_unit_linking": {
+            "method": "checked closed-component Clang function binding across translation units",
+            "entry": {
+              "source": "entry",
+              "unit": 0,
+              "normalized": "entry"
+            },
+            "units": [
+              {
+                "index": 0,
+                "source": {
+                  "path": "<inline>",
+                  "sha256": "183604147afc4589d719dcc05f078f5bdfdcf56382ff56ac548b854db4a2bda4"
+                },
+                "target": {
+                  "triple": "x86_64-pc-linux-gnu",
+                  "data_layout": "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+                },
+                "effective_flags": [
+                  "-std=c11",
+                  "-O0",
+                  "-gline-tables-only",
+                  "-fsanitize=undefined",
+                  "-fno-sanitize-recover=all"
+                ],
+                "compilation_database": null,
+                "llvm_ir_sha256": "b196c30bc17ae619aa7e609a600ca6d0e56b76ce11deca008bcdee7d160004e1",
+                "function_ast_sha256": "ecddbedb237ae1d9ba1a9b5963ed1daa6d6add9ba2f56d4492c6bc253b7febae",
+                "preprocessed_snapshot_sha256": "9346ee2a81acf6f460a05b1e4457dd32303e5e3706f7e8e961760a704dd6484f"
+              },
+              {
+                "index": 1,
+                "source": {
+                  "path": "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/provider.c",
+                  "sha256": "2aed2963b5b7436e7e44368488cc923a92e21d0e2f719305d5cffcb6b76fac87"
+                },
+                "target": {
+                  "triple": "x86_64-pc-linux-gnu",
+                  "data_layout": "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+                },
+                "effective_flags": [
+                  "-std=c11",
+                  "-O0",
+                  "-gline-tables-only",
+                  "-fsanitize=undefined",
+                  "-fno-sanitize-recover=all"
+                ],
+                "compilation_database": null,
+                "llvm_ir_sha256": "8f0afd10aedc858e8931d1e5949696feff204847f8c27e5e44ee6adfd33d9108",
+                "function_ast_sha256": "ac25e15bb85ac1a76395e1843d1e717b360396a1c792271604c20f2e815bebc8",
+                "preprocessed_snapshot_sha256": "5e52140baacffd19a631ccfb6f1acc92ceaa9b13a36b5887ac5b67373510f0ee"
+              }
+            ],
+            "bindings": [
+              {
+                "caller_unit": 0,
+                "declaration_id": "0x555b9e675cc8",
+                "callee": "api",
+                "provider_unit": 1,
+                "provider_definition_id": "0x55e1e047fe90",
+                "normalized_callee": "api",
+                "canonical_signature": [
+                  "signed int *",
+                  [
+                    "signed int *"
+                  ]
+                ],
+                "declaration_checked": true,
+                "body_is_supplied_source": true
+              }
+            ],
+            "static_function_renames": [],
+            "reachable_functions": [
+              "entry",
+              "api"
+            ],
+            "caller_provider_types_checked": true,
+            "per_unit_declaration_contexts_preserved": true,
+            "source_snapshots_checked": true,
+            "closed_world_function_binding": true,
+            "external_semantics_assumed": false,
+            "dynamic_interposition_modeled": false,
+            "general_linker_or_C_support": false,
+            "normalized_source_sha256": "136ed98d3c04e24d09819bb876e280f48f75a4b1182d830685de0e320e6a3c86"
+          }
+        }
+      },
+      "observations": [
+        {
+          "optimization": "-O0",
+          "commands": [
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/main.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/main.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/helper.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/helper.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/normalized.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/normalized.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/main.o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/helper.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/original"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/normalized.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/normalized"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/main.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/main.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/helper.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/helper.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/normalized.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/normalized.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/main.o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/helper.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/original"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/normalized.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/normalized"
+            ]
+          ],
+          "outputs": {
+            "original": {
+              "exit_code": 0,
+              "stdout": "11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n",
+              "stderr": ""
+            },
+            "normalized": {
+              "exit_code": 0,
+              "stdout": "11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n",
+              "stderr": ""
+            },
+            "preprocessed": {
+              "exit_code": 0,
+              "stdout": "11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n",
+              "stderr": ""
+            }
+          },
+          "independent_expected": [
+            "11",
+            "12",
+            "13",
+            "14",
+            "15",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21",
+            "22",
+            "23",
+            "24",
+            "25",
+            "26",
+            "27"
+          ]
+        },
+        {
+          "optimization": "-O2",
+          "commands": [
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/main.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/main.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/helper.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/helper.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/normalized.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/normalized.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/main.o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/helper.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/original"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/normalized.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/normalized"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/main.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/main.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/helper.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/helper.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/normalized.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/normalized.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/main.o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/helper.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/original"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/normalized.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/macro_pointer_alias/normalized"
+            ]
+          ],
+          "outputs": {
+            "original": {
+              "exit_code": 0,
+              "stdout": "11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n",
+              "stderr": ""
+            },
+            "normalized": {
+              "exit_code": 0,
+              "stdout": "11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n",
+              "stderr": ""
+            },
+            "preprocessed": {
+              "exit_code": 0,
+              "stdout": "11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n",
+              "stderr": ""
+            }
+          },
+          "independent_expected": [
+            "11",
+            "12",
+            "13",
+            "14",
+            "15",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21",
+            "22",
+            "23",
+            "24",
+            "25",
+            "26",
+            "27"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "header_static_helper",
+      "negative": false,
+      "header": "static int bump(int *p){p[0]+=1;return p[0];}\nint api(int *);",
+      "original_units": [
+        "#include \"/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/api.h\"\nint entry(int n){int a[1]={n};return api(a);}",
+        "#include \"/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/api.h\"\nint api(int *p){int x=bump(p);return bump(p)+x;}"
+      ],
+      "preprocessed_units": [
+        {
+          "method": "single Clang -E snapshot with line markers; all later stages use -x cpp-output",
+          "source": "# 1 \"/tmp/llmloop-clang-vmjkzkmi/input.c\"\n# 1 \"<built-in>\" 1\n# 1 \"<built-in>\" 3\n# 388 \"<built-in>\" 3\n# 1 \"<command line>\" 1\n# 1 \"<built-in>\" 2\n# 1 \"/tmp/llmloop-clang-vmjkzkmi/input.c\" 2\n# 1 \"/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/api.h\" 1\nstatic int bump(int *p){p[0]+=1;return p[0];}\nint api(int *);\n# 2 \"/tmp/llmloop-clang-vmjkzkmi/input.c\" 2\nint entry(int n){int a[1]={n};return api(a);}\n",
+          "sha256": "323c6aa1243f2e1e85c3713b442e7bb12f69840fedc0bb9097959571d4525fb8",
+          "bytes": 412,
+          "input_sha256": "d3d42a9b7a82848d9556d9a2d9a64360dc2468a470f303d03f8dc77c255eae74",
+          "line_markers_preserved": true,
+          "source_location_builtins_supported": false
+        },
+        {
+          "method": "single Clang -E snapshot with line markers; all later stages use -x cpp-output",
+          "source": "# 1 \"/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/provider.c\"\n# 1 \"<built-in>\" 1\n# 1 \"<built-in>\" 3\n# 388 \"<built-in>\" 3\n# 1 \"<command line>\" 1\n# 1 \"<built-in>\" 2\n# 1 \"/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/provider.c\" 2\n# 1 \"/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/api.h\" 1\nstatic int bump(int *p){p[0]+=1;return p[0];}\nint api(int *);\n# 2 \"/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/provider.c\" 2\nint api(int *p){int x=bump(p);return bump(p)+x;}\n",
+          "sha256": "3660520e9ef0b200bfa3e9f98e8069b0e8235fa5f887d85d02e74365d4dc66a3",
+          "bytes": 517,
+          "input_sha256": "ec3b92aec9998c44e3f883b6ec04ef556686829f33adb4d30b26bd29f72a841b",
+          "line_markers_preserved": true,
+          "source_location_builtins_supported": false
+        }
+      ],
+      "original_sha256": [
+        "d3d42a9b7a82848d9556d9a2d9a64360dc2468a470f303d03f8dc77c255eae74",
+        "ec3b92aec9998c44e3f883b6ec04ef556686829f33adb4d30b26bd29f72a841b"
+      ],
+      "proof": {
+        "schema_version": 1,
+        "status": "PROVED_DEFINED_CLANG_CFG_CALLS",
+        "abi": "LP64",
+        "function": "entry",
+        "c_overflow_verified": true,
+        "memory_safety_verified": true,
+        "termination_proved": true,
+        "allocation_failure_modeled": true,
+        "allocation_success_assumed": false,
+        "domain_smt2": "(and (>= typed_loop_n!141 0) (<= typed_loop_n!141 16))",
+        "semantics": "typed C integer semantics with explicit implementation choices",
+        "parameter_symbols": {
+          "n": "typed_loop_n!141"
+        },
+        "leak_freedom_proved": false,
+        "unbounded_summary": false,
+        "certificate": {
+          "method": "exhaustive original CFG execution with proved complete exit for declared domain",
+          "obligations": [
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "all original executed operations defined",
+              "proved": true
+            },
+            {
+              "obligation": "returned paths cover parameter and allocation domain",
+              "proved": true
+            }
+          ],
+          "executed_cfg_nodes": 32,
+          "max_steps_per_path": 256,
+          "max_paths": 48,
+          "represented_object_instances": 1
+        },
+        "memory_model": {
+          "pointer_rebinding_supported": true,
+          "block_escape_supported": true,
+          "dynamic_lengths_supported": true,
+          "max_object_instances": 8,
+          "max_cells_per_object": 8,
+          "max_total_cells": 64,
+          "adjacent_distinct_object_boundary_comparisons": "unsupported",
+          "external_pointer_parameters_supported": false,
+          "pointer_cells_supported": true,
+          "structs_supported": true,
+          "struct_model": "named single allocated records with integer/data-pointer fields",
+          "struct_layouts": {},
+          "max_pointer_indirection": 3,
+          "calloc_pointer_cells_implicitly_null": false
+        },
+        "implementation_choices": {
+          "signed_cast": "two-complement modular",
+          "signed_right_shift": "arithmetic",
+          "pointer_width_bits": 64
+        },
+        "scope": "declared scalar input domain and selected typed backend contract; allocation assumptions and the selected shape/CFG proof boundary remain explicit; no general LLVM semantics or KLEE execution",
+        "return_smt2": "(+ (- 2147483648) (mod (+ 2147483651 (* 2 typed_loop_n!141)) 4294967296))",
+        "evaluation": {
+          "value": 35
+        },
+        "call_model": {
+          "method": "hygienic sequenced direct-call expansion with typed parameters/returns and frame lifetime edges",
+          "eager_single_call_expressions": true,
+          "stable_scalar_operands_only": false,
+          "stable_eager_sibling_operands_only": true,
+          "sequenced_lazy_expressions": true,
+          "nested_argument_calls": true,
+          "loop_header_calls": true,
+          "independent_pure_sibling_calls": true,
+          "scalar_pure_functions": [],
+          "expression_expansion": [],
+          "expanded_source": "int entry(int n)\n{\n  int a[1] = {n};\n  int __cfg_call_result_4 = 0;\n  int __cfg_call_returned_5 = 0;\n  {\n    int *__cfg_call_arg_1 = a;\n    {\n      int __cfg_call_result_8 = 0;\n      int __cfg_call_returned_9 = 0;\n      {\n        int *__cfg_call_arg_6 = __cfg_call_arg_1;\n        {\n          __cfg_call_arg_6[0] += 1;\n          __cfg_call_result_8 = __cfg_call_arg_6[0];\n          __cfg_call_returned_9 = 1;\n          goto __cfg_call_exit_7;\n        }\n        __cfg_call_exit_7:\n        ;\n\n      }\n      int __cfg_call_return_guard_10 = 1 / __cfg_call_returned_9;\n      int __cfg_call_local_2 = __cfg_call_result_8;\n      int __cfg_call_result_13 = 0;\n      int __cfg_call_returned_14 = 0;\n      {\n        int *__cfg_call_arg_11 = __cfg_call_arg_1;\n        {\n          __cfg_call_arg_11[0] += 1;\n          __cfg_call_result_13 = __cfg_call_arg_11[0];\n          __cfg_call_returned_14 = 1;\n          goto __cfg_call_exit_12;\n        }\n        __cfg_call_exit_12:\n        ;\n\n      }\n      int __cfg_call_return_guard_15 = 1 / __cfg_call_returned_14;\n      __cfg_call_result_4 = __cfg_call_result_13 + __cfg_call_local_2;\n      __cfg_call_returned_5 = 1;\n      goto __cfg_call_exit_3;\n    }\n    __cfg_call_exit_3:\n    ;\n\n  }\n  int __cfg_call_return_guard_16 = 1 / __cfg_call_returned_5;\n  return __cfg_call_result_4;\n}\n\n",
+          "expanded_source_sha256": "9b3842c4916950d1164ee7d3310a6b45341852844ed8e444a9cefc2061a769b9",
+          "source_equivalence_machine_proved": false,
+          "expanded_sites": [
+            {
+              "callee": "api",
+              "depth": 1,
+              "recursive_edge": false,
+              "parameter_count": 1,
+              "pointer_return": false,
+              "void_return": false,
+              "exit_label": "__cfg_call_exit_3"
+            },
+            {
+              "callee": "__clang_tu1_bump",
+              "depth": 2,
+              "recursive_edge": false,
+              "parameter_count": 1,
+              "pointer_return": false,
+              "void_return": false,
+              "exit_label": "__cfg_call_exit_7"
+            },
+            {
+              "callee": "__clang_tu1_bump",
+              "depth": 2,
+              "recursive_edge": false,
+              "parameter_count": 1,
+              "pointer_return": false,
+              "void_return": false,
+              "exit_label": "__cfg_call_exit_12"
+            }
+          ],
+          "max_depth": 3,
+          "recursion_supported": false,
+          "bounded_recursion_enabled": false,
+          "depth_frontiers": [],
+          "external_frontiers": [],
+          "external_policy": "entire call evaluation must be unreachable; no external semantics assumed",
+          "unreachable_external_calls_supported": true,
+          "all_frontiers_proved_unreachable": true,
+          "external_calls_supported": false,
+          "pointer_return_supported": true,
+          "nonvoid_return_marker_checked": true
+        },
+        "frontend": "clang_proof",
+        "normalization": {
+          "method": "structural admitted Clang AST to typed C; Clang + normalizer are trusted frontend components",
+          "source": "int __clang_tu1_bump(int * p);\nint api(int * p);\nint entry(int n);\nint __clang_tu1_bump(int * p) {\n(p)[0] += 1;\nreturn (p)[0];\n}\n\nint api(int * p) {\nint x = __clang_tu1_bump(p);\nreturn (__clang_tu1_bump(p) + x);\n}\n\nint entry(int n) {\nint a[1] = {n};\nreturn api(a);\n}\n",
+          "source_sha256": "f33f84b3e31ff0673ee913daca594663970967ea88b04c83f9d03dbeb9b8d8e0",
+          "ast_sha256": "d28eed080649a266b010b898589a470b17ebb262a3a32816b51b39ed82cc3f56",
+          "type_environment_sha256": "64f817774e65110f51f4534e3005ee729d1051fda6be0040232d0be330bbb3dc",
+          "alpha_renamed": [],
+          "functions": [
+            "__clang_tu1_bump",
+            "api",
+            "entry"
+          ],
+          "backend": "calls",
+          "external_call_frontiers": [],
+          "external_call_semantics_assumed": false,
+          "array_parameter_adjustments": [],
+          "static_array_contracts": {},
+          "static_array_contracts_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "zero_record_member_adjustments": [],
+          "bit_builtin_calls": [],
+          "bit_builtin_models": [],
+          "union_views": [],
+          "abi": "LP64",
+          "char_signed": true,
+          "record_layout_correspondence": {},
+          "compiler_equivalence_machine_proved": false,
+          "unsupported_constructs_rejected": true,
+          "translation_unit_linking": {
+            "method": "checked closed-component Clang function binding across translation units",
+            "entry": {
+              "source": "entry",
+              "unit": 0,
+              "normalized": "entry"
+            },
+            "units": [
+              {
+                "index": 0,
+                "source": {
+                  "path": "<inline>",
+                  "sha256": "d3d42a9b7a82848d9556d9a2d9a64360dc2468a470f303d03f8dc77c255eae74"
+                },
+                "target": {
+                  "triple": "x86_64-pc-linux-gnu",
+                  "data_layout": "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+                },
+                "effective_flags": [
+                  "-std=c11",
+                  "-O0",
+                  "-gline-tables-only",
+                  "-fsanitize=undefined",
+                  "-fno-sanitize-recover=all"
+                ],
+                "compilation_database": null,
+                "llvm_ir_sha256": "ac57d68020a2cd781a3ec98b1408a5a59a15ef2b4b063a8511a590be0716d278",
+                "function_ast_sha256": "15aed5a4745fae05d33b6330a91e0768f8ef60f077723b8b87c09a59349bcd9b",
+                "preprocessed_snapshot_sha256": "323c6aa1243f2e1e85c3713b442e7bb12f69840fedc0bb9097959571d4525fb8"
+              },
+              {
+                "index": 1,
+                "source": {
+                  "path": "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/provider.c",
+                  "sha256": "ec3b92aec9998c44e3f883b6ec04ef556686829f33adb4d30b26bd29f72a841b"
+                },
+                "target": {
+                  "triple": "x86_64-pc-linux-gnu",
+                  "data_layout": "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+                },
+                "effective_flags": [
+                  "-std=c11",
+                  "-O0",
+                  "-gline-tables-only",
+                  "-fsanitize=undefined",
+                  "-fno-sanitize-recover=all"
+                ],
+                "compilation_database": null,
+                "llvm_ir_sha256": "1f08cb7523692273207cdb913aa90782a4ac222eae8132a4a99a3f644117a228",
+                "function_ast_sha256": "8a448cb1d641e5df98612cc0b5438ec0b396786c80c19792ce8f0e7468898d82",
+                "preprocessed_snapshot_sha256": "3660520e9ef0b200bfa3e9f98e8069b0e8235fa5f887d85d02e74365d4dc66a3"
+              }
+            ],
+            "bindings": [
+              {
+                "caller_unit": 0,
+                "declaration_id": "0x563842a1f1f8",
+                "callee": "api",
+                "provider_unit": 1,
+                "provider_definition_id": "0x5652931ce188",
+                "normalized_callee": "api",
+                "canonical_signature": [
+                  "signed int",
+                  [
+                    "signed int *"
+                  ]
+                ],
+                "declaration_checked": true,
+                "body_is_supplied_source": true
+              },
+              {
+                "caller_unit": 1,
+                "declaration_id": "0x5652931cdcf8",
+                "callee": "bump",
+                "provider_unit": 1,
+                "provider_definition_id": "0x5652931cdcf8",
+                "normalized_callee": "__clang_tu1_bump",
+                "canonical_signature": [
+                  "signed int",
+                  [
+                    "signed int *"
+                  ]
+                ],
+                "declaration_checked": true,
+                "body_is_supplied_source": true
+              }
+            ],
+            "static_function_renames": [
+              {
+                "unit": 0,
+                "source": "bump",
+                "normalized": "__clang_tu0_bump"
+              },
+              {
+                "unit": 1,
+                "source": "bump",
+                "normalized": "__clang_tu1_bump"
+              }
+            ],
+            "reachable_functions": [
+              "entry",
+              "__clang_tu1_bump",
+              "api"
+            ],
+            "caller_provider_types_checked": true,
+            "per_unit_declaration_contexts_preserved": true,
+            "source_snapshots_checked": true,
+            "closed_world_function_binding": true,
+            "external_semantics_assumed": false,
+            "dynamic_interposition_modeled": false,
+            "general_linker_or_C_support": false,
+            "normalized_source_sha256": "f33f84b3e31ff0673ee913daca594663970967ea88b04c83f9d03dbeb9b8d8e0"
+          }
+        }
+      },
+      "observations": [
+        {
+          "optimization": "-O0",
+          "commands": [
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/main.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/main.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/helper.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/helper.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/normalized.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/normalized.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/main.o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/helper.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/original"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/normalized.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/normalized"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/main.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/main.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/helper.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/helper.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/normalized.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/normalized.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/main.o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/helper.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/original"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/normalized.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/normalized"
+            ]
+          ],
+          "outputs": {
+            "original": {
+              "exit_code": 0,
+              "stdout": "3\n5\n7\n9\n11\n13\n15\n17\n19\n21\n23\n25\n27\n29\n31\n33\n35\n",
+              "stderr": ""
+            },
+            "normalized": {
+              "exit_code": 0,
+              "stdout": "3\n5\n7\n9\n11\n13\n15\n17\n19\n21\n23\n25\n27\n29\n31\n33\n35\n",
+              "stderr": ""
+            },
+            "preprocessed": {
+              "exit_code": 0,
+              "stdout": "3\n5\n7\n9\n11\n13\n15\n17\n19\n21\n23\n25\n27\n29\n31\n33\n35\n",
+              "stderr": ""
+            }
+          },
+          "independent_expected": [
+            "3",
+            "5",
+            "7",
+            "9",
+            "11",
+            "13",
+            "15",
+            "17",
+            "19",
+            "21",
+            "23",
+            "25",
+            "27",
+            "29",
+            "31",
+            "33",
+            "35"
+          ]
+        },
+        {
+          "optimization": "-O2",
+          "commands": [
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/main.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/main.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/helper.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/helper.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/normalized.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/normalized.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/main.o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/helper.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/original"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/normalized.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/normalized"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/main.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/main.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/helper.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/helper.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/normalized.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/normalized.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/main.o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/helper.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/original"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/normalized.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_static_helper/normalized"
+            ]
+          ],
+          "outputs": {
+            "original": {
+              "exit_code": 0,
+              "stdout": "3\n5\n7\n9\n11\n13\n15\n17\n19\n21\n23\n25\n27\n29\n31\n33\n35\n",
+              "stderr": ""
+            },
+            "normalized": {
+              "exit_code": 0,
+              "stdout": "3\n5\n7\n9\n11\n13\n15\n17\n19\n21\n23\n25\n27\n29\n31\n33\n35\n",
+              "stderr": ""
+            },
+            "preprocessed": {
+              "exit_code": 0,
+              "stdout": "3\n5\n7\n9\n11\n13\n15\n17\n19\n21\n23\n25\n27\n29\n31\n33\n35\n",
+              "stderr": ""
+            }
+          },
+          "independent_expected": [
+            "3",
+            "5",
+            "7",
+            "9",
+            "11",
+            "13",
+            "15",
+            "17",
+            "19",
+            "21",
+            "23",
+            "25",
+            "27",
+            "29",
+            "31",
+            "33",
+            "35"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "header_record_allocation",
+      "negative": false,
+      "header": "typedef __SIZE_TYPE__ Size;void *calloc(Size,Size);void free(void *);struct Node{long value;struct Node *next;};int api(struct Node *);",
+      "original_units": [
+        "#include \"/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/api.h\"\nint entry(int n){struct Node *p=calloc(1,sizeof(struct Node));if(!p)return -1;p->value=n;p->next=0;int x=api(p);free(p);return x;}",
+        "#include \"/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/api.h\"\nint api(struct Node *p){return p->value+1;}"
+      ],
+      "preprocessed_units": [
+        {
+          "method": "single Clang -E snapshot with line markers; all later stages use -x cpp-output",
+          "source": "# 1 \"/tmp/llmloop-clang-71_bq453/input.c\"\n# 1 \"<built-in>\" 1\n# 1 \"<built-in>\" 3\n# 388 \"<built-in>\" 3\n# 1 \"<command line>\" 1\n# 1 \"<built-in>\" 2\n# 1 \"/tmp/llmloop-clang-71_bq453/input.c\" 2\n# 1 \"/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/api.h\" 1\ntypedef long unsigned int Size;void *calloc(Size,Size);void free(void *);struct Node{long value;struct Node *next;};int api(struct Node *);\n# 2 \"/tmp/llmloop-clang-71_bq453/input.c\" 2\nint entry(int n){struct Node *p=calloc(1,sizeof(struct Node));if(!p)return -1;p->value=n;p->next=0;int x=api(p);free(p);return x;}\n",
+          "sha256": "9adb6279f681e0e987071d4056fc6bb3a43d5ba9e87bee78f2cd49b0bb373883",
+          "bytes": 579,
+          "input_sha256": "b1ec050dc44345fd67f42c8e78caae6fb7acaa3b64ffad901d37c5e78b928b61",
+          "line_markers_preserved": true,
+          "source_location_builtins_supported": false
+        },
+        {
+          "method": "single Clang -E snapshot with line markers; all later stages use -x cpp-output",
+          "source": "# 1 \"/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/provider.c\"\n# 1 \"<built-in>\" 1\n# 1 \"<built-in>\" 3\n# 388 \"<built-in>\" 3\n# 1 \"<command line>\" 1\n# 1 \"<built-in>\" 2\n# 1 \"/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/provider.c\" 2\n# 1 \"/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/api.h\" 1\ntypedef long unsigned int Size;void *calloc(Size,Size);void free(void *);struct Node{long value;struct Node *next;};int api(struct Node *);\n# 2 \"/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/provider.c\" 2\nint api(struct Node *p){return p->value+1;}\n",
+          "sha256": "70e3a2ec04e2bef0f853e2c7a8bc4de5ce0cf100a272aedc777af5c672c83509",
+          "bytes": 606,
+          "input_sha256": "5d621b48ac9be80be842617e6254c7f1fb101eeb6eb979794d2c30040994dbb9",
+          "line_markers_preserved": true,
+          "source_location_builtins_supported": false
+        }
+      ],
+      "original_sha256": [
+        "b1ec050dc44345fd67f42c8e78caae6fb7acaa3b64ffad901d37c5e78b928b61",
+        "5d621b48ac9be80be842617e6254c7f1fb101eeb6eb979794d2c30040994dbb9"
+      ],
+      "proof": {
+        "schema_version": 1,
+        "status": "PROVED_DEFINED_CLANG_CFG_CALLS",
+        "abi": "LP64",
+        "function": "entry",
+        "c_overflow_verified": true,
+        "memory_safety_verified": true,
+        "termination_proved": true,
+        "allocation_failure_modeled": true,
+        "allocation_success_assumed": false,
+        "domain_smt2": "(and (>= typed_loop_n!462 0) (<= typed_loop_n!462 16))",
+        "semantics": "typed C integer semantics with explicit implementation choices",
+        "parameter_symbols": {
+          "n": "typed_loop_n!462"
+        },
+        "leak_freedom_proved": false,
+        "unbounded_summary": false,
+        "certificate": {
+          "method": "exhaustive original CFG execution with proved complete exit for declared domain",
+          "obligations": [
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "calloc typed element size",
+              "proved": true
+            },
+            {
+              "obligation": "allocation capacity budget",
+              "proved": true
+            },
+            {
+              "obligation": "struct allocation contains exactly one record",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "pointer-cell store location defined",
+              "proved": true
+            },
+            {
+              "obligation": "pointer-cell store represented",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "all original executed operations defined",
+              "proved": true
+            },
+            {
+              "obligation": "returned paths cover parameter and allocation domain",
+              "proved": true
+            }
+          ],
+          "executed_cfg_nodes": 18,
+          "max_steps_per_path": 256,
+          "max_paths": 48,
+          "represented_object_instances": 1
+        },
+        "memory_model": {
+          "pointer_rebinding_supported": true,
+          "block_escape_supported": true,
+          "dynamic_lengths_supported": true,
+          "max_object_instances": 8,
+          "max_cells_per_object": 8,
+          "max_total_cells": 64,
+          "adjacent_distinct_object_boundary_comparisons": "unsupported",
+          "external_pointer_parameters_supported": false,
+          "pointer_cells_supported": true,
+          "structs_supported": true,
+          "struct_model": "named single allocated records with integer/data-pointer fields",
+          "struct_layouts": {
+            "Node": {
+              "size": 16,
+              "alignment": 8,
+              "members": [
+                {
+                  "field": "value",
+                  "offset": 0,
+                  "size": 8,
+                  "alignment": 8
+                },
+                {
+                  "field": "next",
+                  "offset": 8,
+                  "size": 8,
+                  "alignment": 8
+                }
+              ]
+            }
+          },
+          "max_pointer_indirection": 3,
+          "calloc_pointer_cells_implicitly_null": false
+        },
+        "implementation_choices": {
+          "signed_cast": "two-complement modular",
+          "signed_right_shift": "arithmetic",
+          "pointer_width_bits": 64
+        },
+        "scope": "declared scalar input domain and selected typed backend contract; allocation assumptions and the selected shape/CFG proof boundary remain explicit; no general LLVM semantics or KLEE execution",
+        "return_smt2": "(let ((a!1 (mod (+ 2147483649\n                   (mod (+ 9223372036854775808 typed_loop_n!462)\n                        18446744073709551616))\n                4294967296)))\n  (ite allocation_success!473 (+ (- 2147483648) a!1) (- 1)))",
+        "evaluation": {
+          "deterministic": false,
+          "allocation_dependent_return_smt2": "(ite allocation_success!473 17 (- 1))"
+        },
+        "call_model": {
+          "method": "hygienic sequenced direct-call expansion with typed parameters/returns and frame lifetime edges",
+          "eager_single_call_expressions": true,
+          "stable_scalar_operands_only": false,
+          "stable_eager_sibling_operands_only": true,
+          "sequenced_lazy_expressions": true,
+          "nested_argument_calls": true,
+          "loop_header_calls": true,
+          "independent_pure_sibling_calls": true,
+          "scalar_pure_functions": [],
+          "expression_expansion": [],
+          "expanded_source": "struct Node\n{\n  long value;\n  struct Node *next;\n};\nint entry(int n)\n{\n  struct Node *p = calloc((unsigned long) 1, sizeof(struct Node));\n  if (!p)\n    return -1;\n  p->value = (long) n;\n  p->next = 0;\n  int __cfg_call_result_3 = 0;\n  int __cfg_call_returned_4 = 0;\n  {\n    struct Node *__cfg_call_arg_1 = p;\n    {\n      __cfg_call_result_3 = (int) (__cfg_call_arg_1->value + ((long) 1));\n      __cfg_call_returned_4 = 1;\n      goto __cfg_call_exit_2;\n    }\n    __cfg_call_exit_2:\n    ;\n\n  }\n  int __cfg_call_return_guard_5 = 1 / __cfg_call_returned_4;\n  int x = __cfg_call_result_3;\n  free(p);\n  return x;\n}\n\n",
+          "expanded_source_sha256": "0941f1387cf218c50d60df1aaafb2c5ae84680ec52090ae402f7a598350b6a41",
+          "source_equivalence_machine_proved": false,
+          "expanded_sites": [
+            {
+              "callee": "api",
+              "depth": 1,
+              "recursive_edge": false,
+              "parameter_count": 1,
+              "pointer_return": false,
+              "void_return": false,
+              "exit_label": "__cfg_call_exit_2"
+            }
+          ],
+          "max_depth": 3,
+          "recursion_supported": false,
+          "bounded_recursion_enabled": false,
+          "depth_frontiers": [],
+          "external_frontiers": [],
+          "external_policy": "entire call evaluation must be unreachable; no external semantics assumed",
+          "unreachable_external_calls_supported": true,
+          "all_frontiers_proved_unreachable": true,
+          "external_calls_supported": false,
+          "pointer_return_supported": true,
+          "nonvoid_return_marker_checked": true
+        },
+        "frontend": "clang_proof",
+        "normalization": {
+          "method": "structural admitted Clang AST to typed C; Clang + normalizer are trusted frontend components",
+          "source": "struct Node {long value; struct Node * next;};\nint api(struct Node * p);\nint entry(int n);\nint api(struct Node * p) {\nreturn ((int)(((p)->value + ((long)(1)))));\n}\n\nint entry(int n) {\nstruct Node * p = calloc(((unsigned long)(1)), sizeof(struct Node));\nif ((!(p))) return (-(1));\n(p)->value = ((long)(n));\n(p)->next = 0;\nint x = api(p);\nfree(p);\nreturn x;\n}\n",
+          "source_sha256": "eda3cf7169ae0ca6e8f24b4b30ecbc7fb6ffe449ddd210c12f3ef523f9c5ca6f",
+          "ast_sha256": "a4337cfa1a261465f11694ef8d672fd1ead4c191a4c780d1d137d47d46326a9c",
+          "type_environment_sha256": "1f665ec46e7857dfc08532fc179f6c44d5110d5a3c332efdfb4a200b5aa22ebf",
+          "alpha_renamed": [],
+          "functions": [
+            "api",
+            "entry"
+          ],
+          "backend": "calls",
+          "external_call_frontiers": [],
+          "external_call_semantics_assumed": false,
+          "array_parameter_adjustments": [],
+          "static_array_contracts": {},
+          "static_array_contracts_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "zero_record_member_adjustments": [],
+          "bit_builtin_calls": [],
+          "bit_builtin_models": [],
+          "union_views": [],
+          "abi": "LP64",
+          "char_signed": true,
+          "record_layout_correspondence": {
+            "Node": {
+              "size_bytes": 16,
+              "alignment_bytes": 8,
+              "member_offsets": [
+                [
+                  "value",
+                  0
+                ],
+                [
+                  "next",
+                  8
+                ]
+              ]
+            }
+          },
+          "compiler_equivalence_machine_proved": false,
+          "unsupported_constructs_rejected": true,
+          "translation_unit_linking": {
+            "method": "checked closed-component Clang function binding across translation units",
+            "entry": {
+              "source": "entry",
+              "unit": 0,
+              "normalized": "entry"
+            },
+            "units": [
+              {
+                "index": 0,
+                "source": {
+                  "path": "<inline>",
+                  "sha256": "b1ec050dc44345fd67f42c8e78caae6fb7acaa3b64ffad901d37c5e78b928b61"
+                },
+                "target": {
+                  "triple": "x86_64-pc-linux-gnu",
+                  "data_layout": "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+                },
+                "effective_flags": [
+                  "-std=c11",
+                  "-O0",
+                  "-gline-tables-only",
+                  "-fsanitize=undefined",
+                  "-fno-sanitize-recover=all"
+                ],
+                "compilation_database": null,
+                "llvm_ir_sha256": "8f9869fa4c0f1109548b8ce19c385bfe0fdc593c218822704784f2ef74843ba5",
+                "function_ast_sha256": "812a1b7b461c9fe66a6f9279513ed6a939d5562d2fe29c279fb721eabdc02107",
+                "preprocessed_snapshot_sha256": "9adb6279f681e0e987071d4056fc6bb3a43d5ba9e87bee78f2cd49b0bb373883"
+              },
+              {
+                "index": 1,
+                "source": {
+                  "path": "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/provider.c",
+                  "sha256": "5d621b48ac9be80be842617e6254c7f1fb101eeb6eb979794d2c30040994dbb9"
+                },
+                "target": {
+                  "triple": "x86_64-pc-linux-gnu",
+                  "data_layout": "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+                },
+                "effective_flags": [
+                  "-std=c11",
+                  "-O0",
+                  "-gline-tables-only",
+                  "-fsanitize=undefined",
+                  "-fno-sanitize-recover=all"
+                ],
+                "compilation_database": null,
+                "llvm_ir_sha256": "90a57e1b1c4ff86fbf436802199539529e5e8c4074eb669021ada40830ce450b",
+                "function_ast_sha256": "44ae80d1dc43a54eb6f12b0c090b4c586f36e77c3fb0826485db316ef59733d8",
+                "preprocessed_snapshot_sha256": "70e3a2ec04e2bef0f853e2c7a8bc4de5ce0cf100a272aedc777af5c672c83509"
+              }
+            ],
+            "bindings": [
+              {
+                "caller_unit": 0,
+                "declaration_id": "0x556671cadb48",
+                "callee": "api",
+                "provider_unit": 1,
+                "provider_definition_id": "0x556a7a029ca0",
+                "normalized_callee": "api",
+                "canonical_signature": [
+                  "signed int",
+                  [
+                    "struct Node *"
+                  ]
+                ],
+                "declaration_checked": true,
+                "body_is_supplied_source": true
+              }
+            ],
+            "static_function_renames": [],
+            "reachable_functions": [
+              "entry",
+              "api"
+            ],
+            "caller_provider_types_checked": true,
+            "per_unit_declaration_contexts_preserved": true,
+            "source_snapshots_checked": true,
+            "closed_world_function_binding": true,
+            "external_semantics_assumed": false,
+            "dynamic_interposition_modeled": false,
+            "general_linker_or_C_support": false,
+            "normalized_source_sha256": "eda3cf7169ae0ca6e8f24b4b30ecbc7fb6ffe449ddd210c12f3ef523f9c5ca6f",
+            "record_compatibility": {
+              "method": "ordered canonical named-struct graph compatibility plus per-unit Clang/model layouts",
+              "records": {
+                "Node": {
+                  "members": [
+                    {
+                      "name": "value",
+                      "type": "signed long"
+                    },
+                    {
+                      "name": "next",
+                      "type": "struct Node *"
+                    }
+                  ],
+                  "compiler_layout": {
+                    "size_bytes": 16,
+                    "alignment_bytes": 8,
+                    "member_offsets": [
+                      [
+                        "value",
+                        0
+                      ],
+                      [
+                        "next",
+                        8
+                      ]
+                    ]
+                  },
+                  "definitions": [
+                    {
+                      "unit": 0,
+                      "record_id": "0x556671cad7e8",
+                      "definition_scope": "file",
+                      "ast_sha256": "adbd3a095d2980b738af11c01371c198f03c344fdfb1105d043b9d5de34f70ec"
+                    },
+                    {
+                      "unit": 1,
+                      "record_id": "0x556a7a029788",
+                      "definition_scope": "file",
+                      "ast_sha256": "f6ddc0be10636c61ef2a155491def8304a00343d5ec94f305ad639993f169ba0"
+                    }
+                  ]
+                }
+              },
+              "proof_model_layouts_checked": true,
+              "by_value_records_supported": false,
+              "unions_supported": false,
+              "emitted_record_source_sha256": "a90fe0b40fa07662547368203dc080a211022cd6e4514aebca410322cc714c2f",
+              "proof_model_layouts_by_unit": {
+                "0": {
+                  "Node": {
+                    "size_bytes": 16,
+                    "alignment_bytes": 8,
+                    "member_offsets": [
+                      [
+                        "value",
+                        0
+                      ],
+                      [
+                        "next",
+                        8
+                      ]
+                    ]
+                  }
+                },
+                "1": {
+                  "Node": {
+                    "size_bytes": 16,
+                    "alignment_bytes": 8,
+                    "member_offsets": [
+                      [
+                        "value",
+                        0
+                      ],
+                      [
+                        "next",
+                        8
+                      ]
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "observations": [
+        {
+          "optimization": "-O0",
+          "commands": [
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-include",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/allocation.h",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/main.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/main.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-include",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/allocation.h",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/helper.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/helper.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-include",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/allocation.h",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/normalized.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/normalized.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/main.o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/helper.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/original"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/normalized.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/normalized"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-include",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/allocation.h",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/main.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/main.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-include",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/allocation.h",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/helper.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/helper.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-include",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/allocation.h",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/normalized.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/normalized.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/main.o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/helper.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/original"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/normalized.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/normalized"
+            ]
+          ],
+          "outputs": {
+            "original": {
+              "exit_code": 0,
+              "stdout": "1 1 1 0\n2 1 1 0\n3 1 1 0\n4 1 1 0\n5 1 1 0\n6 1 1 0\n7 1 1 0\n8 1 1 0\n9 1 1 0\n10 1 1 0\n11 1 1 0\n12 1 1 0\n13 1 1 0\n14 1 1 0\n15 1 1 0\n16 1 1 0\n17 1 1 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n",
+              "stderr": ""
+            },
+            "normalized": {
+              "exit_code": 0,
+              "stdout": "1 1 1 0\n2 1 1 0\n3 1 1 0\n4 1 1 0\n5 1 1 0\n6 1 1 0\n7 1 1 0\n8 1 1 0\n9 1 1 0\n10 1 1 0\n11 1 1 0\n12 1 1 0\n13 1 1 0\n14 1 1 0\n15 1 1 0\n16 1 1 0\n17 1 1 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n",
+              "stderr": ""
+            },
+            "preprocessed": {
+              "exit_code": 0,
+              "stdout": "1 1 1 0\n2 1 1 0\n3 1 1 0\n4 1 1 0\n5 1 1 0\n6 1 1 0\n7 1 1 0\n8 1 1 0\n9 1 1 0\n10 1 1 0\n11 1 1 0\n12 1 1 0\n13 1 1 0\n14 1 1 0\n15 1 1 0\n16 1 1 0\n17 1 1 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n",
+              "stderr": ""
+            }
+          },
+          "independent_expected": [
+            "1 1 1 0",
+            "2 1 1 0",
+            "3 1 1 0",
+            "4 1 1 0",
+            "5 1 1 0",
+            "6 1 1 0",
+            "7 1 1 0",
+            "8 1 1 0",
+            "9 1 1 0",
+            "10 1 1 0",
+            "11 1 1 0",
+            "12 1 1 0",
+            "13 1 1 0",
+            "14 1 1 0",
+            "15 1 1 0",
+            "16 1 1 0",
+            "17 1 1 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0"
+          ]
+        },
+        {
+          "optimization": "-O2",
+          "commands": [
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-include",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/allocation.h",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/main.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/main.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-include",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/allocation.h",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/helper.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/helper.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-include",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/allocation.h",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/normalized.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/normalized.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/main.o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/helper.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/original"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/normalized.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/normalized"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-include",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/allocation.h",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/main.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/main.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-include",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/allocation.h",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/helper.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/helper.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-include",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/allocation.h",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/normalized.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/normalized.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/main.o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/helper.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/original"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/normalized.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/header_record_allocation/normalized"
+            ]
+          ],
+          "outputs": {
+            "original": {
+              "exit_code": 0,
+              "stdout": "1 1 1 0\n2 1 1 0\n3 1 1 0\n4 1 1 0\n5 1 1 0\n6 1 1 0\n7 1 1 0\n8 1 1 0\n9 1 1 0\n10 1 1 0\n11 1 1 0\n12 1 1 0\n13 1 1 0\n14 1 1 0\n15 1 1 0\n16 1 1 0\n17 1 1 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n",
+              "stderr": ""
+            },
+            "normalized": {
+              "exit_code": 0,
+              "stdout": "1 1 1 0\n2 1 1 0\n3 1 1 0\n4 1 1 0\n5 1 1 0\n6 1 1 0\n7 1 1 0\n8 1 1 0\n9 1 1 0\n10 1 1 0\n11 1 1 0\n12 1 1 0\n13 1 1 0\n14 1 1 0\n15 1 1 0\n16 1 1 0\n17 1 1 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n",
+              "stderr": ""
+            },
+            "preprocessed": {
+              "exit_code": 0,
+              "stdout": "1 1 1 0\n2 1 1 0\n3 1 1 0\n4 1 1 0\n5 1 1 0\n6 1 1 0\n7 1 1 0\n8 1 1 0\n9 1 1 0\n10 1 1 0\n11 1 1 0\n12 1 1 0\n13 1 1 0\n14 1 1 0\n15 1 1 0\n16 1 1 0\n17 1 1 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n-1 1 0 0\n",
+              "stderr": ""
+            }
+          },
+          "independent_expected": [
+            "1 1 1 0",
+            "2 1 1 0",
+            "3 1 1 0",
+            "4 1 1 0",
+            "5 1 1 0",
+            "6 1 1 0",
+            "7 1 1 0",
+            "8 1 1 0",
+            "9 1 1 0",
+            "10 1 1 0",
+            "11 1 1 0",
+            "12 1 1 0",
+            "13 1 1 0",
+            "14 1 1 0",
+            "15 1 1 0",
+            "16 1 1 0",
+            "17 1 1 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0",
+            "-1 1 0 0"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "pointer_overflow",
+      "negative": true,
+      "header": "int api(int *);",
+      "original_units": [
+        "#include \"/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/api.h\"\nint entry(int n){int a[1]={n};return api(a);}",
+        "#include \"/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/api.h\"\nint api(int *p){return p[0]+2147483647;}"
+      ],
+      "preprocessed_units": [
+        {
+          "method": "single Clang -E snapshot with line markers; all later stages use -x cpp-output",
+          "source": "# 1 \"/tmp/llmloop-clang-ycly_lwh/input.c\"\n# 1 \"<built-in>\" 1\n# 1 \"<built-in>\" 3\n# 388 \"<built-in>\" 3\n# 1 \"<command line>\" 1\n# 1 \"<built-in>\" 2\n# 1 \"/tmp/llmloop-clang-ycly_lwh/input.c\" 2\n# 1 \"/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/api.h\" 1\nint api(int *);\n# 2 \"/tmp/llmloop-clang-ycly_lwh/input.c\" 2\nint entry(int n){int a[1]={n};return api(a);}\n",
+          "sha256": "a1c8e26b9f99f6e167ea376fb79beb96caf6c4a1b49c7b92589017641f956d3b",
+          "bytes": 362,
+          "input_sha256": "b025fc51b058758465f54b0d3ebb6134fca76f093db444cf355b34ad5411ffd1",
+          "line_markers_preserved": true,
+          "source_location_builtins_supported": false
+        },
+        {
+          "method": "single Clang -E snapshot with line markers; all later stages use -x cpp-output",
+          "source": "# 1 \"/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/provider.c\"\n# 1 \"<built-in>\" 1\n# 1 \"<built-in>\" 3\n# 388 \"<built-in>\" 3\n# 1 \"<command line>\" 1\n# 1 \"<built-in>\" 2\n# 1 \"/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/provider.c\" 2\n# 1 \"/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/api.h\" 1\nint api(int *);\n# 2 \"/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/provider.c\" 2\nint api(int *p){return p[0]+2147483647;}\n",
+          "sha256": "452186ed91a3770eb057ef2c0077cdf2c4f5e99488950eca982809ebef4ab3ce",
+          "bytes": 447,
+          "input_sha256": "ef22d173ac74de164b0d79944cc171a870c5db58aed09114141dffd8db3f3ef7",
+          "line_markers_preserved": true,
+          "source_location_builtins_supported": false
+        }
+      ],
+      "original_sha256": [
+        "b025fc51b058758465f54b0d3ebb6134fca76f093db444cf355b34ad5411ffd1",
+        "ef22d173ac74de164b0d79944cc171a870c5db58aed09114141dffd8db3f3ef7"
+      ],
+      "proof": {
+        "schema_version": 1,
+        "status": "UNKNOWN",
+        "abi": "LP64",
+        "function": "entry",
+        "c_overflow_verified": false,
+        "memory_safety_verified": false,
+        "termination_proved": false,
+        "allocation_failure_modeled": true,
+        "allocation_success_assumed": false,
+        "domain_smt2": "(and (>= typed_loop_n!674 1) (<= typed_loop_n!674 1))",
+        "semantics": "typed C integer semantics with explicit implementation choices",
+        "parameter_symbols": {
+          "n": "typed_loop_n!674"
+        },
+        "leak_freedom_proved": false,
+        "unbounded_summary": false,
+        "certificate": {
+          "method": "exhaustive original CFG execution with proved complete exit for declared domain",
+          "obligations": [
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            }
+          ],
+          "executed_cfg_nodes": 11,
+          "max_steps_per_path": 256,
+          "max_paths": 48,
+          "represented_object_instances": 1
+        },
+        "memory_model": {
+          "pointer_rebinding_supported": true,
+          "block_escape_supported": true,
+          "dynamic_lengths_supported": true,
+          "max_object_instances": 8,
+          "max_cells_per_object": 8,
+          "max_total_cells": 64,
+          "adjacent_distinct_object_boundary_comparisons": "unsupported",
+          "external_pointer_parameters_supported": false,
+          "pointer_cells_supported": true,
+          "structs_supported": true,
+          "struct_model": "named single allocated records with integer/data-pointer fields",
+          "struct_layouts": {},
+          "max_pointer_indirection": 3,
+          "calloc_pointer_cells_implicitly_null": false
+        },
+        "implementation_choices": {
+          "signed_cast": "two-complement modular",
+          "signed_right_shift": "arithmetic",
+          "pointer_width_bits": 64
+        },
+        "scope": "declared scalar input domain and selected typed backend contract; allocation assumptions and the selected shape/CFG proof boundary remain explicit; no general LLVM semantics or KLEE execution",
+        "failed_obligation": "all original executed operations defined",
+        "reason": "counterexample to the universal obligation",
+        "counterexample": {
+          "n": "1"
+        },
+        "call_model": {
+          "method": "hygienic sequenced direct-call expansion with typed parameters/returns and frame lifetime edges",
+          "eager_single_call_expressions": true,
+          "stable_scalar_operands_only": false,
+          "stable_eager_sibling_operands_only": true,
+          "sequenced_lazy_expressions": true,
+          "nested_argument_calls": true,
+          "loop_header_calls": true,
+          "independent_pure_sibling_calls": true,
+          "scalar_pure_functions": [],
+          "expression_expansion": [],
+          "expanded_source": "int entry(int n)\n{\n  int a[1] = {n};\n  int __cfg_call_result_3 = 0;\n  int __cfg_call_returned_4 = 0;\n  {\n    int *__cfg_call_arg_1 = a;\n    {\n      __cfg_call_result_3 = __cfg_call_arg_1[0] + 2147483647;\n      __cfg_call_returned_4 = 1;\n      goto __cfg_call_exit_2;\n    }\n    __cfg_call_exit_2:\n    ;\n\n  }\n  int __cfg_call_return_guard_5 = 1 / __cfg_call_returned_4;\n  return __cfg_call_result_3;\n}\n\n",
+          "expanded_source_sha256": "e0ee2b08d6fa2ffed441ca9eaa8edb2372cab6be983aca23c08e6c0297548333",
+          "source_equivalence_machine_proved": false,
+          "expanded_sites": [
+            {
+              "callee": "api",
+              "depth": 1,
+              "recursive_edge": false,
+              "parameter_count": 1,
+              "pointer_return": false,
+              "void_return": false,
+              "exit_label": "__cfg_call_exit_2"
+            }
+          ],
+          "max_depth": 3,
+          "recursion_supported": false,
+          "bounded_recursion_enabled": false,
+          "depth_frontiers": [],
+          "external_frontiers": [],
+          "external_policy": "entire call evaluation must be unreachable; no external semantics assumed",
+          "unreachable_external_calls_supported": true,
+          "all_frontiers_proved_unreachable": false,
+          "external_calls_supported": false,
+          "pointer_return_supported": true,
+          "nonvoid_return_marker_checked": true
+        },
+        "frontend": "clang_proof",
+        "normalization": {
+          "method": "structural admitted Clang AST to typed C; Clang + normalizer are trusted frontend components",
+          "source": "int api(int * p);\nint entry(int n);\nint api(int * p) {\nreturn ((p)[0] + 2147483647);\n}\n\nint entry(int n) {\nint a[1] = {n};\nreturn api(a);\n}\n",
+          "source_sha256": "bd8fc14544a95e828c629ea658e4c3a74f125f5c5f9320dcfeefa5ab75b02671",
+          "ast_sha256": "d7b010f98bb6b4e36d8cde0e8325e68653dd002ec995105858fe5e0760b1d1ff",
+          "type_environment_sha256": "2a315c101185bad9de6b82ea59b05e0b54a03ac1bd3ca00e399e95a11325b082",
+          "alpha_renamed": [],
+          "functions": [
+            "api",
+            "entry"
+          ],
+          "backend": "calls",
+          "external_call_frontiers": [],
+          "external_call_semantics_assumed": false,
+          "array_parameter_adjustments": [],
+          "static_array_contracts": {},
+          "static_array_contracts_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "zero_record_member_adjustments": [],
+          "bit_builtin_calls": [],
+          "bit_builtin_models": [],
+          "union_views": [],
+          "abi": "LP64",
+          "char_signed": true,
+          "record_layout_correspondence": {},
+          "compiler_equivalence_machine_proved": false,
+          "unsupported_constructs_rejected": true,
+          "translation_unit_linking": {
+            "method": "checked closed-component Clang function binding across translation units",
+            "entry": {
+              "source": "entry",
+              "unit": 0,
+              "normalized": "entry"
+            },
+            "units": [
+              {
+                "index": 0,
+                "source": {
+                  "path": "<inline>",
+                  "sha256": "b025fc51b058758465f54b0d3ebb6134fca76f093db444cf355b34ad5411ffd1"
+                },
+                "target": {
+                  "triple": "x86_64-pc-linux-gnu",
+                  "data_layout": "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+                },
+                "effective_flags": [
+                  "-std=c11",
+                  "-O0",
+                  "-gline-tables-only",
+                  "-fsanitize=undefined",
+                  "-fno-sanitize-recover=all"
+                ],
+                "compilation_database": null,
+                "llvm_ir_sha256": "a224e21f38aa76829c1bd8387394d004dbe69b4a5c9680ea45da74370e89feff",
+                "function_ast_sha256": "3a9e5a10879dc56450c5e29b4fd784281f302efa704e3c6ed4e1b235087045b1",
+                "preprocessed_snapshot_sha256": "a1c8e26b9f99f6e167ea376fb79beb96caf6c4a1b49c7b92589017641f956d3b"
+              },
+              {
+                "index": 1,
+                "source": {
+                  "path": "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/provider.c",
+                  "sha256": "ef22d173ac74de164b0d79944cc171a870c5db58aed09114141dffd8db3f3ef7"
+                },
+                "target": {
+                  "triple": "x86_64-pc-linux-gnu",
+                  "data_layout": "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+                },
+                "effective_flags": [
+                  "-std=c11",
+                  "-O0",
+                  "-gline-tables-only",
+                  "-fsanitize=undefined",
+                  "-fno-sanitize-recover=all"
+                ],
+                "compilation_database": null,
+                "llvm_ir_sha256": "bc5effaeceebb1ca1daf159c5515955910b704edb3cb8ead9f61dafe93b8a89f",
+                "function_ast_sha256": "e00fd77394b2ce3d8e5596b74061739c6d252e3188bf47babbdeb3cd391acccb",
+                "preprocessed_snapshot_sha256": "452186ed91a3770eb057ef2c0077cdf2c4f5e99488950eca982809ebef4ab3ce"
+              }
+            ],
+            "bindings": [
+              {
+                "caller_unit": 0,
+                "declaration_id": "0x5591045bae98",
+                "callee": "api",
+                "provider_unit": 1,
+                "provider_definition_id": "0x556f65e36e90",
+                "normalized_callee": "api",
+                "canonical_signature": [
+                  "signed int",
+                  [
+                    "signed int *"
+                  ]
+                ],
+                "declaration_checked": true,
+                "body_is_supplied_source": true
+              }
+            ],
+            "static_function_renames": [],
+            "reachable_functions": [
+              "entry",
+              "api"
+            ],
+            "caller_provider_types_checked": true,
+            "per_unit_declaration_contexts_preserved": true,
+            "source_snapshots_checked": true,
+            "closed_world_function_binding": true,
+            "external_semantics_assumed": false,
+            "dynamic_interposition_modeled": false,
+            "general_linker_or_C_support": false,
+            "normalized_source_sha256": "bd8fc14544a95e828c629ea658e4c3a74f125f5c5f9320dcfeefa5ab75b02671"
+          }
+        }
+      },
+      "observations": [
+        {
+          "optimization": "-O0",
+          "commands": [
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/main.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/main.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/helper.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/helper.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/normalized.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/normalized.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/main.o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/helper.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/original"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/normalized.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/normalized"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/main.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/main.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/helper.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/helper.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/normalized.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/normalized.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/main.o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/helper.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/original"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/normalized.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/normalized"
+            ]
+          ],
+          "outputs": {
+            "original": {
+              "exit_code": 1,
+              "stdout": "",
+              "stderr": "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/helper.c:2:28: runtime error: signed integer overflow: 1 + 2147483647 cannot be represented in type 'int'\n"
+            },
+            "normalized": {
+              "exit_code": 1,
+              "stdout": "",
+              "stderr": "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/normalized.c:4:16: runtime error: signed integer overflow: 1 + 2147483647 cannot be represented in type 'int'\n"
+            },
+            "preprocessed": {
+              "exit_code": 1,
+              "stdout": "",
+              "stderr": "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/provider.c:2:28: runtime error: signed integer overflow: 1 + 2147483647 cannot be represented in type 'int'\n"
+            }
+          }
+        },
+        {
+          "optimization": "-O2",
+          "commands": [
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/main.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/main.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/helper.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/helper.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/normalized.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/normalized.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/main.o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/helper.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/original"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/normalized.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/normalized"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/main.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/main.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/helper.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/helper.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/normalized.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/normalized.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/main.o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/helper.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/original"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/normalized.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/normalized"
+            ]
+          ],
+          "outputs": {
+            "original": {
+              "exit_code": 1,
+              "stdout": "",
+              "stderr": "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/helper.c:2:28: runtime error: signed integer overflow: 1 + 2147483647 cannot be represented in type 'int'\n"
+            },
+            "normalized": {
+              "exit_code": 1,
+              "stdout": "",
+              "stderr": "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/normalized.c:4:16: runtime error: signed integer overflow: 1 + 2147483647 cannot be represented in type 'int'\n"
+            },
+            "preprocessed": {
+              "exit_code": 1,
+              "stdout": "",
+              "stderr": "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/provider.c:2:28: runtime error: signed integer overflow: 1 + 2147483647 cannot be represented in type 'int'\n"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "pointer_zero_division",
+      "negative": true,
+      "header": "int api(int *);",
+      "original_units": [
+        "#include \"/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/api.h\"\nint entry(int n){int a[1]={n};return api(a);}",
+        "#include \"/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/api.h\"\nint api(int *p){return 12/p[0];}"
+      ],
+      "preprocessed_units": [
+        {
+          "method": "single Clang -E snapshot with line markers; all later stages use -x cpp-output",
+          "source": "# 1 \"/tmp/llmloop-clang-lq2pr32z/input.c\"\n# 1 \"<built-in>\" 1\n# 1 \"<built-in>\" 3\n# 388 \"<built-in>\" 3\n# 1 \"<command line>\" 1\n# 1 \"<built-in>\" 2\n# 1 \"/tmp/llmloop-clang-lq2pr32z/input.c\" 2\n# 1 \"/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/api.h\" 1\nint api(int *);\n# 2 \"/tmp/llmloop-clang-lq2pr32z/input.c\" 2\nint entry(int n){int a[1]={n};return api(a);}\n",
+          "sha256": "2b0d831a2b83a7359b1c006fedb008e2ba6dd5c3160020816913358fdbee127c",
+          "bytes": 367,
+          "input_sha256": "438a7da350eb41043a05f3129017be4443edfbea6959c92ca5106f0b38f496e0",
+          "line_markers_preserved": true,
+          "source_location_builtins_supported": false
+        },
+        {
+          "method": "single Clang -E snapshot with line markers; all later stages use -x cpp-output",
+          "source": "# 1 \"/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/provider.c\"\n# 1 \"<built-in>\" 1\n# 1 \"<built-in>\" 3\n# 388 \"<built-in>\" 3\n# 1 \"<command line>\" 1\n# 1 \"<built-in>\" 2\n# 1 \"/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/provider.c\" 2\n# 1 \"/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/api.h\" 1\nint api(int *);\n# 2 \"/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/provider.c\" 2\nint api(int *p){return 12/p[0];}\n",
+          "sha256": "db59564aee586d41661ec07c77fd4323a1ca42fc7201b653230d281db458f480",
+          "bytes": 459,
+          "input_sha256": "e8fca15a51b01e332bd7a6ed88d4b8fb952c877b2a4a8e540fd54ea1f98d0f44",
+          "line_markers_preserved": true,
+          "source_location_builtins_supported": false
+        }
+      ],
+      "original_sha256": [
+        "438a7da350eb41043a05f3129017be4443edfbea6959c92ca5106f0b38f496e0",
+        "e8fca15a51b01e332bd7a6ed88d4b8fb952c877b2a4a8e540fd54ea1f98d0f44"
+      ],
+      "proof": {
+        "schema_version": 1,
+        "status": "UNKNOWN",
+        "abi": "LP64",
+        "function": "entry",
+        "c_overflow_verified": false,
+        "memory_safety_verified": false,
+        "termination_proved": false,
+        "allocation_failure_modeled": true,
+        "allocation_success_assumed": false,
+        "domain_smt2": "(and (>= typed_loop_n!675 0) (<= typed_loop_n!675 0))",
+        "semantics": "typed C integer semantics with explicit implementation choices",
+        "parameter_symbols": {
+          "n": "typed_loop_n!675"
+        },
+        "leak_freedom_proved": false,
+        "unbounded_summary": false,
+        "certificate": {
+          "method": "exhaustive original CFG execution with proved complete exit for declared domain",
+          "obligations": [
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            },
+            {
+              "obligation": "control-flow step budget",
+              "proved": true
+            }
+          ],
+          "executed_cfg_nodes": 11,
+          "max_steps_per_path": 256,
+          "max_paths": 48,
+          "represented_object_instances": 1
+        },
+        "memory_model": {
+          "pointer_rebinding_supported": true,
+          "block_escape_supported": true,
+          "dynamic_lengths_supported": true,
+          "max_object_instances": 8,
+          "max_cells_per_object": 8,
+          "max_total_cells": 64,
+          "adjacent_distinct_object_boundary_comparisons": "unsupported",
+          "external_pointer_parameters_supported": false,
+          "pointer_cells_supported": true,
+          "structs_supported": true,
+          "struct_model": "named single allocated records with integer/data-pointer fields",
+          "struct_layouts": {},
+          "max_pointer_indirection": 3,
+          "calloc_pointer_cells_implicitly_null": false
+        },
+        "implementation_choices": {
+          "signed_cast": "two-complement modular",
+          "signed_right_shift": "arithmetic",
+          "pointer_width_bits": 64
+        },
+        "scope": "declared scalar input domain and selected typed backend contract; allocation assumptions and the selected shape/CFG proof boundary remain explicit; no general LLVM semantics or KLEE execution",
+        "failed_obligation": "all original executed operations defined",
+        "reason": "counterexample to the universal obligation",
+        "counterexample": {
+          "n": "0"
+        },
+        "call_model": {
+          "method": "hygienic sequenced direct-call expansion with typed parameters/returns and frame lifetime edges",
+          "eager_single_call_expressions": true,
+          "stable_scalar_operands_only": false,
+          "stable_eager_sibling_operands_only": true,
+          "sequenced_lazy_expressions": true,
+          "nested_argument_calls": true,
+          "loop_header_calls": true,
+          "independent_pure_sibling_calls": true,
+          "scalar_pure_functions": [],
+          "expression_expansion": [],
+          "expanded_source": "int entry(int n)\n{\n  int a[1] = {n};\n  int __cfg_call_result_3 = 0;\n  int __cfg_call_returned_4 = 0;\n  {\n    int *__cfg_call_arg_1 = a;\n    {\n      __cfg_call_result_3 = 12 / __cfg_call_arg_1[0];\n      __cfg_call_returned_4 = 1;\n      goto __cfg_call_exit_2;\n    }\n    __cfg_call_exit_2:\n    ;\n\n  }\n  int __cfg_call_return_guard_5 = 1 / __cfg_call_returned_4;\n  return __cfg_call_result_3;\n}\n\n",
+          "expanded_source_sha256": "7d0f29d0dcf800762d7262ec89fa159812729426a550065794fdf71603e756a8",
+          "source_equivalence_machine_proved": false,
+          "expanded_sites": [
+            {
+              "callee": "api",
+              "depth": 1,
+              "recursive_edge": false,
+              "parameter_count": 1,
+              "pointer_return": false,
+              "void_return": false,
+              "exit_label": "__cfg_call_exit_2"
+            }
+          ],
+          "max_depth": 3,
+          "recursion_supported": false,
+          "bounded_recursion_enabled": false,
+          "depth_frontiers": [],
+          "external_frontiers": [],
+          "external_policy": "entire call evaluation must be unreachable; no external semantics assumed",
+          "unreachable_external_calls_supported": true,
+          "all_frontiers_proved_unreachable": false,
+          "external_calls_supported": false,
+          "pointer_return_supported": true,
+          "nonvoid_return_marker_checked": true
+        },
+        "frontend": "clang_proof",
+        "normalization": {
+          "method": "structural admitted Clang AST to typed C; Clang + normalizer are trusted frontend components",
+          "source": "int api(int * p);\nint entry(int n);\nint api(int * p) {\nreturn (12 / (p)[0]);\n}\n\nint entry(int n) {\nint a[1] = {n};\nreturn api(a);\n}\n",
+          "source_sha256": "b53c456c80adf0ffa4791a3d598f8d04d966712d436b6920d19beb958aa86121",
+          "ast_sha256": "cab0002b8fba3b7b25b973d9bba6042ab233bdede768253fcb47c4492c8d7d17",
+          "type_environment_sha256": "5f89f2a88477d354c9e81f1272b7ee268c306b5ea97348b9ee89b13ea9ab99f6",
+          "alpha_renamed": [],
+          "functions": [
+            "api",
+            "entry"
+          ],
+          "backend": "calls",
+          "external_call_frontiers": [],
+          "external_call_semantics_assumed": false,
+          "array_parameter_adjustments": [],
+          "static_array_contracts": {},
+          "static_array_contracts_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "zero_record_member_adjustments": [],
+          "bit_builtin_calls": [],
+          "bit_builtin_models": [],
+          "union_views": [],
+          "abi": "LP64",
+          "char_signed": true,
+          "record_layout_correspondence": {},
+          "compiler_equivalence_machine_proved": false,
+          "unsupported_constructs_rejected": true,
+          "translation_unit_linking": {
+            "method": "checked closed-component Clang function binding across translation units",
+            "entry": {
+              "source": "entry",
+              "unit": 0,
+              "normalized": "entry"
+            },
+            "units": [
+              {
+                "index": 0,
+                "source": {
+                  "path": "<inline>",
+                  "sha256": "438a7da350eb41043a05f3129017be4443edfbea6959c92ca5106f0b38f496e0"
+                },
+                "target": {
+                  "triple": "x86_64-pc-linux-gnu",
+                  "data_layout": "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+                },
+                "effective_flags": [
+                  "-std=c11",
+                  "-O0",
+                  "-gline-tables-only",
+                  "-fsanitize=undefined",
+                  "-fno-sanitize-recover=all"
+                ],
+                "compilation_database": null,
+                "llvm_ir_sha256": "04ea11c5c16320d62eca58b1eda2094c9cf3adb18c7b401ff5f25e31a917d125",
+                "function_ast_sha256": "05fa7c4a15cbf39910dfdb4c4551c1edee71dc3e4abadecf8c9ff56a3a8f239d",
+                "preprocessed_snapshot_sha256": "2b0d831a2b83a7359b1c006fedb008e2ba6dd5c3160020816913358fdbee127c"
+              },
+              {
+                "index": 1,
+                "source": {
+                  "path": "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/provider.c",
+                  "sha256": "e8fca15a51b01e332bd7a6ed88d4b8fb952c877b2a4a8e540fd54ea1f98d0f44"
+                },
+                "target": {
+                  "triple": "x86_64-pc-linux-gnu",
+                  "data_layout": "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+                },
+                "effective_flags": [
+                  "-std=c11",
+                  "-O0",
+                  "-gline-tables-only",
+                  "-fsanitize=undefined",
+                  "-fno-sanitize-recover=all"
+                ],
+                "compilation_database": null,
+                "llvm_ir_sha256": "4a52b66631af02455dfc362ed08d8f0ffbc170bf63ab6057600564e273f7bfaa",
+                "function_ast_sha256": "038ee5a593d4da7684145a48cd16ca59dc88bff402746d1610b78085d2f5a896",
+                "preprocessed_snapshot_sha256": "db59564aee586d41661ec07c77fd4323a1ca42fc7201b653230d281db458f480"
+              }
+            ],
+            "bindings": [
+              {
+                "caller_unit": 0,
+                "declaration_id": "0x5586a31fbe98",
+                "callee": "api",
+                "provider_unit": 1,
+                "provider_definition_id": "0x55e259d72ea0",
+                "normalized_callee": "api",
+                "canonical_signature": [
+                  "signed int",
+                  [
+                    "signed int *"
+                  ]
+                ],
+                "declaration_checked": true,
+                "body_is_supplied_source": true
+              }
+            ],
+            "static_function_renames": [],
+            "reachable_functions": [
+              "entry",
+              "api"
+            ],
+            "caller_provider_types_checked": true,
+            "per_unit_declaration_contexts_preserved": true,
+            "source_snapshots_checked": true,
+            "closed_world_function_binding": true,
+            "external_semantics_assumed": false,
+            "dynamic_interposition_modeled": false,
+            "general_linker_or_C_support": false,
+            "normalized_source_sha256": "b53c456c80adf0ffa4791a3d598f8d04d966712d436b6920d19beb958aa86121"
+          }
+        }
+      },
+      "observations": [
+        {
+          "optimization": "-O0",
+          "commands": [
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/main.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/main.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/helper.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/helper.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/normalized.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/normalized.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/main.o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/helper.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/original"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/normalized.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/normalized"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/main.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/main.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/helper.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/helper.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/normalized.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/normalized.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/main.o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/helper.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/original"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O0",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/normalized.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/normalized"
+            ]
+          ],
+          "outputs": {
+            "original": {
+              "exit_code": 1,
+              "stdout": "",
+              "stderr": "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/helper.c:2:26: runtime error: division by zero\n"
+            },
+            "normalized": {
+              "exit_code": 1,
+              "stdout": "",
+              "stderr": "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/normalized.c:4:12: runtime error: division by zero\n"
+            },
+            "preprocessed": {
+              "exit_code": 1,
+              "stdout": "",
+              "stderr": "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/provider.c:2:26: runtime error: division by zero\n"
+            }
+          }
+        },
+        {
+          "optimization": "-O2",
+          "commands": [
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/main.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/main.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/helper.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/helper.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/normalized.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/normalized.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/main.o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/helper.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/original"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/normalized.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/normalized"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/main.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/main.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/helper.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/helper.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "-c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/normalized.c",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/normalized.o"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/main.o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/helper.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/original"
+            ],
+            [
+              "cc",
+              "-std=c11",
+              "-O2",
+              "-fsanitize=undefined",
+              "-fno-sanitize-recover=all",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/harness.c",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/normalized.o",
+              "-o",
+              "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/normalized"
+            ]
+          ],
+          "outputs": {
+            "original": {
+              "exit_code": 1,
+              "stdout": "",
+              "stderr": "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/helper.c:2:26: runtime error: division by zero\n"
+            },
+            "normalized": {
+              "exit_code": 1,
+              "stdout": "",
+              "stderr": "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/normalized.c:4:12: runtime error: division by zero\n"
+            },
+            "preprocessed": {
+              "exit_code": 1,
+              "stdout": "",
+              "stderr": "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/provider.c:2:26: runtime error: division by zero\n"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "negative_controls": [
+    {
+      "name": "pointer_overflow",
+      "optimization": "-O0",
+      "form": "original",
+      "observation": {
+        "exit_code": 1,
+        "stdout": "",
+        "stderr": "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/helper.c:2:28: runtime error: signed integer overflow: 1 + 2147483647 cannot be represented in type 'int'\n"
+      }
+    },
+    {
+      "name": "pointer_overflow",
+      "optimization": "-O0",
+      "form": "normalized",
+      "observation": {
+        "exit_code": 1,
+        "stdout": "",
+        "stderr": "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/normalized.c:4:16: runtime error: signed integer overflow: 1 + 2147483647 cannot be represented in type 'int'\n"
+      }
+    },
+    {
+      "name": "pointer_overflow",
+      "optimization": "-O0",
+      "form": "preprocessed",
+      "observation": {
+        "exit_code": 1,
+        "stdout": "",
+        "stderr": "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/provider.c:2:28: runtime error: signed integer overflow: 1 + 2147483647 cannot be represented in type 'int'\n"
+      }
+    },
+    {
+      "name": "pointer_overflow",
+      "optimization": "-O2",
+      "form": "original",
+      "observation": {
+        "exit_code": 1,
+        "stdout": "",
+        "stderr": "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/helper.c:2:28: runtime error: signed integer overflow: 1 + 2147483647 cannot be represented in type 'int'\n"
+      }
+    },
+    {
+      "name": "pointer_overflow",
+      "optimization": "-O2",
+      "form": "normalized",
+      "observation": {
+        "exit_code": 1,
+        "stdout": "",
+        "stderr": "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/normalized.c:4:16: runtime error: signed integer overflow: 1 + 2147483647 cannot be represented in type 'int'\n"
+      }
+    },
+    {
+      "name": "pointer_overflow",
+      "optimization": "-O2",
+      "form": "preprocessed",
+      "observation": {
+        "exit_code": 1,
+        "stdout": "",
+        "stderr": "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_overflow/provider.c:2:28: runtime error: signed integer overflow: 1 + 2147483647 cannot be represented in type 'int'\n"
+      }
+    },
+    {
+      "name": "pointer_zero_division",
+      "optimization": "-O0",
+      "form": "original",
+      "observation": {
+        "exit_code": 1,
+        "stdout": "",
+        "stderr": "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/helper.c:2:26: runtime error: division by zero\n"
+      }
+    },
+    {
+      "name": "pointer_zero_division",
+      "optimization": "-O0",
+      "form": "normalized",
+      "observation": {
+        "exit_code": 1,
+        "stdout": "",
+        "stderr": "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/normalized.c:4:12: runtime error: division by zero\n"
+      }
+    },
+    {
+      "name": "pointer_zero_division",
+      "optimization": "-O0",
+      "form": "preprocessed",
+      "observation": {
+        "exit_code": 1,
+        "stdout": "",
+        "stderr": "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/provider.c:2:26: runtime error: division by zero\n"
+      }
+    },
+    {
+      "name": "pointer_zero_division",
+      "optimization": "-O2",
+      "form": "original",
+      "observation": {
+        "exit_code": 1,
+        "stdout": "",
+        "stderr": "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/helper.c:2:26: runtime error: division by zero\n"
+      }
+    },
+    {
+      "name": "pointer_zero_division",
+      "optimization": "-O2",
+      "form": "normalized",
+      "observation": {
+        "exit_code": 1,
+        "stdout": "",
+        "stderr": "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/normalized.c:4:12: runtime error: division by zero\n"
+      }
+    },
+    {
+      "name": "pointer_zero_division",
+      "optimization": "-O2",
+      "form": "preprocessed",
+      "observation": {
+        "exit_code": 1,
+        "stdout": "",
+        "stderr": "/tmp/llmloop-snapshot-native-8w_5oek2/pointer_zero_division/provider.c:2:26: runtime error: division by zero\n"
+      }
+    }
+  ],
+  "parameter_attribute_refusals": 1,
+  "attributed_typedef_refusals": 1,
+  "expected_alignment_traps": 4,
+  "alignment_controls": [
+    {
+      "header": "int api(int *p __attribute__((align_value(32))));\n",
+      "provider": "#include \"api.h\"\nint api(int *p __attribute__((align_value(32)))){return p[0];}\n",
+      "proof_entry": "#include \"api.h\"\nint entry(int n){int a[1]={n};return api(a);}\n",
+      "native_harness": "#include \"api.h\"\n_Alignas(32) int data[9]={0};int main(void){return api(data+1);}\n",
+      "source_interface_refused": true,
+      "source_report": {
+        "schema_version": 1,
+        "status": "UNKNOWN",
+        "frontend": "clang_proof",
+        "c_overflow_verified": false,
+        "memory_safety_verified": false,
+        "termination_proved": false,
+        "reason": "Clang parameter attributes/entry expressions unsupported"
+      },
+      "native_traps": 2,
+      "observations": [
+        {
+          "command": [
+            "/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang",
+            "-std=c11",
+            "-O0",
+            "-fsanitize=undefined",
+            "-fsanitize-trap=all",
+            "/tmp/llmloop-snapshot-native-8w_5oek2/alignment_control/provider.c",
+            "/tmp/llmloop-snapshot-native-8w_5oek2/alignment_control/harness.c",
+            "-o",
+            "/tmp/llmloop-snapshot-native-8w_5oek2/alignment_control/alignment"
+          ],
+          "exit_code": -4,
+          "stdout": "",
+          "stderr": ""
+        },
+        {
+          "command": [
+            "/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang",
+            "-std=c11",
+            "-O2",
+            "-fsanitize=undefined",
+            "-fsanitize-trap=all",
+            "/tmp/llmloop-snapshot-native-8w_5oek2/alignment_control/provider.c",
+            "/tmp/llmloop-snapshot-native-8w_5oek2/alignment_control/harness.c",
+            "-o",
+            "/tmp/llmloop-snapshot-native-8w_5oek2/alignment_control/alignment"
+          ],
+          "exit_code": -4,
+          "stdout": "",
+          "stderr": ""
+        }
+      ],
+      "scope": "native harness passes an explicitly misaligned argument at the refused interface; no normalized execution or positive proof correspondence claimed"
+    },
+    {
+      "header": "typedef int *Ptr __attribute__((align_value(32)));int api(Ptr);\n",
+      "provider": "#include \"api.h\"\nint api(Ptr p){return p[0];}\n",
+      "proof_entry": "#include \"api.h\"\nint entry(int n){int a[1]={n};return api(a);}\n",
+      "native_harness": "#include \"api.h\"\n_Alignas(32) int data[9]={0};int main(void){return api(data+1);}\n",
+      "source_interface_refused": true,
+      "source_report": {
+        "schema_version": 1,
+        "status": "UNKNOWN",
+        "frontend": "clang_proof",
+        "c_overflow_verified": false,
+        "memory_safety_verified": false,
+        "termination_proved": false,
+        "reason": "Attributed Clang typedefs unsupported in selected declarations/body"
+      },
+      "native_traps": 2,
+      "observations": [
+        {
+          "command": [
+            "/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang",
+            "-std=c11",
+            "-O0",
+            "-fsanitize=undefined",
+            "-fsanitize-trap=all",
+            "/tmp/llmloop-snapshot-native-8w_5oek2/typedef_alignment_control/provider.c",
+            "/tmp/llmloop-snapshot-native-8w_5oek2/typedef_alignment_control/harness.c",
+            "-o",
+            "/tmp/llmloop-snapshot-native-8w_5oek2/typedef_alignment_control/alignment"
+          ],
+          "exit_code": -4,
+          "stdout": "",
+          "stderr": ""
+        },
+        {
+          "command": [
+            "/workspace/scratch/26b59f7180c2/runtime-v050/bin/clang",
+            "-std=c11",
+            "-O2",
+            "-fsanitize=undefined",
+            "-fsanitize-trap=all",
+            "/tmp/llmloop-snapshot-native-8w_5oek2/typedef_alignment_control/provider.c",
+            "/tmp/llmloop-snapshot-native-8w_5oek2/typedef_alignment_control/harness.c",
+            "-o",
+            "/tmp/llmloop-snapshot-native-8w_5oek2/typedef_alignment_control/alignment"
+          ],
+          "exit_code": -4,
+          "stdout": "",
+          "stderr": ""
+        }
+      ],
+      "scope": "native harness passes an explicitly misaligned argument at the refused interface; no normalized execution or positive proof correspondence claimed"
+    }
+  ],
+  "scope": "native LP64 observations and independent finite arithmetic/allocation oracles supplement bounded source obligations; no general preprocessing/compiler equivalence theorem"
+}

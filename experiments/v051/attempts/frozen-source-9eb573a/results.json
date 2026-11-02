@@ -1,0 +1,136 @@
+{
+  "passed": false,
+  "checks": {
+    "full_pytest": false,
+    "static_array_native": true,
+    "array_native": true,
+    "snapshot_native": true,
+    "retained_record_native": true,
+    "array_cli": true,
+    "frozen_source_unchanged": true,
+    "prior_evidence_unchanged": true
+  },
+  "tested_commit": "9eb573a995caaf4a4d569d5ea50ef4014e2e0270",
+  "tested_tree": "752dfcef49c13bdde7b8e3e6706e518b231731a6",
+  "published_source_commit": "9eb573a995caaf4a4d569d5ea50ef4014e2e0270",
+  "source_tree_equal": true,
+  "environment": {
+    "python": "3.12.14",
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.39",
+    "pytest": "9.1.1",
+    "sympy": "1.14.0",
+    "pycparser": "3.12",
+    "z3": "5.3.3",
+    "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+    "native_compiler": "cc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0"
+  },
+  "full_pytest": {
+    "passed": 2432,
+    "skipped": 0,
+    "expected": 2436
+  },
+  "new_tests": 75,
+  "existing_parameterized_test_functions_updated": 1,
+  "existing_cases_deleted": 0,
+  "commands": {
+    "full_pytest": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--forked"
+      ],
+      "exit_code": 1,
+      "elapsed_seconds": 777.498,
+      "log": "pytest.txt"
+    },
+    "static_arrays": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_clang_static_arrays_native.py",
+        "--output",
+        "experiments/v051/static_arrays.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 21.821,
+      "log": "static_arrays.txt"
+    },
+    "arrays": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_clang_arrays_native.py",
+        "--output",
+        "experiments/v051/arrays.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 19.52,
+      "log": "arrays.txt"
+    },
+    "snapshots": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_clang_snapshots_native.py",
+        "--output",
+        "experiments/v051/snapshots.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 11.416,
+      "log": "snapshots.txt"
+    },
+    "linked_records": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_clang_linked_records_native.py",
+        "--output",
+        "experiments/v051/linked_records.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 15.89,
+      "log": "linked_records.txt"
+    },
+    "array_cli": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-m",
+        "llmloop.symbolic_cli",
+        "examples/clang_static_arrays/entry.c",
+        "--c-clang-proof",
+        "--function",
+        "entry",
+        "--clang-config",
+        "{\"preprocess\": true, \"compilation_database\": \"examples/clang_static_arrays\", \"linked_sources\": [\"examples/clang_static_arrays/worker.c\"]}",
+        "--clang-proof-config",
+        "{\"backend\":\"calls\"}",
+        "--parameter-bounds",
+        "{\"n\":[0,10]}",
+        "--inputs",
+        "{\"n\":3}"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.867,
+      "log": "static_cli.json"
+    }
+  },
+  "source_path_count": 406,
+  "historical_evidence_path_count": 524,
+  "github_actions_used": false,
+  "ci_runs_used": 0,
+  "klee_used": false,
+  "complete_c_support": false,
+  "proof_query_budget_increased": false,
+  "evidence_sha256": {
+    "arrays.json": "ca388c799e1868e0b37d1a5f1ecade46b4045da016d69365525b451032b42d23",
+    "arrays.txt": "a8a88fd6797bf2a84e5b07d77341bb82c41ddfc103acba49944b7b4a80db2729",
+    "linked_records.json": "68e48db975715e835565131ab684855cf02968da91ada56910bab1d424eb934a",
+    "linked_records.txt": "ef9684726251a19b306337f587ebdde6566e6a879ae3193bb3dd65ba01eda4ad",
+    "pytest.txt": "a301956e1c4b43a7ed52d0e68ada7539ce025b15a5313f5f51870f3563799de9",
+    "report.md": "ca2491848fd5f8851ff746800b168245354b6d1dd2c88c31f8b1c2e10974f0d6",
+    "snapshots.json": "7e821a568cc2ac3299420ac553666441dcaaf43a9b72b01950a578227c580f37",
+    "snapshots.txt": "6d1c076b608f186f23cb74c51aa7df5baad0b8fe4ac52b895462ca14c1f4b441",
+    "source_manifest.json": "3b93ae00a5b2e04e920654783c4a7f258652cad204c647e9d8798ed2eeef95cc",
+    "static_arrays.json": "81d4b6e3b579e4affcf723478af4e0590ddb58ad857ca48dd9328c9c9efe5c00",
+    "static_arrays.txt": "2c3e73dfb5e4ef2beb5601b6b2415d27d70e41a24cdb7ef6414831165e8107bc",
+    "static_cli.json": "f6e300cce666e60cf4316d07c6140ac577ca07abaa023fdff733ea57a41bb5c6"
+  }
+}

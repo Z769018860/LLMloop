@@ -23,7 +23,7 @@ def checked_pointer_parameter(parameter, raw, resolved, canonical_type,allow_sta
     if match:
         element=match[1].strip();static=match[2] is not None;bound=match[3]
         if static and (not allow_static or bound not in tuple('12345678')):
-            raise SMTGraphError('Clang static array contracts require calls backend and literal minimum 1..8')
+            raise SMTGraphError('Clang pointer parameters require literal pointer or ordinary array declarators; static array contracts require calls backend and literal minimum 1..8')
         adjusted=canonical_type(element+(' *' if bound is not None else ''))
         if adjusted==resolved:
             if bound is None:return None

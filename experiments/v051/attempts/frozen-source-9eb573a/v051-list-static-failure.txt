@@ -1,0 +1,16 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____ test_clang_adjusted_array_parameter_is_not_treated_as_literal_pointer _____
+
+    def test_clang_adjusted_array_parameter_is_not_treated_as_literal_pointer():
+        source='typedef __SIZE_TYPE__ Size;void*calloc(Size,Size);void free(void*);'+program().replace('struct Node*q,int d','struct Node q[static 1],int d')
+        result=analyze_request({'source':source,'function':'entry','frontend':'clang_proof','proof':{'backend':'list_calls'}})
+>       assert result['status']=='UNKNOWN' and 'literal pointer' in result['reason']
+E       AssertionError: assert ('UNKNOWN' == 'UNKNOWN'
+E         
+E           UNKNOWN and 'literal pointer' in 'Clang static array contracts require calls backend and literal minimum 1..8')
+
+tests/test_list_call_arguments.py:197: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_list_call_arguments.py::test_clang_adjusted_array_parameter_is_not_treated_as_literal_pointer
+1 failed in 0.58s

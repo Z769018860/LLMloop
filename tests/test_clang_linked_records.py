@@ -187,7 +187,10 @@ def test_undefined_or_incomplete_cross_unit_heap_execution_is_not_certified(tmp_
 def test_record_pointer_parameters_keep_original_array_declaration_checks(tmp_path,clang):
     helper=NODE+'int api(struct Node p[static 5]){return p->value;}'
     main=ALLOC+NODE+'int api(struct Node *);int entry(int n){struct Node *p=calloc(1,sizeof(struct Node));if(!p)return -1;p->value=n;int x=api(p);free(p);return x;}'
-    unknown(check(tmp_path,clang,main,helper),'literal')
+    r=check(tmp_path,clang,main,helper)
+    unknown(r)
+    assert r['failed_obligation'].startswith('static array minimum extent:')
+    assert r['call_model']['static_array_contracts']=={'api':{0:5}}
 
 
 def test_bv_backend_does_not_acquire_record_memory_semantics(tmp_path,clang):

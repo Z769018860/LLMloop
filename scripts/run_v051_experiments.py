@@ -82,7 +82,7 @@ def main():
     ci_runs=int(os.environ.get('GITHUB_RUN_ATTEMPT','1')) if github_actions else 0
     result={'passed':all(checks.values()),'checks':checks,'tested_commit':tested,'tested_tree':tree,
         'published_source_commit':published,'source_tree_equal':True,'environment':environment,
-        'full_pytest':full,'new_tests':75,'existing_parameterized_test_functions_updated':1,'existing_cases_deleted':0,'commands':commands,
+        'full_pytest':full,'new_tests':75,'existing_parameterized_test_functions_updated':2,'existing_nonparameterized_test_functions_updated':1,'existing_cases_deleted':0,'commands':commands,
         'source_path_count':len(paths),'historical_evidence_path_count':len(prior),
         'github_actions_used':github_actions,'ci_runs_used':ci_runs,'klee_used':False,
         'complete_c_support':False,'proof_query_budget_increased':False}
@@ -111,7 +111,9 @@ have additional 4096-query/16-MiB caps.
 Full regression: **{full['passed']} passed**, **{skipped} skipped**, 75 new cases.
 One existing six-case declaration test advances valid static-one to proof and
 checks insufficient static-three as a capacity violation; three VLA rows stay
-refused. No existing case is deleted. Coverage includes three ABIs, unused and
+refused. Two further linked-declaration/record test functions retain all
+three short-object rows and now assert a minimum-extent failure instead of
+an unsupported-declarator message. No existing case is deleted. Coverage includes three ABIs, unused and
 uninitialized capacity, aliasing, pointer cells, declaration chains, private
 names, recursion, allocation failure, expired pointers and independent replay.
 
@@ -150,7 +152,11 @@ The header/compilation-database CLI example fills an uninitialized three-cell
 object and returns 12 for n=3. All {len(paths)} source paths and {len(prior)}
 historical evidence paths are hash checked. Pre-freeze development records are
 retained under `attempts/prevalidation/`, not relabeled as release acceptance.
-Older full LLVM matrices remain historical. CI runs: {ci_runs}; no KLEE or
+The first frozen run is retained under `attempts/frozen-source-9eb573a/`:
+three old message assertions failed while their programs were correctly
+rejected for insufficient capacity, and one unsupported-list-backend diagnostic
+lost its previous literal-pointer wording. The capacity assertions, diagnostic
+wording and validation reporting were corrected before this final run. Older full LLVM matrices remain historical. CI runs: {ci_runs}; no KLEE or
 larger query budgets. General VLA/ownership/heap contracts, arbitrary recurrences
 and complete C/LLVM remain open. Clang, normalization and typed kernels remain
 trusted; native samples are supplementary and no compiler equivalence theorem
