@@ -19,24 +19,34 @@ BIT_BUILTINS = {
 
 
 def bit_count_helper(name, operation, ctype, width):
-    """Balanced sums keep the existing expression/AST depth limits unchanged."""
+    """Balanced literal decision trees avoid arithmetic count-sum circuits.
+
+    Sixteen-leaf blocks preserve the existing per-expression AST budget. All
+    blocks are pure and defined; a coarse tree selects the actual bit bucket.
+    An explicit division guard retains undefined zero-input behavior.
+    """
     if operation not in ('clz', 'ctz') or width not in (32, 64) or ctype not in ('unsigned int', 'unsigned long', 'unsigned long long'):
         raise SMTGraphError('Unsupported bit-count helper contract')
     if not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', name):
         raise SMTGraphError('Invalid bit-count helper identifier')
     suffix = {'unsigned int': 'U', 'unsigned long': 'UL', 'unsigned long long': 'ULL'}[ctype]
-    # For nonzero x: clz counts thresholds above x, ctz counts zero low prefixes.
-    terms = ['(x < ' + str(1 << bit) + suffix + ')' for bit in range(1, width)] if operation == 'clz' else [
-        '((x % ' + str(1 << bit) + suffix + ') == 0)' for bit in range(1, width)]
-    def balanced(values):
-        while len(values) > 1:
-            values = ['(' + values[i] + ' + ' + values[i + 1] + ')' if i + 1 < len(values) else values[i] for i in range(0, len(values), 2)]
-        return values[0]
-    # Separate small expressions also respect the typed kernel's 256-node limit.
-    parts = [terms[i:i + 16] for i in range(0, len(terms), 16)]
-    declarations = ' '.join('int count' + str(i) + ' = ' + balanced(part) + ';' for i, part in enumerate(parts))
-    result = balanced(['count' + str(i) for i in range(len(parts))])
-    return 'int ' + name + '(' + ctype + ' x) { ' + declarations + ' return ' + result + ' / (x != 0); }\n'
+    def choose(boundary, low, high):
+        constant = str(1 << boundary) + suffix
+        if operation == 'clz':
+            return '(x < ' + constant + ' ? ' + low + ' : ' + high + ')'
+        return '(x % ' + constant + ' == 0 ? ' + high + ' : ' + low + ')'
+    def bucket(lo, hi):
+        if lo == hi:return str(width - 1 - lo if operation == 'clz' else lo)
+        mid = (lo + hi) // 2
+        return choose(mid + 1, bucket(lo, mid), bucket(mid + 1, hi))
+    blocks = width // 16
+    declarations = ' '.join('int count' + str(i) + ' = ' + bucket(16*i, 16*i+15) + ';' for i in range(blocks))
+    def selected(lo, hi):
+        if lo == hi:return 'count' + str(lo)
+        mid = (lo + hi) // 2
+        return choose(16*(mid+1), selected(lo, mid), selected(mid+1, hi))
+    return 'int ' + name + '(' + ctype + ' x) { ' + declarations + ' return ' + selected(0, blocks-1) + ' / (x != 0); }\n'
+
 
 
 class BitBuiltinModels:
@@ -94,5 +104,6 @@ class BitBuiltinModels:
                                  'partial_names': [bindings['count' + str(i)] for i in range((width - 2) // 16 + 1)], 'source': source,
                                  'source_sha256': hashlib.sha256(source.encode()).hexdigest(),
                                  'zero_input': 'undefined; explicit division guard retained',
+                                 'lowering': 'balanced literal decision trees in sixteen-leaf blocks',
                                  'semantics': 'typed scalar helper body, not an external assumption'}
         return self.models[name]

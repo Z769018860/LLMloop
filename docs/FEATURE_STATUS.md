@@ -124,3 +124,6 @@ semantics are still open.
 See [cross-unit named records](CLANG_LINKED_RECORDS.md) for ordered canonical
 member-graph compatibility and per-unit compiler/model layout checks. This
 extends finite record calls without changing heap, call or execution budgets.
+
+See [literal bit-count models](BIT_COUNT_DECISION_MODELS.md) for full-word
+old/new model equivalence, source-definedness and independent native/spec checks.

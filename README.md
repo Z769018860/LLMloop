@@ -943,3 +943,8 @@ source files. Aliases, lifetimes and allocation failures retain the existing
 bounded proof obligations. See the [contract and three-file example](docs/CLANG_LINKED_RECORDS.md)
 and [experiment report](experiments/v048/report.md). General heaps, external
 contracts and complete C/LLVM support remain open.
+
+The same release uses [equivalent literal decision trees for bit counts](docs/BIT_COUNT_DECISION_MODELS.md),
+with replayed all-word equivalence to prior helper bodies, separate source
+safety and unchanged proof budgets. Earlier unsuccessful validation attempts
+are retained in the experiment archive.

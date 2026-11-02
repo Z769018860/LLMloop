@@ -223,3 +223,19 @@ def test_builtin_cli_explicit_bv_source_strategy_keeps_full_domain_and_zero_cont
     assert row['zero_control']['status']=='UNKNOWN' and row['zero_control']['counterexample']['x']==0
     assert row['functional']['status']=='PROVED_FUNCTIONAL_QF_BV' and row['functional']['replay_result']=='unsat'
     assert result['native_comparisons']==1024 and result['expected_zero_ubsan_failures']==4
+
+
+@pytest.mark.parametrize('name',list(BIT_BUILTINS))
+@pytest.mark.parametrize('target,abi',[('x86_64-unknown-linux-gnu','LP64'),('i386-unknown-linux-gnu','ILP32'),('x86_64-w64-windows-gnu','LLP64')])
+def test_decision_model_preserves_legacy_value_and_definedness_for_every_nonzero_word(name,target,abi):
+    import json
+    from llmloop.llvm_benchmarks import ROOT
+    from scripts.check_clang_bit_builtins import legacy_equivalence
+    old_row=next(row for row in json.loads((ROOT/'experiments/v047/bit_builtins.json').read_text())['cases'] if row['builtin']==name and row['target']==target)
+    legacy,=old_row['source_safety']['normalization']['bit_builtin_models']
+    operation,ctype=BIT_BUILTINS[name]
+    source=bit_count_helper(legacy['helper'],operation,ctype,legacy['width'])
+    model={**legacy,'source':source,'argument_name':'x','source_sha256':hashlib.sha256(source.encode()).hexdigest()}
+    query=legacy_equivalence(model,abi,legacy)
+    assert query['status']=='PROVED_EQUIVALENT_DEFINED_NONZERO' and query['replay_result']=='unsat',query
+    assert query['legacy_source_sha256']==legacy['source_sha256'] and query['new_source_sha256']==model['source_sha256']

@@ -110,3 +110,7 @@ allocation-failure and complete-exit obligations. General layouts, unions, opaqu
 records, header pointer declarations and arbitrary shape/ownership contracts
 remain open. See [the exact contract](CLANG_LINKED_RECORDS.md) and
 [latest evidence](../experiments/v048/report.md).
+
+The [decision-tree bit-count lowering](BIT_COUNT_DECISION_MODELS.md) preserves
+prior helper semantics with replayed full-word equivalence and source proofs.
+It improves this modeled representation without adding general C/LLVM coverage.

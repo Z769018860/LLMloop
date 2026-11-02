@@ -34,7 +34,7 @@ coincide. Typedefs resolve in each unit's own context. Different tag names are
 not unified by shape. Conflicting used private same-tag definitions are rejected
 conservatively rather than renamed or merged.
 
-Definitions have one to eight unique unqualified integer/data-pointer members;
+Definitions have one to eight unique unqualified integer or integer/named-struct-pointer members;
 at most eight reachable tags are admitted. Pointer depth is at most three.
 By-value/embedded records, record/field arrays, flexible arrays, unions,
 bitfields, function pointers, opaque incomplete records and packed/attributed
@@ -87,11 +87,13 @@ See [v0.48 evidence](../experiments/v048/report.md) and
 unbounded ownership composition, globals, external libraries, cross-unit unions,
 byte memory and complete C/LLVM semantics remain open. KLEE is not used.
 
-The v0.48 validation also exposes `--source-backend calls|bv_calls` in the
-bit-builtin experiment. Its default remains calls; this release explicitly
-selects bv_calls before all eighteen workers. A prior full regression passed,
-but the default calls LP64 ctzll source-definedness query timed out; that failed
-validation is retained in the experiment archive. The BV run checks the same
-source/helper hashes and full nonzero domains, keeps zero-input counterexamples,
-and retains independent functional/native controls. No query timeout is raised
+The bit-builtin experiment exposes `--source-backend calls|bv_calls`; the
+default remains calls. Final validation runs both as separate predetermined
+strategies. Earlier additive helpers produced an integer-source timeout and a
+subsequent division CFG-reachability timeout; both attempts are archived.
+[Literal decision-tree helpers](BIT_COUNT_DECISION_MODELS.md) now carry replayed
+all-word value/definedness equivalence to the immutable v0.47 bodies, along with
+independent priority-reference/native checks. Original builtin/vendor source and
+input domains are unchanged; normalized helper hashes intentionally change.
+No proof-query timeout, functional budget, step/path or call limit is raised,
 and no automatic fallback/retry is added.

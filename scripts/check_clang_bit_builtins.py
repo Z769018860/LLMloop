@@ -48,6 +48,38 @@ def functional(model, abi, source=None):
     return result
 
 
+def legacy_equivalence(model, abi, legacy):
+    """A separate QF_BV claim proves value and C-definedness equivalence."""
+    old=TypedCFunction(legacy['source'],function=legacy['helper'],abi=abi,max_unroll=0)
+    new=TypedCFunction(model['source'],function=model['helper'],abi=abi,max_unroll=0)
+    old_word=old.parameter_env[legacy['argument_name']].value
+    word=new.parameter_env[model['argument_name']].value
+    if old_word.size()!=word.size():raise AssertionError('Legacy/model word width mismatch')
+    safety={}
+    for label,body in (('legacy',legacy),('new',model)):
+        checked=analyze_request({'source':body['source'],'function':body['helper'],'frontend':'typed_bv_cfg','abi':abi,
+                                 'parameter_bounds':{body['argument_name']:[1,None]}})
+        if checked['status']!='PROVED_DEFINED_TYPED_C_BV_CFG':raise AssertionError(checked)
+        queries=checked['certificate']['queries']
+        for query in queries:
+            solver=z3.SolverFor('QF_BV');solver.set(timeout=5000);solver.from_string(query['smt2'])
+            if str(solver.check())!=query['result'] or query['result'] not in ('sat','unsat'):raise AssertionError(query)
+        safety[label]={k:checked[k] for k in ('status','abi','source_sha256','domain_smt2','parameter_symbols','certificate','c_overflow_verified','termination_proved')}
+        safety[label]['all_queries_replayed']=True
+    old_value=z3.substitute(old.engine.expression.value,(old_word,word))
+    roots=[word!=0,old_value!=new.engine.expression.value]
+    qfbv_terms(roots)
+    solver=z3.SolverFor('QF_BV');solver.set(timeout=5000);solver.add(*roots)
+    started=time.monotonic();answer=solver.check()
+    result={'status':'PROVED_EQUIVALENT_DEFINED_NONZERO' if answer==z3.unsat else 'UNKNOWN' if answer==z3.unknown else 'REFUTED',
+            'logic':'QF_BV','timeout_ms':5000,'elapsed_seconds':round(time.monotonic()-started,6),
+            'refutation_smt2':solver.to_smt2(),'source_definedness':safety,'legacy_source':legacy['source'],
+            'legacy_source_sha256':hashlib.sha256(legacy['source'].encode()).hexdigest(),
+            'new_source_sha256':model['source_sha256'],'claim':'both C helper bodies defined and equal on every nonzero input word; zero is excluded and separately refuted'}
+    replay=z3.SolverFor('QF_BV');replay.set(timeout=5000);replay.from_string(result['refutation_smt2']);result['replay_result']=str(replay.check())
+    return result
+
+
 def worker(name, target, source_backend='calls'):
     if source_backend not in ('calls','bv_calls'): raise ValueError('Unsupported source backend')
     unused, ctype = BIT_BUILTINS[name]
@@ -58,6 +90,14 @@ def worker(name, target, source_backend='calls'):
     expected_status = {'calls':'PROVED_DEFINED_CLANG_CFG_CALLS','bv_calls':'PROVED_DEFINED_CLANG_BV_CALLS'}[source_backend]
     if report['status'] != expected_status: raise AssertionError(report)
     model, = report['normalization']['bit_builtin_models']
+    baseline_path=ROOT/'experiments/v047/bit_builtins.json'
+    baseline=json.loads(baseline_path.read_text())
+    old_row=next(row for row in baseline['cases'] if row['builtin']==name and row['target']==target)
+    legacy,=old_row['source_safety']['normalization']['bit_builtin_models']
+    equivalence=legacy_equivalence(model,TARGETS[target],legacy)
+    equivalence['baseline_path']=str(baseline_path.relative_to(ROOT))
+    equivalence['baseline_sha256']=hashlib.sha256(baseline_path.read_bytes()).hexdigest()
+    if equivalence['status']!='PROVED_EQUIVALENT_DEFINED_NONZERO' or equivalence['replay_result']!='unsat':raise AssertionError(equivalence)
     query = functional(model, TARGETS[target])
     if query['status'] != 'PROVED_FUNCTIONAL_QF_BV' or query['replay_result'] != 'unsat': raise AssertionError(query)
     zero_request = {**request, 'proof': {'backend': source_backend, 'parameter_bounds': {'x': [0, 0]}}}
@@ -67,7 +107,7 @@ def worker(name, target, source_backend='calls'):
     front = report['clang_frontend']
     compact = lambda value: {k: v for k, v in value.items() if k != 'clang_frontend'}
     return {'builtin': name, 'target': target, 'abi': TARGETS[target], 'request': request, 'source_safety': compact(report),
-            'source_safety_elapsed_seconds': elapsed, 'zero_control': compact(zero), 'functional': query,
+            'source_safety_elapsed_seconds': elapsed, 'legacy_model_equivalence':equivalence, 'zero_control': compact(zero), 'functional': query,
             'compiler': {k: front[k] for k in ('status', 'compiler', 'source', 'target', 'effective_flags')},
             'source_sha256': hashlib.sha256(source.encode()).hexdigest(), 'source': source}
 
@@ -138,7 +178,7 @@ def main(argv=None):
                     mutant = functional(model, row['abi'], mutant_source)
                     if mutant['status'] != 'REFUTED' or mutant['replay_result'] != 'sat' or mutant['actual'] == mutant['expected']: raise AssertionError(mutant)
                     row['wrong_count_control'] = mutant
-    result = {'source_proved_cases': len(rows), 'functional_proved_cases': len(rows), 'zero_source_refutations': len(rows),
+    result = {'legacy_model_equivalence_proofs':len(rows),'legacy_model_equivalence_replays':len(rows), 'source_proved_cases': len(rows), 'functional_proved_cases': len(rows), 'zero_source_refutations': len(rows),
               'source_analysis_process_isolation': True, 'source_analysis_retries': 0, 'source_analysis_backend': args.source_backend,
               'source_analysis_strategy':'explicit fixed backend selected before workers; no automatic fallback',
               'native_comparisons': sum(run['comparisons'] for row in rows for run in row.get('native', [])),
