@@ -1,0 +1,193 @@
+{
+  "passed": true,
+  "checks": {
+    "pytest": true,
+    "vla_native": true,
+    "static_native": true,
+    "array_native": true,
+    "vla_cli": true,
+    "full_test_count": true,
+    "vla_native_result": true,
+    "static_native_result": true,
+    "array_native_result": true,
+    "vla_cli_result": true,
+    "historical_evidence_unchanged": true,
+    "frozen_regression_source_verified_before_runner_fix": true,
+    "proof_engine_tests_examples_unchanged": true
+  },
+  "full_pytest": {
+    "passed": 2482,
+    "skipped": 0,
+    "expected": 2482
+  },
+  "new_tests": 46,
+  "tested_commit": "83ada05690f2d4b982bb4acb8b3b1d12689e9e73",
+  "tested_tree": "60c7a08900db7a9a2753108f8ec8670ca082f240",
+  "commands": {
+    "pytest": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--forked"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1400.8661756820002,
+      "log": "pytest.txt"
+    },
+    "vla_native": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_bounded_vla_native.py",
+        "--output",
+        "experiments/v053/vla_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 39.18059549099962,
+      "log": "vla_native.txt"
+    },
+    "static_native": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_clang_static_arrays_native.py",
+        "--output",
+        "experiments/v053/static_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 31.51265666600011,
+      "log": "static_native.txt"
+    },
+    "array_native": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_clang_arrays_native.py",
+        "--output",
+        "experiments/v053/array_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 24.083777961000123,
+      "log": "array_native.txt"
+    },
+    "vla_cli": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-m",
+        "llmloop.symbolic_cli",
+        "examples/clang_bounded_vla.c",
+        "--c-clang-proof",
+        "--function",
+        "entry",
+        "--clang-proof-config",
+        "{\"backend\":\"calls\",\"max_steps\":256}",
+        "--parameter-bounds",
+        "{\"n\":[-2,10]}",
+        "--inputs",
+        "{\"n\":3}"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 2.9949559549995683,
+      "log": "vla_cli.txt",
+      "json": "vla_cli.json"
+    }
+  },
+  "environment": {
+    "python": "3.12.14",
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.39",
+    "pytest": "9.1.1",
+    "pycparser": "3.12",
+    "sympy": "1.14.0",
+    "z3": "5.3.3",
+    "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+    "gcc": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0"
+  },
+  "source_paths": 415,
+  "historical_evidence_paths": 564,
+  "github_actions_used": false,
+  "ci_runs_used": 0,
+  "klee_used": false,
+  "query_budgets_increased": false,
+  "complete_vla_support": false,
+  "complete_c_support": false,
+  "evidence_sha256": {
+    "raw_evidence.tar.gz": "84cfe7df0da6beb66888bfbf52360561a1d3999d00d0c5f631a5a4112a1dd798",
+    "report.md": "b1ddea9b125d9ba2271cbcdebdfeb96174d226a26a1ca83ee9df7376823264d2",
+    "source_publication.json": "4abcc3a3c847a66b2ec0f66052e75fabf6ff2ef64e58e694d62ff2e48dbd5942",
+    "vla_cases.csv": "fe3dd0144ffd085ef615cb2a3e4fc8fe03405c921d2bb9f7041e32a932776df2"
+  },
+  "runner_output_fix": {
+    "initial_cli_command_passed": true,
+    "initial_acceptance_failure": "CLI wrote vla_cli.txt but acceptance read vla_cli.json",
+    "preserved_attempt": "attempts/cli_output_filename",
+    "changed_paths": [
+      "scripts/run_v053_experiments.py"
+    ],
+    "post_regression_local_commit": "9232348f165de8d90be2393f5491366f00058288",
+    "post_regression_github_commit": "9aae12781ea4455e2acb94a3617632867115f0b6",
+    "post_regression_tree": "cd36000bab1efd2ea79b2d3e0148751be2ebd392",
+    "cli_attempts": 2,
+    "full_pytest_attempts": 1,
+    "proof_engine_changed": false,
+    "query_budgets_increased": false,
+    "same_normalized_cli_source": true
+  },
+  "experiment_summary": {
+    "vla_native": {
+      "case_count": 8,
+      "native_output_matches": 768,
+      "independent_model_matches": 64,
+      "expected_ubsan_traps": 36,
+      "expected_memory_failures": 6,
+      "query_replays": {
+        "unsat": 25,
+        "sat": 3
+      },
+      "capacity_frontiers": 1,
+      "native_valid_frontier_runs": 4
+    },
+    "retained_static_native_matches": 1848,
+    "retained_array_native_matches": 1632,
+    "full_pytest_passed": 2482,
+    "skipped": 0,
+    "new_tests": 46,
+    "cli_value": 15
+  },
+  "command_source_checkpoints": {
+    "pytest": "ba9537c48d8185321ed2067f1f30923d3b0113b7",
+    "vla_native": "ba9537c48d8185321ed2067f1f30923d3b0113b7",
+    "static_native": "ba9537c48d8185321ed2067f1f30923d3b0113b7",
+    "array_native": "ba9537c48d8185321ed2067f1f30923d3b0113b7",
+    "vla_cli": "9aae12781ea4455e2acb94a3617632867115f0b6"
+  },
+  "published_full_regression_source_commit": "ba9537c48d8185321ed2067f1f30923d3b0113b7",
+  "published_runner_fix_commit": "9aae12781ea4455e2acb94a3617632867115f0b6",
+  "raw_archive": {
+    "path": "raw_evidence.tar.gz",
+    "sha256": "84cfe7df0da6beb66888bfbf52360561a1d3999d00d0c5f631a5a4112a1dd798",
+    "members_sha256": {
+      "array_native.json": "d975059915c38faa74e00844f02bceab0fe9e49bbcc309f8ea46dc4fd36afe57",
+      "array_native.txt": "a8a88fd6797bf2a84e5b07d77341bb82c41ddfc103acba49944b7b4a80db2729",
+      "attempts/cli_output_filename/initial_commands.json": "b0809639738803527d582a7ff943465d8f3c5c860199bcdbec2bd3312d624c8e",
+      "attempts/cli_output_filename/initial_report.md": "8337b83e949e3e7459343cb5c6c892e21cae96662e48933204e118daaa7cd851",
+      "attempts/cli_output_filename/initial_results.json": "3f4e9ae337ce92787d4cd2790fd39617f02513b0a376e3faed077159f9374794",
+      "attempts/cli_output_filename/initial_vla_cli.txt": "739caa1f76ef5a645d9b894d62737e73cfd4a81b68c0f24d5560fa072c6db8f9",
+      "attempts/prevalidation/v053-focused-1.txt": "ad012c19545362f81fd1e7e19efbfa8d63b5bd9c4cdb8547235a6e00bb9e2c87",
+      "attempts/prevalidation/v053-focused-2.txt": "c0962296dfb40e541eaa763804279f291b706b0a363ae754ce6182d7dfef5a39",
+      "attempts/prevalidation/v053-focused-final.txt": "4d1219a57789e8271352fd650ff73bb6a51781e8fe63b63e3498ccc577d5ab1e",
+      "attempts/prevalidation/v053-native-1.txt": "3bd85cf5eab94e8ea9d7d1afca40be117775dbcdbb36c2355718fa2c3407dc49",
+      "attempts/prevalidation/v053-native-2.json": "d455fa11f56c79ae59caf59848e7afab063e6cc63e9a81073d5831a794a65a4e",
+      "attempts/prevalidation/v053-native-2.txt": "a0c8549b1a842d087805bd74b289b2e23c25e8a98ad48ec6528d4328d7d26e80",
+      "attempts/prevalidation/v053-recursive.txt": "c420fbcd629a020d82db5355a0430090ad57720c65b08d7983461589c3bab90d",
+      "commands.json": "c3ac30068cbca2ac5159fe645dc93e3dd39db1a5bdad4b4af74b84881549dee5",
+      "pytest.txt": "3255a3b815d8d95a743354fe3fb02021709e87fae7a6d6dfd018c98cbd755f51",
+      "source_manifest.json": "25358b647fa515c9eb106118e50c271466bf0cd28c47727647cd0d3a5b2e4c4d",
+      "static_native.json": "6b65346ba30a25ef43ca7edbc748e90ecc3bc594733c5458a0440a587b7a661b",
+      "static_native.txt": "2c3e73dfb5e4ef2beb5601b6b2415d27d70e41a24cdb7ef6414831165e8107bc",
+      "vla_cli.json": "3d6c01a23fecdc18eb99a8a9c8cdacb69eaad5c9d4e8600f9daa98d10e3b5956",
+      "vla_cli.txt": "3d6c01a23fecdc18eb99a8a9c8cdacb69eaad5c9d4e8600f9daa98d10e3b5956",
+      "vla_native.json": "ae2417891fdab46309f039c1828f617ec945e02004226b3b7ed59c0246469e4b",
+      "vla_native.txt": "a0c8549b1a842d087805bd74b289b2e23c25e8a98ad48ec6528d4328d7d26e80"
+    },
+    "original_relative_paths_preserved": true
+  }
+}
