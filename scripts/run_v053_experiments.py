@@ -50,8 +50,9 @@ def main():
     full={'passed':int(counts[-1]) if counts else 0,'skipped':skipped,'expected':EXPECTED_TESTS}
     for name,script in [('vla_native','check_bounded_vla_native.py'),('static_native','check_clang_static_arrays_native.py'),('array_native','check_clang_arrays_native.py')]:
         run(name,[sys.executable,'scripts/'+script,'--output',str(out/(name+'.json'))],600)
-    run('vla_cli',[sys.executable,'-m','llmloop.symbolic_cli','examples/clang_bounded_vla.c','--c-clang-proof','--function','entry',
+    cli_text=run('vla_cli',[sys.executable,'-m','llmloop.symbolic_cli','examples/clang_bounded_vla.c','--c-clang-proof','--function','entry',
         '--clang-proof-config','{"backend":"calls","max_steps":256}','--parameter-bounds','{"n":[-2,10]}','--inputs','{"n":3}'],120)
+    (out/'vla_cli.json').write_text(cli_text)
     def data(name):
         path=out/(name+'.json');return json.loads(path.read_text()) if path.exists() else {}
     vla,static,array,cli=(data(name) for name in ('vla_native','static_native','array_native','vla_cli'))
