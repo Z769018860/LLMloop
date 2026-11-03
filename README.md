@@ -987,3 +987,12 @@ general ownership and complete C/LLVM remain open.
 The v0.51 audit also fixes erased runtime effects in unused variably modified
 typedefs: selected declarations such as `typedef int A[n++];` now return UNKNOWN
 instead of producing a scalar proof with the increment missing.
+
+## v0.52 experiment continuation
+
+The experiment-only continuation retains the v0.51 proof engine and adds an
+exhaustive finite-capacity entry-contract grid and a fresh-process same-source
+comparison of finite heaps versus owned-list induction. This is a comparison
+of different backend contracts, not a LoopSCC on/off ablation. See the
+[local runner](scripts/run_v052_experiments.py) and
+[results and explicit remaining limits](experiments/v052/report.md).
