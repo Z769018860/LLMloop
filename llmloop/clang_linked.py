@@ -83,7 +83,7 @@ class LinkedClangProject:
         except (SMTGraphError,OSError,ValueError,TypeError,KeyError) as exc:
             return {**failure,'reason':str(exc),'translation_units':self.units}
 
-    def normalize(self,function,static_array_contracts=False):
+    def normalize(self,function,static_array_contracts=False,bounded_vlas=False):
         from .clang_proof import nodes, check_parameter_attributes, check_typedef_attributes
         from .clang_memory_proof import MemoryNormalizer,BUILTINS
         from .clang_bit_builtins import BIT_BUILTINS,BitBuiltinModels
@@ -264,7 +264,7 @@ class LinkedClangProject:
             index=key[0];front=units[index]
             if index not in models_by_unit:
                 models=BitBuiltinModels(front,used);models.used=used;models.models=shared_models;models_by_unit[index]=models
-            normalizer=MemoryNormalizer({**front,'functions':[definitions[key]]},callable_names,models_by_unit[index],static_array_contracts)
+            normalizer=MemoryNormalizer({**front,'functions':[definitions[key]]},callable_names,models_by_unit[index],static_array_contracts,bounded_vlas)
             source=normalizer.source()
             if normalizer.union_views:
                 raise SMTGraphError('Linked union views are not yet admitted')

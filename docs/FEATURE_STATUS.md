@@ -1,4 +1,4 @@
-# Feature status after v0.51
+# Feature status after v0.53
 
 This inventory distinguishes certified capabilities from outstanding general
 requirements. The project remains a restricted research prototype.
@@ -19,7 +19,13 @@ particular exit condition terminates. `UNKNOWN` is an explicit unsupported or
 unproved result, not a valid summary.
 
 See [v0.14 recurrence and experiment contracts](GUARDED_RECURRENCES_AND_EXPERIMENTS.md)
-and the committed [latest experiment report](../experiments/v051/report.md).
+and the committed [latest experiment report](../experiments/v053/report.md).
+
+The [bounded local VLA contract](BOUNDED_LOCAL_VLA.md) adds direct function-body
+integer `T a[n]` declarations with a uniquely bound scalar parameter, proved
+positive extent within eight represented cells, saved `sizeof` and complete
+cell/lifetime checks. General VLA expressions, parameters, nested declaration
+contexts and layouts remain open.
 
 See [unroll-free typed scalar C contracts](TYPED_UNBOUNDED_RECURRENCES.md) for the new machine-integer certificate. It does not certify general heap memory.
 

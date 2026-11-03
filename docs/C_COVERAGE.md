@@ -61,13 +61,21 @@ analysis:
 - [Clang Static Analyzer](https://clang.llvm.org/docs/ClangStaticAnalyzer.html)
 
 See [feature inventory](FEATURE_STATUS.md),
+[bounded local VLA contract](BOUNDED_LOCAL_VLA.md),
 [list-call composition contract](INTERPROCEDURAL_LIST_HEAP.md) and
 [sequenced expression contract](SEQUENCED_CALL_EXPRESSIONS.md) and
 [owned-chain reversal contract](OWNED_LIST_REVERSAL.md) and
 [borrowed payload-map contract](OWNED_LIST_PAYLOAD_MAPS.md) and
 [eager list-call arguments](EAGER_LIST_ARGUMENTS.md) and
 [finite choices and upstream integer pilot](FINITE_CHOICES_AND_UPSTREAM_BENCHMARKS.md) and
-[latest experiment report](../experiments/v051/report.md).
+[latest experiment report](../experiments/v053/report.md).
+
+The [bounded local VLA bridge](BOUNDED_LOCAL_VLA.md) admits direct function-body
+integer arrays with one unambiguous scalar-parameter bound. Positivity and the
+eight-cell representation are proved at declaration; saved extents govern
+`sizeof` and accesses. This is a finite fragment, with general VLA expressions,
+parameters, nested declaration contexts and layouts still unsupported. See
+[v0.53 validation](../experiments/v053/report.md).
 
 [Stateful consumers](STATEFUL_LIST_CONSUMERS.md) admit nonzero initialized scalar
 states and sequential pure scalar updates within the same complete owned-chain

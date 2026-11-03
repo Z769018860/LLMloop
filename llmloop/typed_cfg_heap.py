@@ -15,6 +15,7 @@ from .symbolic_integers import TypedTerm
 from .memory_frontend import _lit
 from .smt_spath import SMTGraphError
 from .struct_heap import StructHeap,StructType
+from .bounded_vla import validate_bounded_vlas
 
 
 @dataclass
@@ -118,6 +119,7 @@ class TypedCFGHeap(TypedCMemory):
         if type(allocation_failure) is not bool:raise SMTGraphError('allocation_failure must be Boolean')
         self.records=StructHeap(self,source)
         self.max_steps=max_steps;self.allocation_failure=allocation_failure;self.pointer_types={};self.array_names=set();self.choices=[];self.executed=0;self.current_scope=()
+        self.vla_queries=[];self.vla_query_chars=0
         super().__init__(source,{},function,parameter_bounds,abi,char_signed,max_paths)
 
     def reachable(self,guard):
@@ -126,6 +128,7 @@ class TypedCFGHeap(TypedCMemory):
         return answer==z3.sat
 
     def build(self,unused):
+        if not getattr(self,'_vla_source_context_validated',False):validate_bounded_vlas(self.func)
         self.records.prepare()
         pending=[(self.func.body,0)];syntax_nodes=0;labels=set()
         while pending:
@@ -308,6 +311,15 @@ class TypedCFGHeap(TypedCMemory):
         return self.expression_tree(node)
 
     def expression_tree(self,node):
+        if isinstance(node,c_ast.UnaryOp) and node.op=='sizeof' and isinstance(node.expr,c_ast.ID) and node.expr.name in self.array_names:
+            pointer=self.expr_env.get(node.expr.name)
+            if not isinstance(pointer,Pointer) or pointer.obj is None:raise SMTGraphError('sizeof array requires a live declared array object')
+            obj=pointer.obj
+            size_type='unsigned long' if self.engine.abi.model=='LP64' else 'unsigned int' if self.engine.abi.model=='ILP32' else 'unsigned long long'
+            t=self.engine.abi.types[size_type];value=obj.length*max(1,obj.type.bits//8)
+            # The bound was evaluated at declaration; never read the current
+            # bound variable or any element when evaluating sizeof the object.
+            return self.leaf(TypedTerm(value,t,z3.And(self.object_live(obj,self.expr_env),value>=0,value<=t.maximum)))
         if isinstance(node,c_ast.StructRef) and not self.pointer_cell(node):return self.leaf(self.read(node,self.expr_env))
         if isinstance(node,c_ast.UnaryOp) and node.op=='sizeof' and isinstance(node.expr,c_ast.Typename) and isinstance(node.expr.type,c_ast.TypeDecl) and isinstance(node.expr.type.type,c_ast.Struct):
             t=self.memory_type(node.expr.type)
@@ -399,12 +411,19 @@ class TypedCFGHeap(TypedCMemory):
                 for guard,env,_ in states:out.extend(self.bind(node,t,guard,env))
             else:
                 self.array_names.add(node.name);length=_lit(node.type.dim)
-                if length is None or not 1<=length<=8:raise SMTGraphError('Stack array size must be 1..8')
+                dynamic=length is None
+                if dynamic and (not isinstance(node.type.dim,c_ast.ID) or isinstance(t,(StructType,PointerElement)) or node.init is not None):
+                    raise SMTGraphError('Bounded VLA requires an integer-identifier bound and uninitialized integer elements')
+                if not dynamic and not 1<=length<=8:raise SMTGraphError('Stack array size must be 1..8')
                 if node.init is not None and not isinstance(node.init,c_ast.InitList):raise SMTGraphError('Array initializer must be a list')
                 initial=node.init.exprs or [] if node.init is not None else []
-                if len(initial)>length:raise SMTGraphError('Excess initializers')
+                if not dynamic and len(initial)>length:raise SMTGraphError('Excess initializers')
                 for guard,env,_ in states:
-                    obj=self.make_object(node,t,z3.IntVal(length),length,False,node.init is not None,env,guard);new=self.initialize(obj,env,initial)
+                    extent=self.evaluate(node.type.dim,env) if dynamic else None
+                    if dynamic:
+                        self.check_vla('VLA bound positive: '+node.name,guard,z3.And(extent.safe,extent.value>0),node,extent)
+                        self.check_vla('VLA represented cell capacity: '+node.name,guard,extent.value<=8,node,extent)
+                    obj=self.make_object(node,t,extent.value if dynamic else z3.IntVal(length),8 if dynamic else length,False,node.init is not None,env,guard);new=self.initialize(obj,env,initial)
                     for cell in obj.cells:self.observe(guard,new[cell].offset if isinstance(new[cell],Pointer) else new[cell])
                     new[node.name]=Pointer(obj,TypedTerm(z3.IntVal(0),self.engine.abi.types['long long'],z3.BoolVal(True)),t);out.append((guard,new,None))
             return out
@@ -427,6 +446,14 @@ class TypedCFGHeap(TypedCMemory):
             for expression in node.exprs:states=self.atom(expression,states)
             return states
         return TypedCFunction.run(self,node,states)
+
+    def check_vla(self,label,guard,claim,node,extent):
+        solver=z3.Solver();solver.add(self.domain,guard,z3.Not(claim));query=solver.to_smt2()
+        if len(self.vla_queries)>=4096 or self.vla_query_chars+len(query)>16*1024*1024:raise SMTGraphError('Bounded VLA certificate budget exceeded')
+        record={'obligation':label,'array_name':node.name,'bound_name':node.type.dim.name,
+                'saved_extent_smt2':extent.value.sexpr(),'smt2':query,'proved':False}
+        self.vla_queries.append(record);self.vla_query_chars+=len(query)
+        self.check(label,z3.And(self.domain,guard),claim);record['proved']=True
 
     def assign(self,node,states):
         if isinstance(node.lvalue,c_ast.ID) and node.lvalue.name in self.pointer_types:
@@ -501,6 +528,9 @@ class TypedCFGHeap(TypedCMemory):
         if not success:
             result.update(failed_obligation=self.failure.label,reason=self.failure.reason)
             if self.failure.witness is not None:result['counterexample']=self.failure.witness
+            if self.failure.label.startswith('VLA represented cell capacity'):
+                result['analysis_limit']='bounded_vla_capacity_frontier'
+                result['counterexample_kind']='unsupported_vla_extent'
             if self.failure.label=='control-flow step budget':
                 result['analysis_limit']='control_flow_step_budget'
                 result['counterexample_kind']='reachable_control_flow_step_frontier'
@@ -510,4 +540,8 @@ class TypedCFGHeap(TypedCMemory):
             if inputs is not None:
                 value=self.evaluate_return(inputs)
                 result['evaluation']={'value':value.as_long()} if z3.is_int_value(value) else {'deterministic':False,'allocation_dependent_return_smt2':value.sexpr()}
+        if self.vla_queries:
+            result['memory_model']['bounded_local_vla']={'bound_evaluated_once':True,'sizeof_uses_saved_extent':True,
+                'extent_assumed':False,'max_cells':8,'queries':self.vla_queries,
+                'certificate_limits':{'max_queries':4096,'max_chars':16*1024*1024,'solver_timeout_ms':5000}}
         return result

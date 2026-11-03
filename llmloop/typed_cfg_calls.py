@@ -13,6 +13,7 @@ from pycparser import c_ast,c_parser,c_generator
 from .typed_cfg_heap import TypedCFGHeap
 from .smt_spath import SMTGraphError
 from .memory_frontend import _lit
+from .bounded_vla import validate_bounded_vlas
 
 
 BUILTINS={'malloc','calloc','free'}
@@ -147,6 +148,7 @@ class CallExpansion:
         return isinstance(node,c_ast.FuncCall) and isinstance(node.name,c_ast.ID) and node.name.name in set(self.functions)|set(self.externals)
 
     def validate_function_context(self,function):
+        validate_bounded_vlas(function)
         if function.decl.funcspec:raise SMTGraphError('Function specifiers require explicit call contracts')
         declared=set()
         class Declarations(c_ast.NodeVisitor):
@@ -489,6 +491,8 @@ class CallExpansion:
 class TypedCFGCalls(TypedCFGHeap):
     def __init__(self,source,function=None,max_call_depth=3,allow_recursion=False,array_contracts=None,**options):
         self.expansion=CallExpansion(source,function,max_call_depth,allow_recursion,array_contracts)
+        # Original function contexts were checked before hygienic return gotos.
+        self._vla_source_context_validated=True
         self.frontier_names={item['marker'] for item in self.expansion.frontiers}
         self.frontier_kinds={item['marker']:item.get('kind','depth') for item in self.expansion.frontiers}
         self.array_contract_queries=[];self.array_contract_query_chars=0

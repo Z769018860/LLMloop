@@ -15,7 +15,7 @@ BUILTINS = {'malloc', 'calloc', 'free'}
 
 
 class MemoryNormalizer(UnionViewNormalizer):
-    def __init__(self, frontend, callables=(), bit_models=None,static_array_contracts=False):
+    def __init__(self, frontend, callables=(), bit_models=None,static_array_contracts=False,bounded_vlas=False):
         super().__init__(frontend)
         self.callables = set(callables)
         self.used.update(self.callables)
@@ -33,6 +33,9 @@ class MemoryNormalizer(UnionViewNormalizer):
         self.static_array_contracts = {}
         self.static_array_contracts_enabled = static_array_contracts
         self.zero_record_member_adjustments = []
+        self.bounded_vla_declarations = []
+        self.bounded_vlas_enabled = bounded_vlas
+        self.local_array_ids = {n['id'] for n in nodes(self.root) if n.get('kind')=='VarDecl' and '[' in n.get('type',{}).get('qualType','')}
         for record in frontend.get('record_definitions', []):
             self.record_defs.setdefault(record.get('name'), []).append(record)
 
@@ -130,6 +133,27 @@ class MemoryNormalizer(UnionViewNormalizer):
         if not match or not 1 <= int(match[2]) <= 8:
             raise SMTGraphError('Clang arrays require one constant dimension of 1..8 cells')
         return self.memory_type(match[1]), int(match[2])
+
+    def bounded_vla(self,node):
+        text=node['type'].get('desugaredQualType',node['type']['qualType'])
+        match=re.fullmatch(r'(.+?)\s*\[([A-Za-z_][A-Za-z0-9_]*)\]',text)
+        if not match or not self.bounded_vlas_enabled:
+            return None
+        body=next(n for n in self.root['inner'] if n.get('kind')=='CompoundStmt')
+        direct={v.get('id') for stmt in body.get('inner',[]) if stmt.get('kind')=='DeclStmt' for v in stmt.get('inner',[])}
+        declarations=[n for n in nodes(self.root) if n.get('kind') in ('VarDecl','ParmVarDecl') and n.get('name')==match[2]]
+        if (node['id'] not in direct or len(declarations)!=1 or declarations[0].get('kind')!='ParmVarDecl'
+                or any(n.get('kind') in ('GotoStmt','LabelStmt') for n in nodes(self.root))):
+            raise SMTGraphError('Bounded Clang VLA requires a direct function-body declaration, unique scalar-parameter bound and no source goto/label')
+        parameter=declarations[0];self.type(parameter['type'])
+        element=self.memory_type(match[1])
+        if '*' in element or element.startswith('struct '):raise SMTGraphError('Bounded Clang VLA supports integer elements only')
+        if node.get('inner'):raise SMTGraphError('Bounded Clang VLA initializers/attributes unsupported')
+        bound=self.names[parameter['id']]
+        self.bounded_vla_declarations.append({'function':self.root['name'],'ast_id':node['id'],'array_name':self.names[node['id']],
+            'source_type':text,'bound_parameter_id':parameter['id'],'bound_name':bound,
+            'rule':'evaluate scalar parameter value once at declaration; prove positive extent and capacity, never assume bounds'})
+        return element,bound
 
     def expr(self, node):
         kind = node.get('kind')
@@ -250,6 +274,11 @@ class MemoryNormalizer(UnionViewNormalizer):
                 args = args[0]['inner']
             return ref['name'] + '(' + ', '.join(self.expr(child) for child in args) + ')'
         if kind == 'UnaryExprOrTypeTraitExpr' and node.get('name') == 'sizeof':
+            if len(children)==1:
+                child=children[0]
+                while child.get('kind')=='ParenExpr' and len(child.get('inner',[]))==1:child=child['inner'][0]
+                if child.get('kind')=='DeclRefExpr' and child.get('referencedDecl',{}).get('id') in self.local_array_ids:
+                    return 'sizeof('+self.names[child['referencedDecl']['id']]+')'
             value = node.get('argType') or (children[0].get('type') if len(children) == 1 else None)
             if value and ('*' in value.get('qualType', '') or 'struct ' in value.get('desugaredQualType', value.get('qualType', ''))):
                 return 'sizeof(' + self.memory_type(value) + ')'
@@ -286,7 +315,8 @@ class MemoryNormalizer(UnionViewNormalizer):
         self.memory_used = True
         children = node.get('inner', [])
         if '[' in text:
-            element, length = self.array_type(node['type'])
+            vla=self.bounded_vla(node)
+            element, length = vla or self.array_type(node['type'])
             if not children:
                 initializer = ''
             elif len(children) == 1 and children[0].get('kind') == 'InitListExpr':
@@ -355,7 +385,7 @@ class MemoryNormalizer(UnionViewNormalizer):
         return result + ' ' + self.root['name'] + '(' + declarations + ') ' + self.stmt(bodies[0]) + '\n'
 
 
-def normalize_calls(frontend, function,static_array_contracts=False):
+def normalize_calls(frontend, function,static_array_contracts=False,bounded_vlas=False):
     from .clang_bit_builtins import BIT_BUILTINS, BitBuiltinModels
     functions = {fn['name']: fn for fn in frontend['functions']}
     if function is None:
@@ -387,7 +417,7 @@ def normalize_calls(frontend, function,static_array_contracts=False):
     used = {n['name'] for fn in frontend['functions'] for n in nodes(fn['ast']) if n.get('name')}
     used.update(n['name'] for n in frontend.get('external_function_declarations', []) if n.get('name'))
     bit_models = BitBuiltinModels(frontend, used)
-    normalizers = [MemoryNormalizer({**frontend, 'functions': [functions[name]]}, selected, bit_models,static_array_contracts) for name in sorted(selected)]
+    normalizers = [MemoryNormalizer({**frontend, 'functions': [functions[name]]}, selected, bit_models,static_array_contracts,bounded_vlas) for name in sorted(selected)]
     sources = [normalizer.source() for normalizer in normalizers]
     sources += [model['source'] for model in bit_models.models.values()]
     prototypes = [source.split('{', 1)[0].strip() + ';' for source in sources]

@@ -996,3 +996,14 @@ comparison of finite heaps versus owned-list induction. This is a comparison
 of different backend contracts, not a LoopSCC on/off ablation. See the
 [local runner](scripts/run_v052_experiments.py) and
 [results and explicit remaining limits](experiments/v052/report.md).
+
+## v0.53: bounded local variable-length arrays
+
+The `calls` Clang bridge now retains local integer `T a[n]` declarations when
+the extent is one unambiguous scalar parameter and runtime checks prove 1..8
+elements. The object captures the extent once; `sizeof(a)` and access bounds
+use that saved extent even after n changes. Formal conversions, initialization,
+stack lifetime and static entry checks remain independent obligations.
+See the [contract and example](docs/BOUNDED_LOCAL_VLA.md) and
+[local validation](experiments/v053/report.md). General VLA expressions/layouts,
+VLA parameters, static interior slices and full C/LLVM remain open.
