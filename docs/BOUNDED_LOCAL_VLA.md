@@ -2,13 +2,16 @@
 
 The Clang `calls` bridge and typed CFG heap/call kernels admit a restricted
 local integer VLA. Its one-dimensional extent must be one uniquely named
-scalar parameter identifier. The declaration is directly in the original
-function body; source labels/gotos, nested declarations, bound expressions,
+visible scalar parameter or initialized local identifier. Declarations in
+explicit nested blocks and for initializers are admitted, including structured
+loops and case blocks. Source labels/gotos, compound bound expressions,
 pointer elements, initializers and variably modified typedefs remain refused.
 VLA parameters, general layouts and arbitrary VLA programs are not supported.
+Local scalar bounds must be declared with an initializer; later-only assignment
+does not extend the admitted scalar declaration fragment.
 
-The bound's current typed value is evaluated **once at declaration**, after
-earlier parameter assignments and helper argument conversions. The kernel
+The bound's current typed value is evaluated **once per execution of the declaration**,
+after earlier scalar assignments and helper argument conversions. The kernel
 checks positivity on each executed path, then separately proves that the
 extent fits the unchanged eight-cell representation. Neither predicate is
 assumed. A positive extent above eight is an UNKNOWN capacity frontier, not a
@@ -17,7 +20,7 @@ bound check. There is no allocation-success assumption for automatic arrays.
 
 The object saves that exact extent. `sizeof(array)` uses the saved extent and
 the ABI element size, including one-byte `_Bool`; changing the bound variable
-later does not change the object size or its access bounds. This operation
+later does not change that object's size or its access bounds. This operation
 does not read or initialize any cells. Fixed local arrays also support this
 unevaluated `sizeof` form. Adjusted array parameters retain pointer `sizeof`.
 General `sizeof` expressions and VLA type-name expressions remain unsupported.
@@ -29,9 +32,10 @@ interior slices retain the same object and saved extent. Static array entry
 contracts independently check the actual VLA capacity; their whole-object-base
 restriction is unchanged.
 
-Clang identifies the bound parameter by its AST declaration ID after requiring
-unambiguous spelling in that function. Raw type spelling, array declaration,
-bound ID and normalized names are retained in `normalization.bounded_vla_declarations`.
+Clang identifies the bound parameter/local by its AST declaration ID after
+requiring unambiguous spelling in that function. The receiving source validator
+checks lexical visibility and requires an initialized scalar before the VLA.
+Raw type spelling, array declaration, bound declaration kind/ID and normalized names are retained in `normalization.bounded_vla_declarations`.
 The normalizer preserves `T a[n]`; it does not rewrite the VLA to an eight-cell
 source array or use a sampled length. Compiler ingestion, lowering and typed
 kernels remain trusted components, not a verified compiler-equivalence theorem.
@@ -39,7 +43,18 @@ kernels remain trusted components, not a verified compiler-equivalence theorem.
 Before call expansion, each original function's declaration context is checked.
 Generated return/continuation gotos do not relax original-source restrictions.
 Hygienic calls, repeated call sites and bounded recursion retain separate
-stack frames; automatic VLA objects expire at the existing frame-exit edges.
+stack frames. Every execution of a VLA declaration creates fresh storage and
+uninitialized cells. Exiting a block, including by break/continue or return,
+expires its arrays; an alias from an earlier loop iteration cannot revive when
+the declaration executes again. A for-initializer VLA remains live across that
+loop's condition, body and increment, and expires after the loop. Generated
+continuation/return edges preserve these boundaries.
+
+`memory_model.bounded_local_vla.instances` records object names, lexical scopes,
+saved extents and declaration visits. The eight-object budget counts cumulative
+represented instances, including expired arrays; it is not an unbounded storage
+reclamation proof. Longer loops can remain UNKNOWN even when only one VLA is
+live. General VLA expressions and arbitrary source jumps remain unsupported.
 The scalar parameter is evaluated after formal conversions, while its caller's
 domain, eager argument safety and complete-exit requirements remain intact.
 
@@ -68,3 +83,5 @@ See [C coverage](C_COVERAGE.md) and [static-entry contracts](CLANG_STATIC_ARRAY_
 The C extent and lifetime rules are specified in
 [C11 draft N1570](https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf),
 sections 6.2.4, 6.7.6.2 and 6.5.3.4. Full VLA/heap/C/LLVM support remains open.
+
+The scoped extension is illustrated by [clang_scoped_vla.c](../examples/clang_scoped_vla.c) and [v0.54 evidence](../experiments/v054/report.md).

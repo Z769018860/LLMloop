@@ -145,15 +145,17 @@ def test_unmodeled_bound_evaluations_and_shapes_stay_closed(clang,decl):
     unknown(run('int entry(int n){'+decl+'return n;}'))
 
 
-@pytest.mark.parametrize('body',[
-    '{int a[n];}return n;',
-    'for(int i=0;i<1;i++){int a[n];}return n;',
-    'int a[n];again:n--;if(n>0)goto again;return 0;',
-    'int a[n];{int n=2;}return 0;',
-    'int m=n;int a[m];return 0;',
+@pytest.mark.parametrize('body,expected',[
+    ('{int a[n];}return n;',3),
+    ('for(int i=0;i<1;i++){int a[n];}return n;',3),
+    ('int a[n];again:n--;if(n>0)goto again;return 0;',None),
+    ('int a[n];{int n=2;}return 0;',None),
+    ('int m=n;int a[m];return 0;',0),
 ])
-def test_declaration_contexts_and_ambiguous_names_are_refused(clang,body):
-    unknown(run('int entry(int n){'+body+'}'))
+def test_declaration_contexts_and_ambiguous_names(clang,body,expected):
+    r=run('int entry(int n){'+body+'}')
+    if expected is None:unknown(r)
+    else:proved(r);assert r['evaluation']['value']==expected
 
 
 def test_constant_array_sizeof_is_unevaluated(clang):

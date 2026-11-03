@@ -139,20 +139,19 @@ class MemoryNormalizer(UnionViewNormalizer):
         match=re.fullmatch(r'(.+?)\s*\[([A-Za-z_][A-Za-z0-9_]*)\]',text)
         if not match or not self.bounded_vlas_enabled:
             return None
-        body=next(n for n in self.root['inner'] if n.get('kind')=='CompoundStmt')
-        direct={v.get('id') for stmt in body.get('inner',[]) if stmt.get('kind')=='DeclStmt' for v in stmt.get('inner',[])}
         declarations=[n for n in nodes(self.root) if n.get('kind') in ('VarDecl','ParmVarDecl') and n.get('name')==match[2]]
-        if (node['id'] not in direct or len(declarations)!=1 or declarations[0].get('kind')!='ParmVarDecl'
+        if (len(declarations)!=1
                 or any(n.get('kind') in ('GotoStmt','LabelStmt') for n in nodes(self.root))):
-            raise SMTGraphError('Bounded Clang VLA requires a direct function-body declaration, unique scalar-parameter bound and no source goto/label')
+            raise SMTGraphError('Bounded Clang VLA requires a unique scalar bound and no source goto/label')
         parameter=declarations[0];self.type(parameter['type'])
         element=self.memory_type(match[1])
         if '*' in element or element.startswith('struct '):raise SMTGraphError('Bounded Clang VLA supports integer elements only')
         if node.get('inner'):raise SMTGraphError('Bounded Clang VLA initializers/attributes unsupported')
         bound=self.names[parameter['id']]
         self.bounded_vla_declarations.append({'function':self.root['name'],'ast_id':node['id'],'array_name':self.names[node['id']],
-            'source_type':text,'bound_parameter_id':parameter['id'],'bound_name':bound,
-            'rule':'evaluate scalar parameter value once at declaration; prove positive extent and capacity, never assume bounds'})
+            'source_type':text,'bound_declaration_id':parameter['id'],'bound_declaration_kind':parameter['kind'],
+            **({'bound_parameter_id':parameter['id']} if parameter['kind']=='ParmVarDecl' else {}),'bound_name':bound,
+            'rule':'evaluate visible scalar value once per declaration execution; prove positive extent and capacity, never assume bounds'})
         return element,bound
 
     def expr(self, node):

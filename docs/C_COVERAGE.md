@@ -68,14 +68,14 @@ See [feature inventory](FEATURE_STATUS.md),
 [borrowed payload-map contract](OWNED_LIST_PAYLOAD_MAPS.md) and
 [eager list-call arguments](EAGER_LIST_ARGUMENTS.md) and
 [finite choices and upstream integer pilot](FINITE_CHOICES_AND_UPSTREAM_BENCHMARKS.md) and
-[latest experiment report](../experiments/v053/report.md).
+[latest experiment report](../experiments/v054/report.md).
 
-The [bounded local VLA bridge](BOUNDED_LOCAL_VLA.md) admits direct function-body
-integer arrays with one unambiguous scalar-parameter bound. Positivity and the
+The [bounded local VLA bridge](BOUNDED_LOCAL_VLA.md) admits integer arrays in explicit block/for scopes with one unambiguous visible scalar
+parameter or initialized-local bound. Positivity and the
 eight-cell representation are proved at declaration; saved extents govern
 `sizeof` and accesses. This is a finite fragment, with general VLA expressions,
-parameters, nested declaration contexts and layouts still unsupported. See
-[v0.53 validation](../experiments/v053/report.md).
+parameters, arbitrary source jumps and layouts still unsupported. See
+[v0.54 validation](../experiments/v054/report.md).
 
 [Stateful consumers](STATEFUL_LIST_CONSUMERS.md) admit nonzero initialized scalar
 states and sequential pure scalar updates within the same complete owned-chain

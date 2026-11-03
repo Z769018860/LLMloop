@@ -1007,3 +1007,18 @@ stack lifetime and static entry checks remain independent obligations.
 See the [contract and example](docs/BOUNDED_LOCAL_VLA.md) and
 [local validation](experiments/v053/report.md). General VLA expressions/layouts,
 VLA parameters, static interior slices and full C/LLVM remain open.
+
+## v0.54: scoped VLA lifetimes and initialized-local bounds
+
+Local integer VLAs now support explicit nested blocks, structured loop bodies,
+case blocks and for initializers. A bound can be one uniquely named visible
+initialized local, with each declaration execution capturing its current value.
+Loop re-entry creates fresh storage and initialization flags; scope exits,
+break/continue and generated call-continuation edges expire the correct objects.
+For-initializer arrays remain live for their entire loop.
+
+See the [scope contract](docs/BOUNDED_LOCAL_VLA.md),
+[example](examples/clang_scoped_vla.c) and [local evidence](experiments/v054/report.md).
+Eight-cell/eight-object representation and existing execution budgets remain;
+general bound expressions, VLA parameters, source goto/labels and arbitrary
+heap/LLVM semantics remain unsupported.

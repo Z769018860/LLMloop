@@ -119,7 +119,7 @@ class TypedCFGHeap(TypedCMemory):
         if type(allocation_failure) is not bool:raise SMTGraphError('allocation_failure must be Boolean')
         self.records=StructHeap(self,source)
         self.max_steps=max_steps;self.allocation_failure=allocation_failure;self.pointer_types={};self.array_names=set();self.choices=[];self.executed=0;self.current_scope=()
-        self.vla_queries=[];self.vla_query_chars=0
+        self.vla_queries=[];self.vla_query_chars=0;self.vla_instances=[]
         super().__init__(source,{},function,parameter_bounds,abi,char_signed,max_paths)
 
     def reachable(self,guard):
@@ -231,7 +231,8 @@ class TypedCFGHeap(TypedCMemory):
     def make_object(self,node,t,length,capacity,heap,zeroed,env,guard=None):
         if isinstance(t,StructType):return self.records.make_object(node,t,length,heap,zeroed,env,guard)
         old=env.get(node.name)
-        if not heap and isinstance(old,Pointer) and old.obj is not None and getattr(old.obj,'site',None)==id(node):return old.obj
+        dynamic=isinstance(getattr(node,'type',None),c_ast.ArrayDecl) and _lit(node.type.dim) is None
+        if not heap and not dynamic and isinstance(old,Pointer) and old.obj is not None and getattr(old.obj,'site',None)==id(node):return old.obj
         if len(self.objects)>=8 or sum(len(o.cells) for o in self.objects.values())+capacity>64:raise SMTGraphError('Dynamic heap budget: 8 instances and 64 represented cells')
         boolean=self.engine.abi.types['_Bool'];tag=node.name+'@'+str(len(self.objects))
         obj=Object(tag,t,length,heap,zeroed,[self.field(tag+'['+str(i)+']',t) for i in range(capacity)],
@@ -424,6 +425,8 @@ class TypedCFGHeap(TypedCMemory):
                         self.check_vla('VLA bound positive: '+node.name,guard,z3.And(extent.safe,extent.value>0),node,extent)
                         self.check_vla('VLA represented cell capacity: '+node.name,guard,extent.value<=8,node,extent)
                     obj=self.make_object(node,t,extent.value if dynamic else z3.IntVal(length),8 if dynamic else length,False,node.init is not None,env,guard);new=self.initialize(obj,env,initial)
+                    if dynamic:self.vla_instances.append({'array_name':node.name,'object_name':obj.name,'scope':obj.scope,
+                        'saved_extent_smt2':extent.value.sexpr(),'declaration_visit':len(self.vla_instances)})
                     for cell in obj.cells:self.observe(guard,new[cell].offset if isinstance(new[cell],Pointer) else new[cell])
                     new[node.name]=Pointer(obj,TypedTerm(z3.IntVal(0),self.engine.abi.types['long long'],z3.BoolVal(True)),t);out.append((guard,new,None))
             return out
@@ -451,7 +454,7 @@ class TypedCFGHeap(TypedCMemory):
         solver=z3.Solver();solver.add(self.domain,guard,z3.Not(claim));query=solver.to_smt2()
         if len(self.vla_queries)>=4096 or self.vla_query_chars+len(query)>16*1024*1024:raise SMTGraphError('Bounded VLA certificate budget exceeded')
         record={'obligation':label,'array_name':node.name,'bound_name':node.type.dim.name,
-                'saved_extent_smt2':extent.value.sexpr(),'smt2':query,'proved':False}
+                'saved_extent_smt2':extent.value.sexpr(),'declaration_visit':len(self.vla_instances),'smt2':query,'proved':False}
         self.vla_queries.append(record);self.vla_query_chars+=len(query)
         self.check(label,z3.And(self.domain,guard),claim);record['proved']=True
 
@@ -542,6 +545,7 @@ class TypedCFGHeap(TypedCMemory):
                 result['evaluation']={'value':value.as_long()} if z3.is_int_value(value) else {'deterministic':False,'allocation_dependent_return_smt2':value.sexpr()}
         if self.vla_queries:
             result['memory_model']['bounded_local_vla']={'bound_evaluated_once':True,'sizeof_uses_saved_extent':True,
-                'extent_assumed':False,'max_cells':8,'queries':self.vla_queries,
+                'extent_assumed':False,'max_cells':8,'queries':self.vla_queries,'instances':self.vla_instances,
+                'reexecuted_declarations_get_fresh_storage':True,
                 'certificate_limits':{'max_queries':4096,'max_chars':16*1024*1024,'solver_timeout_ms':5000}}
         return result
