@@ -62,7 +62,11 @@ def main():
         cli_result=cli.get('status')=='PROVED_DEFINED_CLANG_CFG_CALLS' and cli.get('evaluation',{}).get('value')==30,
         source_unchanged=all(hashlib.sha256(Path(p).read_bytes()).hexdigest()==h for p,h in hashes.items()),
         historical_evidence_unchanged=all(hashlib.sha256(Path(p).read_bytes()).hexdigest()==h for p,h in prior.items()))
+    previous_path=out/'attempts/frozen_first_run/results.json'
+    previous=json.loads(previous_path.read_text()) if previous_path.exists() else None
+    attempt_note=('One earlier full run had 2543 passes and two legacy solver-sensitive failures; both isolated reproductions passed at unchanged budgets. The earlier complete run and diagnostics remain under attempts/frozen_first_run. This acceptance run repeats the entire suite and native matrices.' if previous else 'No earlier frozen full run is retained.')
     result={'passed':all(checks.values()),'checks':checks,'full_pytest':full,'new_tests':63,'existing_cases_deleted':0,'existing_cases_advanced':3,
+        'previous_full_run':{'path':str(previous_path.relative_to(out)),'passed':previous['passed'],'full_pytest':previous['full_pytest']} if previous else None,
         'tested_commit':manifest['tested_commit'],'tested_tree':manifest['tested_tree'],'commands':commands,
         'source_paths':len(hashes),'historical_evidence_paths':len(prior),
         'environment':{'python':platform.python_version(),'platform':platform.platform(),'pytest':pytest.__version__,'pycparser':pycparser.__version__,'sympy':sympy.__version__,'z3':z3.get_version_string(),
@@ -73,8 +77,8 @@ def main():
 Frozen source `{manifest['tested_commit']}`, tree `{manifest['tested_tree']}`.
 Full regression: **{full['passed']} passed, {full['skipped']} skipped**. There are
 63 new tests; three existing refusal cases advance to checked support, and no
-existing case is deleted. All validation is local, without Actions, KLEE,
-retries or larger query/execution budgets.
+existing case is deleted. All validation is local, without Actions, KLEE
+or larger query/execution budgets. {attempt_note}
 
 ## Implemented source contract
 
