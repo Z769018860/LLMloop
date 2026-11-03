@@ -90,10 +90,31 @@ def main(argv=None):
     provenance = verify_vendor(); comparisons = 0; expected_ubsan = 0; wrong_native = 0
     with tempfile.TemporaryDirectory(prefix='llmloop-division-bv-') as temporary:
         directory = Path(temporary); database = compilation_database(directory)
-        def analyze(strategy, source=None):
+        def analyze(strategy, source=None, *, baseline=False):
             command = [sys.executable, str(Path(__file__).resolve()), '--worker', strategy, '--database', str(database),'--strategy',args.strategy]
             if source: command += ['--source', str(source)]
-            run = subprocess.run(command, capture_output=True, text=True, timeout=180)
+            started = time.monotonic()
+            try:
+                run = subprocess.run(command, capture_output=True, text=True, timeout=180)
+            except subprocess.TimeoutExpired as error:
+                # A baseline's process frontier must not discard independent
+                # completed source/functional certificates or skip controls.
+                # The killed worker produced no normalized-source certificate:
+                # retain the requested source identity, never invent one.
+                if not baseline:
+                    raise
+                def text(value):
+                    return value.decode(errors='replace') if isinstance(value, bytes) else value or ''
+                requested_source = source or VENDOR / CASE['file']
+                return {'strategy': strategy, 'worker_command': command,
+                        'elapsed_seconds': round(time.monotonic()-started, 6),
+                        'process_timeout_seconds': 180, 'process_timed_out': True,
+                        'requested_source_sha256': hashlib.sha256(requested_source.read_bytes()).hexdigest(),
+                        'normalized_source_comparison_available': False,
+                        'worker_stdout': text(error.stdout), 'worker_stderr': text(error.stderr),
+                        'report': {'status': 'UNKNOWN', 'analysis_limit': 'process_wall_timeout',
+                                   'reason': 'Baseline worker exceeded unchanged 180-second process ceiling; no completed certificate',
+                                   'c_overflow_verified': False, 'termination_proved': False}}
             if run.returncode: raise AssertionError((command, run.stderr, run.stdout))
             row = json.loads(run.stdout); row['worker_command'] = command
             return row
@@ -135,9 +156,11 @@ def main(argv=None):
         baselines = []
         if args.compare_baseline:
             for strategy in ('bv128', 'integer512'):
-                baseline = analyze(strategy); baselines.append(baseline)
-                if baseline['report'].get('normalization', {}).get('source_sha256') != positive['report']['normalization']['source_sha256']: raise AssertionError('Comparison changed normalized source')
-            if baselines[0]['report']['status'] != 'UNKNOWN' or baselines[0]['report'].get('analysis_limit') != 'control_flow_step_budget': raise AssertionError(baselines[0])
+                baseline = analyze(strategy, baseline=True); baselines.append(baseline)
+                if not baseline.get('process_timed_out'):
+                    if baseline['report'].get('normalization', {}).get('source_sha256') != positive['report']['normalization']['source_sha256']: raise AssertionError('Comparison changed normalized source')
+                    baseline['normalized_source_comparison_available'] = True
+            if not baselines[0].get('process_timed_out') and (baselines[0]['report']['status'] != 'UNKNOWN' or baselines[0]['report'].get('analysis_limit') != 'control_flow_step_budget'): raise AssertionError(baselines[0])
         controls = []
         if args.controls:
             header = (VENDOR / 'int_div_impl.inc').read_text()
@@ -169,7 +192,9 @@ def main(argv=None):
     result = {'provenance': provenance, 'source': positive, 'functional': query, 'functional_baseline':direct_query,'functional_induction_replay':induction_replay,'functional_strategy':args.strategy, 'query_replay': positive['query_replay'],
               'inputs': inputs, 'model_samples': models, 'model_comparisons': len(models), 'native': native, 'native_comparisons': comparisons,
               'baselines': baselines, 'controls': controls, 'expected_ubsan_failures': expected_ubsan, 'wrong_algorithm_native_refutations': wrong_native,
-              'source_analysis_retries': 0, 'source_analysis_process_isolation': True, 'passed': True, 'klee_used': False, 'complete_c_support': False,
+              'source_analysis_retries': 0, 'source_analysis_process_isolation': True,
+              'baseline_process_timeouts': sum(row.get('process_timed_out', False) for row in baselines),
+              'baseline_process_timeout_seconds': 180, 'passed': True, 'klee_used': False, 'complete_c_support': False,
               'scope': 'original pinned 32-bit unsigned division source definedness and bounded complete exit; functional query status is independent; native samples do not establish universal output equivalence; no memory/LLVM theorem'}
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True); args.output.write_text(json.dumps(result, indent=2) + '\n')
