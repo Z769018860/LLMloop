@@ -1,0 +1,227 @@
+{
+  "passed": true,
+  "checks": {
+    "heap_scaling": true,
+    "static_grid": true,
+    "static_native": true,
+    "popcount": true,
+    "division": true,
+    "pytest": true,
+    "full_pytest_count": true,
+    "heap_scaling_result": true,
+    "static_grid_result": true,
+    "static_native_result": true,
+    "historical_evidence_unchanged": true,
+    "division_cli_recheck": true,
+    "full_regression_frozen_source_verified_before_harness_repair": true,
+    "proof_engine_and_tests_unchanged": true
+  },
+  "full_pytest": {
+    "passed": 2436,
+    "skipped": 0,
+    "expected": 2436
+  },
+  "tested_commit": "1860477c562a2750ddecd27b122d9135eb7913bb",
+  "tested_tree": "1b6d9fb5c289a9a2956cc9f6ee41a26d50af5b03",
+  "commands": {
+    "heap_scaling": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_heap_backend_scaling.py",
+        "--output",
+        "experiments/v052/heap_scaling.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 221.28469986000027,
+      "log": "heap_scaling.txt"
+    },
+    "static_grid": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_static_contract_grid.py",
+        "--output",
+        "experiments/v052/static_grid.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 139.06609689699997,
+      "log": "static_grid.txt"
+    },
+    "static_native": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_clang_static_arrays_native.py",
+        "--output",
+        "experiments/v052/static_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 27.04352615500011,
+      "log": "static_native.txt"
+    },
+    "popcount": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_popcount_functional.py",
+        "--output",
+        "experiments/v052/popcount.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.0178869400001531,
+      "log": "popcount.txt"
+    },
+    "division": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_division_bv.py",
+        "--strategy",
+        "induction",
+        "--compare-baseline",
+        "--controls",
+        "--output",
+        "experiments/v052/division.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 218.2892637760001,
+      "log": "division.txt"
+    },
+    "pytest": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--forked"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1223.208303575,
+      "log": "pytest.txt"
+    },
+    "division_cli_recheck": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--forked",
+        "tests/test_division_induction.py::test_real_original_source_cli_exports_complete_induction_and_direct_baseline",
+        "tests/test_bv_scalar_cfg.py::test_division_cli_preserves_universal_safety_query_replay_and_independent_functional_status"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 45.79000248500006,
+      "log": "division_cli_recheck.txt"
+    }
+  },
+  "source_paths": 409,
+  "historical_evidence_paths": 557,
+  "environment": {
+    "python": "3.12.14",
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.39",
+    "z3": "5.3.3",
+    "pytest": "9.1.1",
+    "sympy": "1.14.0",
+    "pycparser": "3.12",
+    "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+    "gcc": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0"
+  },
+  "github_actions_used": false,
+  "ci_runs_used": 0,
+  "klee_used": false,
+  "proof_engine_changed": false,
+  "query_budgets_increased": false,
+  "complete_c_support": false,
+  "scope": "Experiment-only continuation: exhaustive finite-capacity checks, constructed same-source heap backend comparison, refreshed static native controls and two pinned upstream functional experiments. This is not a full upstream matrix refresh or a LoopSCC on/off ablation.",
+  "evidence_sha256": {
+    "harness_source_publication.json": "055ce767968899a5a6de4db6b4ee07a98952b788d7f49e56cccd478754faa350",
+    "heap_scaling.csv": "ab89b790fdc56f180f763de8e93d674de09fe8589480648d321657450b7193b9",
+    "raw_evidence.tar.gz": "70bc71aa5148b8e0e3009f5e24f3f10b04eba38e6dd89f2d30938bed750f37e8",
+    "report.md": "5a8fccb4867218b15192b1d58b7ee7a3a85d3b3da38cf7bf1e43baecb1305edc",
+    "source_publication.json": "4bec08c90a12f8ede8832b6dd86d6423e0841df03f75b14579bb8e8e6572054f",
+    "static_grid.csv": "cf2825df2f5c2c7d6f5e08d82472584903c33f38ec56305bac4d18aa2cf420cb"
+  },
+  "harness_validation_checkpoint": {
+    "commit": "076ab91a699a752d30cf3f12b88db6433dcefdaf",
+    "tree": "fe663cdb22fc52f66683092d222de327ecdbe818",
+    "changed_paths": [
+      "scripts/check_division_bv.py"
+    ],
+    "full_regression_checkpoint": "1860477c562a2750ddecd27b122d9135eb7913bb",
+    "proof_engine_and_tests_unchanged": true
+  },
+  "recovery": {
+    "initial_attempt_directory": "attempts/missing_clang_ubsan",
+    "initial_heap_experiment_exit_code": 1,
+    "initial_heap_analyzer_runs_completed": 108,
+    "initial_heap_run_accepted": false,
+    "heap_experiment_attempts": 2,
+    "division_experiment_attempts": 2,
+    "full_pytest_attempts": 1,
+    "same_proof_engine_tree": true,
+    "division_harness_repaired": true,
+    "proof_engine_changed": false,
+    "query_budgets_changed": false,
+    "dependency_repair": "Extracted libclang-rt-18-dev 18.1.3-1ubuntu1; no compiler executable change",
+    "successful_heap_run_after_other_experiments": true
+  },
+  "published_full_regression_source_commit": "7e93838bf54c9f5e34f53ac3bdac280be031bf73",
+  "published_post_regression_harness_commit": "56681c5ad562bde85de5c075113406ba1be57a3c",
+  "command_source_checkpoints": {
+    "heap_scaling": "56681c5ad562bde85de5c075113406ba1be57a3c",
+    "static_grid": "7e93838bf54c9f5e34f53ac3bdac280be031bf73",
+    "static_native": "7e93838bf54c9f5e34f53ac3bdac280be031bf73",
+    "popcount": "7e93838bf54c9f5e34f53ac3bdac280be031bf73",
+    "division": "56681c5ad562bde85de5c075113406ba1be57a3c",
+    "pytest": "7e93838bf54c9f5e34f53ac3bdac280be031bf73",
+    "division_cli_recheck": "56681c5ad562bde85de5c075113406ba1be57a3c"
+  },
+  "experiment_summary": {
+    "static_grid": {
+      "cases": 384,
+      "proved": 144,
+      "insufficient_extent": 112,
+      "unsupported_interior": 128,
+      "query_replays": 1024
+    },
+    "heap_scaling": {
+      "fresh_process_runs": 108,
+      "native_output_matches": 1440,
+      "independent_model_matches": 120,
+      "statuses": {
+        "PROVED_DEFINED_CLANG_LIST_CALLS": 54,
+        "PROVED_DEFINED_CLANG_CFG_CALLS": 27,
+        "UNKNOWN": 27
+      }
+    },
+    "division_baseline_process_timeouts": 1,
+    "full_regression_passed": 2436,
+    "affected_cli_rechecks_passed": 2
+  },
+  "raw_archive": {
+    "path": "raw_evidence.tar.gz",
+    "sha256": "70bc71aa5148b8e0e3009f5e24f3f10b04eba38e6dd89f2d30938bed750f37e8",
+    "members_sha256": {
+      "attempts/missing_clang_ubsan/environment_repair.json": "5a805de051ce8152c691c3b85d0a80d00c8d2382ae2d261024f96f346338721e",
+      "attempts/missing_clang_ubsan/initial_commands.json": "119eb8aaae3f61e7cea7d9795e5dbcd7984b56b1a339e4b14d0da09de319e20e",
+      "attempts/missing_clang_ubsan/initial_division.txt": "233ee391503f0fc9350df002f08d53f845ed44d0cb0f34da3e04055565f2263d",
+      "attempts/missing_clang_ubsan/initial_heap_scaling.txt": "661ea51e4c9f9e3ca34ac6f4af2f89ac476fb84de8c5e45c8bb8ab930efca49e",
+      "attempts/missing_clang_ubsan/initial_report.md": "acea2f150399cb96a6fd98344d54b366f40a121b8eac85deca58e63a4cbb6e61",
+      "attempts/missing_clang_ubsan/initial_results.json": "29c2873ad765b35f236d21128800b4042b393df38e40b20472efbacd432bc9fc",
+      "attempts/missing_clang_ubsan/retry_command.json": "2c7cfa5c1b5cb0c36142d03726e7f4bcabf6546338a6396d4cd743bc9b809a89",
+      "attempts/prevalidation/static-grid.json": "e1b81d9fcc40f46eee5a9cf3355b65c4a61ee15b4e8ef415533ef55d8924fb3a",
+      "attempts/prevalidation/static-grid.txt": "1a22870e425c4f0a8bd127698561e7c4f7c9ff96627b64f14c6ad11739ff0d56",
+      "commands.json": "0904519e74d1390cbd6e851420ae90dadd7ea9270dffb3ea70219397f8a30054",
+      "division.json": "234b00a8a30f6efebaaef57cefeeb03d09f46170065d2879a4951bad8a478d4e",
+      "division.txt": "f73ca0a0d8c584bbb110788083462f968a3cf4ca658561b8cdee19d22161fab4",
+      "division_cli_recheck.txt": "af990f3c439f94fd462367f406e1957cb9452d279e1c48ea91630cc0430ce148",
+      "heap_scaling.json": "c490f8485fcd4b5c00d41413e9a2933cf3f242d2e7cc0db381f4fbd085631a60",
+      "heap_scaling.txt": "21874b324aa80c27ffdd5b52cdee0da8daa5394cf638d7a7a075be4d445f8048",
+      "popcount.json": "fa5a99601cc592b05d62111898f981361292028079f4f60ee3791ee3d52a5e15",
+      "popcount.txt": "beb4a5bff8a16ada9825fb370139d1ff9fa92badb8a888c1bb7d4814be0b5992",
+      "pytest.txt": "6741712bc5c30775998701af0ca47d8dae3777ab31e392b8fd3e92a1cc674bd2",
+      "source_manifest.json": "f2db973fecdd2fdc401e73e7333108364c821b78002dd4f93cc42d4c5ca63439",
+      "static_grid.json": "cc9c9c7e074d59f70ff9efcf9caf6247c845b9a486df342d7a1b20892cf0bd21",
+      "static_grid.txt": "76b404702604a2c0024d9307a96e79b243f49a93dfe2729dcc6a84b8b6399c29",
+      "static_native.json": "95b75638cbfd5603783511fb1658e1a06872ac34416c77dd9fed259754a638c0",
+      "static_native.txt": "2c3e73dfb5e4ef2beb5601b6b2415d27d70e41a24cdb7ef6414831165e8107bc"
+    },
+    "original_relative_paths_preserved": true
+  }
+}
