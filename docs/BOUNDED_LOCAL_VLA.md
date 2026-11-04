@@ -2,8 +2,9 @@
 
 The Clang `calls` bridge and typed CFG heap/call kernels admit a restricted
 local integer VLA. Its one-dimensional extent may be a pure typed integer
-expression whose identifiers are uniquely named visible scalar parameters or
-initialized locals. Declarations in
+expression whose value identifiers are uniquely named visible scalar parameters or
+initialized locals. Size-only observations may additionally name declared data
+pointers and local integer arrays. Declarations in
 explicit nested blocks and for initializers are admitted, including structured
 loops and case blocks. Source labels/gotos, effectful bound expressions,
 pointer elements, initializers and variably modified typedefs remain refused.
@@ -20,9 +21,28 @@ zero divisors and invalid shifts cannot be hidden by positivity/capacity checks.
 Unsigned wrapping can yield a positive but unrepresented extent, which remains
 an analysis frontier. Every identifier in every arm must satisfy the lexical
 source contract even if that arm is unexecuted. Calls, assignment/increment,
-comma expressions, pointer/array reads, general `sizeof`, typedef-name casts and
+comma expressions, pointer/array reads, complex `sizeof` operands, VM type-name
+evaluation, typedef-name casts/sizes and
 noninteger casts remain refused. The expression has 256-node/32-depth limits;
 printed Clang bounds additionally have a 4096-character parsing limit.
+
+`sizeof` leaves admit primitive integer type names (optionally const), up to
+three unqualified data-pointer levels over integers/void, and supported visible
+scalar/pointer/integer-array identifiers. Function pointers, type-name arrays,
+records/typedef-name operands and compound operands such as `sizeof(n++)`,
+`sizeof(*p)` or `sizeof(api(n))` remain outside the bound grammar. VM type names
+such as `sizeof(int[n++])` cannot have their evaluation effects erased.
+
+Scalar and pointer sizes are ABI-dependent `size_t` constants, without reading
+the operand's value, cell initialization or pointee. Thus sizeof a null/dangling
+data pointer remains valid when its declaration is supported. Existing executed
+initializer checks and the initialized-scalar/pointer declaration frontier are
+unchanged. Arrays need live declared storage but their cells need not be
+initialized. A VLA array contributes its saved extent, so
+`int b[sizeof(a)/sizeof(int)]` can retain a's original count after the scalar
+bound changes. Adjusted array parameters contribute pointer size, not the
+caller's object extent. Every named size operand still requires unique spelling
+and lexical visibility, including in unexecuted arms.
 
 The bound's current typed value is evaluated **once per execution of the declaration**,
 after earlier scalar assignments and helper argument conversions. The kernel
@@ -37,7 +57,7 @@ the ABI element size, including one-byte `_Bool`; changing the bound variable
 later does not change that object's size or its access bounds. This operation
 does not read or initialize any cells. Fixed local arrays also support this
 unevaluated `sizeof` form. Adjusted array parameters retain pointer `sizeof`.
-General `sizeof` expressions and VLA type-name expressions remain unsupported.
+Other `sizeof` operand forms and VM type-name expressions remain unsupported.
 
 Every actual access retains existing initialization, bounds, arithmetic and
 lifetime obligations. Eight represented cells do not create eight live array
@@ -53,6 +73,8 @@ and requires each local operand to be declared with an initializer before the VL
 Raw type/bound spelling, normalized expression, array declaration and every
 operand's declaration kind/ID and normalized name remain in
 `normalization.bounded_vla_declarations`. Legacy single-identifier fields remain.
+Each reference now also records `uses` (`value`, `sizeof`, or both). Kernel
+bound queries retain the corresponding `bound_operand_uses` name groups.
 The normalizer preserves `T a[expression]`; it does not rewrite the VLA to an eight-cell
 source array or use a sampled length. Compiler ingestion, lowering and typed
 kernels remain trusted components, not a verified compiler-equivalence theorem.
@@ -106,3 +128,10 @@ The scoped extension is illustrated by [clang_scoped_vla.c](../examples/clang_sc
 
 Pure expression bounds are illustrated by [clang_vla_expression.c](../examples/clang_vla_expression.c)
 and [v0.55 evidence](../experiments/v055/report.md). The example returns 20 at n=3.
+
+Size-dependent arrays are illustrated by
+[clang_sizeof_vla_bound.c](../examples/clang_sizeof_vla_bound.c) and
+[v0.56 evidence](../experiments/v056/report.md), returning 27 at n=3.
+The native coverage controls distinguish required observable-use UB traps from
+an unused-result overflow that GCC O2 may not diagnose. Sanitizer silence never
+establishes a defined-source certificate.

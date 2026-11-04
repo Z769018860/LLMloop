@@ -1,4 +1,4 @@
-# Feature status after v0.55
+# Feature status after v0.56
 
 This inventory distinguishes certified capabilities from outstanding general
 requirements. The project remains a restricted research prototype.
@@ -19,7 +19,7 @@ particular exit condition terminates. `UNKNOWN` is an explicit unsupported or
 unproved result, not a valid summary.
 
 See [v0.14 recurrence and experiment contracts](GUARDED_RECURRENCES_AND_EXPERIMENTS.md)
-and the committed [latest experiment report](../experiments/v055/report.md).
+and the committed [latest experiment report](../experiments/v056/report.md).
 
 The [bounded local VLA contract](BOUNDED_LOCAL_VLA.md) adds scoped local
 integer `T a[expression]` declarations with pure typed integer operators and
@@ -27,6 +27,14 @@ unique visible scalar parameter/initialized-local operands, proved
 positive extent within eight represented cells, saved `sizeof` and complete
 cell/lifetime checks. Effectful/memory-reading bounds, VLA parameters, arbitrary source jumps
 and layouts remain open.
+
+Size leaves now include non-VM primitive integer/data-pointer type names and
+declared scalar/pointer/integer-array identifiers. `sizeof(a)` uses a local
+array's saved extent without reading its cells; `sizeof(p)` does not follow p.
+Complex operands, VM type names, typedef-name sizes and existing uninitialized
+scalar/pointer declaration frontiers remain unsupported. Size-only and value
+identifier uses are recorded separately; no source obligation is inferred from
+sanitizer silence.
 
 See [unroll-free typed scalar C contracts](TYPED_UNBOUNDED_RECURRENCES.md) for the new machine-integer certificate. It does not certify general heap memory.
 

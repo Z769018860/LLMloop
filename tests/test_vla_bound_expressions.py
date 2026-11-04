@@ -116,9 +116,11 @@ def test_helper_formal_conversion_precedes_expression_extent(clang,frontend):
 
 
 @pytest.mark.parametrize('frontend',FRONTENDS)
-@pytest.mark.parametrize('expression',['n++','(n=3)','(n,3)','*p','p[0]','api(n)','n+sizeof(n)','(int*)n','n?2:api(n)','n?2:n++'])
-def test_bound_effects_calls_pointer_reads_and_general_sizeof_stay_refused(clang,frontend,expression):
-    unknown(run('int *p=0;int a['+expression+'];return 7;',frontend,prefix='int api(int m){return m;}'))
+@pytest.mark.parametrize('expression,expected',[(e,7 if e=='n+sizeof(n)' else None) for e in ['n++','(n=3)','(n,3)','*p','p[0]','api(n)','n+sizeof(n)','(int*)n','n?2:api(n)','n?2:n++']])
+def test_scalar_sizeof_advances_without_admitting_bound_effects_or_pointer_reads(clang,frontend,expression,expected):
+    r=run('int *p=0;int a['+expression+'];return 7;',frontend,prefix='int api(int m){return m;}')
+    if expected is None:unknown(r)
+    else:proved(r,expected)
 
 
 @pytest.mark.parametrize('frontend',FRONTENDS)

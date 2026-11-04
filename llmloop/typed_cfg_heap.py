@@ -15,7 +15,7 @@ from .symbolic_integers import TypedTerm
 from .memory_frontend import _lit
 from .smt_spath import SMTGraphError
 from .struct_heap import StructHeap,StructType
-from .bounded_vla import validate_bounded_vlas,bound_identifiers,bound_spelling
+from .bounded_vla import validate_bounded_vlas,bound_identifiers,bound_spelling,bound_operands,sizeof_type_supported
 
 
 @dataclass
@@ -321,15 +321,24 @@ class TypedCFGHeap(TypedCMemory):
             # The bound was evaluated at declaration; never read the current
             # bound variable or any element when evaluating sizeof the object.
             return self.leaf(TypedTerm(value,t,z3.And(self.object_live(obj,self.expr_env),value>=0,value<=t.maximum)))
+        if isinstance(node,c_ast.UnaryOp) and node.op=='sizeof' and isinstance(node.expr,c_ast.ID):
+            name=node.expr.name
+            if name not in self.expr_env:raise SMTGraphError('sizeof object is not in scope')
+            size_type='unsigned long' if self.engine.abi.model=='LP64' else 'unsigned int' if self.engine.abi.model=='ILP32' else 'unsigned long long'
+            if name in self.pointer_types:size=4 if self.engine.abi.model=='ILP32' else 8
+            elif name in self.types:size=max(1,self.types[name].bits//8)
+            else:raise SMTGraphError('sizeof requires a declared scalar, pointer or array object')
+            # No value, initialization flag, pointee or cell is read here.
+            return {'value':size,'type':size_type}
         if isinstance(node,c_ast.StructRef) and not self.pointer_cell(node):return self.leaf(self.read(node,self.expr_env))
         if isinstance(node,c_ast.UnaryOp) and node.op=='sizeof' and isinstance(node.expr,c_ast.Typename) and isinstance(node.expr.type,c_ast.TypeDecl) and isinstance(node.expr.type.type,c_ast.Struct):
             t=self.memory_type(node.expr.type)
             size_type='unsigned long' if self.engine.abi.model=='LP64' else 'unsigned int' if self.engine.abi.model=='ILP32' else 'unsigned long long'
             return {'value':t.bits//8,'type':size_type}
         if isinstance(node,c_ast.UnaryOp) and node.op=='sizeof' and isinstance(node.expr,c_ast.Typename) and isinstance(node.expr.type,c_ast.PtrDecl):
-            t=self.memory_type(node.expr.type)
+            t=None if sizeof_type_supported(node.expr.type) else self.memory_type(node.expr.type)
             size_type='unsigned long' if self.engine.abi.model=='LP64' else 'unsigned int' if self.engine.abi.model=='ILP32' else 'unsigned long long'
-            return {'value':t.bits//8,'type':size_type}
+            return {'value':(4 if self.engine.abi.model=='ILP32' else 8) if t is None else t.bits//8,'type':size_type}
         if isinstance(node,c_ast.BinaryOp) and node.op in ('&&','||'):return {'op':node.op,'args':[self.condition_tree(node.left),self.condition_tree(node.right)]}
         if isinstance(node,c_ast.UnaryOp) and node.op=='!':return {'op':'!','args':[self.condition_tree(node.expr)]}
         if isinstance(node,c_ast.BinaryOp) and node.op in ('==','!=') and (self.is_pointer(node.left) or self.is_pointer(node.right)):
@@ -457,6 +466,7 @@ class TypedCFGHeap(TypedCMemory):
         if len(self.vla_queries)>=4096 or self.vla_query_chars+len(query)>16*1024*1024:raise SMTGraphError('Bounded VLA certificate budget exceeded')
         record={'obligation':label,'array_name':node.name,'bound_name':bound_spelling(node.type.dim),
                 'bound_expression':bound_spelling(node.type.dim),'bound_names':bound_identifiers(node.type.dim),'bound_type':extent.type.name,
+                'bound_operand_uses':bound_operands(node.type.dim),
                 'saved_extent_smt2':extent.value.sexpr(),'declaration_visit':len(self.vla_instances),'smt2':query,'proved':False}
         self.vla_queries.append(record);self.vla_query_chars+=len(query)
         self.check(label,z3.And(self.domain,guard),claim);record['proved']=True
@@ -548,6 +558,7 @@ class TypedCFGHeap(TypedCMemory):
                 result['evaluation']={'value':value.as_long()} if z3.is_int_value(value) else {'deterministic':False,'allocation_dependent_return_smt2':value.sexpr()}
         if self.vla_queries:
             result['memory_model']['bounded_local_vla']={'bound_evaluated_once':True,'sizeof_uses_saved_extent':True,
+                'sizeof_bound_operands_use_saved_extent':True,'scalar_pointer_sizeof_does_not_read_value':True,
                 'extent_assumed':False,'max_cells':8,'queries':self.vla_queries,'instances':self.vla_instances,
                 'reexecuted_declarations_get_fresh_storage':True,
                 'certificate_limits':{'max_queries':4096,'max_chars':16*1024*1024,'solver_timeout_ms':5000}}

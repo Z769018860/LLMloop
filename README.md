@@ -1040,3 +1040,19 @@ See the [bound contract](docs/BOUNDED_LOCAL_VLA.md),
 Calls/effects, memory-reading bounds, general `sizeof`, typedef-name casts,
 VLA parameters and multidimensional layouts remain open. Eight represented
 cells per object, eight cumulative objects and existing proof budgets remain.
+
+## v0.56: sizeof leaves and size-dependent local VLAs
+
+Bounds now admit `sizeof` of primitive integer/data-pointer type names and
+visible scalar, pointer or local integer-array identifiers. Scalar/pointer
+sizes do not read operand values or follow pointees. Array sizes use the
+declared object's saved extent, so `int b[sizeof(a)/sizeof(int)]` retains a's
+original length after its bound variables change. Adjusted array formals retain
+pointer size. Value and size-only references have separate trace metadata.
+
+See the [contract](docs/BOUNDED_LOCAL_VLA.md),
+[example](examples/clang_sizeof_vla_bound.c) and [local evidence](experiments/v056/report.md).
+Complex sizeof operands, VM type-name evaluation, typedef-name sizes, VLA
+parameters and general layouts remain unsupported. Existing storage, lifetime,
+initialization, object/cell and proof budgets still apply. Native evidence also
+retains an unused-overflow sanitizer coverage gap separately from source proofs.

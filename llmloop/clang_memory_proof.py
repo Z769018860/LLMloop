@@ -10,7 +10,7 @@ from .clang_proof import nodes, check_parameter_attributes, check_typedef_attrib
 from .clang_parameters import checked_pointer_parameter
 from .clang_union_views import UnionViewNormalizer
 from .smt_spath import SMTGraphError
-from .bounded_vla import parse_bound_expression,bound_identifiers,bound_spelling
+from .bounded_vla import parse_bound_expression,bound_identifiers,bound_spelling,bound_operands
 
 
 BUILTINS = {'malloc', 'calloc', 'free'}
@@ -141,14 +141,21 @@ class MemoryNormalizer(UnionViewNormalizer):
         match=re.fullmatch(r'([^\[\]]+?)\s*\[([^\[\]]+)\]',text)
         if not match or not self.bounded_vlas_enabled or match[2].isdigit():
             return None
-        expression=parse_bound_expression(match[2]);names=bound_identifiers(expression);references=[];renamed={}
+        expression=parse_bound_expression(match[2]);names=bound_identifiers(expression);operands=bound_operands(expression);references=[];renamed={}
         if any(n.get('kind') in ('GotoStmt','LabelStmt') for n in nodes(self.root)):
             raise SMTGraphError('Bounded Clang VLA requires no source goto/label')
         for name in names:
             declarations=[n for n in nodes(self.root) if n.get('kind') in ('VarDecl','ParmVarDecl') and n.get('name')==name]
             if len(declarations)!=1:raise SMTGraphError('Bounded Clang VLA requires unique scalar operand names')
-            declaration=declarations[0];self.type(declaration['type']);renamed[name]=self.names[declaration['id']]
-            references.append({'source_name':name,'normalized_name':renamed[name],'ast_id':declaration['id'],'kind':declaration['kind']})
+            declaration=declarations[0]
+            if name in operands['value']:self.type(declaration['type'])
+            else:
+                dtype=declaration['type'].get('desugaredQualType',declaration['type']['qualType'])
+                array=re.fullmatch(r'([^\[\]]+)\[[^\[\]]+\]',dtype)
+                self.memory_type(array[1].strip() if array else declaration['type'])
+            renamed[name]=self.names[declaration['id']]
+            references.append({'source_name':name,'normalized_name':renamed[name],'ast_id':declaration['id'],'kind':declaration['kind'],
+                'uses':[usage for usage in ('value','sizeof') if name in operands[usage]]})
         element=self.memory_type(match[1])
         if '*' in element or element.startswith('struct '):raise SMTGraphError('Bounded Clang VLA supports integer elements only')
         if node.get('inner'):raise SMTGraphError('Bounded Clang VLA initializers/attributes unsupported')
@@ -289,6 +296,8 @@ class MemoryNormalizer(UnionViewNormalizer):
                 if child.get('kind')=='DeclRefExpr' and child.get('referencedDecl',{}).get('id') in self.local_array_ids:
                     return 'sizeof('+self.names[child['referencedDecl']['id']]+')'
             value = node.get('argType') or (children[0].get('type') if len(children) == 1 else None)
+            if value and re.fullmatch(r'void\s*(?:\*\s*){1,3}',value.get('qualType','')):
+                return bound_spelling(parse_bound_expression('sizeof('+value['qualType']+')'))
             if value and ('*' in value.get('qualType', '') or 'struct ' in value.get('desugaredQualType', value.get('qualType', ''))):
                 return 'sizeof(' + self.memory_type(value) + ')'
         return super().expr(node)

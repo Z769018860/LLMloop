@@ -6,15 +6,36 @@ from .memory_frontend import _lit
 from .smt_spath import SMTGraphError
 
 
-def bound_identifiers(expression):
-    """Admit only pure typed integer operations; inspect even lazy arms."""
-    pending=[(expression,0)];names=set();count=0
+def sizeof_type_supported(node):
+    """Non-VM integer/data-pointer type names; no bound evaluation to erase."""
+    depth=0
+    while isinstance(node,c_ast.PtrDecl):
+        if node.quals:return False
+        depth+=1;node=node.type
+    if depth>3 or not isinstance(node,c_ast.TypeDecl) or set(node.quals or [])-{'const'}:return False
+    if not isinstance(node.type,c_ast.IdentifierType):return False
+    names=node.type.names
+    if names==['_Bool'] or depth>0 and names==['void']:return True
+    allowed={'char','short','int','long','signed','unsigned'}
+    return (bool(names) and set(names)<=allowed and all(names.count(n)<=1 for n in allowed-{'long'})
+            and names.count('long')<=2 and not ('signed' in names and 'unsigned' in names)
+            and not ('char' in names and set(names)&{'short','long','int'})
+            and not ('short' in names and 'long' in names))
+
+
+def bound_operands(expression):
+    """Separate value reads from unevaluated object/type size observations."""
+    pending=[(expression,0)];values=set();sizes=set();count=0
     binary=set(('+','-','*','/','%','<<','>>','&','|','^','<','<=','>','>=','==','!=','&&','||'))
     while pending:
         node,depth=pending.pop();count+=1
         if count>256 or depth>32:raise SMTGraphError('VLA bound expression budget exceeded')
-        if isinstance(node,c_ast.ID):names.add(node.name);continue
+        if isinstance(node,c_ast.ID):values.add(node.name);continue
         if isinstance(node,c_ast.Constant) and node.type in ('int','unsigned int','long int','unsigned long int','long long int','unsigned long long int','char'):continue
+        if isinstance(node,c_ast.UnaryOp) and node.op=='sizeof':
+            if isinstance(node.expr,c_ast.ID):sizes.add(node.expr.name);continue
+            if isinstance(node.expr,c_ast.Typename) and sizeof_type_supported(node.expr.type):continue
+            raise SMTGraphError('VLA sizeof requires an object identifier or non-VM integer/data-pointer type name')
         if isinstance(node,c_ast.UnaryOp) and node.op in ('+','-','~','!'):children=[node.expr]
         elif isinstance(node,c_ast.BinaryOp) and node.op in binary:children=[node.left,node.right]
         elif isinstance(node,c_ast.TernaryOp) and node.iftrue is not None:children=[node.cond,node.iftrue,node.iffalse]
@@ -27,7 +48,12 @@ def bound_identifiers(expression):
             children=[node.expr]
         else:raise SMTGraphError('VLA bound requires pure integer operators without calls, memory reads or effects')
         pending.extend((child,depth+1) for child in children)
-    return sorted(names)
+    return {'value':sorted(values),'sizeof':sorted(sizes)}
+
+
+def bound_identifiers(expression):
+    operands=bound_operands(expression)
+    return sorted(set(operands['value'])|set(operands['sizeof']))
 
 
 def parse_bound_expression(text):
@@ -70,6 +96,9 @@ def validate_bounded_vlas(function):
     scalar={d.name:d for d in declarations if isinstance(d.type,c_ast.TypeDecl)
             and isinstance(d.type.type,c_ast.IdentifierType)
             and (id(d) in parameter_ids or d.init is not None)}
+    sized={d.name:d for d in declarations if
+           (sizeof_type_supported(d.type) and (id(d) in parameter_ids or d.init is not None))
+           or isinstance(d.type,c_ast.ArrayDecl) and sizeof_type_supported(d.type.type) and isinstance(d.type.type,c_ast.TypeDecl)}
     counts=Counter(d.name for d in declarations)
 
     def visit(node,visible,context=None):
@@ -92,13 +121,15 @@ def validate_bounded_vlas(function):
         if isinstance(node,c_ast.Decl):
             if id(node) in dynamic:
                 bound=node.type.dim
-                names=bound_identifiers(bound)
+                operands=bound_operands(bound);names=bound_identifiers(bound)
                 if (context not in ('block','for_init')
-                        or any(name not in visible or name not in scalar or counts[name]!=1 for name in names)):
-                    raise SMTGraphError('Bounded VLA requires an explicit block/for scope and unique visible initialized scalar operands')
+                        or any(name not in visible or counts[name]!=1 for name in names)
+                        or any(name not in scalar for name in operands['value'])
+                        or any(name not in sized for name in operands['sizeof'])):
+                    raise SMTGraphError('Bounded VLA requires visible unique scalar value/object-size operands and supported declaration types')
                 if node.init is not None or not isinstance(node.type.type,c_ast.TypeDecl) or not isinstance(node.type.type.type,c_ast.IdentifierType):
                     raise SMTGraphError('Bounded VLA requires uninitialized integer elements and one dimension')
-            if node.name in scalar:visible[node.name]=node
+            if node.name in scalar or node.name in sized:visible[node.name]=node
             return
         for _,child in node.children():visit(child,visible)
-    visit(function.body,{p.name:p for p in params if isinstance(p,c_ast.Decl) and p.name in scalar})
+    visit(function.body,{p.name:p for p in params if isinstance(p,c_ast.Decl) and (p.name in scalar or p.name in sized)})
