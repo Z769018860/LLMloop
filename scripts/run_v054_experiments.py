@@ -18,7 +18,7 @@ import z3
 from llmloop.clang_adapter import compiler_path
 
 ROOT=Path(__file__).resolve().parents[1]
-EXPECTED_TESTS=2545
+EXPECTED_TESTS=2547
 
 
 def main():
@@ -64,9 +64,11 @@ def main():
         historical_evidence_unchanged=all(hashlib.sha256(Path(p).read_bytes()).hexdigest()==h for p,h in prior.items()))
     previous_path=out/'attempts/frozen_first_run/results.json'
     previous=json.loads(previous_path.read_text()) if previous_path.exists() else None
-    attempt_note=('One earlier full run had 2543 passes and two legacy solver-sensitive failures; both isolated reproductions passed at unchanged budgets. The earlier complete run and diagnostics remain under attempts/frozen_first_run. This acceptance run repeats the entire suite and native matrices.' if previous else 'No earlier frozen full run is retained.')
-    result={'passed':all(checks.values()),'checks':checks,'full_pytest':full,'new_tests':63,'existing_cases_deleted':0,'existing_cases_advanced':3,
+    interrupted=out/'attempts/frozen_second_interrupted/interruption.json'
+    attempt_note=('Before query-context isolation, one full run had 2543 passes and two legacy solver-sensitive failures; a second run was interrupted after another division-induction failure. Isolated reproductions passed at unchanged budgets. The earlier run, partial run and diagnostics remain under attempts. The final source isolates obligation/replay solver contexts and retains every formula and budget; this acceptance run repeats the entire suite and native matrices.' if previous and interrupted.exists() else 'Any earlier validation records are retained under attempts.')
+    result={'passed':all(checks.values()),'checks':checks,'full_pytest':full,'new_tests':65,'new_scoped_vla_tests':63,'new_solver_context_tests':2,'existing_cases_deleted':0,'existing_cases_advanced':3,
         'previous_full_run':{'path':str(previous_path.relative_to(out)),'passed':previous['passed'],'full_pytest':previous['full_pytest']} if previous else None,
+        'previous_interrupted_run':str(interrupted.relative_to(out)) if interrupted.exists() else None,
         'tested_commit':manifest['tested_commit'],'tested_tree':manifest['tested_tree'],'commands':commands,
         'source_paths':len(hashes),'historical_evidence_paths':len(prior),
         'environment':{'python':platform.python_version(),'platform':platform.platform(),'pytest':pytest.__version__,'pycparser':pycparser.__version__,'sympy':sympy.__version__,'z3':z3.get_version_string(),
@@ -76,7 +78,7 @@ def main():
 
 Frozen source `{manifest['tested_commit']}`, tree `{manifest['tested_tree']}`.
 Full regression: **{full['passed']} passed, {full['skipped']} skipped**. There are
-63 new tests; three existing refusal cases advance to checked support, and no
+65 new tests (63 scoped VLA and two solver-context controls); three existing refusal cases advance to checked support, and no
 existing case is deleted. All validation is local, without Actions, KLEE
 or larger query/execution budgets. {attempt_note}
 
@@ -97,6 +99,21 @@ A for-initializer VLA instead lives across condition, body and increment, with
 one saved extent, until the entire loop exits. Existing call expansion retains
 these boundaries when conditions/initializers/increments contain helpers.
 Original source goto/labels remain refused.
+
+## Solver context isolation
+
+Typed recurrence/CFG obligations and division functional lemmas now translate
+their unchanged assertions into a fresh Z3 context for each query. Exported
+division/source queries are independently replayed in fresh contexts as well.
+This separates queries from ambient AST allocation history. Counterexample
+parameters are translated to the solving context before model evaluation;
+dedicated SAT and UNKNOWN controls check that witnesses are retained and an
+UNKNOWN result cannot certify an obligation. Induction steps retain UNKNOWN
+reasons, and CLI replay failures include label, result and reason. This is a
+query-isolation change, not a claim that all solver timeouts are eliminated.
+No assumptions, query retries, 5000 ms query cap or 30000 ms functional deadline
+are added or relaxed. Context setup/translation count toward the existing
+functional deadline. Every induction query and all 31 counter cases remain.
 
 `memory_model.bounded_local_vla.instances` binds each object name, scope, saved
 extent and declaration visit. The guarded negated positivity/capacity queries

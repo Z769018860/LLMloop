@@ -1022,3 +1022,7 @@ See the [scope contract](docs/BOUNDED_LOCAL_VLA.md),
 Eight-cell/eight-object representation and existing execution budgets remain;
 general bound expressions, VLA parameters, source goto/labels and arbitrary
 heap/LLVM semantics remain unsupported.
+
+Typed obligation queries and division induction/replay now use independent
+solver contexts while retaining the same formulas and time limits. SAT witness
+translation and fail-closed UNKNOWN behavior have dedicated regression controls.

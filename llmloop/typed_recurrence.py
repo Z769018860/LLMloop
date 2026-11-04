@@ -64,9 +64,10 @@ class TypedCRecurrence(TypedCFunction):
             enclosure=prove_interval(premise,claim)
             if enclosure is not None:
                 self.checks.append({'obligation':label,'proved':True,'certificate':enclosure});return
-        solver=z3.Solver();solver.set(timeout=5000);solver.add(premise,z3.Not(claim))
+        context=z3.Context();solver=z3.Solver(ctx=context);solver.set(timeout=5000)
+        solver.add(premise.translate(context),z3.Not(claim).translate(context))
         answer=solver.check()
-        if answer!=z3.unsat:raise ProofFailure(label,answer,solver,self.witness)
+        if answer!=z3.unsat:raise ProofFailure(label,answer,solver,{name:term.translate(context) for name,term in self.witness.items()})
         self.checks.append({'obligation':label,'proved':True})
 
     def build(self,closed_forms):

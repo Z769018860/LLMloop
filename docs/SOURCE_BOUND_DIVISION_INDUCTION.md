@@ -7,6 +7,15 @@ prerequisite. Recognition only identifies candidate source regions; it does not
 assign a division specification from a function name or an algorithm signature.
 Every accepted expression comes from the actual normalized C AST.
 
+Each functional lemma is solved in a fresh Z3 context containing translated
+copies of the same assertions and source symbols. CLI certificate replays also
+use fresh contexts. This separates solving from the ambient context's AST
+allocation history without changing proof obligations or the 5000 ms per-query
+and 30000 ms total functional limits. Context preparation counts toward the
+total deadline. UNKNOWN step/replay diagnostics retain the reason; an UNKNOWN
+lemma cannot establish a certificate. General solver timeout elimination is
+not claimed.
+
 API example (inside a Clang proof request):
 
 ```json

@@ -111,7 +111,7 @@ def prove_division_induction(model, timeout_ms=30000):
     if type(timeout_ms) is not int or not 1 <= timeout_ms <= 30000: raise SMTGraphError('Division functional deadline must be 1..30000 ms')
     started = time.monotonic(); deadline = started + timeout_ms / 1000
     result = {'status': 'UNKNOWN', 'method': 'actual-source unsigned-32 division induction', 'total_timeout_ms': timeout_ms,
-              'per_query_maximum_ms': 5000, 'steps': [], 'arithmetic_audits': [], 'source_safety_inferred_from_functional': False,
+              'per_query_maximum_ms': 5000, 'solver_context': 'isolated per query', 'steps': [], 'arithmetic_audits': [], 'source_safety_inferred_from_functional': False,
               'source_sha256': hashlib.sha256(model.original_source.encode()).hexdigest(),
               'execution_source_sha256': hashlib.sha256(model.source.encode()).hexdigest(),
               'trusted_components': ['Clang structural normalization when selected', 'typed expression/CFG/call execution',
@@ -125,11 +125,16 @@ def prove_division_induction(model, timeout_ms=30000):
     def prove(label, precondition, claim, logic='QF_BV'):
         remaining()
         if logic == 'QF_BV': qfbv_terms([precondition, claim])
-        solver = z3.SolverFor(logic); budget = remaining(); solver.set(timeout=budget); solver.add(precondition, z3.Not(claim))
+        # A proof query must not inherit the ambient context's AST allocation
+        # history. Translation preserves every source obligation and symbol.
+        context = z3.Context(); solver = z3.SolverFor(logic, ctx=context)
+        solver.add(precondition.translate(context), z3.Not(claim).translate(context))
+        budget = remaining(); solver.set(timeout=budget)
         before = time.monotonic(); answer = solver.check()
         result['steps'].append({'label': label, 'logic': logic, 'timeout_ms': budget, 'result': str(answer),
                                 'elapsed_seconds': round(time.monotonic() - before, 6), 'refutation_smt2': solver.to_smt2()})
         if answer != z3.unsat:
+            if answer == z3.unknown: result['steps'][-1]['reason'] = solver.reason_unknown()
             result['failed_step'] = label
             result['counterexample_kind'] = 'unproved_intermediate_lemma_not_a_program_counterexample'
             raise _Stop('Intermediate lemma ' + str(answer) + (': ' + solver.reason_unknown() if answer == z3.unknown else ''))

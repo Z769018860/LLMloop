@@ -69,7 +69,7 @@ def functional(row, inputs=None):
 def replay(row):
     counts = {'sat': 0, 'unsat': 0}; queries = row['report']['certificate']['queries']
     for query in queries:
-        solver = z3.SolverFor('QF_BV'); solver.set(timeout=5000); solver.from_string(query['smt2']); answer = str(solver.check())
+        context = z3.Context(); solver = z3.SolverFor('QF_BV', ctx=context); solver.set(timeout=5000); solver.from_string(query['smt2']); answer = str(solver.check())
         if answer != query['result'] or answer not in counts: raise AssertionError((query['label'], answer, query['result']))
         counts[answer] += 1
     return {'queries': len(queries), 'results': counts, 'all_match': True}
@@ -129,8 +129,9 @@ def main(argv=None):
             if any(query[key]!=direct_query[key] for key in ('source_sha256','execution_source_sha256','reference_sha256','domain_sha256')):raise AssertionError('Functional strategies changed source, execution, reference or domain')
             steps=query['steps']
             for step in steps:
-                solver=z3.SolverFor(step['logic']);solver.set(timeout=step['timeout_ms']);solver.from_string(step['refutation_smt2'])
-                if solver.check()!=z3.unsat:raise AssertionError(step['label'])
+                context=z3.Context();solver=z3.SolverFor(step['logic'],ctx=context);solver.set(timeout=step['timeout_ms']);solver.from_string(step['refutation_smt2'])
+                answer=solver.check()
+                if answer!=z3.unsat:raise AssertionError({'label':step['label'],'result':str(answer),'reason':solver.reason_unknown() if answer==z3.unknown else 'refuted exported lemma'})
             if not query['arithmetic_audits']:raise AssertionError('Arithmetic audit missing')
             for audit in query['arithmetic_audits']:
                 variables={name:z3.Int(name) for name in 'audit_D audit_Q audit_R audit_H audit_T audit_F audit_B'.split()}

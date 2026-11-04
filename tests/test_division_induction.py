@@ -38,7 +38,7 @@ def model(source=DIVIDER, bounds=None, **options):
 
 def replay(proof):
     for step in proof['steps']:
-        solver=z3.SolverFor(step['logic']);solver.set(timeout=step['timeout_ms']);solver.from_string(step['refutation_smt2'])
+        context=z3.Context();solver=z3.SolverFor(step['logic'],ctx=context);solver.set(timeout=step['timeout_ms']);solver.from_string(step['refutation_smt2'])
         assert solver.check()==z3.unsat,step['label']
     for audit in proof['arithmetic_audits']:
         assert audit['identity_checked'] and audit['normalized_difference']=='0'
@@ -50,12 +50,18 @@ def replay(proof):
 
 
 @pytest.mark.parametrize('abi',['LP64','ILP32','LLP64'])
-def test_actual_scalar_loop_induction_covers_all_remaining_counter_values(abi):
+def test_actual_scalar_loop_induction_covers_all_remaining_counter_values(abi,monkeypatch):
     m=model(abi=abi);assert m.failure is None
+    original=z3.SolverFor;isolated=[]
+    def solver_for(*args,**kwargs):
+        isolated.append(kwargs.get('ctx') is not None and kwargs['ctx'] is not z3.main_ctx())
+        return original(*args,**kwargs)
+    monkeypatch.setattr(z3,'SolverFor',solver_for)
     proof=m.division_induction()
     assert proof['status']=='PROVED_FUNCTIONAL_DIVISION_INDUCTION',proof
     assert sorted(case['counter'] for case in proof['counter_cases'])==list(range(1,32))
     assert len(proof['steps'])==39
+    assert len(isolated)==39 and all(isolated)
     assert proof['steps'][-1]['logic']=='QF_NIA'
     assert all(step['result']=='unsat' and 0<step['timeout_ms']<=5000 for step in proof['steps'])
     assert not proof['source_safety_inferred_from_functional']
@@ -167,7 +173,7 @@ def test_intermediate_solver_unknown_cannot_be_used_as_a_lemma(monkeypatch):
         def check(self):return z3.unknown
         def reason_unknown(self):return 'test unknown'
         def to_smt2(self):return '(assert true)'
-    monkeypatch.setattr(z3,'SolverFor',lambda *unused:Unknown())
+    monkeypatch.setattr(z3,'SolverFor',lambda *unused,**unused_options:Unknown())
     proof=m.division_induction()
     assert proof['status']=='UNKNOWN' and proof['failed_step']=='actual source width constant'
     assert proof['steps'][0]['result']=='unknown'
