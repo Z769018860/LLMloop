@@ -1,0 +1,241 @@
+{
+  "passed": true,
+  "checks": {
+    "pytest": true,
+    "scoped_native": true,
+    "vla_native": true,
+    "static_native": true,
+    "array_native": true,
+    "scoped_cli": true,
+    "full_test_count": true,
+    "scoped_native_result": true,
+    "retained_vla_result": true,
+    "retained_static_result": true,
+    "retained_array_result": true,
+    "cli_result": true,
+    "source_unchanged": true,
+    "historical_evidence_unchanged": true
+  },
+  "full_pytest": {
+    "passed": 2547,
+    "skipped": 0,
+    "expected": 2547
+  },
+  "new_tests": 65,
+  "new_scoped_vla_tests": 63,
+  "new_solver_context_tests": 2,
+  "existing_cases_deleted": 0,
+  "existing_cases_advanced": 3,
+  "previous_full_run": {
+    "path": "attempts/frozen_first_run/results.json",
+    "passed": false,
+    "full_pytest": {
+      "passed": 2543,
+      "skipped": 0,
+      "expected": 2545
+    }
+  },
+  "previous_interrupted_run": "attempts/frozen_second_interrupted/interruption.json",
+  "tested_commit": "6e92fa9818b29d06f004e29f01ffe9fd13076369",
+  "tested_tree": "958ad476eae1388c788f46f4a51552bd746b46a1",
+  "commands": {
+    "pytest": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--forked"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 912.0600172499999,
+      "log": "pytest.txt"
+    },
+    "scoped_native": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_scoped_vla_native.py",
+        "--output",
+        "experiments/v054/scoped_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 34.44534220600008,
+      "log": "scoped_native.txt"
+    },
+    "vla_native": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_bounded_vla_native.py",
+        "--output",
+        "experiments/v054/vla_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 26.61979911399999,
+      "log": "vla_native.txt"
+    },
+    "static_native": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_clang_static_arrays_native.py",
+        "--output",
+        "experiments/v054/static_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 22.83294768099995,
+      "log": "static_native.txt"
+    },
+    "array_native": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_clang_arrays_native.py",
+        "--output",
+        "experiments/v054/array_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 17.45812259299987,
+      "log": "array_native.txt"
+    },
+    "scoped_cli": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-m",
+        "llmloop.symbolic_cli",
+        "examples/clang_scoped_vla.c",
+        "--c-clang-proof",
+        "--function",
+        "entry",
+        "--clang-proof-config",
+        "{\"backend\":\"calls\",\"max_steps\":256}",
+        "--parameter-bounds",
+        "{\"n\":[-2,5]}",
+        "--inputs",
+        "{\"n\":3}"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.1173747520001598,
+      "log": "scoped_cli.txt"
+    }
+  },
+  "source_paths": 420,
+  "historical_evidence_paths": 569,
+  "environment": {
+    "python": "3.12.14",
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.39",
+    "pytest": "9.1.1",
+    "pycparser": "3.12",
+    "sympy": "1.14.0",
+    "z3": "5.3.3",
+    "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+    "gcc": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0"
+  },
+  "github_actions_used": false,
+  "ci_runs_used": 0,
+  "klee_used": false,
+  "query_budgets_increased": false,
+  "complete_vla_support": false,
+  "complete_c_support": false,
+  "evidence_sha256": {
+    "raw_evidence.tar.gz": "14cceb871a347d081d0f47c7d3335f72e436526cb0c21d2e901eff78d6afc5d3",
+    "report.md": "fe7071d6b2425944564e20c1529c03b1b5250765af950485f8a40773454b2717",
+    "scoped_cases.csv": "676f2d9f58119775c39a8596437cc442c870f4db367f05ef9a71ae6b4a53194a",
+    "source_publication.json": "1c8ac506fbcc6d0d96a57d2858b96d3ca2341dc6e85b62fa2845536eee17c994"
+  },
+  "published_source_commit": "05e2991ee24cca6338fe33555cb9cd4095915431",
+  "published_source_tree": "958ad476eae1388c788f46f4a51552bd746b46a1",
+  "source_tree_equal": true,
+  "validation_history": {
+    "full_runs_started": 3,
+    "full_runs_completed": 2,
+    "first_full_run": {
+      "passed": 2543,
+      "failed": 2,
+      "path": "attempts/frozen_first_run/results.json"
+    },
+    "second_run_interrupted": {
+      "accepted": false,
+      "path": "attempts/frozen_second_interrupted/interruption.json"
+    },
+    "final_frozen_run": {
+      "passed": 2547,
+      "failed": 0
+    },
+    "solver_context_isolation_added_before_final_run": true,
+    "query_and_execution_budgets_unchanged": true,
+    "failed_attempts_hidden": false
+  },
+  "experiment_summary": {
+    "scoped_native": {
+      "case_count": 10,
+      "native_output_matches": 360,
+      "independent_model_matches": 30,
+      "expected_ubsan_traps": 36,
+      "expected_memory_failures": 6,
+      "symbolic_lifetime_initialization_controls": 4,
+      "query_replays": {
+        "unsat": 48,
+        "sat": 2
+      }
+    },
+    "retained_vla_matches": 768,
+    "retained_static_matches": 1848,
+    "retained_array_matches": 1632,
+    "full_pytest_passed": 2547,
+    "skipped": 0,
+    "new_tests": 65,
+    "existing_cases_advanced": 3,
+    "cli_value": 30
+  },
+  "raw_archive": {
+    "path": "raw_evidence.tar.gz",
+    "sha256": "14cceb871a347d081d0f47c7d3335f72e436526cb0c21d2e901eff78d6afc5d3",
+    "members_sha256": {
+      "array_native.json": "8cf42403dae22254214b7df0a32bfbbabae9040f687c52235c9f02fc3d26366d",
+      "array_native.txt": "a8a88fd6797bf2a84e5b07d77341bb82c41ddfc103acba49944b7b4a80db2729",
+      "attempts/context_prevalidation/notes.json": "944cf9b4e64401545f1a909317877309d80e0b453e5af335a9fb7414d1233778",
+      "attempts/context_prevalidation/pytest.txt": "97942e8dbf1be18d9fe9f896b877233d8ea005b0312b2f39c104dd6e134910f2",
+      "attempts/frozen_first_run/array_native.json": "3ee18ecba6d3a8b4d2d870632c184b27348f52fcebd8c36911513c8becb7c052",
+      "attempts/frozen_first_run/array_native.txt": "a8a88fd6797bf2a84e5b07d77341bb82c41ddfc103acba49944b7b4a80db2729",
+      "attempts/frozen_first_run/attempts/legacy_division_reproduction/division_induction.json": "96d3741abec31005c5d77916b816f2d56ab7b132e4abf1e2a039cf04cbee4a6a",
+      "attempts/frozen_first_run/attempts/legacy_division_reproduction/notes.json": "a3726eb551e08b1e1ed03bb3d76b1c6600e66550ab96525e8cb0b3be7d27ec3c",
+      "attempts/frozen_first_run/attempts/legacy_division_reproduction/pytest.txt": "17866e87be6894f63c33d9323947dca6ef58a7b365e3d76697a38a76be579f36",
+      "attempts/frozen_first_run/attempts/legacy_parity_reproduction/notes.json": "b2f4d55f6282c01857faf1d78cc5c0d2ad56bc8268ad076add1bd0121c4986ca",
+      "attempts/frozen_first_run/attempts/legacy_parity_reproduction/pytest.txt": "601e3900ca758101d1bc8f8d5c0a802b7e1080d6b9579387637362a90e88b9c2",
+      "attempts/frozen_first_run/attempts/prevalidation/v054-cli-precheck.json": "44973445955e0eed9b12fcc0b55cd5258798e9249bf75aef7defc44e35d0cde6",
+      "attempts/frozen_first_run/attempts/prevalidation/v054-focused-1.txt": "d1693b09e89384f1e350878f2360e62c9102f064a24ed82e15e31e8c826f082a",
+      "attempts/frozen_first_run/attempts/prevalidation/v054-focused-2.txt": "aba517006703530cadfe52bc31e40a23e37518d878cd160b08b2c03e99591cb5",
+      "attempts/frozen_first_run/attempts/prevalidation/v054-focused-final.txt": "3597e5cc6c292dc44948cc67625599118661d23e04170d711a8510dc7fa2f161",
+      "attempts/frozen_first_run/attempts/prevalidation/v054-native-1.json": "5da840bce934daae899a8b6e1dbae5d10733095febbd0f8853c1dcfb3050b4a1",
+      "attempts/frozen_first_run/attempts/prevalidation/v054-native-1.txt": "aa85a2a7890c5251d35c528c45bc0e0678f568b10df84d799ad29a2899fc619d",
+      "attempts/frozen_first_run/commands.json": "055f687a08607ce29565dcaad88eb14da4e068d59a304c0c206a9b2a2bf21cd2",
+      "attempts/frozen_first_run/pytest.txt": "5f914dbc8afb165defc5509127b34e7257790b95cd29dd126107015aea13a6d6",
+      "attempts/frozen_first_run/report.md": "8be72fbdf24d1d3c90f443e14915963d2eafbba52e44fb4ba352e5c0f010e851",
+      "attempts/frozen_first_run/results.json": "6c2b35d321998a840080060b3b23c0c0f65fc09e0ed7d23d6b3facad76910d9b",
+      "attempts/frozen_first_run/scoped_cli.json": "7cd8d43da5abe46e226e6f76173b67befcb0db71440177d9cf497350a3408344",
+      "attempts/frozen_first_run/scoped_cli.txt": "7cd8d43da5abe46e226e6f76173b67befcb0db71440177d9cf497350a3408344",
+      "attempts/frozen_first_run/scoped_native.json": "039d9c8b2991f3faa1865661a35b807bc09060e0d7cb242ed5ab94885c63e9ce",
+      "attempts/frozen_first_run/scoped_native.txt": "aa85a2a7890c5251d35c528c45bc0e0678f568b10df84d799ad29a2899fc619d",
+      "attempts/frozen_first_run/source_manifest.json": "ccd1d6a22506e0db40e3b42cc306b197a27e9a10e42e6cf78c4d13f7163be616",
+      "attempts/frozen_first_run/static_native.json": "9d5fbfa9fcf1be78dc9c31c0b42217086ff3c7527039cb8a7e056277616aaee4",
+      "attempts/frozen_first_run/static_native.txt": "2c3e73dfb5e4ef2beb5601b6b2415d27d70e41a24cdb7ef6414831165e8107bc",
+      "attempts/frozen_first_run/vla_native.json": "6b44def24daa13c63e1a8fef38cb7afeaa6e62dcf6daf2007949bf6c7e5cece7",
+      "attempts/frozen_first_run/vla_native.txt": "a0c8549b1a842d087805bd74b289b2e23c25e8a98ad48ec6528d4328d7d26e80",
+      "attempts/frozen_second_interrupted/interruption.json": "73dd3a919136b4084c24469fa0c276dee99df604e99bea845b9f0c4d63df3156",
+      "attempts/frozen_second_interrupted/isolated_llp64/v054-llp64-debug.json": "e7f2f7b8c4f5c02a11e0f987e86cbcb8b2cffb2ec69722912cb2a2bf04dd78ed",
+      "attempts/frozen_second_interrupted/isolated_llp64/v054-llp64-debug.txt": "5fe733c666d789c9dbd5d438415cffbab36b5af38222c91844ad4f13fe99678c",
+      "attempts/frozen_second_interrupted/pytest.txt": "17126bef163d62abcfb43d062e588aaf81e2869e045fe25e2ca7656f76fa1136",
+      "attempts/frozen_second_interrupted/source_manifest.json": "4679937d9bf06f8e25778919d3207f40d601fc00ab42b0a375ebcb088946b101",
+      "commands.json": "d28ee7054079d427e6b7c0b6d40984e05596cb1fa5e73177a07cfabb98409583",
+      "pytest.txt": "31c3b79939499e5a1efc9de8f1c3a89f1d5576e58e57daa86502284575841440",
+      "scoped_cli.json": "7f9961b0feec37e958e3d4862d5b894306e5628ec8e350c9bda9c0e347a16202",
+      "scoped_cli.txt": "7f9961b0feec37e958e3d4862d5b894306e5628ec8e350c9bda9c0e347a16202",
+      "scoped_native.json": "43e7b1486c726f8ed7c1e06903209456594dc4e6f61e8bc045ce851cf22dec13",
+      "scoped_native.txt": "aa85a2a7890c5251d35c528c45bc0e0678f568b10df84d799ad29a2899fc619d",
+      "source_manifest.json": "1b73c6b383219809e37e3dc617cde05404498f7a48f6b012cebb70b0441668b1",
+      "static_native.json": "a21e0585b7356749fecd214189071b43dead8b70b982b62f2850929123aff32a",
+      "static_native.txt": "2c3e73dfb5e4ef2beb5601b6b2415d27d70e41a24cdb7ef6414831165e8107bc",
+      "vla_native.json": "1dd47711088c633d128c6e75a4579198554578ddb50be0ac4c0b620b807209df",
+      "vla_native.txt": "a0c8549b1a842d087805bd74b289b2e23c25e8a98ad48ec6528d4328d7d26e80"
+    },
+    "original_relative_paths_preserved": true
+  }
+}
