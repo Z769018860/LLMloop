@@ -1,16 +1,55 @@
 """Conservative lexical source context for once-evaluated finite local VLAs."""
 from collections import Counter
-from pycparser import c_ast
+from pycparser import c_ast,c_parser,c_generator
 
 from .memory_frontend import _lit
 from .smt_spath import SMTGraphError
 
 
+def bound_identifiers(expression):
+    """Admit only pure typed integer operations; inspect even lazy arms."""
+    pending=[(expression,0)];names=set();count=0
+    binary=set(('+','-','*','/','%','<<','>>','&','|','^','<','<=','>','>=','==','!=','&&','||'))
+    while pending:
+        node,depth=pending.pop();count+=1
+        if count>256 or depth>32:raise SMTGraphError('VLA bound expression budget exceeded')
+        if isinstance(node,c_ast.ID):names.add(node.name);continue
+        if isinstance(node,c_ast.Constant) and node.type in ('int','unsigned int','long int','unsigned long int','long long int','unsigned long long int','char'):continue
+        if isinstance(node,c_ast.UnaryOp) and node.op in ('+','-','~','!'):children=[node.expr]
+        elif isinstance(node,c_ast.BinaryOp) and node.op in binary:children=[node.left,node.right]
+        elif isinstance(node,c_ast.TernaryOp) and node.iftrue is not None:children=[node.cond,node.iftrue,node.iffalse]
+        elif isinstance(node,c_ast.Cast):
+            target=node.to_type.type
+            if (not isinstance(target,c_ast.TypeDecl) or target.quals or node.to_type.quals
+                    or not isinstance(target.type,c_ast.IdentifierType)
+                    or not set(target.type.names)<=set(('_Bool','char','short','int','long','signed','unsigned'))):
+                raise SMTGraphError('VLA bound casts require plain integer types')
+            children=[node.expr]
+        else:raise SMTGraphError('VLA bound requires pure integer operators without calls, memory reads or effects')
+        pending.extend((child,depth+1) for child in children)
+    return sorted(names)
+
+
+def parse_bound_expression(text):
+    """Parse Clang's printed bound conservatively, then validate its grammar."""
+    if len(text)>4096:raise SMTGraphError('VLA bound spelling budget exceeded')
+    try:unit=c_parser.CParser().parse('int __llmloop_bound(void){return ('+text+');}')
+    except Exception as exc:raise SMTGraphError('Unsupported Clang VLA bound spelling: '+str(exc)) from exc
+    if len(unit.ext)!=1 or not isinstance(unit.ext[0],c_ast.FuncDef):raise SMTGraphError('Expected one VLA bound expression')
+    items=unit.ext[0].body.block_items or []
+    if len(items)!=1 or not isinstance(items[0],c_ast.Return):raise SMTGraphError('Expected one VLA bound expression')
+    expression=items[0].expr;bound_identifiers(expression);return expression
+
+
+def bound_spelling(expression):
+    return c_generator.CGenerator().visit(expression)
+
+
 def validate_bounded_vlas(function):
     """Validate original scopes before call expansion creates hygienic gotos.
 
-    A bound is one uniquely named, visible scalar parameter or initialized
-    local. Declarations live in explicit blocks or a for initializer. Original
+    Bound leaves are uniquely named, visible scalar parameters or initialized
+    locals. Declarations live in explicit blocks or a for initializer. Original
     goto/labels remain refused; runtime positivity/capacity are never assumed.
     """
     declarations=[];jumps=[];pending=[(function,0)];count=0
@@ -53,9 +92,10 @@ def validate_bounded_vlas(function):
         if isinstance(node,c_ast.Decl):
             if id(node) in dynamic:
                 bound=node.type.dim
-                if (context not in ('block','for_init') or not isinstance(bound,c_ast.ID)
-                        or bound.name not in visible or bound.name not in scalar or counts[bound.name]!=1):
-                    raise SMTGraphError('Bounded VLA requires an explicit block/for scope and unique visible initialized scalar bound')
+                names=bound_identifiers(bound)
+                if (context not in ('block','for_init')
+                        or any(name not in visible or name not in scalar or counts[name]!=1 for name in names)):
+                    raise SMTGraphError('Bounded VLA requires an explicit block/for scope and unique visible initialized scalar operands')
                 if node.init is not None or not isinstance(node.type.type,c_ast.TypeDecl) or not isinstance(node.type.type.type,c_ast.IdentifierType):
                     raise SMTGraphError('Bounded VLA requires uninitialized integer elements and one dimension')
             if node.name in scalar:visible[node.name]=node

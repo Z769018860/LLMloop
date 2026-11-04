@@ -1,14 +1,28 @@
 # Bounded local variable-length arrays
 
 The Clang `calls` bridge and typed CFG heap/call kernels admit a restricted
-local integer VLA. Its one-dimensional extent must be one uniquely named
-visible scalar parameter or initialized local identifier. Declarations in
+local integer VLA. Its one-dimensional extent may be a pure typed integer
+expression whose identifiers are uniquely named visible scalar parameters or
+initialized locals. Declarations in
 explicit nested blocks and for initializers are admitted, including structured
-loops and case blocks. Source labels/gotos, compound bound expressions,
+loops and case blocks. Source labels/gotos, effectful bound expressions,
 pointer elements, initializers and variably modified typedefs remain refused.
 VLA parameters, general layouts and arbitrary VLA programs are not supported.
 Local scalar bounds must be declared with an initializer; later-only assignment
 does not extend the admitted scalar declaration fragment.
+
+Admitted bounds include integer/character literals, unary `+ - ~ !`, arithmetic,
+shifts, bitwise/comparison/logical operators, ternary conditionals and casts to
+plain primitive integer types. Examples are `n+1`, `1U<<n`, `n+m`,
+`n>0?n+1:1/(n-n)` and `(unsigned char)(n+256)+1`. The existing typed expression
+kernel retains promotions, conversions and lazy evaluation; signed overflow,
+zero divisors and invalid shifts cannot be hidden by positivity/capacity checks.
+Unsigned wrapping can yield a positive but unrepresented extent, which remains
+an analysis frontier. Every identifier in every arm must satisfy the lexical
+source contract even if that arm is unexecuted. Calls, assignment/increment,
+comma expressions, pointer/array reads, general `sizeof`, typedef-name casts and
+noninteger casts remain refused. The expression has 256-node/32-depth limits;
+printed Clang bounds additionally have a 4096-character parsing limit.
 
 The bound's current typed value is evaluated **once per execution of the declaration**,
 after earlier scalar assignments and helper argument conversions. The kernel
@@ -32,11 +46,14 @@ interior slices retain the same object and saved extent. Static array entry
 contracts independently check the actual VLA capacity; their whole-object-base
 restriction is unchanged.
 
-Clang identifies the bound parameter/local by its AST declaration ID after
-requiring unambiguous spelling in that function. The receiving source validator
-checks lexical visibility and requires an initialized scalar before the VLA.
-Raw type spelling, array declaration, bound declaration kind/ID and normalized names are retained in `normalization.bounded_vla_declarations`.
-The normalizer preserves `T a[n]`; it does not rewrite the VLA to an eight-cell
+The Clang normalizer parses the printed type's bound in the restricted integer
+grammar and resolves each identifier to one uniquely spelled VarDecl/ParmVarDecl
+ID in the function. The receiving source validator checks lexical visibility
+and requires each local operand to be declared with an initializer before the VLA.
+Raw type/bound spelling, normalized expression, array declaration and every
+operand's declaration kind/ID and normalized name remain in
+`normalization.bounded_vla_declarations`. Legacy single-identifier fields remain.
+The normalizer preserves `T a[expression]`; it does not rewrite the VLA to an eight-cell
 source array or use a sampled length. Compiler ingestion, lowering and typed
 kernels remain trusted components, not a verified compiler-equivalence theorem.
 
@@ -54,13 +71,14 @@ continuation/return edges preserve these boundaries.
 saved extents and declaration visits. The eight-object budget counts cumulative
 represented instances, including expired arrays; it is not an unbounded storage
 reclamation proof. Longer loops can remain UNKNOWN even when only one VLA is
-live. General VLA expressions and arbitrary source jumps remain unsupported.
-The scalar parameter is evaluated after formal conversions, while its caller's
+live. Effectful/general memory-reading bounds and arbitrary source jumps remain unsupported.
+Scalar operands are evaluated after formal conversions, while the caller's
 domain, eager argument safety and complete-exit requirements remain intact.
 
 `memory_model.bounded_local_vla.queries` exports guarded negated positivity
 and capacity obligations for independent SMT replay. Queries bind the saved
-extent, array and bound names. The existing 5000 ms query budget is unchanged;
+extent, array, normalized expression, operand names and resulting integer type.
+The existing 5000 ms query budget is unchanged;
 the VLA trace has 4096-query/16-MiB caps. Object/path/call/step budgets are unchanged.
 
 Run the example (n=3 returns 15, even after n is reassigned):
@@ -85,3 +103,6 @@ The C extent and lifetime rules are specified in
 sections 6.2.4, 6.7.6.2 and 6.5.3.4. Full VLA/heap/C/LLVM support remains open.
 
 The scoped extension is illustrated by [clang_scoped_vla.c](../examples/clang_scoped_vla.c) and [v0.54 evidence](../experiments/v054/report.md).
+
+Pure expression bounds are illustrated by [clang_vla_expression.c](../examples/clang_vla_expression.c)
+and [v0.55 evidence](../experiments/v055/report.md). The example returns 20 at n=3.

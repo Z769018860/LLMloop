@@ -111,15 +111,17 @@ def test_bound_visibility_and_initialization_are_checked_statically(clang,fronte
     unknown(run(body,frontend=frontend))
 
 
-@pytest.mark.parametrize('body',[
-    'int m=3;{int m=2;int a[m];return 0;}',
-    'int m=3;{int a[m++];return 0;}',
-    'int m=3;{int a[m+1];return 0;}',
-    '{int a[n];goto done;}done:return 0;',
-    'int m=3;switch(n){case 1:;int a[m];case 2:return 7;default:return 0;}',
+@pytest.mark.parametrize('body,expected',[
+    ('int m=3;{int m=2;int a[m];return 0;}',None),
+    ('int m=3;{int a[m++];return 0;}',None),
+    ('int m=3;{int a[m+1];return 0;}',0),
+    ('{int a[n];goto done;}done:return 0;',None),
+    ('int m=3;switch(n){case 1:;int a[m];case 2:return 7;default:return 0;}',None),
 ])
-def test_unmodeled_bound_effects_and_source_jumps_remain_refused(clang,body):
-    unknown(run(body))
+def test_pure_scoped_bound_advances_while_effects_and_jumps_stay_closed(clang,body,expected):
+    r=run(body)
+    if expected is None:unknown(r)
+    else:proved(r,expected)
 
 
 def test_for_initializer_lifetime_ends_after_loop(clang):

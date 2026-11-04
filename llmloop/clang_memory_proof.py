@@ -4,11 +4,13 @@ This is a trusted structural frontend, not an LLVM interpreter. The receiving
 typed kernels retain their finite memory, alias, lifetime and call budgets.
 """
 import re
+from pycparser import c_ast
 
 from .clang_proof import nodes, check_parameter_attributes, check_typedef_attributes
 from .clang_parameters import checked_pointer_parameter
 from .clang_union_views import UnionViewNormalizer
 from .smt_spath import SMTGraphError
+from .bounded_vla import parse_bound_expression,bound_identifiers,bound_spelling
 
 
 BUILTINS = {'malloc', 'calloc', 'free'}
@@ -136,22 +138,30 @@ class MemoryNormalizer(UnionViewNormalizer):
 
     def bounded_vla(self,node):
         text=node['type'].get('desugaredQualType',node['type']['qualType'])
-        match=re.fullmatch(r'(.+?)\s*\[([A-Za-z_][A-Za-z0-9_]*)\]',text)
-        if not match or not self.bounded_vlas_enabled:
+        match=re.fullmatch(r'([^\[\]]+?)\s*\[([^\[\]]+)\]',text)
+        if not match or not self.bounded_vlas_enabled or match[2].isdigit():
             return None
-        declarations=[n for n in nodes(self.root) if n.get('kind') in ('VarDecl','ParmVarDecl') and n.get('name')==match[2]]
-        if (len(declarations)!=1
-                or any(n.get('kind') in ('GotoStmt','LabelStmt') for n in nodes(self.root))):
-            raise SMTGraphError('Bounded Clang VLA requires a unique scalar bound and no source goto/label')
-        parameter=declarations[0];self.type(parameter['type'])
+        expression=parse_bound_expression(match[2]);names=bound_identifiers(expression);references=[];renamed={}
+        if any(n.get('kind') in ('GotoStmt','LabelStmt') for n in nodes(self.root)):
+            raise SMTGraphError('Bounded Clang VLA requires no source goto/label')
+        for name in names:
+            declarations=[n for n in nodes(self.root) if n.get('kind') in ('VarDecl','ParmVarDecl') and n.get('name')==name]
+            if len(declarations)!=1:raise SMTGraphError('Bounded Clang VLA requires unique scalar operand names')
+            declaration=declarations[0];self.type(declaration['type']);renamed[name]=self.names[declaration['id']]
+            references.append({'source_name':name,'normalized_name':renamed[name],'ast_id':declaration['id'],'kind':declaration['kind']})
         element=self.memory_type(match[1])
         if '*' in element or element.startswith('struct '):raise SMTGraphError('Bounded Clang VLA supports integer elements only')
         if node.get('inner'):raise SMTGraphError('Bounded Clang VLA initializers/attributes unsupported')
-        bound=self.names[parameter['id']]
-        self.bounded_vla_declarations.append({'function':self.root['name'],'ast_id':node['id'],'array_name':self.names[node['id']],
-            'source_type':text,'bound_declaration_id':parameter['id'],'bound_declaration_kind':parameter['kind'],
-            **({'bound_parameter_id':parameter['id']} if parameter['kind']=='ParmVarDecl' else {}),'bound_name':bound,
-            'rule':'evaluate visible scalar value once per declaration execution; prove positive extent and capacity, never assume bounds'})
+        class Rename(c_ast.NodeVisitor):
+            def visit_ID(self,n):n.name=renamed[n.name]
+        Rename().visit(expression);bound=bound_spelling(expression)
+        record={'function':self.root['name'],'ast_id':node['id'],'array_name':self.names[node['id']],
+            'source_type':text,'source_bound_expression':match[2],'bound_expression':bound,'bound_references':references,'bound_name':bound,
+            'rule':'evaluate visible scalar value once per declaration execution; prove positive extent and capacity, never assume bounds'}
+        if isinstance(expression,c_ast.ID):
+            reference=references[0];record.update(bound_declaration_id=reference['ast_id'],bound_declaration_kind=reference['kind'])
+            if reference['kind']=='ParmVarDecl':record['bound_parameter_id']=reference['ast_id']
+        self.bounded_vla_declarations.append(record)
         return element,bound
 
     def expr(self, node):

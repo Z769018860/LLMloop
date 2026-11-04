@@ -140,9 +140,11 @@ def test_linked_preprocessed_provider_retains_vla_and_sizeof(tmp_path,clang):
     assert r['normalization']['bounded_vla_declarations']
 
 
-@pytest.mark.parametrize('decl',['int a[n++];','int a[n+1];','int a[1][n];','int *a[n];','typedef int A[n++];'])
-def test_unmodeled_bound_evaluations_and_shapes_stay_closed(clang,decl):
-    unknown(run('int entry(int n){'+decl+'return n;}'))
+@pytest.mark.parametrize('decl,expected',[('int a[n++];',None),('int a[n+1];',3),('int a[1][n];',None),('int *a[n];',None),('typedef int A[n++];',None)])
+def test_pure_bound_advances_without_admitting_effects_or_layouts(clang,decl,expected):
+    r=run('int entry(int n){'+decl+'return n;}',bounds=(1,3))
+    if expected is None:unknown(r)
+    else:proved(r);assert r['evaluation']['value']==expected
 
 
 @pytest.mark.parametrize('body,expected',[

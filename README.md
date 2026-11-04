@@ -1026,3 +1026,17 @@ heap/LLVM semantics remain unsupported.
 Typed obligation queries and division induction/replay now use independent
 solver contexts while retaining the same formulas and time limits. SAT witness
 translation and fail-closed UNKNOWN behavior have dedicated regression controls.
+
+## v0.55: pure typed VLA bound expressions
+
+Local integer arrays now admit pure bounds such as `n+1`, `1U<<n`, `n+m`,
+conditional expressions and primitive integer casts. Each declaration execution
+evaluates the typed expression once, checks definedness/positivity/capacity,
+and saves its extent for access and `sizeof`. Lazy arms retain C evaluation
+rules; later changes to any bound operand do not resize the object.
+
+See the [bound contract](docs/BOUNDED_LOCAL_VLA.md),
+[example](examples/clang_vla_expression.c) and [local validation](experiments/v055/report.md).
+Calls/effects, memory-reading bounds, general `sizeof`, typedef-name casts,
+VLA parameters and multidimensional layouts remain open. Eight represented
+cells per object, eight cumulative objects and existing proof budgets remain.

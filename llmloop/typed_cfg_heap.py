@@ -15,7 +15,7 @@ from .symbolic_integers import TypedTerm
 from .memory_frontend import _lit
 from .smt_spath import SMTGraphError
 from .struct_heap import StructHeap,StructType
-from .bounded_vla import validate_bounded_vlas
+from .bounded_vla import validate_bounded_vlas,bound_identifiers,bound_spelling
 
 
 @dataclass
@@ -413,8 +413,10 @@ class TypedCFGHeap(TypedCMemory):
             else:
                 self.array_names.add(node.name);length=_lit(node.type.dim)
                 dynamic=length is None
-                if dynamic and (not isinstance(node.type.dim,c_ast.ID) or isinstance(t,(StructType,PointerElement)) or node.init is not None):
-                    raise SMTGraphError('Bounded VLA requires an integer-identifier bound and uninitialized integer elements')
+                if dynamic:
+                    bound_identifiers(node.type.dim)
+                    if isinstance(t,(StructType,PointerElement)) or node.init is not None:
+                        raise SMTGraphError('Bounded VLA requires a pure integer bound and uninitialized integer elements')
                 if not dynamic and not 1<=length<=8:raise SMTGraphError('Stack array size must be 1..8')
                 if node.init is not None and not isinstance(node.init,c_ast.InitList):raise SMTGraphError('Array initializer must be a list')
                 initial=node.init.exprs or [] if node.init is not None else []
@@ -453,7 +455,8 @@ class TypedCFGHeap(TypedCMemory):
     def check_vla(self,label,guard,claim,node,extent):
         solver=z3.Solver();solver.add(self.domain,guard,z3.Not(claim));query=solver.to_smt2()
         if len(self.vla_queries)>=4096 or self.vla_query_chars+len(query)>16*1024*1024:raise SMTGraphError('Bounded VLA certificate budget exceeded')
-        record={'obligation':label,'array_name':node.name,'bound_name':node.type.dim.name,
+        record={'obligation':label,'array_name':node.name,'bound_name':bound_spelling(node.type.dim),
+                'bound_expression':bound_spelling(node.type.dim),'bound_names':bound_identifiers(node.type.dim),'bound_type':extent.type.name,
                 'saved_extent_smt2':extent.value.sexpr(),'declaration_visit':len(self.vla_instances),'smt2':query,'proved':False}
         self.vla_queries.append(record);self.vla_query_chars+=len(query)
         self.check(label,z3.And(self.domain,guard),claim);record['proved']=True
