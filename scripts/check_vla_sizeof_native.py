@@ -15,7 +15,7 @@ def fixtures():
     def row(name,body,oracle,header='int api(int n);',helper='int api(int n){return n;}'):
         return dict(name=name,header=header,helper=helper,main='int entry(int n){'+body+'}',oracle=oracle)
     return [
-        row('scalar_object_size','int b[n+sizeof(n)];n=1;return (int)sizeof(b);',lambda n:4*(n+4)),
+        row('const_scalar_object_size','const int m=2;int b[n+sizeof(m)];n=1;return (int)sizeof(b);',lambda n:4*(n+4)),
         row('void_pointer_type_size','int b[n+sizeof(void*)/sizeof(void*)];return (int)sizeof(b);',lambda n:4*(n+1)),
         row('null_pointer_object_size','int *p=0;int b[n+sizeof(p)/sizeof(int)];return (int)sizeof(b);',lambda n:4*(n+2)),
         row('saved_extent_after_mutation','int old=n;int a[n];n=7;int b[sizeof(a)/sizeof(int)];b[old-1]=old;return (int)sizeof(b)+b[old-1];',lambda n:5*n),

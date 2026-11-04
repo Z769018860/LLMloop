@@ -18,7 +18,7 @@ import z3
 from llmloop.clang_adapter import compiler_path
 
 ROOT=Path(__file__).resolve().parents[1]
-EXPECTED_TESTS=2805
+EXPECTED_TESTS=2814
 
 
 def main():
@@ -69,7 +69,7 @@ def main():
         historical_evidence_unchanged=all(hashlib.sha256(Path(p).read_bytes()).hexdigest()==h for p,h in prior.items()))
     total=sum(d.get('native_output_matches',0) for d in (sizeof,expression,scoped,vla,static,arrays))+sizeof.get('defined_capacity_frontier_matches',0)+expression.get('defined_capacity_frontier_matches',0)
     checks['native_total']=total==5496
-    result={'passed':all(checks.values()),'checks':checks,'full_pytest':full,'new_tests':127,'existing_cases_deleted':0,'existing_cases_advanced':3,'native_output_matches_including_defined_frontiers':total,
+    result={'passed':all(checks.values()),'checks':checks,'full_pytest':full,'new_tests':136,'existing_cases_deleted':0,'existing_cases_advanced':3,'native_output_matches_including_defined_frontiers':total,
         'tested_commit':manifest['tested_commit'],'tested_tree':manifest['tested_tree'],'commands':commands,'source_paths':len(hashes),'historical_evidence_paths':len(prior),
         'environment':{'python':platform.python_version(),'platform':platform.platform(),'pytest':pytest.__version__,'pycparser':pycparser.__version__,'sympy':sympy.__version__,'z3':z3.get_version_string(),
             'clang':subprocess.check_output([compiler_path(),'--version'],text=True).splitlines()[0],'gcc':subprocess.check_output(['gcc','--version'],text=True).splitlines()[0]},
@@ -78,7 +78,7 @@ def main():
 
 Frozen source `{manifest['tested_commit']}`, tree `{manifest['tested_tree']}`.
 Full regression: **{full['passed']} passed, {full['failed']} failed, {full['skipped']} skipped**.
-There are 127 new tests; three existing scalar-size refusal cases advance to
+There are 136 new tests; three existing scalar-size refusal cases advance to
 checked support, and no existing case is deleted. Validation is local, without
 Actions or KLEE, and query/step/path/call/object/cell/full-suite limits are unchanged.
 
@@ -172,6 +172,9 @@ exhaustive native-equivalence theorem. Sanitizer silence never certifies source.
 All {len(hashes)} source paths and {len(prior)} historical evidence paths are
 hash checked. Earlier focused/native attempts, including the unused-overflow
 sanitizer mismatch, are retained under attempts and are not frozen acceptance.
+An early incomplete full run was stopped after an additional audit found a
+const-scalar size binding refusal. That attempt is retained separately; the
+final source fixes type-only const binding and adds nine const object controls.
 Checks: `{json.dumps(checks,sort_keys=True)}`. Passed: **{result['passed']}**.
 '''
     (out/'report.md').write_text(report)

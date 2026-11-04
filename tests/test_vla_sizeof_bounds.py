@@ -54,6 +54,12 @@ def test_type_and_scalar_size_leaves_have_size_t_semantics(clang,frontend,expres
 
 
 @pytest.mark.parametrize('frontend',FRONTENDS)
+@pytest.mark.parametrize('kind,size',[('int',4),('unsigned char',1),('_Bool',1)])
+def test_const_scalar_size_does_not_require_mutable_memory_type(clang,frontend,kind,size):
+    proved(run('const '+kind+' m=2;int a[n+sizeof(m)];return (int)sizeof(a);',frontend),4*(3+size))
+
+
+@pytest.mark.parametrize('frontend',FRONTENDS)
 @pytest.mark.parametrize('body,expected',[
     ('int a[n];n=7;int b[sizeof(a)/sizeof(int)];return (int)sizeof(b);',12),
     ('int a[2];int b[n+sizeof(a)/sizeof(int)];return (int)sizeof(b);',20),

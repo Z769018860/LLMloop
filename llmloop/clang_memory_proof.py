@@ -152,7 +152,8 @@ class MemoryNormalizer(UnionViewNormalizer):
             else:
                 dtype=declaration['type'].get('desugaredQualType',declaration['type']['qualType'])
                 array=re.fullmatch(r'([^\[\]]+)\[[^\[\]]+\]',dtype)
-                self.memory_type(array[1].strip() if array else declaration['type'])
+                if array or '*' in dtype:self.memory_type(array[1].strip() if array else declaration['type'])
+                else:self.type(declaration['type'])
             renamed[name]=self.names[declaration['id']]
             references.append({'source_name':name,'normalized_name':renamed[name],'ast_id':declaration['id'],'kind':declaration['kind'],
                 'uses':[usage for usage in ('value','sizeof') if name in operands[usage]]})
