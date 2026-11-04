@@ -1,0 +1,250 @@
+{
+  "passed": true,
+  "checks": {
+    "pytest": true,
+    "sizeof_native": true,
+    "expression_native": true,
+    "scoped_native": true,
+    "vla_native": true,
+    "static_native": true,
+    "array_native": true,
+    "sizeof_cli": true,
+    "full_test_count": true,
+    "sizeof_result": true,
+    "sizeof_query_replay": true,
+    "unused_overflow_coverage": true,
+    "expression_result": true,
+    "expression_query_replay": true,
+    "retained_scoped_result": true,
+    "retained_vla_result": true,
+    "retained_static_result": true,
+    "retained_array_result": true,
+    "cli_result": true,
+    "source_unchanged": true,
+    "historical_evidence_unchanged": true,
+    "native_total": true
+  },
+  "full_pytest": {
+    "passed": 2814,
+    "failed": 0,
+    "skipped": 0,
+    "expected": 2814
+  },
+  "new_tests": 136,
+  "existing_cases_deleted": 0,
+  "existing_cases_advanced": 3,
+  "native_output_matches_including_defined_frontiers": 5496,
+  "tested_commit": "f8093499a148b4a196f0d1c8af5b0c005c1d3b99",
+  "tested_tree": "e6b24749b461472cd6613a53b5ef855c1d0d5a8a",
+  "commands": {
+    "pytest": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--forked"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1330.495282888,
+      "log": "pytest.txt"
+    },
+    "sizeof_native": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_vla_sizeof_native.py",
+        "--output",
+        "experiments/v056/sizeof_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 46.91571431400007,
+      "log": "sizeof_native.txt"
+    },
+    "expression_native": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_vla_expressions_native.py",
+        "--output",
+        "experiments/v056/expression_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 42.40866578999976,
+      "log": "expression_native.txt"
+    },
+    "scoped_native": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_scoped_vla_native.py",
+        "--output",
+        "experiments/v056/scoped_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 44.89206813800001,
+      "log": "scoped_native.txt"
+    },
+    "vla_native": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_bounded_vla_native.py",
+        "--output",
+        "experiments/v056/vla_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 38.17796805800026,
+      "log": "vla_native.txt"
+    },
+    "static_native": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_clang_static_arrays_native.py",
+        "--output",
+        "experiments/v056/static_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 25.72951000000012,
+      "log": "static_native.txt"
+    },
+    "array_native": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_clang_arrays_native.py",
+        "--output",
+        "experiments/v056/array_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 22.336164067000027,
+      "log": "array_native.txt"
+    },
+    "sizeof_cli": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-m",
+        "llmloop.symbolic_cli",
+        "examples/clang_sizeof_vla_bound.c",
+        "--c-clang-proof",
+        "--function",
+        "entry",
+        "--clang-proof-config",
+        "{\"backend\":\"calls\",\"max_steps\":256}",
+        "--parameter-bounds",
+        "{\"n\":[-2,5]}",
+        "--inputs",
+        "{\"n\":3}"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.8747043369999119,
+      "log": "sizeof_cli.txt"
+    }
+  },
+  "source_paths": 428,
+  "historical_evidence_paths": 579,
+  "environment": {
+    "python": "3.12.14",
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.39",
+    "pytest": "9.1.1",
+    "pycparser": "3.12",
+    "sympy": "1.14.0",
+    "z3": "5.3.3",
+    "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+    "gcc": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0"
+  },
+  "github_actions_used": false,
+  "ci_runs_used": 0,
+  "klee_used": false,
+  "query_budgets_increased": false,
+  "complete_vla_support": false,
+  "complete_c_support": false,
+  "evidence_sha256": {
+    "raw_evidence.tar.gz": "dae45adfe3f58b0ed679115a56febdc40b8485ce20139ed5c158c546d72323fd",
+    "report.md": "d4e2378d4fcb4858d18816aa334068ae3e1a84e321a11b82cfdeaced1a8cd8a8",
+    "sanitizer_coverage.csv": "aa7165bfdbb07adb3ef9d299671e47877912affffdffbc8b00fe802c14cfd73c",
+    "sizeof_cases.csv": "619d4533c7430e61c240e26bc19f591d2a8e3c2cd51d29e97890fd6597f8074b",
+    "source_publication.json": "779fd2150aea9bc54cd8aa0bce7eb1e2fe813620730bc1da04e075c6c177b193"
+  },
+  "published_source_commit": "a2b3f8cf1ae7d35924b33bc3032929eed479f006",
+  "published_source_tree": "e6b24749b461472cd6613a53b5ef855c1d0d5a8a",
+  "source_tree_equal": true,
+  "validation_history": {
+    "full_runs_started": 2,
+    "full_runs_completed": 1,
+    "earlier_interrupted_run": {
+      "accepted": false,
+      "path": "attempts/const_object_audit_interrupted/interruption.json"
+    },
+    "final_frozen_run": {
+      "passed": 2814,
+      "failed": 0
+    },
+    "const_object_binding_fixed_before_final_run": true,
+    "query_and_execution_budgets_unchanged": true,
+    "prevalidation_sanitizer_assumption_failure_preserved": true
+  },
+  "experiment_summary": {
+    "sizeof_native": {
+      "case_count": 12,
+      "native_output_matches": 432,
+      "independent_model_matches": 36,
+      "expected_ubsan_traps": 60,
+      "expected_memory_failures": 6,
+      "defined_capacity_frontier_matches": 12,
+      "symbolic_controls": 5,
+      "query_replays": {
+        "unsat": 67,
+        "sat": 5
+      },
+      "unused_overflow_sanitizer_traps": 9,
+      "unused_overflow_sanitizer_misses": 3
+    },
+    "retained_expression_matches": 432,
+    "retained_expression_frontier_matches": 12,
+    "retained_scoped_matches": 360,
+    "retained_vla_matches": 768,
+    "retained_static_matches": 1848,
+    "retained_array_matches": 1632,
+    "total_native_matches_including_defined_frontiers": 5496,
+    "full_pytest_passed": 2814,
+    "skipped": 0,
+    "new_tests": 136,
+    "existing_cases_advanced": 3,
+    "cli_value": 27
+  },
+  "raw_archive": {
+    "path": "raw_evidence.tar.gz",
+    "sha256": "dae45adfe3f58b0ed679115a56febdc40b8485ce20139ed5c158c546d72323fd",
+    "members_sha256": {
+      "array_native.json": "7b30eba249708c9595040373148289dd70d2734e8282cc8792414206b68133fd",
+      "array_native.txt": "a8a88fd6797bf2a84e5b07d77341bb82c41ddfc103acba49944b7b4a80db2729",
+      "attempts/const_object_audit_interrupted/audit-summary.json": "f2ec0ecf9d326ff08623ae534e5f7753b92f8a229f619f4ce8f11f1c6449cfd6",
+      "attempts/const_object_audit_interrupted/interruption.json": "84060b830a8badd83ab338afd7a01215155a6a872e3ef2c625b5c15748cfc229",
+      "attempts/const_object_audit_interrupted/pytest.txt": "7a9dd28214121c2ddff763fa708d95ece0bec330d1297c487b5cbb72e658d225",
+      "attempts/const_object_audit_interrupted/source_manifest.json": "243324c0b01ed0dd4b3b46f568f0de9123832a570b1109531c20b1edfa7ae00d",
+      "attempts/prevalidation/cli-precheck.json": "abb2393a2cec78a1817357aee97920d3f3953d82710a721bc02260b2006ea09d",
+      "attempts/prevalidation/native-before-observable-controls.py": "e31ee5440c3c0fb6465bc54441580a86db8b3dcf22c23cad67be19f1a899d93d",
+      "attempts/prevalidation/notes.json": "3d510f65ae0e34362a02131ad8ea14b4c32c2adf6775e108d016aa372d059856",
+      "attempts/prevalidation/v056-const-native.json": "c268c393f27d671f8cef45278407174fec54d4aa9b58051845143d04b4dfdcf5",
+      "attempts/prevalidation/v056-const-native.txt": "c64b95635c68207621ee5d31739762bf457fbbc7f58f35c76e67bbdcd0dc6f03",
+      "attempts/prevalidation/v056-focused.txt": "31c6c903ebf3f9a753d8d7efe1f47f091f20b74e751902f1db5ae260d40b24fd",
+      "attempts/prevalidation/v056-native-precheck-2.json": "921c9bd3521d738fbd5fd6092930d4761800d4a5dd71446ca12d8d17dde6aff5",
+      "attempts/prevalidation/v056-native-precheck-2.txt": "111a0b3820190e8ec70a89c6748837eb9044fd41be42229aa2059bb50e2dbb05",
+      "attempts/prevalidation/v056-native-precheck.txt": "aed9a7c1147b87f78c9a551b0e9b730e6d1dcb6c045fc977324cbb94f292fbe2",
+      "attempts/prevalidation/v056-sizeof-const-focused.txt": "f261a84180748d74cbae4ffb61214ad5584b192f98d85272fc4697ba50879a3b",
+      "attempts/prevalidation/v056-sizeof-final-focused.txt": "83c240a091322bed1be602156f5ab989d48196da17a0674af3b069add244ce91",
+      "commands.json": "743c94abb0ef7703c3d8ed169119007fc33bd955db48a3a4b573271e1ec3544b",
+      "expression_native.json": "00f791dda350ba1e551f87efedb538e3c50c901abdf42412125c911849559d86",
+      "expression_native.txt": "ee161dd644379b3441163b80324dd7754fafc4b35f84495d144474d7814b2080",
+      "pytest.txt": "04df3c58bbcb1d02a467bbd7193321695ea43a97850d65ea813aaaf74d6e8f1d",
+      "scoped_native.json": "3b20deb6913dc13c9aeccd687d0d670f5d389e8627c9f9780b55697ec49490ed",
+      "scoped_native.txt": "aa85a2a7890c5251d35c528c45bc0e0678f568b10df84d799ad29a2899fc619d",
+      "sizeof_cli.json": "7de4b3b61888af9120db0751aacc2cf8964af1173f6501a198328f0a6aee3817",
+      "sizeof_cli.txt": "7de4b3b61888af9120db0751aacc2cf8964af1173f6501a198328f0a6aee3817",
+      "sizeof_native.json": "e2e6a20b646f5ff3e6f8afb8d9357b2af00880b55b1e8b846968dfa62722f6e2",
+      "sizeof_native.txt": "d62a223f2c0b034632366b4435e913cb0a1752f8573dfd629ae840c45f79edf5",
+      "source_manifest.json": "e72eccbaec28fd3039626d44250916ef6163744b81b63ed3fbe6c6c0afe3c915",
+      "static_native.json": "2f6dd1688f481d2261a659a70eba4ae18855c8586e383bd91ba4e4dfc57cf328",
+      "static_native.txt": "2c3e73dfb5e4ef2beb5601b6b2415d27d70e41a24cdb7ef6414831165e8107bc",
+      "vla_native.json": "cb41d26e77831511826830cf9a90528a213a934f051fd53ef03f738b51945844",
+      "vla_native.txt": "a0c8549b1a842d087805bd74b289b2e23c25e8a98ad48ec6528d4328d7d26e80"
+    },
+    "original_relative_paths_preserved": true
+  }
+}
