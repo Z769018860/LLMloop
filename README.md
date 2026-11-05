@@ -1072,3 +1072,18 @@ See the [contract](docs/BOUNDED_LOCAL_VLA.md),
 Calls, comma/string operands, VM/array type names, pointer-to-array forms, general
 VLA parameters/layouts and effectful evaluated bounds remain unsupported. All
 previous execution, representation and proof limits remain.
+
+
+## v0.58: unevaluated comma and void-discard operands
+
+`sizeof((n++, c))` now checks both operand types without executing either,
+uses c's type without integer promotion, and produces a non-lvalue result.
+A final array operand decays to a pointer, unlike direct `sizeof(array)`.
+Plain `(void)` casts, nested discards and void/void conditionals are admitted
+inside the same type-only fragment; a void final sizeof result stays refused.
+Every discarded operand retains lexical/type/qualification constraints, even
+in unexecuted declarations. Evaluated comma bounds and actual unsafe operations
+remain excluded or checked under their existing contracts. Calls, strings,
+VM type names and general VLA layouts remain open; budgets are unchanged.
+See the [contract](docs/BOUNDED_LOCAL_VLA.md),
+[example](examples/clang_sizeof_comma.c) and [evidence](experiments/v058/report.md).

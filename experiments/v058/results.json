@@ -1,0 +1,320 @@
+{
+  "passed": true,
+  "checks": {
+    "pytest": true,
+    "comma_native": true,
+    "operands_native": true,
+    "sizeof_native": true,
+    "expression_native": true,
+    "scoped_native": true,
+    "vla_native": true,
+    "static_native": true,
+    "array_native": true,
+    "comma_cli": true,
+    "comma_result": true,
+    "comma_query_replay": true,
+    "operands_result": true,
+    "operands_query_replay": true,
+    "full_test_count": true,
+    "sizeof_result": true,
+    "sizeof_query_replay": true,
+    "unused_overflow_coverage": true,
+    "expression_result": true,
+    "expression_query_replay": true,
+    "retained_scoped_result": true,
+    "retained_vla_result": true,
+    "retained_static_result": true,
+    "retained_array_result": true,
+    "cli_result": true,
+    "source_unchanged": true,
+    "historical_evidence_unchanged": true,
+    "native_total": true
+  },
+  "full_pytest": {
+    "passed": 3161,
+    "failed": 0,
+    "skipped": 0,
+    "expected": 3161
+  },
+  "new_tests": 165,
+  "existing_cases_deleted": 0,
+  "existing_cases_advanced": 3,
+  "native_output_matches_including_defined_frontiers": 6384,
+  "tested_commit": "1ef37939475c13cbd2374c2dcfa8488a79420586",
+  "tested_tree": "ed40c27b6b8613fe5f1517579c30207ba8b0a2c6",
+  "commands": {
+    "pytest": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--forked"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1435.8189966640002,
+      "log": "pytest.txt"
+    },
+    "comma_native": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_sizeof_comma_native.py",
+        "--output",
+        "experiments/v058/comma_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 43.75825526799986,
+      "log": "comma_native.txt"
+    },
+    "operands_native": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_sizeof_operands_native.py",
+        "--output",
+        "experiments/v058/operands_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 45.74423517200012,
+      "log": "operands_native.txt"
+    },
+    "sizeof_native": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_vla_sizeof_native.py",
+        "--output",
+        "experiments/v058/sizeof_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 54.735571661999984,
+      "log": "sizeof_native.txt"
+    },
+    "expression_native": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_vla_expressions_native.py",
+        "--output",
+        "experiments/v058/expression_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 48.545910939999885,
+      "log": "expression_native.txt"
+    },
+    "scoped_native": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_scoped_vla_native.py",
+        "--output",
+        "experiments/v058/scoped_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 51.96601907500008,
+      "log": "scoped_native.txt"
+    },
+    "vla_native": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_bounded_vla_native.py",
+        "--output",
+        "experiments/v058/vla_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 38.85646509800017,
+      "log": "vla_native.txt"
+    },
+    "static_native": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_clang_static_arrays_native.py",
+        "--output",
+        "experiments/v058/static_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 28.637674572999913,
+      "log": "static_native.txt"
+    },
+    "array_native": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_clang_arrays_native.py",
+        "--output",
+        "experiments/v058/array_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 24.100781865000044,
+      "log": "array_native.txt"
+    },
+    "comma_cli": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-m",
+        "llmloop.symbolic_cli",
+        "examples/clang_sizeof_comma.c",
+        "--c-clang-proof",
+        "--function",
+        "entry",
+        "--clang-proof-config",
+        "{\"backend\":\"calls\",\"max_steps\":256}",
+        "--parameter-bounds",
+        "{\"n\":[-2,5]}",
+        "--inputs",
+        "{\"n\":3}"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.0231700750000527,
+      "log": "comma_cli.txt"
+    }
+  },
+  "source_paths": 437,
+  "historical_evidence_paths": 590,
+  "environment": {
+    "python": "3.12.14",
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.39",
+    "pytest": "9.1.1",
+    "pycparser": "3.12",
+    "sympy": "1.14.0",
+    "z3": "5.3.3",
+    "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+    "gcc": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0"
+  },
+  "github_actions_used": false,
+  "ci_runs_used": 0,
+  "klee_used": false,
+  "query_budgets_increased": false,
+  "complete_vla_support": false,
+  "complete_c_support": false,
+  "evidence_sha256": {
+    "report.md": "317321ae396f0f4a78013ce09e8cc5dcbdc0d4cd6de1126ac160500bfa69e265",
+    "source_publication.json": "6e64206127e965b19344d58590cc8b6b5ac86b5e89d37a9d93cd6e4c5a703af2",
+    "comma_cases.csv": "671ef9a4f2ae5bef07b91da027bbe21c49a9a6b301aa7d6b3f1cd8bbc44dc8ed",
+    "raw_evidence.tar.gz": "1e29e5402a6929dea81e96bc6dcc770757453f6743c1b96e4a494f0ed195eb9b"
+  },
+  "published_source_commit": "80057c3203246f0c48c0a0eaef787fb867a1b3bc",
+  "published_source_tree": "ed40c27b6b8613fe5f1517579c30207ba8b0a2c6",
+  "source_tree_equal": true,
+  "validation_history": {
+    "full_runs_started": 1,
+    "full_runs_completed": 1,
+    "prevalidation_failed_metadata_expectations": 6,
+    "prevalidation_focused_final_passed": 483,
+    "initial_test_source_and_log_preserved": true,
+    "budgets_unchanged": true
+  },
+  "experiment_summary": {
+    "comma_native": {
+      "passed": true,
+      "native_output_matches": 432,
+      "defined_capacity_frontier_matches": 12,
+      "query_replays": {
+        "unsat": 31,
+        "sat": 5
+      }
+    },
+    "operands_native": {
+      "passed": true,
+      "native_output_matches": 432,
+      "defined_capacity_frontier_matches": 12,
+      "query_replays": {
+        "unsat": 33,
+        "sat": 5
+      }
+    },
+    "sizeof_native": {
+      "passed": true,
+      "native_output_matches": 432,
+      "defined_capacity_frontier_matches": 12,
+      "query_replays": {
+        "unsat": 67,
+        "sat": 5
+      }
+    },
+    "expression_native": {
+      "passed": true,
+      "native_output_matches": 432,
+      "defined_capacity_frontier_matches": 12,
+      "query_replays": {
+        "unsat": 31,
+        "sat": 5
+      }
+    },
+    "scoped_native": {
+      "passed": true,
+      "native_output_matches": 360,
+      "query_replays": {
+        "unsat": 48,
+        "sat": 2
+      }
+    },
+    "vla_native": {
+      "passed": true,
+      "native_output_matches": 768,
+      "query_replays": {
+        "unsat": 25,
+        "sat": 3
+      }
+    },
+    "static_native": {
+      "passed": true,
+      "native_output_matches": 1848
+    },
+    "array_native": {
+      "passed": true,
+      "native_output_matches": 1632
+    },
+    "new_comma_matrix": {
+      "case_count": 12,
+      "native_output_matches": 432,
+      "independent_model_matches": 36,
+      "expected_ubsan_traps": 48,
+      "expected_memory_failures": 6,
+      "defined_capacity_frontier_matches": 12,
+      "symbolic_controls": 5,
+      "query_replays": {
+        "unsat": 31,
+        "sat": 5
+      }
+    },
+    "retained_unused_overflow_sanitizer_traps": 9,
+    "retained_unused_overflow_sanitizer_misses": 3,
+    "total_native_matches_including_defined_frontiers": 6384,
+    "full_pytest_passed": 3161,
+    "new_tests": 165,
+    "existing_cases_advanced": 3,
+    "cli_value": 49
+  },
+  "raw_archive": {
+    "path": "raw_evidence.tar.gz",
+    "sha256": "1e29e5402a6929dea81e96bc6dcc770757453f6743c1b96e4a494f0ed195eb9b",
+    "members_sha256": {
+      "array_native.json": "b44aa659497d67d850a831bfc87634447547d8d31d47d267b88ab6d0e31193b0",
+      "array_native.txt": "a8a88fd6797bf2a84e5b07d77341bb82c41ddfc103acba49944b7b4a80db2729",
+      "attempts/prevalidation/cli.json": "f93429739c4d3bfc476a231ab327841701d11dedd0de5705df3d3b42c81fe9a5",
+      "attempts/prevalidation/comma-native.json": "92495d2a924cb3183b8fd1f86705175537ce7192e7a977e81546e7965615c8da",
+      "attempts/prevalidation/comma-native.txt": "705128f28a6c217fe09c30fe872a0b92de417bf6ff9537ad704a5cd60dfd3cf2",
+      "attempts/prevalidation/focused-final.txt": "5f0e107146f0b33b26d8ee4ea7783bd5282622998b0a60a267e38d87d25e6968",
+      "attempts/prevalidation/initial-focused.txt": "fe6644bff5024db62e1059c55e4c8fa50203c97f9bc4606d03fe06065fb7e724",
+      "attempts/prevalidation/notes.json": "c26079dc8e5e6621df2bbc129d9600e3c4383ecbef747cc5fd24b309b7750343",
+      "attempts/prevalidation/test-before-metadata-expectation-correction.py": "faca0468deec50b8abe16bd9508a6fb14d2cdb407ee5a0c4f446b59c51346ca1",
+      "comma_cli.json": "b75b15ee694dd51cedcc8c8fcb59eaf422229519d24dde2f84fac17cead5d0a0",
+      "comma_cli.txt": "b75b15ee694dd51cedcc8c8fcb59eaf422229519d24dde2f84fac17cead5d0a0",
+      "comma_native.json": "0d98c7cacc56faf7baa461ffe1d3997c8535493d965c0010b1875269fb5a7d9b",
+      "comma_native.txt": "705128f28a6c217fe09c30fe872a0b92de417bf6ff9537ad704a5cd60dfd3cf2",
+      "commands.json": "7379987e1aed1dbfcf47afb10cbf4f9280196f94a9bb871e1b3eb5c8ee3f22a1",
+      "driver_stdout.txt": "eea7dd0fd1abf59b42abaaa031864db76ebc8dfb97ffcc68391867d43122d294",
+      "expression_native.json": "54a2099654d3b8a7aa1bc40a4a3f72fd3a8b8472660ba39855c6b3e2c842b8a7",
+      "expression_native.txt": "ee161dd644379b3441163b80324dd7754fafc4b35f84495d144474d7814b2080",
+      "operands_native.json": "b1ed6b713e5b1f92fdbb96c9593167a1f39feb761aca68f90f2211210e8ae5e2",
+      "operands_native.txt": "c38359971efab4e1900cf06820b67418919db36520d27af8d6b70f6225e40ab5",
+      "pytest.txt": "abd681787f259ed17acbbfa85e563d89c26ebf123079578a5ec512444ad2c118",
+      "scoped_native.json": "e5349f1294065d5e2d65d79e8fa637d3a9be4e134073cea1e93e1b347807d518",
+      "scoped_native.txt": "aa85a2a7890c5251d35c528c45bc0e0678f568b10df84d799ad29a2899fc619d",
+      "sizeof_native.json": "3bc8016034aed273a11bab671dd716cfc37934beeb6259e07af381fce2159499",
+      "sizeof_native.txt": "d62a223f2c0b034632366b4435e913cb0a1752f8573dfd629ae840c45f79edf5",
+      "source_manifest.json": "076d11d9e96fbafc89c173284cb36008c662a3f7c9792c3cba3647e5aa070cae",
+      "static_native.json": "67c28ce406f47906097a6fc0a913fd8d6d10914a3861f2e775879c148002e8cf",
+      "static_native.txt": "2c3e73dfb5e4ef2beb5601b6b2415d27d70e41a24cdb7ef6414831165e8107bc",
+      "vla_native.json": "26e02c21c308608d7d663ac630f4bf5b91ab542f866e1863d043ffd21c93ab59",
+      "vla_native.txt": "a0c8549b1a842d087805bd74b289b2e23c25e8a98ad48ec6528d4328d7d26e80"
+    },
+    "original_relative_paths_preserved": true
+  }
+}
