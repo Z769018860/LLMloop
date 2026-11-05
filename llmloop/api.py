@@ -13,8 +13,12 @@ def analyze_request(request: dict) -> dict:
     try:
         if not isinstance(request, dict):raise SMTGraphError('Request must be an object')
         allowed = {'ir', 'source', 'source_file', 'clang', 'proof', 'function', 'parameter_bounds', 'max_unroll',
-                   'max_paths', 'whole_function', 'invariants', 'verify_steps', 'assertion', 'ranking', 'synthesize_ranking', 'frontend', 'int_bits', 'parameter_mins', 'inputs', 'memory_layout', 'abi', 'char_signed', 'closed_forms', 'loop_summaries', 'max_steps', 'allocation_failure', 'max_call_depth', 'allow_recursion','functional'}
+                   'max_paths', 'whole_function', 'invariants', 'verify_steps', 'assertion', 'ranking', 'synthesize_ranking', 'frontend', 'int_bits', 'parameter_mins', 'inputs', 'memory_layout', 'abi', 'char_signed', 'closed_forms', 'loop_summaries', 'max_steps', 'allocation_failure', 'max_call_depth', 'allow_recursion','functional','proposals','summary_backend','fallback'}
         if set(request)-allowed:raise SMTGraphError('Unknown request fields: '+', '.join(sorted(set(request)-allowed)))
+        if request.get('frontend')=='typed_summary_portfolio':
+            from .summary_portfolio import analyze_portfolio
+            return analyze_portfolio(request,analyze_request)
+        if set(request)&{'proposals','summary_backend','fallback'}:raise SMTGraphError('Proposal options require typed_summary_portfolio')
         if 'synthesize_ranking' in request and type(request['synthesize_ranking']) is not bool:raise SMTGraphError('synthesize_ranking must be Boolean')
         if request.get('frontend')=='clang_proof':
             if ('source' in request)==('source_file' in request) or set(request)-{'source','source_file','frontend','clang','function','proof'}:raise SMTGraphError('Invalid clang_proof request')

@@ -1,4 +1,4 @@
-# Feature status after v0.58
+# Feature status after v0.59
 
 This inventory distinguishes certified capabilities from outstanding general
 requirements. The project remains a restricted research prototype.
@@ -19,7 +19,7 @@ particular exit condition terminates. `UNKNOWN` is an explicit unsupported or
 unproved result, not a valid summary.
 
 See [v0.14 recurrence and experiment contracts](GUARDED_RECURRENCES_AND_EXPERIMENTS.md)
-and the committed [latest experiment report](../experiments/v058/report.md).
+and the committed [latest experiment report](../experiments/v059/report.md).
 
 The [bounded local VLA contract](BOUNDED_LOCAL_VLA.md) adds scoped local
 integer `T a[expression]` declarations with pure typed integer operators and
@@ -165,3 +165,10 @@ assuming preconditions, introducing external pointer objects or admitting VLAs.
 
 Selected variably modified typedefs now return UNKNOWN: runtime bound effects
 cannot be erased, including unused VLA and pointer-to-VLA aliases.
+
+The [typed proposal portfolio](TYPED_SUMMARY_PORTFOLIO.md) now joins supplied
+untrusted trajectories to original-source recurrence/nested checks, selects
+only a certified result and supports an explicit bounded CFG fallback. It does
+not generate typed trajectories with a live LLM, optimize proposal order, or
+establish an empirical LLM improvement. Paired baseline/ablation evaluation and
+representative external-tool comparisons remain open paper requirements.

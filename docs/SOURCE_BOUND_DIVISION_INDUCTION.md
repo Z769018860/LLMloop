@@ -175,3 +175,21 @@ This closes the selected unsigned-32 quotient proof. It does not implement an
 arbitrary functional-contract language, unrestricted division families, general
 heap/alias/ownership contracts, arbitrary branch closed-form discovery or complete
 C/LLVM semantics. No KLEE is used. See [v0.43 evidence](../experiments/v043/report.md).
+
+
+## v0.59 checked conservation normalization
+
+Regression diagnostics observed timeouts in individual word-step lemmas. Each
+query still proves the actual typed remainder and carry equal their expected
+post-state forms. Under those equalities, congruence permits expressing the
+conservation fact with the expected remainder and a conditional contribution
+rather than a widened divisor multiplied by a source carry expression. The
+0/1 multiplication identity is audited symbolically in both Boolean branches.
+Actual source intermediate definedness and both source equalities stay in the
+same conjunction; changed-source counterexamples remain required.
+
+`source_step_normalizations` exports the original/normalized facts, retained
+equalities and branch audits for all 31 counters. No solver retry, lemma
+assumption or enlarged limit is added: 39 direct / 40 wrapped queries, 5000 ms
+per query and one 30000 ms functional deadline remain. This is an exact checked
+encoding change, not a claim of universally predictable solver time.
