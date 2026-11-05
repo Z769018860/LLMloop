@@ -1,0 +1,492 @@
+{
+  "schema_version": 1,
+  "study": "v060_development_replay",
+  "prior_snapshot": "6d23f5b9d31a94fa0cbca83f8c0d1816c24c0fda",
+  "corpus_origin": "handcrafted v059 fixtures already used during development",
+  "split": "development_only",
+  "held_out_programs": 0,
+  "remote_model_calls": 0,
+  "modes": [
+    "bounded_cfg",
+    "last_candidate_only",
+    "portfolio_no_fallback",
+    "portfolio",
+    "portfolio_reversed"
+  ],
+  "repetitions": 5,
+  "random_seed": 20261106,
+  "worker_wall_timeout_seconds": 20,
+  "total_deadline_seconds": 1800,
+  "timing_scope": "fresh-process local supplied-candidate workflow including interpreter/import startup; provider generation/network excluded",
+  "comparability": "Ratios only for paired complete source proofs with matching evaluated return; UNKNOWN-versus-proof ratios prohibited. This common projection is source definedness/exit, not identical full state certificates.",
+  "last_candidate_only_policy": "Always the last declared supplied candidate, without outcome-based selection or fallback; not a model or automatic oracle.",
+  "cases": [
+    {
+      "name": "modular_LP64",
+      "request": {
+        "source": "long f(int n){unsigned char x=0;long y=0;for(int i=0;i<n;i++){x++;y++;}return y+x;}",
+        "frontend": "typed_summary_portfolio",
+        "summary_backend": "typed_recurrence",
+        "proposals": [
+          {
+            "id": "0",
+            "summary": {
+              "x": "0",
+              "y": "i"
+            }
+          },
+          {
+            "id": "1",
+            "summary": {
+              "x": "i%256",
+              "y": "i"
+            }
+          }
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            1000000000
+          ]
+        },
+        "inputs": {
+          "n": 1000000000
+        },
+        "abi": "LP64"
+      },
+      "source_sha256": "218f0de9edb184c016e514b7b9ec269d3205d66efb6d993529d3e893a7ea9de3",
+      "context_sha256": "83c780a5c098e06d55abb8a2c7d91b2d4edc45ec5416415d59621aef989dad06",
+      "expected_portfolio_status": "PROVED_DEFINED_TYPED_C_RECURRENCE",
+      "expected_value": 1000000000,
+      "role": "expected_proof_configuration"
+    },
+    {
+      "name": "modular_ILP32",
+      "request": {
+        "source": "long f(int n){unsigned char x=0;long y=0;for(int i=0;i<n;i++){x++;y++;}return y+x;}",
+        "frontend": "typed_summary_portfolio",
+        "summary_backend": "typed_recurrence",
+        "proposals": [
+          {
+            "id": "0",
+            "summary": {
+              "x": "0",
+              "y": "i"
+            }
+          },
+          {
+            "id": "1",
+            "summary": {
+              "x": "i%256",
+              "y": "i"
+            }
+          }
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            1000000000
+          ]
+        },
+        "inputs": {
+          "n": 1000000000
+        },
+        "abi": "ILP32"
+      },
+      "source_sha256": "218f0de9edb184c016e514b7b9ec269d3205d66efb6d993529d3e893a7ea9de3",
+      "context_sha256": "119e788f345580fd5658e719c6f339f4f5679be958a6b78b0f9d667cf18e4a77",
+      "expected_portfolio_status": "PROVED_DEFINED_TYPED_C_RECURRENCE",
+      "expected_value": 1000000000,
+      "role": "expected_proof_configuration"
+    },
+    {
+      "name": "modular_LLP64",
+      "request": {
+        "source": "long f(int n){unsigned char x=0;long y=0;for(int i=0;i<n;i++){x++;y++;}return y+x;}",
+        "frontend": "typed_summary_portfolio",
+        "summary_backend": "typed_recurrence",
+        "proposals": [
+          {
+            "id": "0",
+            "summary": {
+              "x": "0",
+              "y": "i"
+            }
+          },
+          {
+            "id": "1",
+            "summary": {
+              "x": "i%256",
+              "y": "i"
+            }
+          }
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            1000000000
+          ]
+        },
+        "inputs": {
+          "n": 1000000000
+        },
+        "abi": "LLP64"
+      },
+      "source_sha256": "218f0de9edb184c016e514b7b9ec269d3205d66efb6d993529d3e893a7ea9de3",
+      "context_sha256": "03b557a0c5237ff0c7f3cf818c85666153ae05cd4d1e4ba2848ba642149a430a",
+      "expected_portfolio_status": "PROVED_DEFINED_TYPED_C_RECURRENCE",
+      "expected_value": 1000000000,
+      "role": "expected_proof_configuration"
+    },
+    {
+      "name": "saturation",
+      "request": {
+        "source": "long f(int n){unsigned char x=0;for(int i=0;i<n;i++){if(x<255)x++;}return x;}",
+        "frontend": "typed_summary_portfolio",
+        "summary_backend": "typed_recurrence",
+        "proposals": [
+          {
+            "id": "0",
+            "summary": {
+              "x": "i"
+            }
+          },
+          {
+            "id": "1",
+            "summary": {
+              "x": "Min(i,255)"
+            }
+          }
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            1000000
+          ]
+        },
+        "inputs": {
+          "n": 1000000
+        },
+        "abi": "LP64"
+      },
+      "source_sha256": "c46bc7d464077868910144c7a732841fab91ea898e6181a735a1b107475aacd4",
+      "context_sha256": "c953281f86349a337a9bf0b19bcb2815dd37c0635bbbaab1e5d30177c85f8eb2",
+      "expected_portfolio_status": "PROVED_DEFINED_TYPED_C_RECURRENCE",
+      "expected_value": 255,
+      "role": "expected_proof_configuration"
+    },
+    {
+      "name": "negative_zero",
+      "request": {
+        "source": "long f(int n){unsigned char x=0;long y=0;for(int i=0;i<n;i++){x++;y++;}return y+x;}",
+        "frontend": "typed_summary_portfolio",
+        "summary_backend": "typed_recurrence",
+        "proposals": [
+          {
+            "id": "0",
+            "summary": {
+              "x": "i%256",
+              "y": "i"
+            }
+          }
+        ],
+        "parameter_bounds": {
+          "n": [
+            -5,
+            0
+          ]
+        },
+        "inputs": {
+          "n": -3
+        },
+        "abi": "LP64"
+      },
+      "source_sha256": "218f0de9edb184c016e514b7b9ec269d3205d66efb6d993529d3e893a7ea9de3",
+      "context_sha256": "926e7c05b8e3bd8cb743b7df7532ca7be5ce25e94c9136a95d6e8c4440fc8532",
+      "expected_portfolio_status": "PROVED_DEFINED_TYPED_C_RECURRENCE",
+      "expected_value": 0,
+      "role": "expected_proof_configuration"
+    },
+    {
+      "name": "nested_product",
+      "request": {
+        "source": "long f(int n,int m){long x=0;for(int i=0;i<n;i++){for(int j=0;j<m;j++){x++;}}return x;}",
+        "frontend": "typed_summary_portfolio",
+        "summary_backend": "typed_nested",
+        "proposals": [
+          {
+            "id": "0",
+            "summary": {
+              "i": {
+                "x": "i*m"
+              },
+              "j": {
+                "x": "entry(\"x\")+j"
+              }
+            }
+          }
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            1000
+          ],
+          "m": [
+            0,
+            1000
+          ]
+        },
+        "inputs": {
+          "n": 1000,
+          "m": 1000
+        },
+        "abi": "LP64"
+      },
+      "source_sha256": "1284a89756a00960f846d454a68e389daaeec271d1694c9ebbf8e6fe2f16790f",
+      "context_sha256": "0db1278767b9a8c55ab0af4f59af9477a878f5ddbc1ff42a297b51d47c8831ea",
+      "expected_portfolio_status": "PROVED_DEFINED_TYPED_C_NESTED",
+      "expected_value": 1000000,
+      "role": "expected_proof_configuration"
+    },
+    {
+      "name": "nonrectangular",
+      "request": {
+        "source": "long f(int n){long x=0;for(int i=0;i<n;i++){for(int j=0;j<2*i+1;j++){x++;}}return x;}",
+        "frontend": "typed_summary_portfolio",
+        "summary_backend": "typed_nested",
+        "proposals": [
+          {
+            "id": "0",
+            "summary": {
+              "i": {
+                "x": "i*i"
+              },
+              "j": {
+                "x": "entry(\"x\")+j"
+              }
+            }
+          }
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            1000000
+          ]
+        },
+        "inputs": {
+          "n": 1000000
+        },
+        "abi": "LP64"
+      },
+      "source_sha256": "59de2b34d561ed29051db3831d2421c94c2008fc112dc653c47fc296363014f2",
+      "context_sha256": "e39eb207db923999b2815cac9d024c3b9bc958008eb0d4372733c682ab38333a",
+      "expected_portfolio_status": "PROVED_DEFINED_TYPED_C_NESTED",
+      "expected_value": 1000000000000,
+      "role": "expected_proof_configuration"
+    },
+    {
+      "name": "explicit_small_fallback",
+      "request": {
+        "source": "long f(int n){unsigned char x=0;long y=0;for(int i=0;i<n;i++){x++;y++;}return y+x;}",
+        "frontend": "typed_summary_portfolio",
+        "summary_backend": "typed_recurrence",
+        "proposals": [
+          {
+            "id": "0",
+            "summary": {
+              "x": "0",
+              "y": "i"
+            }
+          }
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            3
+          ]
+        },
+        "inputs": {
+          "n": 3
+        },
+        "abi": "LP64",
+        "fallback": {
+          "max_steps": 128
+        }
+      },
+      "source_sha256": "218f0de9edb184c016e514b7b9ec269d3205d66efb6d993529d3e893a7ea9de3",
+      "context_sha256": "759b8ee840097ffe4e741d789fb612a04d8219eac46312e788f33998617221f8",
+      "expected_portfolio_status": "PROVED_DEFINED_TYPED_C_CFG_HEAP",
+      "expected_value": 6,
+      "role": "expected_proof_configuration"
+    },
+    {
+      "name": "large_fallback_frontier",
+      "request": {
+        "source": "long f(int n){unsigned char x=0;long y=0;for(int i=0;i<n;i++){x++;y++;}return y+x;}",
+        "frontend": "typed_summary_portfolio",
+        "summary_backend": "typed_recurrence",
+        "proposals": [
+          {
+            "id": "0",
+            "summary": {
+              "x": "0",
+              "y": "i"
+            }
+          }
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            1000000000
+          ]
+        },
+        "inputs": {
+          "n": 1000000000
+        },
+        "abi": "LP64",
+        "fallback": {
+          "max_steps": 16
+        }
+      },
+      "source_sha256": "218f0de9edb184c016e514b7b9ec269d3205d66efb6d993529d3e893a7ea9de3",
+      "context_sha256": "83c780a5c098e06d55abb8a2c7d91b2d4edc45ec5416415d59621aef989dad06",
+      "expected_portfolio_status": "UNKNOWN",
+      "expected_value": null,
+      "role": "candidate_or_frontier_control"
+    },
+    {
+      "name": "late_wrong_candidate",
+      "request": {
+        "source": "long f(int n){unsigned char x=0;long y=0;for(int i=0;i<n;i++){x++;y++;}return y+x;}",
+        "frontend": "typed_summary_portfolio",
+        "summary_backend": "typed_recurrence",
+        "proposals": [
+          {
+            "id": "0",
+            "summary": {
+              "x": "i%256",
+              "y": "i if i<1000000 else 0"
+            }
+          }
+        ],
+        "parameter_bounds": {
+          "n": [
+            0,
+            1000000000
+          ]
+        },
+        "inputs": {
+          "n": 1000000
+        },
+        "abi": "LP64"
+      },
+      "source_sha256": "218f0de9edb184c016e514b7b9ec269d3205d66efb6d993529d3e893a7ea9de3",
+      "context_sha256": "05b39410a370c18af5ef58c2cc1207dcba133e6a0bc05faaba7dc0c5907dd09e",
+      "expected_portfolio_status": "UNKNOWN",
+      "expected_value": null,
+      "role": "candidate_or_frontier_control"
+    },
+    {
+      "name": "intermediate_overflow",
+      "request": {
+        "source": "long f(int n){int x=2147483647;for(int i=0;i<n;i++){x=(x+1)-1;}return x;}",
+        "frontend": "typed_summary_portfolio",
+        "summary_backend": "typed_recurrence",
+        "proposals": [
+          {
+            "id": "0",
+            "summary": {
+              "x": "2147483647"
+            }
+          }
+        ],
+        "parameter_bounds": {
+          "n": [
+            1,
+            2
+          ]
+        },
+        "inputs": {
+          "n": 1
+        },
+        "abi": "LP64",
+        "fallback": {
+          "max_steps": 128
+        }
+      },
+      "source_sha256": "ab747930f493f7f2e1c8c3da00b8c0d76d40ba6d9a220fde3145476551ac64ab",
+      "context_sha256": "dd1569f13be3c50007572d4f05378c2dbfd9bca1ff4fb477333e4eaae4087536",
+      "expected_portfolio_status": "UNKNOWN",
+      "expected_value": null,
+      "role": "unsafe_source_control"
+    },
+    {
+      "name": "observable_overflow",
+      "request": {
+        "source": "long f(int n){int x=2147483647;for(int i=0;i<n;i++){x=x+1;}return x;}",
+        "frontend": "typed_summary_portfolio",
+        "summary_backend": "typed_recurrence",
+        "proposals": [
+          {
+            "id": "0",
+            "summary": {
+              "x": "2147483647"
+            }
+          }
+        ],
+        "parameter_bounds": {
+          "n": [
+            1,
+            2
+          ]
+        },
+        "inputs": {
+          "n": 1
+        },
+        "abi": "LP64",
+        "fallback": {
+          "max_steps": 128
+        }
+      },
+      "source_sha256": "cf1067a49aedad11b1313a71a800c60b226cafddecc37cbb53c10e6367880d05",
+      "context_sha256": "4bf30218923881deed4e0eac21efadbdb5aabc369932050b9fc8efdb974ffbf9",
+      "expected_portfolio_status": "UNKNOWN",
+      "expected_value": null,
+      "role": "unsafe_source_control"
+    },
+    {
+      "name": "executed_zero_divisor",
+      "request": {
+        "source": "long f(int n){int x=0;for(int i=0;i<n;i++){x=n/(n-1);}return x;}",
+        "frontend": "typed_summary_portfolio",
+        "summary_backend": "typed_recurrence",
+        "proposals": [
+          {
+            "id": "0",
+            "summary": {
+              "x": "0"
+            }
+          }
+        ],
+        "parameter_bounds": {
+          "n": [
+            1,
+            2
+          ]
+        },
+        "inputs": {
+          "n": 1
+        },
+        "abi": "LP64",
+        "fallback": {
+          "max_steps": 128
+        }
+      },
+      "source_sha256": "1c1fe62d8e692d422cb36d1fe9a185080d365ceea9ff88264507ff4e543f51f0",
+      "context_sha256": "7f4046b085ad51e151a31fe4efc548b82da9cd30e6823d2045c8e45de2a49d89",
+      "expected_portfolio_status": "UNKNOWN",
+      "expected_value": null,
+      "role": "unsafe_source_control"
+    }
+  ]
+}
