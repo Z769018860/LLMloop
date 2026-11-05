@@ -22,6 +22,21 @@ class _Stop(Exception):
     pass
 
 
+def _checked_boolean_product(divisor, predicate):
+    """Exact widened-word multiplication by a Boolean, without a wide multiplier."""
+    if not z3.is_bv(divisor) or divisor.size()!=32 or not z3.is_bool(predicate):
+        raise SMTGraphError('Boolean product normalization requires a 32-bit word and predicate')
+    flag=z3.If(predicate,z3.BitVecVal(1,32),z3.BitVecVal(0,32))
+    original=z3.ZeroExt(32,divisor)*z3.ZeroExt(32,flag)
+    normalized=z3.If(predicate,z3.ZeroExt(32,divisor),z3.BitVecVal(0,64))
+    identities=[]
+    for branch in (False,True):
+        identity=z3.simplify(z3.substitute(original==normalized,(predicate,z3.BoolVal(branch))))
+        if not z3.is_true(identity):raise _Stop('Boolean product normalization audit failed')
+        identities.append({'predicate_value':branch,'identity_checked':True})
+    return normalized,identities
+
+
 class _PureTerms(TypedCFunction):
     """Typed value execution of declaration/return-only scalar call bodies."""
     def __init__(self, functions, abi, char_signed=True):
@@ -111,7 +126,7 @@ def prove_division_induction(model, timeout_ms=30000):
     if type(timeout_ms) is not int or not 1 <= timeout_ms <= 30000: raise SMTGraphError('Division functional deadline must be 1..30000 ms')
     started = time.monotonic(); deadline = started + timeout_ms / 1000
     result = {'status': 'UNKNOWN', 'method': 'actual-source unsigned-32 division induction', 'total_timeout_ms': timeout_ms,
-              'per_query_maximum_ms': 5000, 'solver_context': 'isolated per query', 'steps': [], 'arithmetic_audits': [], 'source_safety_inferred_from_functional': False,
+              'per_query_maximum_ms': 5000, 'solver_context': 'isolated per query', 'steps': [], 'arithmetic_audits': [], 'source_step_normalizations': [], 'source_safety_inferred_from_functional': False,
               'source_sha256': hashlib.sha256(model.original_source.encode()).hexdigest(),
               'execution_source_sha256': hashlib.sha256(model.source.encode()).hexdigest(),
               'trusted_components': ['Clang structural normalization when selected', 'typed expression/CFG/call execution',
@@ -244,15 +259,24 @@ def prove_division_induction(model, timeout_ms=30000):
             qold = (p.value << 1) | carry.value; qnew = (qold << 1) | flag
             expected_n = (rest << (33 - s)) | qold if s > 1 else qold
             expected_r = z3.If(z3.UGE(expanded, divisor.value), expanded - divisor.value, expanded)
+            masked_divisor,branch_audit=_checked_boolean_product(divisor.value,z3.UGE(expanded,divisor.value))
+            # These source/post-state equalities stay in this same proof goal.
+            # Congruence permits using the expected forms in the conservation
+            # fact. The Boolean-product identity is checked in both branches;
+            # no actual source operation or definedness predicate is removed.
+            source_equalities=[changed[r_name].value==expected_r,changed[carry_name].value==flag]
+            original_conservation=(z3.ZeroExt(32,rem.value)*2+z3.ZeroExt(32,high_bit)==
+                z3.ZeroExt(32,changed[r_name].value)+z3.ZeroExt(32,divisor.value)*z3.ZeroExt(32,changed[carry_name].value))
+            normalized_conservation=(z3.ZeroExt(32,rem.value)*2+z3.ZeroExt(32,high_bit)==z3.ZeroExt(32,expected_r)+masked_divisor)
             claims = observed + [value.safe for value in changed.values()]
-            claims += [changed[r_name].value == expected_r, changed[carry_name].value == flag, changed[n_name].value == expected_n,
+            claims += source_equalities + [changed[n_name].value == expected_n,
                        changed[sr_name].value == s - 1, z3.ULT(changed[r_name].value, divisor.value),
                        z3.ULT(qold, z3.BitVecVal(1 << (32 - s), 32)),
                        z3.ULE(high_bit, 1), z3.ULE(changed[carry_name].value, 1),
                        z3.ZeroExt(32, tail.value) == z3.ZeroExt(32, high_bit) * half + z3.ZeroExt(32, rest),
                        z3.ZeroExt(32, qold) == z3.ZeroExt(32, p.value) * 2 + z3.ZeroExt(32, carry.value),
                        z3.ZeroExt(32, qnew) == z3.ZeroExt(32, qold) * 2 + z3.ZeroExt(32, flag),
-                       z3.ZeroExt(32, rem.value) * 2 + z3.ZeroExt(32, high_bit) == z3.ZeroExt(32, changed[r_name].value) + z3.ZeroExt(32, divisor.value) * z3.ZeroExt(32, changed[carry_name].value)]
+                       normalized_conservation]
             if s == 1:
                 finished = terms.action(finish, changed, n_name)
                 output = terms.engine.convert(terms.evaluate(returned.expr, finished), c_type(helper.decl, abi))
@@ -260,6 +284,10 @@ def prove_division_induction(model, timeout_ms=30000):
             else:
                 claims += [z3.ULT(rest, z3.BitVecVal(half, 32)), z3.ULT(changed[r_name].value, z3.BitVecVal(1 << 31, 32)), z3.ULT(divisor.value, z3.BitVecVal(1 << 31, 32))]
             prove('actual source loop induction, remaining bits ' + str(s), pre, z3.And(*claims))
+            result['source_step_normalizations'].append({'counter':s,'rule':'congruence under source equalities retained in the same goal; exact Boolean-product case split',
+                'checked_source_equalities_smt2':[e.sexpr() for e in source_equalities],
+                'original_conservation_smt2':original_conservation.sexpr(),'normalized_conservation_smt2':normalized_conservation.sexpr(),
+                'boolean_product_branches':branch_audit,'source_definedness_predicates_retained':True})
             result['counter_cases'].append({'counter': s, 'half': half, 'whole': whole, 'whole_is_twice_half': whole == 2 * half})
         D, Q, R, H, T, F, B = z3.Ints('audit_D audit_Q audit_R audit_H audit_T audit_F audit_B')
         before = (D * Q + R) * (2 * H) + B * H + T

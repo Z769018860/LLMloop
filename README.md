@@ -1099,3 +1099,5 @@ summary. Trial failures, unattempted candidates, source/context hashes and
 timings are retained. The API never invokes a remote model; supplied fixtures
 are not real LLM-gain evidence. See the [contract](docs/TYPED_SUMMARY_PORTFOLIO.md),
 [example](examples/typed_summary_portfolio.json) and [evidence](experiments/v059/report.md).
+
+The v0.59 regression audit also adds [checked word-step conservation normalization](docs/SOURCE_BOUND_DIVISION_INDUCTION.md): source/post-state equalities remain in each query, with audited Boolean products replacing a costly wide multiplication. Old failed attempts, normalization checks and unchanged solver deadlines are retained in the experiment evidence.

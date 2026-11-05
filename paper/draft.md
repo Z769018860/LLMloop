@@ -141,9 +141,20 @@ Table 1 records different units explicitly. Counts from different releases are n
 | --- | --- | --- | --- |
 | v0.58 regression | 3,161 test items | All passed, no failures/skips | Representative program accuracy |
 | v0.58 native matrices | 6,384 output observations, including defined capacity-frontier cases | Expected outputs matched in the declared grids | 6,384 independently proved programs or speedup |
+| v0.20 core trajectory/combination controls | 136 predeclared expected outcomes, including negative/unsupported cases | Recorded typed large-count, actual-entry nesting, coupled-periodic and threshold examples; negative controls remain UNKNOWN | Representative accuracy, complete discovery or LLM contribution |
 | v0.43 compiler-rt pilot | 13 public functions, 15 input domains | Default retained table: 14 source-safety results, 1 UNKNOWN; 14 independent functional certificates | Whole compiler-rt/library coverage |
 | v0.43 explicit additional strategies | Same 15 domains | Recorded source and functional coverage reaches 15/15 through named strategies | Uniform success of the default backend or an extra benchmark case |
 | v0.59 coordination pilot | 13 configurations, 7 hash-distinct handcrafted source programs including unsafe controls | Targeted controls separate certified trajectories, bounded fallback and UNKNOWN | Held-out LLM gain or external-tool superiority |
+
+The core trajectory evidence includes the named records `billion_typed_LP64`,
+`outer_index_dependent_inner_bound`, `triple_modular_nesting`,
+`coupled_rotation_LP64`, `coupled_nested` and
+`auto_counter_threshold_now_supported`. Their source-typed certificates are
+separate from mathematical guarded-recurrence results. The retained
+`coupled_signed_intermediate_ub`, `coupled_narrow_feedback_refuted` and
+`late_failure` controls remain UNKNOWN; an expected refusal counts as a matched
+control, not supported-program coverage. Ten illustrative records are bound to
+the original JSON in the evidence inventory rather than treated as a new corpus.
 
 The working evidence manifest provides paths and hashes for the immutable baseline records. The v0.59 final regression and coordination acceptance are documented separately in its experiment report; the manuscript's broad empirical claims remain limited to component validation.
 
@@ -166,6 +177,19 @@ A canceled-intermediate signed-overflow control demonstrates why the source mode
 Planned external comparisons are LoopSCC, ELBA, MALICE and the termination-verification LIFT. They solve different tasks; an exact-state contract must not be treated as identical to a bound, termination predicate or heap invariant. Pin tool revisions and adapters, retain unavailable/unsupported rows, and compare on compatible task projections rather than manufacture a common success rate.
 
 The ablation plan includes an original bounded mode; a declared LoopSCC-compatible reference configuration where available; invariant support without state acceleration; checked closed-form acceleration; nested composition; and the final LLM proposal source with all checks retained. Removing validation is an adversarial control, not a sound analysis mode. Isolate generator changes from verifier changes so that any LLM gain is identifiable.
+
+The v0.59 regression audit also exposed timeouts in an existing division
+induction checker. A targeted observer retained full UNKNOWN query records.
+A subsequent encoding change retains both actual source/post-state equalities
+inside every counter query, then uses congruence and a symbolically audited
+Boolean-product identity to state conservation without a wide multiplier.
+Both Boolean branches are checked, all original definedness predicates remain,
+and neither the 5,000 ms query cap nor the 30,000 ms functional deadline changes.
+All 102 targeted tests, including source mutations and the new normalization
+audits, pass after the change. The complete final regression and original-source
+replay are accepted separately in the v0.59 report. This is a targeted checked
+encoding improvement, not a general runtime-speedup claim. Earlier interrupted
+full attempts and pre-fix failures remain part of the evidence.
 
 The component regressions already support writing the methods and implementation sections. They do not replace these paired baseline, ablation and held-out studies. Additional grammar features are not substitutes for evidence addressing the paper's central research questions.
 
