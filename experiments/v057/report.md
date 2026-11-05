@@ -28,7 +28,7 @@ The earlier v0.56 unused-result overflow sanitizer coverage gap remains in histo
 
 Locally tested source commit: `f8b1fb796257e7845d4d2e7bb97fa6d2fb004908`.
 GitHub equivalent source commit: `94a4862d1869d0d3589a9b056f0342153752c459`.
-Both source trees: `766102be4a962147313e2b3622e1d6848c70c91b`; equality was checked before validation.
+Both source trees: `766102be4a962147313e2b3622e1d6848c70c91b`; equality was checked during the frozen run, before environment loss.
 The source manifest contained 433 source paths and 585 historical evidence paths.
 
 `results.json` deliberately has `passed: false` and an incomplete-environment status. It transcribes observed tool output; raw local logs, manifests, source snapshots and queries could not be retrieved after disconnection. No replacement raw archive or fabricated hash has been produced. Main remains unchanged; the feature and this checkpoint are preserved on a draft branch.
