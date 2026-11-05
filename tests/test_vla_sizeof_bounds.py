@@ -152,9 +152,11 @@ def test_size_observations_preserve_visibility_uniqueness_and_declaration_fronti
 
 
 @pytest.mark.parametrize('frontend',FRONTENDS)
-@pytest.mark.parametrize('operand',['int[n++]','int(*)[n++]','n++','*p','p[0]','api(n)','int[3]','void','long char*','unsigned signed int*'])
-def test_vm_typenames_general_operands_and_invalid_types_stay_closed(clang,frontend,operand):
-    unknown(run('int *p=0;int a[n+sizeof('+operand+')];return 7;',frontend,prefix='int api(int m){return m;}'))
+@pytest.mark.parametrize('operand,expected',[(e,7 if e in ('n++','*p','p[0]') else None) for e in ['int[n++]','int(*)[n++]','n++','*p','p[0]','api(n)','int[3]','void','long char*','unsigned signed int*']])
+def test_non_vm_expression_sizes_advance_without_erasing_vm_types_or_calls(clang,frontend,operand,expected):
+    r=run('int *p=0;int a[n+sizeof('+operand+')];return 7;',frontend,prefix='int api(int m){return m;}')
+    if expected is None:unknown(r)
+    else:proved(r,expected)
 
 
 @pytest.mark.parametrize('target,size_t,pointer,long_size',[

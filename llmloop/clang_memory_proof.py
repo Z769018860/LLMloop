@@ -10,7 +10,7 @@ from .clang_proof import nodes, check_parameter_attributes, check_typedef_attrib
 from .clang_parameters import checked_pointer_parameter
 from .clang_union_views import UnionViewNormalizer
 from .smt_spath import SMTGraphError
-from .bounded_vla import parse_bound_expression,bound_identifiers,bound_spelling,bound_operands
+from .bounded_vla import parse_bound_expression,bound_identifiers,bound_spelling,bound_operands,split_array_type
 
 
 BUILTINS = {'malloc', 'calloc', 'free'}
@@ -138,10 +138,11 @@ class MemoryNormalizer(UnionViewNormalizer):
 
     def bounded_vla(self,node):
         text=node['type'].get('desugaredQualType',node['type']['qualType'])
-        match=re.fullmatch(r'([^\[\]]+?)\s*\[([^\[\]]+)\]',text)
-        if not match or not self.bounded_vlas_enabled or match[2].isdigit():
+        shape=split_array_type(text)
+        if not shape or not self.bounded_vlas_enabled or shape[1].isdigit():
             return None
-        expression=parse_bound_expression(match[2]);names=bound_identifiers(expression);operands=bound_operands(expression);references=[];renamed={}
+        element_text,bound_text=shape
+        expression=parse_bound_expression(bound_text);names=bound_identifiers(expression);operands=bound_operands(expression);references=[];renamed={}
         if any(n.get('kind') in ('GotoStmt','LabelStmt') for n in nodes(self.root)):
             raise SMTGraphError('Bounded Clang VLA requires no source goto/label')
         for name in names:
@@ -151,20 +152,20 @@ class MemoryNormalizer(UnionViewNormalizer):
             if name in operands['value']:self.type(declaration['type'])
             else:
                 dtype=declaration['type'].get('desugaredQualType',declaration['type']['qualType'])
-                array=re.fullmatch(r'([^\[\]]+)\[[^\[\]]+\]',dtype)
-                if array or '*' in dtype:self.memory_type(array[1].strip() if array else declaration['type'])
+                array=split_array_type(dtype)
+                if array or '*' in dtype:self.memory_type(array[0] if array else declaration['type'])
                 else:self.type(declaration['type'])
             renamed[name]=self.names[declaration['id']]
             references.append({'source_name':name,'normalized_name':renamed[name],'ast_id':declaration['id'],'kind':declaration['kind'],
                 'uses':[usage for usage in ('value','sizeof') if name in operands[usage]]})
-        element=self.memory_type(match[1])
+        element=self.memory_type(element_text)
         if '*' in element or element.startswith('struct '):raise SMTGraphError('Bounded Clang VLA supports integer elements only')
         if node.get('inner'):raise SMTGraphError('Bounded Clang VLA initializers/attributes unsupported')
         class Rename(c_ast.NodeVisitor):
             def visit_ID(self,n):n.name=renamed[n.name]
         Rename().visit(expression);bound=bound_spelling(expression)
         record={'function':self.root['name'],'ast_id':node['id'],'array_name':self.names[node['id']],
-            'source_type':text,'source_bound_expression':match[2],'bound_expression':bound,'bound_references':references,'bound_name':bound,
+            'source_type':text,'source_bound_expression':bound_text,'bound_expression':bound,'bound_references':references,'bound_name':bound,
             'rule':'evaluate visible scalar value once per declaration execution; prove positive extent and capacity, never assume bounds'}
         if isinstance(expression,c_ast.ID):
             reference=references[0];record.update(bound_declaration_id=reference['ast_id'],bound_declaration_kind=reference['kind'])

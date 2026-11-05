@@ -14,6 +14,7 @@ from .typed_cfg_heap import TypedCFGHeap
 from .smt_spath import SMTGraphError
 from .memory_frontend import _lit
 from .bounded_vla import validate_bounded_vlas
+from .c_integers import IntegerABI
 
 
 BUILTINS={'malloc','calloc','free'}
@@ -71,7 +72,8 @@ def signature_key(decl):
 
 
 class CallExpansion:
-    def __init__(self,source,function=None,max_call_depth=3,allow_recursion=False,array_contracts=None):
+    def __init__(self,source,function=None,max_call_depth=3,allow_recursion=False,array_contracts=None,abi='LP64',char_signed=True):
+        self.sizeof_abi=IntegerABI(abi,char_signed)
         if type(max_call_depth) is not int or not 1<=max_call_depth<=8:raise SMTGraphError('max_call_depth must be 1..8')
         if type(allow_recursion) is not bool:raise SMTGraphError('allow_recursion must be Boolean')
         if len(source)>200000:raise SMTGraphError('Call source size budget exceeded')
@@ -148,7 +150,7 @@ class CallExpansion:
         return isinstance(node,c_ast.FuncCall) and isinstance(node.name,c_ast.ID) and node.name.name in set(self.functions)|set(self.externals)
 
     def validate_function_context(self,function):
-        validate_bounded_vlas(function)
+        validate_bounded_vlas(function,self.sizeof_abi)
         if function.decl.funcspec:raise SMTGraphError('Function specifiers require explicit call contracts')
         declared=set()
         class Declarations(c_ast.NodeVisitor):
@@ -490,7 +492,7 @@ class CallExpansion:
 
 class TypedCFGCalls(TypedCFGHeap):
     def __init__(self,source,function=None,max_call_depth=3,allow_recursion=False,array_contracts=None,**options):
-        self.expansion=CallExpansion(source,function,max_call_depth,allow_recursion,array_contracts)
+        self.expansion=CallExpansion(source,function,max_call_depth,allow_recursion,array_contracts,options.get('abi','LP64'),options.get('char_signed',True))
         # Original function contexts were checked before hygienic return gotos.
         self._vla_source_context_validated=True
         self.frontier_names={item['marker'] for item in self.expansion.frontiers}

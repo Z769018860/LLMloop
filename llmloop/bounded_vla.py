@@ -4,23 +4,8 @@ from pycparser import c_ast,c_parser,c_generator
 
 from .memory_frontend import _lit
 from .smt_spath import SMTGraphError
-
-
-def sizeof_type_supported(node):
-    """Non-VM integer/data-pointer type names; no bound evaluation to erase."""
-    depth=0
-    while isinstance(node,c_ast.PtrDecl):
-        if node.quals:return False
-        depth+=1;node=node.type
-    if depth>3 or not isinstance(node,c_ast.TypeDecl) or set(node.quals or [])-{'const'}:return False
-    if not isinstance(node.type,c_ast.IdentifierType):return False
-    names=node.type.names
-    if names==['_Bool'] or depth>0 and names==['void']:return True
-    allowed={'char','short','int','long','signed','unsigned'}
-    return (bool(names) and set(names)<=allowed and all(names.count(n)<=1 for n in allowed-{'long'})
-            and names.count('long')<=2 and not ('signed' in names and 'unsigned' in names)
-            and not ('char' in names and set(names)&{'short','long','int'})
-            and not ('short' in names and 'long' in names))
+from .c_integers import IntegerABI
+from .sizeof_expression import sizeof_type_supported,unevaluated_syntax,infer_sizeof_operand,from_declaration
 
 
 def bound_operands(expression):
@@ -35,7 +20,9 @@ def bound_operands(expression):
         if isinstance(node,c_ast.UnaryOp) and node.op=='sizeof':
             if isinstance(node.expr,c_ast.ID):sizes.add(node.expr.name);continue
             if isinstance(node.expr,c_ast.Typename) and sizeof_type_supported(node.expr.type):continue
-            raise SMTGraphError('VLA sizeof requires an object identifier or non-VM integer/data-pointer type name')
+            names,extra=unevaluated_syntax(node.expr,depth+1);sizes.update(names);count+=extra
+            if count>256:raise SMTGraphError('VLA bound expression budget exceeded')
+            continue
         if isinstance(node,c_ast.UnaryOp) and node.op in ('+','-','~','!'):children=[node.expr]
         elif isinstance(node,c_ast.BinaryOp) and node.op in binary:children=[node.left,node.right]
         elif isinstance(node,c_ast.TernaryOp) and node.iftrue is not None:children=[node.cond,node.iftrue,node.iffalse]
@@ -71,7 +58,7 @@ def bound_spelling(expression):
     return c_generator.CGenerator().visit(expression)
 
 
-def validate_bounded_vlas(function):
+def validate_bounded_vlas(function,abi=None):
     """Validate original scopes before call expansion creates hygienic gotos.
 
     Bound leaves are uniquely named, visible scalar parameters or initialized
@@ -87,6 +74,7 @@ def validate_bounded_vlas(function):
         if isinstance(node,c_ast.Decl):declarations.append(node)
         if isinstance(node,(c_ast.Goto,c_ast.Label)):jumps.append(node)
         pending.extend((child,depth+1) for _,child in node.children())
+    abi=abi or IntegerABI()
     params=function.decl.type.args.params if function.decl.type.args else []
     parameter_ids={id(p) for p in params}
     dynamic={id(d):d for d in declarations if id(d) not in parameter_ids
@@ -127,9 +115,34 @@ def validate_bounded_vlas(function):
                         or any(name not in scalar for name in operands['value'])
                         or any(name not in sized for name in operands['sizeof'])):
                     raise SMTGraphError('Bounded VLA requires visible unique scalar value/object-size operands and supported declaration types')
+                pending_size=[bound]
+                while pending_size:
+                    expression=pending_size.pop()
+                    if isinstance(expression,c_ast.UnaryOp) and expression.op=='sizeof' and not isinstance(expression.expr,(c_ast.ID,c_ast.Typename)):
+                        infer_sizeof_operand(expression.expr,lambda name:from_declaration(visible[name],abi,id(visible[name]) in parameter_ids),abi)
+                    pending_size.extend(child for _,child in expression.children())
                 if node.init is not None or not isinstance(node.type.type,c_ast.TypeDecl) or not isinstance(node.type.type.type,c_ast.IdentifierType):
                     raise SMTGraphError('Bounded VLA requires uninitialized integer elements and one dimension')
             if node.name in scalar or node.name in sized:visible[node.name]=node
             return
         for _,child in node.children():visit(child,visible)
     visit(function.body,{p.name:p for p in params if isinstance(p,c_ast.Decl) and (p.name in scalar or p.name in sized)})
+
+
+def split_array_type(text):
+    start=text.find('[')
+    if start<0:return None
+    depth=0;quote=None;escaped=False
+    for i in range(start,len(text)):
+        char=text[i]
+        if quote:
+            if escaped:escaped=False
+            elif char=='\\':escaped=True
+            elif char==quote:quote=None
+        elif char in ('"',"'"):quote=char
+        elif char=='[':depth+=1
+        elif char==']':
+            depth-=1
+            if depth==0:
+                return (text[:start].strip(),text[start+1:i].strip()) if not text[i+1:].strip() else None
+    return None

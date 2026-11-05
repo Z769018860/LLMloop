@@ -20,17 +20,21 @@ kernel retains promotions, conversions and lazy evaluation; signed overflow,
 zero divisors and invalid shifts cannot be hidden by positivity/capacity checks.
 Unsigned wrapping can yield a positive but unrepresented extent, which remains
 an analysis frontier. Every identifier in every arm must satisfy the lexical
-source contract even if that arm is unexecuted. Calls, assignment/increment,
-comma expressions, pointer/array reads, complex `sizeof` operands, VM type-name
-evaluation, typedef-name casts/sizes and
-noninteger casts remain refused. The expression has 256-node/32-depth limits;
+source contract even if that arm is unexecuted. In evaluated bound operands,
+calls, assignment/increment, comma expressions, pointer/array reads and
+noninteger casts remain refused. Unsupported sizeof operands, VM type-name
+evaluation and typedef-name casts/sizes remain closed. The expression has 256-node/32-depth limits;
 printed Clang bounds additionally have a 4096-character parsing limit.
 
 `sizeof` leaves admit primitive integer type names (optionally const), up to
 three unqualified data-pointer levels over integers/void, and supported visible
-scalar/pointer/integer-array identifiers. Function pointers, type-name arrays,
-records/typedef-name operands and compound operands such as `sizeof(n++)`,
-`sizeof(*p)` or `sizeof(api(n))` remain outside the bound grammar. VM type names
+scalar/pointer/integer-array identifiers. Non-VM expression operands now include
+integer arithmetic, comparisons/logical/shift operators, unary operations,
+assignments/compound assignments, subscripts, dereferences, addresses, primitive
+casts and integer/compatible-pointer conditionals. `sizeof(n++)`,
+`sizeof(n=1/0)`, `sizeof(*p)` and `sizeof(a[i++])` infer only their result types.
+Function pointers, type-name arrays, record/typedef-name operands, calls,
+comma/string operands and pointer-to-array forms remain outside the grammar. VM type names
 such as `sizeof(int[n++])` cannot have their evaluation effects erased.
 
 Scalar and pointer sizes are ABI-dependent `size_t` constants, without reading
@@ -43,6 +47,26 @@ initialized. A VLA array contributes its saved extent, so
 bound changes. Adjusted array parameters contribute pointer size, not the
 caller's object extent. Every named size operand still requires unique spelling
 and lexical visibility, including in unexecuted arms.
+
+The expression type pass never reads operand values or executes side effects,
+arithmetic, indexing or pointer formation. Thus a null/expired pointee,
+out-of-range subscript, invalid shift count or zero divisor inside a non-VM
+sizeof operand does not create a runtime obligation. Type constraints still
+apply: const/non-lvalue assignment/increment, invalid operand types,
+qualification-dropping pointer assignment and unknown identifiers are refused,
+even in unexecuted VLA declarations. Promotions and usual conversions remain;
+`sizeof(c++)` for unsigned char is one byte, while `sizeof(+c)` and
+`sizeof(n?c:c)` are sizeof(int). Target size_t/ptrdiff_t and pointer widths
+follow the selected ABI. Some valid pointer forms are conservatively excluded;
+null-pointer type constraints currently recognize literal integer zero.
+
+Direct array-identifier sizeof uses live storage and the saved extent. In
+contrast, `sizeof(a[i++])` uses the element type, and conditional array operands
+decay to compatible pointers. Nested sizeof has type size_t without evaluating
+an inner sizeof expression. VM/type-name effects remain closed, not erased.
+This syntax/type inference and the receiving integer kernel are trusted
+components, not a compiler-equivalence theorem. The existing 256-node/32-depth
+bound budget includes the new operand AST; pointer type depth remains three.
 
 The bound's current typed value is evaluated **once per execution of the declaration**,
 after earlier scalar assignments and helper argument conversions. The kernel
@@ -57,7 +81,7 @@ the ABI element size, including one-byte `_Bool`; changing the bound variable
 later does not change that object's size or its access bounds. This operation
 does not read or initialize any cells. Fixed local arrays also support this
 unevaluated `sizeof` form. Adjusted array parameters retain pointer `sizeof`.
-Other `sizeof` operand forms and VM type-name expressions remain unsupported.
+Operand forms outside the type-only fragment above and VM type-name expressions remain unsupported.
 
 Every actual access retains existing initialization, bounds, arithmetic and
 lifetime obligations. Eight represented cells do not create eight live array
@@ -69,7 +93,7 @@ restriction is unchanged.
 The Clang normalizer parses the printed type's bound in the restricted integer
 grammar and resolves each identifier to one uniquely spelled VarDecl/ParmVarDecl
 ID in the function. The receiving source validator checks lexical visibility
-and requires each local operand to be declared with an initializer before the VLA.
+and requires scalar/pointer locals to have an initializer before the VLA; array cells may remain uninitialized.
 Raw type/bound spelling, normalized expression, array declaration and every
 operand's declaration kind/ID and normalized name remain in
 `normalization.bounded_vla_declarations`. Legacy single-identifier fields remain.
@@ -135,3 +159,8 @@ Size-dependent arrays are illustrated by
 The native coverage controls distinguish required observable-use UB traps from
 an unused-result overflow that GCC O2 may not diagnose. Sanitizer silence never
 establishes a defined-source certificate.
+
+Unevaluated expression operands are illustrated by
+[clang_unevaluated_sizeof.c](../examples/clang_unevaluated_sizeof.c) and
+[v0.57 evidence](../experiments/v057/report.md). The example returns 51 at n=3,
+with no increment, assignment or null-pointer read from its sizeof operands.

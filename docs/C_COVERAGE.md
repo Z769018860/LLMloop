@@ -68,16 +68,17 @@ See [feature inventory](FEATURE_STATUS.md),
 [borrowed payload-map contract](OWNED_LIST_PAYLOAD_MAPS.md) and
 [eager list-call arguments](EAGER_LIST_ARGUMENTS.md) and
 [finite choices and upstream integer pilot](FINITE_CHOICES_AND_UPSTREAM_BENCHMARKS.md) and
-[latest experiment report](../experiments/v056/report.md).
+[latest experiment report](../experiments/v057/report.md).
 
 The [bounded local VLA bridge](BOUNDED_LOCAL_VLA.md) admits integer arrays in explicit block/for scopes with pure typed integer
 bound expressions over unique visible parameters/initialized locals. Definedness, positivity and the
 eight-cell representation are proved at declaration; saved extents govern
 `sizeof` and accesses. This is a finite fragment, with effectful/memory-reading bounds,
 VLA parameters, arbitrary source jumps and general layouts still unsupported. See
-[v0.56 validation](../experiments/v056/report.md). Non-VM primitive/type-object
+[v0.57 validation](../experiments/v057/report.md). Non-VM primitive/type-object
 size leaves can compose saved extents across arrays; pointer size never follows
-the pointee. Complex sizeof operands and VM type-name effects remain refused.
+the pointee. Type-checked integer/data-pointer expression operands are unevaluated;
+calls/comma/string operands, pointer-to-array forms and VM type-name effects remain refused.
 
 [Stateful consumers](STATEFUL_LIST_CONSUMERS.md) admit nonzero initialized scalar
 states and sequential pure scalar updates within the same complete owned-chain
