@@ -11,7 +11,7 @@ not automatically an independent correctness certificate.
 The LoopSCC snapshot is the public `hahaleyile/LoopSCC` repository. Equivalence to
 the ICSE 2026 anonymous artifact has not been established. Analysis source files
 are unchanged. The worker executes their declarative assignments and explicitly
-calls summary construction, rather than their 1,000-print sample driver. It
+calls summary construction, rather than their sample-print driver. It
 uses the first three author inputs and three predeclared uniform small states.
 The author raw Python program is observed with a return-frame tracer capped at
 30,000 events. Missing/unfinished oracle executions remain visible and are not

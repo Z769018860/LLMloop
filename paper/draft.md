@@ -4,7 +4,7 @@
 
 ## Abstract
 
-Loops combine repeated computation with evolving control and data state. A useful acceleration must describe the carried state at an arbitrary iteration, preserve the source program's arithmetic semantics, and compose correctly when an inner loop is invoked from different outer states. We investigate a proposal-and-certification architecture for periodic and monotone state trajectories. Untrusted generators, including optional language-model interfaces, propose invariants or transformations; separate algebraic and SMT-based checks decide whether the proposals may be used. For an explicit scalar C fragment, candidate trajectories are checked against typed initialization, conditions, intermediate operations, successor states and returns. Nested summaries are instantiated at actual loop-entry states, and an explicit bounded fallback retains complete-exit obligations when certification does not succeed. The current prototype passes a frozen 3,212-item regression. A prior array/VLA validation matrix records 6,384 native output comparisons; a separate supplied-trajectory coordination pilot covers 13 configurations over seven handcrafted sources. A separate compiler-rt pilot covers 13 functions under 15 input domains using explicitly identified proof strategies. These are component-validation results, not representative summarization accuracy or speedup estimates. We present the source contracts, conditional correctness arguments and reproducible evaluation protocol needed to test the approach's central research claims.
+Loops combine repeated computation with evolving control and data state. A useful acceleration must describe the carried state at an arbitrary iteration, preserve the source program's arithmetic semantics, and compose correctly when an inner loop is invoked from different outer states. We investigate a proposal-and-certification architecture for periodic and monotone state trajectories. Untrusted generators, including optional language-model interfaces, propose invariants or transformations; separate algebraic and SMT-based checks decide whether the proposals may be used. For an explicit scalar C fragment, candidate trajectories are checked against typed initialization, conditions, intermediate operations, successor states and returns. Nested summaries are instantiated at actual loop-entry states, and an explicit bounded fallback retains complete-exit obligations when certification does not succeed. The current prototype passes a frozen 3,212-item regression. A prior array/VLA validation matrix records 6,384 native output comparisons; a separate supplied-trajectory coordination pilot covers 13 configurations over seven handcrafted sources. A separate compiler-rt pilot covers 13 functions under 15 input domains using explicitly identified proof strategies. A subsequent study records 120 mechanism-control runs and pinned external compatibility executions; one adapted exact-count projection is independently checked and matches 1,156 native observations. These are component-validation results, not representative summarization accuracy or speedup estimates. We present the source contracts, conditional correctness arguments and reproducible evaluation protocol needed to test the approach's central research claims.
 
 ## 1. Introduction
 
@@ -167,9 +167,103 @@ A canceled-intermediate signed-overflow control demonstrates why the source mode
 
 A subsequent frozen development replay uses the same 13 configurations over seven handcrafted source programs, five modes and five randomized blocks (325 fresh workers). The modes are original 128-step CFG, the last declared supplied candidate checked directly, original-order portfolio without fallback, original-order portfolio with its declared fallback, and the same candidates reversed. The last candidate is fixed before measurement, not selected by a successful outcome. Every predeclared result matches in all five blocks, with zero host timeouts or worker errors. Per block, the CFG proves two configurations, the direct last candidate and no-fallback portfolio prove seven each, and both full portfolio orders prove eight. UNKNOWN controls remain in the denominator.
 
-Wall time includes interpreter/import startup and parent timeout-wait polling/notification overhead; analysis time and Linux self-process peak RSS are separate. Small wall-time differences are not interpreted as stable computation savings. Host worker/global deadlines are 20/1800 seconds and verifier budgets are unchanged. Rejected proposals and incomplete outcomes retain their costs. Four wrong-first configurations reduce from two candidate checks to one after reversal, saving 20 checks over five repetitions. Fallback proves the small complete-exit case while the large frontier and unsafe controls remain UNKNOWN. These are candidate-policy controls; the broader periodic/closed-form/nested mechanism ablations remain outstanding.
+Wall time includes interpreter/import startup and parent timeout-wait polling/notification overhead; analysis time and Linux self-process peak RSS are separate. Small wall-time differences are not interpreted as stable computation savings. Host worker/global deadlines are 20/1800 seconds and verifier budgets are unchanged. Rejected proposals and incomplete outcomes retain their costs. Four wrong-first configurations reduce from two candidate checks to one after reversal, saving 20 checks over five repetitions. Fallback proves the small complete-exit case while the large frontier and unsafe controls remain UNKNOWN. These are candidate-policy controls; the subsequent restricted mechanism comparisons below cover additional cases but do not complete every planned ablation.
 
 Only pairs with complete source proofs and matching evaluated returns receive diagnostic time ratios, under the common definedness/exit projection rather than an identical full-state task. UNKNOWN/proof timing ratios are excluded. The machine is shared; five repetitions, known development fixtures and supplied proposals do not establish representative coverage, actual model benefit or a general speedup. Full per-trial records and scope are in the v0.60 report. The earlier 3,212-item complete regression is retained as the unchanged-verifier baseline; this experiment adds nine integrity tests and runs 58 targeted items, without claiming a new full-suite run.
+
+### 6.2a Pinned public-tool execution and restricted mechanism controls
+
+A v0.61 protocol was committed before execution. Its 192 fresh-process trials
+comprise eight controlled C configurations in five existing API modes across
+three randomized blocks (120 trials), plus twelve lexicographically selected
+public inputs each for ELBA and a public LoopSCC snapshot across three blocks
+(72 trials). Seed is 20261107. All tracked source hashes remained unchanged
+through the main study. Worker deadlines are 20 seconds for controls and 15
+seconds for external inputs; this protocol has no separate global deadline.
+Capture acceptance is distinct from external algorithm success.
+
+| Existing API control | Source-proved configurations per block / 8 | Median process wall seconds over 24 trials |
+| --- | ---: | ---: |
+| Original bounded CFG, 128 steps | 1 | 2.121 |
+| Restricted affine supplied candidates | 3 | 0.515 |
+| Flat typed trajectory | 4 | 0.466 |
+| Compositional typed trajectory | 6 | 0.467 |
+| Deterministic automatic synthesis | 6 | 0.616 |
+
+All 120 controlled expectations matched. The six defined configurations include
+linear, quadratic, unsigned periodic, product-nested, triangular-nested and
+zero-iteration domains. Two unsafe-source controls remain UNKNOWN in every
+mode. Source and domain are held fixed; the flat checker does not replace the
+nested source by an equivalent flattened program. Restricted affine candidates
+are deliberately insufficient for selected trajectories. This is a
+candidate-language comparison, not a disabled periodic-invariant detector.
+The automatic generator is deterministic, not an LLM. The two-domain shared
+linear source is not counted as two independent programs. UNKNOWN/proof timing
+ratios are not reported as speedups.
+
+ELBA is pinned to `54c58fcd872481a5e72f8c4a31ed2ef242b6fbdd`.
+Its 36 default-configuration runs report bounds in 15 trials, hit the host
+limit in 18, and report no bound in three. Analysis sources are unchanged;
+the compatibility build uses GCC13, Boost1.83, GMP6.3, Z3 4.13.0 and a forced
+standard deque include. This differs from the author's dependency pins and
+multi-configuration portfolio. Reported bounds are not automatically certified
+by our checker, and no comparative superiority is inferred.
+
+The public `hahaleyile/LoopSCC` snapshot is pinned to
+`09ef9351667a8ccd83d7a50907ca5ea90ec521a4`, with SymPy1.12.1 and Z3 4.13.0.
+Its equivalence to the ICSE 2026 artifact is not established. The initial
+36-trial direct-API adapter returns summary objects in 33 trials and records
+three missing-entry errors on an upstream placeholder file. That adapter omits
+some author sample-driver coordinate conversions, so this is not an upstream
+script success count. A separately frozen supplement executes all twelve
+original scripts unchanged, including those conversions and full sample loops,
+in three fresh-process blocks: 33 scripts complete, and three are the upstream
+`# cannot process` placeholder. There are no timeouts/process exceptions in that
+supplement. The 1,278 printed lines contain no `None`, but script completion is
+not a universal correctness certificate.
+
+Initial raw-source point observations retain 102 numeric comparisons: 69 agree
+and 33 disagree. A transparent post-hoc boundary audit evaluates each original
+function prologue without overriding initialization. Of 150 recorded points,
+39 have incompatible loop-entry states; 111 have compatible entries, including
+69 completed matching comparisons and 42 missing/incomplete comparisons. All
+33 raw disagreements occur among incompatible entries. This post-hoc separation
+is not a preregistered 100% accuracy result; omitted coordinate transforms and
+incomplete direct execution remain adapter limitations. All original outcomes
+are retained in the archive.
+
+A one-case supplemental count projection uses ELBA's registered `ABC_ex01`
+relation `inv(a,b,i)`, initial `i=a` and step `i<b; i'=i+1`.
+A strict two-branch output parser maps its bound to `max(b-a,0)` at entry.
+Five independent mathematical-integer obligations establish nonnegativity,
+entry, active guard, successor and exit; bounds shifted by minus/plus one are
+refuted. An explicitly adapted typed-C program counts from zero to `b-a` over
+`a,b` in [-1000,1000] under LP64. Its original-source trajectory is certified,
+while candidate `x=i+1` is rejected. GCC13/Clang18 at O0/O2 match all 1,156
+observations over the 289 input pairs in [-8,8]. The earlier inspected ABC smoke
+and successful typed probe are disclosed. This is one manual common count
+projection, not unchanged public C, a general CHC importer, complete-state
+comparison or speedup evidence.
+
+LIFT artifact `17bf85707be6677186f34dba25aca58130ac8abe` passes three fresh
+native executions of its official supplied-bound smoke, each reporting one
+verified procedure and zero errors. This uses Mono6.8 rather than the authors'
+Mono6.12 Docker setup. Only name-wide process killing is disabled; proof checks
+remain enabled and the host owns its child process groups. Earlier missing
+assembly exceptions, initially mislabeled as verification timeouts by the
+upstream output reader, are retained. This is not an LLM-generation experiment.
+
+Thirty-five public LoopSCC input paths and hashes are also registered as 30
+development entries and five future model-evaluation entries in the `leap`
+family, with no shared source hash or family. Public-tool evaluation already
+examines some such sources; this registration is not an untouched blind test,
+a training-contamination audit or held-out model result. Redistribution rights
+for the external sources remain unresolved. MALICE's exact artifact and the
+conference LoopSCC artifact mapping remain unverified. Actual model calls are
+zero, and the live typed-proposal experiment remains open. Nine new experiment
+integrity tests pass; no new full-suite regression is claimed. Detailed units,
+raw outcomes and remaining acceptance criteria are in
+`experiments/v061/report.md` and `experiments/v061/p0_ledger.json`.
 
 ### 6.3 Research questions and protocol
 
@@ -183,7 +277,7 @@ Only pairs with complete source proofs and matching evaluated returns receive di
 
 ### 6.4 Baselines and ablations
 
-Planned external comparisons are LoopSCC, ELBA, MALICE and the termination-verification LIFT. They solve different tasks; an exact-state contract must not be treated as identical to a bound, termination predicate or heap invariant. Pin tool revisions and adapters, retain unavailable/unsupported rows, and compare on compatible task projections rather than manufacture a common success rate.
+The baseline plan includes LoopSCC, ELBA, MALICE and the termination-verification LIFT. The pinned executions above partially realize that plan; they do not complete broad compatible-task comparisons. They solve different tasks; an exact-state contract must not be treated as identical to a bound, termination predicate or heap invariant. Pin tool revisions and adapters, retain unavailable/unsupported rows, and compare on compatible task projections rather than manufacture a common success rate.
 
 The ablation plan includes an original bounded mode; a declared LoopSCC-compatible reference configuration where available; invariant support without state acceleration; checked closed-form acceleration; nested composition; and the final LLM proposal source with all checks retained. Removing validation is an adversarial control, not a sound analysis mode. Isolate generator changes from verifier changes so that any LLM gain is identifiable.
 
@@ -200,11 +294,11 @@ replay are accepted separately in the v0.59 report. This is a targeted checked
 encoding improvement, not a general runtime-speedup claim. Earlier interrupted
 full attempts and pre-fix failures remain part of the evidence. Four complete-suite runs were started: two pre-fix attempts interrupted after failures, one post-fix run interrupted when its execution environment ended, and the final complete acceptance. Partial outcomes are not pooled into the final pass count.
 
-The component regressions already support writing the methods and implementation sections. They do not replace these paired baseline, ablation and held-out studies. Additional grammar features are not substitutes for evidence addressing the paper's central research questions.
+The component regressions and scoped public-tool executions support writing the methods, implementation and current-results sections. They do not complete the broader paired baseline, ablation and held-out studies. Additional grammar features are not substitutes for evidence addressing the paper's central research questions.
 
 ## 7. Related Work
 
-**LoopSCC.** The cited preprint organizes single-loop paths using SCC contraction and identifies determinate-cycle structure through oscillatory intervals [R1]. It is directly relevant to periodic state summarization. The relevant distinction concerns checked typed trajectories and compositional entry contexts; SCC decomposition itself is established prior work. No head-to-head superiority result is currently available. The distinct ICSE 2026 conference entry explicitly describes nested summaries from inner to outer loops [R5]. A novelty assessment must include that version; nested-loop support alone is not a new contribution. The conference artifact endpoint has been identified but not pinned or executed in this study.
+**LoopSCC.** The cited preprint organizes single-loop paths using SCC contraction and identifies determinate-cycle structure through oscillatory intervals [R1]. It is directly relevant to periodic state summarization. The relevant distinction concerns checked typed trajectories and compositional entry contexts; SCC decomposition itself is established prior work. No head-to-head superiority result is currently available. The distinct ICSE 2026 conference entry explicitly describes nested summaries from inner to outer loops [R5]. A novelty assessment must include that version; nested-loop support alone is not a new contribution. The conference artifact endpoint has been identified but not pinned or executed in this study. The separately executed public snapshot must not be substituted for that version.
 
 **Exact loop bounds.** ELBA synthesizes exact iteration bounds using preconditions and safety verification [R2]. Our target includes the carried post-state, while our canonical typed source contract is restricted. These are different outputs and incomparable general capabilities without a shared benchmark/task projection. An exact count also does not automatically establish an arbitrary memory-access cost.
 
@@ -218,7 +312,7 @@ The trusted computing base includes source parsing/normalization, type/layout mo
 
 Manual fixtures can favor existing recognizers. Multiple domains, ABIs, compiler modes and repeated inputs are correlated observations; their denominators must not be collapsed into a program count. The compiler-rt pilot is small and selected. External validity requires broader unchanged programs and retained unsupported cases.
 
-Timing depends on solver behavior, process startup, machine load, model latency and candidate order. Single-run component logs do not establish a statistical performance improvement. Genuine model runs may be nondeterministic or affected by data contamination; exact response/provenance archives and held-out splits are needed.
+Timing depends on solver behavior, process startup, machine load, model latency and candidate order. The repeated local controls still do not establish a representative statistical performance improvement. Compatibility dependencies, short external deadlines, the initial adapter limitations and post-hoc entry audit further limit the public-tool observations. Genuine model runs may be nondeterministic or affected by data contamination; exact response/provenance archives and held-out splits are needed.
 
 General floating point, byte-level/effective-type semantics, unrestricted calls/recursion, arbitrary heap shapes, concurrency and general state-dependent closed-form discovery remain unsupported. These do not have to be solved before a narrowly scoped paper, but the scope must be explicit. KLEE is not integrated and is not required by the current evaluation plan. Cost/probability analysis remains an extension, not a claimed core result.
 
