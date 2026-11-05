@@ -1087,3 +1087,15 @@ remain excluded or checked under their existing contracts. Calls, strings,
 VM type names and general VLA layouts remain open; budgets are unchanged.
 See the [contract](docs/BOUNDED_LOCAL_VLA.md),
 [example](examples/clang_sizeof_comma.c) and [evidence](experiments/v058/report.md).
+
+
+## v0.59: source-checked typed proposal portfolio
+
+The API now checks up to eight supplied, untrusted recurrence or nested-loop
+trajectory proposals against the same original C source/domain/ABI. Only a
+verified result is selected. An explicit bounded CFG fallback preserves complete
+exit and original safety obligations, and is never labeled an accelerated
+summary. Trial failures, unattempted candidates, source/context hashes and
+timings are retained. The API never invokes a remote model; supplied fixtures
+are not real LLM-gain evidence. See the [contract](docs/TYPED_SUMMARY_PORTFOLIO.md),
+[example](examples/typed_summary_portfolio.json) and [evidence](experiments/v059/report.md).
