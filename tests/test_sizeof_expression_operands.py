@@ -120,8 +120,10 @@ def test_constraints_are_checked_even_in_unexecuted_declarations(clang,frontend,
 
 @pytest.mark.parametrize('frontend',FRONTENDS)
 @pytest.mark.parametrize('operand',['api(n++)','int[n++]','int(*)[n++]','(n++,n)','"abc"'])
-def test_calls_vm_types_comma_and_strings_remain_closed(clang,frontend,operand):
-    unknown(run('int a[n+sizeof('+operand+')];return 7;',frontend,prefix='int api(int m){return m;}'))
+def test_comma_advances_while_calls_vm_types_and_strings_remain_closed(clang,frontend,operand):
+    r=run('int a[n+sizeof('+operand+')];return 7;',frontend,prefix='int api(int m){return m;}')
+    if operand=='(n++,n)':proved(r,7)
+    else:unknown(r)
 
 
 @pytest.mark.parametrize('frontend',FRONTENDS)

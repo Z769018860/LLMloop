@@ -16,6 +16,11 @@ UNARY={'+','-','~','!','*','&','++','p++','--','p--'}
 ASSIGN={'=','+=','-=','*=','/=','%=','<<=','>>=','&=','|=','^='}
 
 
+def void_cast_type(node):
+    return (isinstance(node,c_ast.TypeDecl) and not node.quals
+            and isinstance(node.type,c_ast.IdentifierType) and node.type.names==['void'])
+
+
 def sizeof_type_supported(node):
     depth=0
     while isinstance(node,c_ast.PtrDecl):
@@ -50,7 +55,8 @@ def unevaluated_syntax(node,start_depth=0):
         elif isinstance(n,c_ast.Assignment) and n.op in ASSIGN:children=[n.lvalue,n.rvalue]
         elif isinstance(n,c_ast.ArrayRef):children=[n.name,n.subscript]
         elif isinstance(n,c_ast.TernaryOp) and n.iftrue is not None:children=[n.cond,n.iftrue,n.iffalse]
-        elif isinstance(n,c_ast.Cast) and sizeof_type_supported(n.to_type.type):children=[n.expr]
+        elif isinstance(n,c_ast.Cast) and (sizeof_type_supported(n.to_type.type) or void_cast_type(n.to_type.type)):children=[n.expr]
+        elif isinstance(n,c_ast.ExprList) and len(n.exprs)>=2:children=n.exprs
         else:raise SMTGraphError('Unsupported unevaluated sizeof operand: '+type(n).__name__)
         pending.extend((child,depth+1) for child in children)
     return sorted(names),count
@@ -154,7 +160,18 @@ def infer_sizeof_operand(root,lookup,abi):
             try:return ExprType('integer',integer=abi.literal(n.value).type)
             except ValueError as exc:raise SMTGraphError(str(exc)) from exc
         if isinstance(n,c_ast.Cast):
-            t=from_type(n.to_type.type,abi);scalar(decay(visit(n.expr,depth+1)));return t.value()
+            operand=decay(visit(n.expr,depth+1))
+            if void_cast_type(n.to_type.type):
+                if operand.kind not in ('integer','pointer','void'):fail()
+                return ExprType('void')
+            t=from_type(n.to_type.type,abi);scalar(operand);return t.value()
+        if isinstance(n,c_ast.ExprList):
+            # Check every operand's constraints; discard all values. Comma
+            # converts arrays to pointers and never yields a C lvalue, while
+            # leaving a narrow integer's type unpromoted.
+            result=None
+            for expression in n.exprs:result=decay(visit(expression,depth+1))
+            return result.value()
         if isinstance(n,c_ast.UnaryOp):
             if n.op=='sizeof':
                 if isinstance(n.expr,c_ast.Typename):from_type(n.expr.type,abi)
@@ -208,6 +225,7 @@ def infer_sizeof_operand(root,lookup,abi):
             return common(a,b)
         if isinstance(n,c_ast.TernaryOp):
             scalar(decay(visit(n.cond,depth+1)));a,b=decay(visit(n.iftrue,depth+1)),decay(visit(n.iffalse,depth+1))
+            if a.kind==b.kind=='void':return ExprType('void')
             if a.kind==b.kind=='integer':return common(a,b)
             if a.kind==b.kind=='pointer' and compatible(a.target,b.target):return pointer(composite(a.target,b.target))
             if a.kind=='pointer' and b.kind=='integer' and null(n.iffalse):return a

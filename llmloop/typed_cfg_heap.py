@@ -569,6 +569,7 @@ class TypedCFGHeap(TypedCMemory):
         if self.vla_queries:
             result['memory_model']['bounded_local_vla']={'bound_evaluated_once':True,'sizeof_uses_saved_extent':True,
                 'non_vm_sizeof_expression_operands_unevaluated':True,
+                'sizeof_comma_operands_unevaluated':True,
                 'sizeof_bound_operands_use_saved_extent':True,'scalar_pointer_sizeof_does_not_read_value':True,
                 'extent_assumed':False,'max_cells':8,'queries':self.vla_queries,'instances':self.vla_instances,
                 'reexecuted_declarations_get_fresh_storage':True,

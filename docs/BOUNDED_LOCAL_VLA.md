@@ -34,7 +34,7 @@ assignments/compound assignments, subscripts, dereferences, addresses, primitive
 casts and integer/compatible-pointer conditionals. `sizeof(n++)`,
 `sizeof(n=1/0)`, `sizeof(*p)` and `sizeof(a[i++])` infer only their result types.
 Function pointers, type-name arrays, record/typedef-name operands, calls,
-comma/string operands and pointer-to-array forms remain outside the grammar. VM type names
+string operands and pointer-to-array forms remain outside the grammar. VM type names
 such as `sizeof(int[n++])` cannot have their evaluation effects erased.
 
 Scalar and pointer sizes are ABI-dependent `size_t` constants, without reading
@@ -67,6 +67,21 @@ an inner sizeof expression. VM/type-name effects remain closed, not erased.
 This syntax/type inference and the receiving integer kernel are trusted
 components, not a compiler-equivalence theorem. The existing 256-node/32-depth
 bound budget includes the new operand AST; pointer type depth remains three.
+
+Comma expressions inside non-VM sizeof now check every operand's type without
+executing any operand. The result has the final operand's type after array
+conversion and lvalue conversion, without automatic integer promotion:
+`sizeof((n++, c))` for unsigned char c is one byte; `sizeof((n++, a))`
+for an integer array a is pointer size. A comma result is never a C lvalue,
+so assignment/increment/address-of that result stays rejected. Discarded left
+operands retain all visibility, declaration, type and qualifier constraints.
+
+Plain `(void)` casts are admitted in these unevaluated operands, including nested
+casts and void/void conditionals used as a discarded comma component. Void cannot
+be used as a scalar condition/arithmetic operand or converted to a scalar. A final
+void expression, `sizeof(void)` and `sizeof((void)n)` remain refused. This does
+not add function calls, strings, VM type names or evaluated comma VLA bounds.
+All nodes/depths count against the existing expression budget.
 
 The bound's current typed value is evaluated **once per execution of the declaration**,
 after earlier scalar assignments and helper argument conversions. The kernel
@@ -164,3 +179,8 @@ Unevaluated expression operands are illustrated by
 [clang_unevaluated_sizeof.c](../examples/clang_unevaluated_sizeof.c) and
 [v0.57 evidence](../experiments/v057/report.md). The example returns 51 at n=3,
 with no increment, assignment or null-pointer read from its sizeof operands.
+
+Comma and void-discard operands are illustrated by
+[clang_sizeof_comma.c](../examples/clang_sizeof_comma.c) and
+[v0.58 evidence](../experiments/v058/report.md). The example returns 49 at n=3;
+n and the unsigned-char value remain unchanged, and the null index is not read.
