@@ -49,6 +49,32 @@ retained. LIFT's supplied-bound smoke is separately attempted using native Mono
 while process-group cleanup is retained. No logical validation is disabled.
 Neither compatibility execution is claimed as the authors' exact environment.
 
+## Post-freeze supplements and initial-adapter limitations
+
+The initial direct-API LoopSCC worker does not execute the author sample-loop
+coordinate adapters (notably `k=x-y`). Some original raw functions also reset
+locals before their loop. Its returned-summary count is therefore an adapter
+observation, not a faithful upstream-script success count. All original rows,
+mismatches and errors are preserved. The simple_bl input is literally the
+upstream `# cannot process` placeholder; its missing `summarizer` is not an
+algorithm crash on an implemented benchmark. A separate post-hoc audit checks
+raw-function entry compatibility and leaves incomplete comparisons visible.
+
+`p0_native_loopscc.py` supplements these observations by executing all twelve
+original upstream scripts unchanged, including their coordinate adapters and
+complete author test loops. The exact set is inherited from the original
+protocol, three repetitions are fixed before this supplement runs, seed is
+20261108 and each worker has a 15-second deadline. Zero exit is recorded as
+script completion, not correctness. Placeholders, errors and timeouts remain
+separate. Output `None` is counted explicitly. This supplements rather than
+replaces the initial 36 direct-API trials. No timing comparison pools them.
+
+The one-case ABC bound projection, its typed-C adaptation and negative controls
+are frozen separately in `experiments/protocols/v061_projection.json`, with the
+prior pilot inspection disclosed. It is a narrow common count task, not a
+general CHC bridge or a common full-state comparison. LIFT has three declared
+fresh native supplied-bound smoke repetitions after dependency setup.
+
 Genuine LLM execution remains blocked without a configured endpoint/model and
 credential. MALICE and the conference LoopSCC artifact are not replaced by
 unverified lookalikes. The P0 ledger must therefore remain open until these
