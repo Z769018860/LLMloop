@@ -1,0 +1,14 @@
+case,kind,status,sample_inputs,native_output_matches,model_matches,represented_instances,bound_expressions,value_names,sizeof_names,result_types,unsat_queries,sat_queries
+discarded_increment,positive,PROVED_DEFINED_CLANG_CFG_CALLS,3,36,3,1,"n + (sizeof(n++, c))",n,c; n,unsigned long,2,0
+discarded_zero_divisor_assignment,positive,PROVED_DEFINED_CLANG_CFG_CALLS,3,36,3,1,"n + (sizeof(n = 1 / 0, c))",n,c; n,unsigned long,2,0
+discarded_invalid_shift,positive,PROVED_DEFINED_CLANG_CFG_CALLS,3,36,3,1,"n + (sizeof(1 << 100, c))",n,c,unsigned long,2,0
+discarded_null_index,positive,PROVED_DEFINED_CLANG_CFG_CALLS,3,36,3,1,"n + (sizeof(p[n++], c))",n,c; n; p,unsigned long,2,0
+last_uninitialized_element,positive,PROVED_DEFINED_CLANG_CFG_CALLS,3,36,3,1,"n + (sizeof(n++, a[n]))",n,a; n,unsigned long,2,0
+last_array_decays,positive,PROVED_DEFINED_CLANG_CFG_CALLS,3,36,3,2,"n; n + ((sizeof(n++, a)) / (sizeof(int *)))",n,a; n,signed int; unsigned long,4,0
+narrow_result_not_promoted,positive,PROVED_DEFINED_CLANG_CFG_CALLS,3,36,3,1,"n + (sizeof(n = 0, c))",n,c; n,unsigned long,2,0
+void_discard_assignment,positive,PROVED_DEFINED_CLANG_CFG_CALLS,3,36,3,1,"n + (sizeof((void) (n = 0), n))",n,n,unsigned long,2,0
+void_conditional_discard,positive,PROVED_DEFINED_CLANG_CFG_CALLS,3,36,3,1,"n + (sizeof((n) ? ((void) (*p)) : ((void) (n = 0)), c))",n,c; n; p,unsigned long,2,0
+saved_vla_and_comma,positive,PROVED_DEFINED_CLANG_CFG_CALLS,3,36,3,2,"((sizeof(a)) / (sizeof(int))) + (sizeof(n = 0, c)); n",n,a; c; n,signed int; unsigned long,4,0
+converted_helper_formal,positive,PROVED_DEFINED_CLANG_CFG_CALLS,3,36,3,1,"__cfg_call_arg_1 + (sizeof((void) (__cfg_call_arg_1 = 0), __cfg_call_arg_1))",__cfg_call_arg_1,__cfg_call_arg_1,unsigned long,2,0
+promotion_after_comma,positive,PROVED_DEFINED_CLANG_CFG_CALLS,3,36,3,1,"n + (sizeof(+((n++, c))))",n,c; n,unsigned long,2,0
+defined_nine_cell_frontier,defined_capacity_frontier,UNKNOWN,1,12,0,0,"(n + (sizeof(n++, n))) + 2",n,n,unsigned long,1,1
