@@ -163,7 +163,15 @@ The coordination pilot pairs supplied trajectories with a 128-step original CFG 
 
 A canceled-intermediate signed-overflow control demonstrates why the source model and sanitizer observations are separate. The source check returns UNKNOWN in both methods, while sanitizer coverage can include non-diagnosed executions. These executions are not positive matches or evidence of definedness. Observable-overflow and divisor controls are required to trap separately. No general compiler defect or sanitizer completeness is inferred.
 
-### 6.2 Research questions and protocol
+### 6.2 Repeated local proposal controls
+
+A subsequent frozen development replay uses the same 13 configurations over seven handcrafted source programs, five modes and five randomized blocks (325 fresh workers). The modes are original 128-step CFG, the last declared supplied candidate checked directly, original-order portfolio without fallback, original-order portfolio with its declared fallback, and the same candidates reversed. The last candidate is fixed before measurement, not selected by a successful outcome. Every predeclared result matches in all five blocks, with zero host timeouts or worker errors. Per block, the CFG proves two configurations, the direct last candidate and no-fallback portfolio prove seven each, and both full portfolio orders prove eight. UNKNOWN controls remain in the denominator.
+
+Wall time includes interpreter/import startup and parent timeout-wait polling/notification overhead; analysis time and Linux self-process peak RSS are separate. Small wall-time differences are not interpreted as stable computation savings. Host worker/global deadlines are 20/1800 seconds and verifier budgets are unchanged. Rejected proposals and incomplete outcomes retain their costs. Four wrong-first configurations reduce from two candidate checks to one after reversal, saving 20 checks over five repetitions. Fallback proves the small complete-exit case while the large frontier and unsafe controls remain UNKNOWN. These are candidate-policy controls; the broader periodic/closed-form/nested mechanism ablations remain outstanding.
+
+Only pairs with complete source proofs and matching evaluated returns receive diagnostic time ratios, under the common definedness/exit projection rather than an identical full-state task. UNKNOWN/proof timing ratios are excluded. The machine is shared; five repetitions, known development fixtures and supplied proposals do not establish representative coverage, actual model benefit or a general speedup. Full per-trial records and scope are in the v0.60 report. The earlier 3,212-item complete regression is retained as the unchanged-verifier baseline; this experiment adds nine integrity tests and runs 58 targeted items, without claiming a new full-suite run.
+
+### 6.3 Research questions and protocol
 
 **RQ1: Does certification preserve the intended state and source semantics?** Use frozen source programs with predeclared domains, exact output/state specifications where available, negative source mutations and wrong-candidate mutations. Report ingestion failures, unsupported source, solver UNKNOWN, candidate rejection and certified results separately. Functional correctness is checked independently of source definedness. Native comparisons supplement these obligations.
 
@@ -173,7 +181,7 @@ A canceled-intermediate signed-overflow control demonstrates why the source mode
 
 **RQ4: What is the incremental contribution of an LLM?** Compare deterministic synthesis, supplied/reference candidates and genuinely generated proposals under a fixed verifier. Archive exact model/version, parameters, prompt hashes, raw responses, call failures, candidate order, token usage and generation latency. Split development and held-out programs. An LLM success counts only after independent certification under the original domain. Temperature zero does not by itself ensure provider reproducibility. The current fixture replay cannot answer RQ4.
 
-### 6.3 Baselines and ablations
+### 6.4 Baselines and ablations
 
 Planned external comparisons are LoopSCC, ELBA, MALICE and the termination-verification LIFT. They solve different tasks; an exact-state contract must not be treated as identical to a bound, termination predicate or heap invariant. Pin tool revisions and adapters, retain unavailable/unsupported rows, and compare on compatible task projections rather than manufacture a common success rate.
 
@@ -196,7 +204,7 @@ The component regressions already support writing the methods and implementation
 
 ## 7. Related Work
 
-**LoopSCC.** The cited preprint organizes single-loop paths using SCC contraction and identifies determinate-cycle structure through oscillatory intervals [R1]. It is directly relevant to periodic state summarization. The relevant distinction concerns checked typed trajectories and compositional entry contexts; SCC decomposition itself is established prior work. No head-to-head superiority result is currently available.
+**LoopSCC.** The cited preprint organizes single-loop paths using SCC contraction and identifies determinate-cycle structure through oscillatory intervals [R1]. It is directly relevant to periodic state summarization. The relevant distinction concerns checked typed trajectories and compositional entry contexts; SCC decomposition itself is established prior work. No head-to-head superiority result is currently available. The distinct ICSE 2026 conference entry explicitly describes nested summaries from inner to outer loops [R5]. A novelty assessment must include that version; nested-loop support alone is not a new contribution. The conference artifact endpoint has been identified but not pinned or executed in this study.
 
 **Exact loop bounds.** ELBA synthesizes exact iteration bounds using preconditions and safety verification [R2]. Our target includes the carried post-state, while our canonical typed source contract is restricted. These are different outputs and incomparable general capabilities without a shared benchmark/task projection. An exact count also does not automatically establish an arbitrary memory-access cost.
 
@@ -227,3 +235,5 @@ The prototype provides a basis for a paper about certified periodic/state trajec
 [R3] Tong Chen, Siyu Liu, Hongyi Zhong, Liao Zhang, Lixiang Wang, Xiwei Wu, Junchi Yan, and Qinxiang Cao. *MALICE: Memory-aware Loop Invariants Generation on Symbolic Execution Traces.* Proceedings of the 43rd International Conference on Machine Learning, PMLR 306:15754–15774, 2026. <https://proceedings.mlr.press/v306/chen26cm.html>.
 
 [R4] Zan Gong, Biting Huang, and Fei He. *LLM-Guided Loop Bound Generation for Program Termination Verification.* Proceedings of the 43rd International Conference on Machine Learning, PMLR 306:35943–35957, 2026. <https://proceedings.mlr.press/v306/gong26e.html>. LIFT here refers to termination verification, not unrelated long-context or generative-model systems with the same acronym.
+
+[R5] Kai Zhu et al. *LoopSCC: Summarizing Complex Multi-branch Nested Loops via Periodic Oscillation Interval.* ICSE 2026 Research Track, official conference entry. <https://conf.researchr.org/details/icse-2026/icse-2026-research-track/127/LoopSCC-Summarizing-Complex-Multi-branch-Nested-Loops-via-Periodic-Oscillation-Inter>. This conference version is distinguished from the 2024 preprint [R1].
