@@ -1,0 +1,15 @@
+{
+  "kind": "supplemental_narrow_common_bound_check",
+  "frozen_after_main_study": true,
+  "pilot_disclosure": "The ABC smoke output and one successful typed API probe were inspected before freezing this supplemental schema. This is validation, not blind benchmark selection.",
+  "input": "ELBA ABC_ex01 at 54c58fcd872481a5e72f8c4a31ed2ef242b6fbdd",
+  "schema": "inv(a,b,i), initial i=a, transition i<b and i'=i+1; require exact two-branch reported output",
+  "projection": "iteration count max(b-a,0), adapted typed C counter starts at zero and exits at b-a",
+  "typed_domain": {"a": [-1000,1000], "b": [-1000,1000]},
+  "native_grid": {"a": [-8,8], "b": [-8,8]},
+  "native_compilers": ["gcc -O0", "gcc -O2", "clang -O0", "clang -O2"],
+  "negative_controls": ["bound minus one", "bound plus one", "typed candidate x=i+1"],
+  "oracle_boundary_audit": "post-hoc audit of every recorded LoopSCC observation; evaluate original simple function prologue and require equal loop-entry states; preserve all original mismatches and missing comparisons",
+  "lift_repeat_plan": "three fresh native known-bound smoke processes after first successful dependency pilot; timeout 60 seconds each; capture all outcomes; no model calls",
+  "limits": "one adapted count projection, no broad common-task success rate, no timing comparison; no model evidence"
+}
