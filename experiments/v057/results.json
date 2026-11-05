@@ -1,28 +1,209 @@
 {
-  "passed": false,
-  "acceptance_status": "INCOMPLETE_ENVIRONMENT_UNAVAILABLE",
-  "tested_commit": "f8b1fb796257e7845d4d2e7bb97fa6d2fb004908",
-  "tested_tree": "766102be4a962147313e2b3622e1d6848c70c91b",
-  "published_source_commit": "94a4862d1869d0d3589a9b056f0342153752c459",
-  "published_source_tree": "766102be4a962147313e2b3622e1d6848c70c91b",
-  "source_tree_equal": true,
+  "passed": true,
+  "checks": {
+    "pytest": true,
+    "operands_native": true,
+    "sizeof_native": true,
+    "expression_native": true,
+    "scoped_native": true,
+    "vla_native": true,
+    "static_native": true,
+    "array_native": true,
+    "operands_cli": true,
+    "operands_result": true,
+    "operands_query_replay": true,
+    "full_test_count": true,
+    "sizeof_result": true,
+    "sizeof_query_replay": true,
+    "unused_overflow_coverage": true,
+    "expression_result": true,
+    "expression_query_replay": true,
+    "retained_scoped_result": true,
+    "retained_vla_result": true,
+    "retained_static_result": true,
+    "retained_array_result": true,
+    "cli_result": true,
+    "source_unchanged": true,
+    "historical_evidence_unchanged": true,
+    "native_total": true
+  },
   "full_pytest": {
     "passed": 2996,
     "failed": 0,
     "skipped": 0,
-    "expected": 2996,
-    "exit_code": 0,
-    "elapsed_seconds": 858.477774295,
-    "observed_terminal_summary": "2996 passed in 858.00s (0:14:18)"
+    "expected": 2996
   },
   "new_tests": 182,
-  "existing_cases_advanced": 9,
   "existing_cases_deleted": 0,
-  "confirmed_native_matrices": {
+  "existing_cases_advanced": 9,
+  "native_output_matches_including_defined_frontiers": 5940,
+  "tested_commit": "f8b1fb796257e7845d4d2e7bb97fa6d2fb004908",
+  "tested_tree": "766102be4a962147313e2b3622e1d6848c70c91b",
+  "commands": {
+    "pytest": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "--forked"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 858.477774295,
+      "log": "pytest.txt"
+    },
     "operands_native": {
-      "passed": true,
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_sizeof_operands_native.py",
+        "--output",
+        "experiments/v057/operands_native.json"
+      ],
       "exit_code": 0,
       "elapsed_seconds": 27.37902554199991,
+      "log": "operands_native.txt"
+    },
+    "sizeof_native": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_vla_sizeof_native.py",
+        "--output",
+        "experiments/v057/sizeof_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 32.83718236100003,
+      "log": "sizeof_native.txt"
+    },
+    "expression_native": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_vla_expressions_native.py",
+        "--output",
+        "experiments/v057/expression_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 29.08234171999993,
+      "log": "expression_native.txt"
+    },
+    "scoped_native": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_scoped_vla_native.py",
+        "--output",
+        "experiments/v057/scoped_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 32.7645957740001,
+      "log": "scoped_native.txt"
+    },
+    "vla_native": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_bounded_vla_native.py",
+        "--output",
+        "experiments/v057/vla_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 37.396994011000004,
+      "log": "vla_native.txt"
+    },
+    "static_native": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_clang_static_arrays_native.py",
+        "--output",
+        "experiments/v057/static_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 38.94888185299999,
+      "log": "static_native.txt"
+    },
+    "array_native": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "scripts/check_clang_arrays_native.py",
+        "--output",
+        "experiments/v057/array_native.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 30.908532960000002,
+      "log": "array_native.txt"
+    },
+    "operands_cli": {
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-m",
+        "llmloop.symbolic_cli",
+        "examples/clang_unevaluated_sizeof.c",
+        "--c-clang-proof",
+        "--function",
+        "entry",
+        "--clang-proof-config",
+        "{\"backend\":\"calls\",\"max_steps\":256}",
+        "--parameter-bounds",
+        "{\"n\":[-2,5]}",
+        "--inputs",
+        "{\"n\":3}"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.8746232519999921,
+      "log": "operands_cli.txt"
+    }
+  },
+  "source_paths": 433,
+  "historical_evidence_paths": 585,
+  "environment": {
+    "python": "3.12.14",
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.39",
+    "pytest": "9.1.1",
+    "pycparser": "3.12",
+    "sympy": "1.14.0",
+    "z3": "5.3.3",
+    "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+    "gcc": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0"
+  },
+  "github_actions_used": false,
+  "ci_runs_used": 0,
+  "klee_used": false,
+  "query_budgets_increased": false,
+  "complete_vla_support": false,
+  "complete_c_support": false,
+  "validation_history": {
+    "full_runs_started": 1,
+    "full_runs_completed": 1,
+    "completed_commands_reused": [
+      "pytest",
+      "operands_native",
+      "sizeof_native",
+      "expression_native",
+      "scoped_native"
+    ],
+    "commands_finished_after_recovery": [
+      "vla_native",
+      "static_native",
+      "array_native",
+      "operands_cli"
+    ],
+    "interrupted_partial_vla_run_preserved": true,
+    "source_and_history_hashes_rechecked_before_and_after_resume": true,
+    "budgets_unchanged": true,
+    "prevalidation_fixture_corrections_preserved": true,
+    "focused_tests_before_helper_addition": 447,
+    "additional_helper_tests": 2,
+    "additional_helper_native_matches": 36,
+    "original_published_interruption_checkpoint_preserved": true
+  },
+  "evidence_sha256": {
+    "report.md": "488c0329ae85b864ce3e9d497d7d3f1f30b096db4a3ada4a2a1f32d9f8fdb09f",
+    "source_publication.json": "aa35c9aad5a65e0e5bf1bbd353724b8a25e58c7b96321e9fb7eef8611e899d2c",
+    "operand_cases.csv": "8c25eac7de4a27190ade105d589b8b9f953c247b8a134f5edd100cca5bd8942d",
+    "raw_evidence.tar.gz": "e5cf4f791b9b6a77fb4cbd25421a7c25389be5bea96853e30f03ccf189325e8f"
+  },
+  "published_source_commit": "94a4862d1869d0d3589a9b056f0342153752c459",
+  "published_source_tree": "766102be4a962147313e2b3622e1d6848c70c91b",
+  "source_tree_equal": true,
+  "experiment_summary": {
+    "operands_native": {
       "case_count": 12,
       "native_output_matches": 432,
       "independent_model_matches": 36,
@@ -35,40 +216,76 @@
         "sat": 5
       }
     },
-    "sizeof_native": {
-      "passed": true,
-      "exit_code": 0,
-      "elapsed_seconds": 32.83718236100003,
-      "summary_retrieved": false
-    }
+    "retained_sizeof_native": {
+      "native_output_matches": 432,
+      "defined_capacity_frontier_matches": 12,
+      "expected_ubsan_traps": 60,
+      "unused_overflow_sanitizer_traps": 9,
+      "unused_overflow_sanitizer_misses": 3,
+      "query_replays": {
+        "unsat": 67,
+        "sat": 5
+      }
+    },
+    "retained_expression_matches": 432,
+    "retained_expression_frontier_matches": 12,
+    "retained_scoped_matches": 360,
+    "retained_vla_matches": 768,
+    "retained_static_matches": 1848,
+    "retained_array_matches": 1632,
+    "total_native_matches_including_defined_frontiers": 5940,
+    "full_pytest_passed": 2996,
+    "skipped": 0,
+    "new_tests": 182,
+    "existing_cases_advanced": 9,
+    "cli_value": 51
   },
-  "remaining_unconfirmed": [
-    "expression_native",
-    "scoped_native",
-    "vla_native",
-    "static_native",
-    "array_native",
-    "operands_cli",
-    "final_source_and_historical_hash_checks",
-    "raw_evidence_archive"
-  ],
-  "raw_evidence_published": false,
-  "raw_evidence_state": "Local files could not be read after execution environment became unavailable; no raw archive or hashes reconstructed.",
-  "planned_native_total_including_defined_frontiers": 5940,
-  "verified_native_total_including_defined_frontiers": null,
-  "source_manifest_counts_observed": {
-    "source_paths": 433,
-    "historical_evidence_paths": 585
-  },
-  "query_budgets_increased": false,
-  "klee_used": false,
-  "github_actions_used": false,
-  "complete_vla_support": false,
-  "complete_c_support": false,
-  "provenance": "This interruption checkpoint transcribes results already returned by tools. It is not the completed runner acceptance report.",
-  "interruption": {
-    "error": "exec-server transport disconnected; failed to resume exec-server session: recovery timed out after 45s",
-    "retry_error": "No usable execution environment is available.",
-    "main_updated": false
+  "raw_archive": {
+    "path": "raw_evidence.tar.gz",
+    "sha256": "e5cf4f791b9b6a77fb4cbd25421a7c25389be5bea96853e30f03ccf189325e8f",
+    "members_sha256": {
+      "array_native.json": "aa796bcccbdf0ee61a5885a83e652c380023b61f7ff0116512e7e01fa4bde257",
+      "array_native.txt": "a8a88fd6797bf2a84e5b07d77341bb82c41ddfc103acba49944b7b4a80db2729",
+      "attempts/environment_recovery/commands_before_recovery.json": "10145e7d03160daeb740fbb36c163c104714cf1fc1e79ec6ea57da622f75d5a3",
+      "attempts/environment_recovery/interrupted_vla_native.txt": "42a685a9f5c4031b278fa25550c82dc9b694932d10709b6e9c593bda0c05b54f",
+      "attempts/environment_recovery/recovery.json": "c21a91783113f77a86258a5c6539d2f291da843b3e08a874dc29d06e93abe280",
+      "attempts/environment_recovery/resume_runner.py": "cac405afab6b668290417fdd74ae882b27002469c2893b630a4750335ca06f64",
+      "attempts/prevalidation/cli-precheck.json": "818f47e93e73d59797c841ab8ea8e6ba335d01ba656acf170160599fd843991c",
+      "attempts/prevalidation/focused-final.txt": "f308a306725d22295aa1e020b7f312d45c00661ef8cefe7eacc2c7bae5ef7892",
+      "attempts/prevalidation/focused-test-before-pointer-arithmetic-correction.py": "b008aea288c2f814514fde8c661fad68d3bf7697ba9c945fa1f14cd6b1644994",
+      "attempts/prevalidation/helper-focused.txt": "e0ad24c248c70513f4a2f78b6f272caa7dce4ff4b8b824ea6992c7a7bec4c77a",
+      "attempts/prevalidation/helper-native.json": "6acaeb25feedc58d29fc2eec7c1dbd009ce7253a247113448c61db8f2cd927ca",
+      "attempts/prevalidation/helper-native.txt": "68515a64783f5de276706bde89dca0aabc3c73a1b250b09d85940ee2308e6d96",
+      "attempts/prevalidation/initial-focused.txt": "d0faea4fd4b379b045c032c76211dc4860eea5c9ebe9a405d7682e57f45bed7a",
+      "attempts/prevalidation/initial-native.txt": "511b6888714a11668abfbd00f075d8eed035cb879bbd1a475ab77b1f613b6497",
+      "attempts/prevalidation/initial-notes.json": "c14fba24faab0cbe884288c7e8a9d3945d296d657e8c276d29ea3d1e82a9c1e5",
+      "attempts/prevalidation/native-before-dependent-zero-control.py": "e488f826285246d9213ad345af07cbfcc1856396b249e5c4f571224579ce030b",
+      "attempts/prevalidation/notes.json": "5e6e4f298542ed7e22e7d09bdb6918f6134f9fddb1ce9540b6f10b77c5514a6c",
+      "attempts/prevalidation/v057-native-final.json": "d36fd4502f7258f6b48f013127d1c10105b8d0d5c6f8e10ab21f65055b31e913",
+      "attempts/prevalidation/v057-native-final.txt": "bbab0b018769ea59f13dc0566405e0ad93796fa811fe6387dbcb0ca0aa1e3644",
+      "attempts/published_interruption_checkpoint/checkpoint.json": "7890edc9acfc99754dcb316a90545da2d5b23940e7ff62aae84c58474d97ed67",
+      "attempts/published_interruption_checkpoint/report.md": "b4093fd1b6048c1de038c5f4035ccc060550954f90df6a30dbd2a15789c272ba",
+      "attempts/published_interruption_checkpoint/results.json": "a10d72ed281f723b5b2e613a797068ce5e477441ebb6600e691fe768718c2d27",
+      "attempts/published_interruption_checkpoint/source_publication.json": "eac3d9e742a363ee423bdb92098b5414da6c98d426cbf08548ab9b556d118bd5",
+      "commands.json": "f77977d582dbdc3b094b1923bb359021dc5cd493728174cb5aef96c57dc6ecd1",
+      "expression_native.json": "d70c4986668ebeeb00cacbc5ba24bb3e50005f4d071a7112408ac9ad6d7b628f",
+      "expression_native.txt": "ee161dd644379b3441163b80324dd7754fafc4b35f84495d144474d7814b2080",
+      "operands_cli.json": "6fd8f6fee7f56964a57235462f544e178d9a0517d987653216136c5766b67d7c",
+      "operands_cli.txt": "6fd8f6fee7f56964a57235462f544e178d9a0517d987653216136c5766b67d7c",
+      "operands_native.json": "55119d196d7c59c35c3cb07c41af5dbbdaa538a4098ff6162dc293da7b91e762",
+      "operands_native.txt": "53631f7543f9610ab4a09239e8fb2b6a1b0d78b206c76b15e5b2c60a578930df",
+      "pytest.txt": "3d81ac51f99428042d621eabebbd7afbd223bfe46ceaaf97c5f4fbb789c4502f",
+      "resume_stdout.txt": "568245e54c49fdab64cac5b5eb507a8a34d33889881d432145444edbb57a6b06",
+      "scoped_native.json": "e20cdc9d2dea8b64dfa0b37b7ad47e10b67761d672e0aadaf157904eb18f2f7a",
+      "scoped_native.txt": "aa85a2a7890c5251d35c528c45bc0e0678f568b10df84d799ad29a2899fc619d",
+      "sizeof_native.json": "31e4ab973a3f2071ba17897443c146c61c71ecbca32ed52e5b3a6141cc453d60",
+      "sizeof_native.txt": "d62a223f2c0b034632366b4435e913cb0a1752f8573dfd629ae840c45f79edf5",
+      "source_manifest.json": "0962615a86d7938fd5de5d35f9dcac9a06ad8e7004c6d642b961f2637c819aa6",
+      "static_native.json": "e2a402e44242e47ba28b423b03d5fe6afd27119d96c5473b6b1eb5af8bd6b3d5",
+      "static_native.txt": "2c3e73dfb5e4ef2beb5601b6b2415d27d70e41a24cdb7ef6414831165e8107bc",
+      "vla_native.json": "c45ce1f19b0a6402c640396cbe126672916b2eb92f515f6df480d61a34ea22ad",
+      "vla_native.txt": "a0c8549b1a842d087805bd74b289b2e23c25e8a98ad48ec6528d4328d7d26e80"
+    },
+    "original_relative_paths_preserved": true
   }
 }
