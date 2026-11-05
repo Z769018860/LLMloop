@@ -16,6 +16,7 @@ from .memory_frontend import _lit
 from .smt_spath import SMTGraphError
 from .struct_heap import StructHeap,StructType
 from .bounded_vla import validate_bounded_vlas,bound_identifiers,bound_spelling,bound_operands,sizeof_type_supported
+from .sizeof_expression import ExprType,from_model_type,infer_sizeof_operand,size_bytes,size_t
 
 
 @dataclass
@@ -128,7 +129,7 @@ class TypedCFGHeap(TypedCMemory):
         return answer==z3.sat
 
     def build(self,unused):
-        if not getattr(self,'_vla_source_context_validated',False):validate_bounded_vlas(self.func)
+        if not getattr(self,'_vla_source_context_validated',False):validate_bounded_vlas(self.func,self.engine.abi)
         self.records.prepare()
         pending=[(self.func.body,0)];syntax_nodes=0;labels=set()
         while pending:
@@ -312,6 +313,15 @@ class TypedCFGHeap(TypedCMemory):
         return self.expression_tree(node)
 
     def expression_tree(self,node):
+        if isinstance(node,c_ast.UnaryOp) and node.op=='sizeof' and not isinstance(node.expr,(c_ast.ID,c_ast.Typename)):
+            def lookup(name):
+                if name not in self.expr_env:raise SMTGraphError('sizeof operand object is not in scope')
+                if name in self.array_names:return ExprType('array',target=from_model_type(self.pointer_types[name]),lvalue=True)
+                if name in self.pointer_types:return ExprType('pointer',target=from_model_type(self.pointer_types[name]),lvalue=True,readonly=name in self.const)
+                if name in self.types:return ExprType('integer',integer=self.types[name],lvalue=True,readonly=name in self.const)
+                raise SMTGraphError('Unknown sizeof operand object type')
+            t=infer_sizeof_operand(node.expr,lookup,self.engine.abi)
+            return {'value':size_bytes(t,self.engine.abi),'type':size_t(self.engine.abi).name}
         if isinstance(node,c_ast.UnaryOp) and node.op=='sizeof' and isinstance(node.expr,c_ast.ID) and node.expr.name in self.array_names:
             pointer=self.expr_env.get(node.expr.name)
             if not isinstance(pointer,Pointer) or pointer.obj is None:raise SMTGraphError('sizeof array requires a live declared array object')
@@ -558,6 +568,7 @@ class TypedCFGHeap(TypedCMemory):
                 result['evaluation']={'value':value.as_long()} if z3.is_int_value(value) else {'deterministic':False,'allocation_dependent_return_smt2':value.sexpr()}
         if self.vla_queries:
             result['memory_model']['bounded_local_vla']={'bound_evaluated_once':True,'sizeof_uses_saved_extent':True,
+                'non_vm_sizeof_expression_operands_unevaluated':True,
                 'sizeof_bound_operands_use_saved_extent':True,'scalar_pointer_sizeof_does_not_read_value':True,
                 'extent_assumed':False,'max_cells':8,'queries':self.vla_queries,'instances':self.vla_instances,
                 'reexecuted_declarations_get_fresh_storage':True,

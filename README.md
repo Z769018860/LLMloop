@@ -1056,3 +1056,19 @@ Complex sizeof operands, VM type-name evaluation, typedef-name sizes, VLA
 parameters and general layouts remain unsupported. Existing storage, lifetime,
 initialization, object/cell and proof budgets still apply. Native evidence also
 retains an unused-overflow sanitizer coverage gap separately from source proofs.
+
+## v0.57: unevaluated non-VM sizeof expression operands
+
+Bounds now admit type-checked integer/data-pointer expression operands such as
+`sizeof(n++)`, `sizeof(n=1/0)`, `sizeof(*p)` and `sizeof(a[i++])`. Their operations
+are not executed: no increment/assignment, arithmetic definedness guard, pointer
+formation or cell read is introduced. A separate type inference pass retains C
+promotions, assignment result types, array decay, const/lvalue constraints and
+ABI-dependent sizes, even in unexecuted declarations. Direct `sizeof(a)` keeps
+the prior live-object/saved-VLA-extent rule.
+
+See the [contract](docs/BOUNDED_LOCAL_VLA.md),
+[example](examples/clang_unevaluated_sizeof.c) and [evidence](experiments/v057/report.md).
+Calls, comma/string operands, VM/array type names, pointer-to-array forms, general
+VLA parameters/layouts and effectful evaluated bounds remain unsupported. All
+previous execution, representation and proof limits remain.
