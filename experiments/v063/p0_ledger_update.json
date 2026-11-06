@@ -1,0 +1,44 @@
+{
+  "milestone": "v063",
+  "supersedes_item": "P0-02 in experiments/v062/p0_ledger_update.json (earlier files unchanged)",
+  "all_p0_complete": false,
+  "remote_model_calls_recorded_this_round": 1120,
+  "items": [
+    {
+      "id": "P0-02",
+      "requirement": "真实 LLM",
+      "status": "substantially_addressed_with_open_limits",
+      "completed_evidence": [
+        "48 个程序化生成程序（8 族）× 3 模型 × 3 提示变体，720 次响应，全部经未修改验证器认证",
+        "零样本/少样本/温度消融；族不相交子集；程序级聚类自助法与配对符号检验",
+        "预算曲线（500–12000 token）与成本记录",
+        "反例引导修复先导（28 个符合条件响应）",
+        "30 个生成周期系统 × 2 提示 × 3 模型 × 2 次，360 次",
+        "134 个认证候选的原生 C 差分测试，0 不一致；不安全源码 0 误认证"
+      ],
+      "remaining_acceptance": [
+        "外部来源、族完全独立的留出语料",
+        "MALICE 与会议版 LoopSCC 的 artifact 与同任务对比（公开 artifact 无法获取）",
+        "机制消融（不变式但无加速等）",
+        "修复回路的更大样本与对截断响应的处理",
+        "训练数据污染无法排除（仅随机常数缓解）"
+      ],
+      "evidence_paths": [
+        "../v063/stats.json",
+        "../v063/diff_check.json",
+        "../../paper/llm_experiment_report_v063_zh.md"
+      ]
+    }
+  ],
+  "findings_requiring_attention": [
+    "预设的 frontier 标签被证伪：hard39/40/41 被认证（短周期查表）",
+    "零样本下降主要是嵌套摘要格式问题（ark 5/16、glm 0/16 嵌套；递推不受影响）"
+  ],
+  "unchanged_open_items": [
+    "P0-01 broader common tasks",
+    "P0-03 external tools",
+    "P0-04 mechanism ablations",
+    "P0-07 novelty review"
+  ],
+  "no_speedup_claimed": true
+}
