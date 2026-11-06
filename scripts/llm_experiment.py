@@ -310,6 +310,7 @@ def summarize_result(r):
             'trial_certified': [t.get('certified') for t in trials], 'trial_seconds': [t.get('verification_seconds') for t in trials],
             'trial_failed_obligation': [(t.get('result') or {}).get('failed_obligation') for t in trials],
             'trial_reason': [(t.get('result') or {}).get('reason') for t in trials],
+            'trial_counterexample': [(t.get('result') or {}).get('counterexample') for t in trials],
             'host_timeout': r['host_timeout'], 'wall_seconds': r['wall_seconds'], 'analysis_seconds': r.get('analysis_seconds'),
             'worker_error': r.get('error')}
 
