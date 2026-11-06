@@ -141,9 +141,10 @@ def append(path, lock, obj):
             f.write(json.dumps(obj, ensure_ascii=False) + '\n')
 
 
-def call_provider(model, prompt, base_url, key):
-    body = {'model': model, 'temperature': TEMPERATURE, 'max_tokens': MAX_TOKENS,
-            'messages': [{'role': 'system', 'content': SYSTEM}, {'role': 'user', 'content': prompt}]}
+def call_provider(model, prompt, base_url, key, system=None, temperature=None, max_tokens=None):
+    body = {'model': model, 'temperature': TEMPERATURE if temperature is None else temperature,
+            'max_tokens': MAX_TOKENS if max_tokens is None else max_tokens,
+            'messages': [{'role': 'system', 'content': SYSTEM if system is None else system}, {'role': 'user', 'content': prompt}]}
     attempts = []
     for attempt in range(7):
         start = time.perf_counter()

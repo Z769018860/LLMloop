@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "study": "v062_cycle_map_proposals",
+  "seed": 20261114,
+  "models": [
+    "deepseek-v4.1-flash-ark",
+    "glm-5.3-ark",
+    "deepseek-v4.1-flash-itkk"
+  ],
+  "configs": {
+    "shipped": {
+      "temperature": 0,
+      "max_tokens": 700,
+      "reps": 1
+    },
+    "extended": {
+      "temperature": 0.7,
+      "max_tokens": 8000,
+      "reps": 3
+    }
+  },
+  "system_prompt": "Return a candidate JSON object, not a proof.",
+  "prompt_source": "llmloop.llm.propose_cycle_map prompt object, verbatim",
+  "verifier": "LoopAnalyzer.verify_cycle_candidate (exact symbolic identity)",
+  "programs": [
+    {
+      "name": "c_add_2_5",
+      "period": 2,
+      "sha256": "472f371895dc5361d9215347e7b3c97256cffad0a61733829a7fde412ef5f237",
+      "prompt_sha256": "f06567fc94426dc89d8aedc0c6791c0cbb13417dfef8a4efbcede18d700ecbb2",
+      "reference_sha256": "b80191d0bd0cd9af2303365c2c7b1c2fef4f248bb68cc76f2cc0d7ca204f56a4"
+    },
+    {
+      "name": "c_three_phase",
+      "period": 3,
+      "sha256": "b1b4e26353d310c52c13ebfaf17a30d1e09a985a951bb6d34ce4dffdc076bc51",
+      "prompt_sha256": "09f6c3a95cf2bd70c86b85812f885dbd27e37587a3b3a1047644788e631f3aa0",
+      "reference_sha256": "187fc8191602b375cf8c6799e1323720830d3dad50bb3b16a612889496d6760f"
+    },
+    {
+      "name": "c_coupled",
+      "period": 2,
+      "sha256": "8e08405ce567d39456587a2159fec115779dd03f9d691356f12cea77b1f09659",
+      "prompt_sha256": "6a8db1220b87283fa77f00fcfd4596666ad055faa67a9abf34d19f4469afedd5",
+      "reference_sha256": "63ecd946b04e0a6a45df5553c805aa1cc81945906745cfb6440b51214d3091f2"
+    },
+    {
+      "name": "c_index_sum",
+      "period": 2,
+      "sha256": "af615478de89e693d61834d0c695277d9ef3771d2024a368b3333af734ea4d5b",
+      "prompt_sha256": "bdc9d87409b5edac66894f69c7ab8dcb0fa5adc576ae7acf9b2515888103f149",
+      "reference_sha256": "0ef4dcbac3d6b244495f169beebda8328fbbb166351bcc63df36fcd15f6be9b3"
+    },
+    {
+      "name": "c_affine_shift",
+      "period": 2,
+      "sha256": "98b6b5bea7c2774414eb5de735ddbb209c15792341da2a578fdcea994f16f604",
+      "prompt_sha256": "147ca98bc974ac21ce442be6cf7801a9cf4e70aa7f51bc49e2554cd8d4f7820d",
+      "reference_sha256": "d3f8d27136645327a816a52a960bc41965dcd70c6aef53eb10c19053cdd209e8"
+    },
+    {
+      "name": "c_param",
+      "period": 2,
+      "sha256": "cb8f89d62a7f83859d85bcdf8d4623cdb7bdae5b299052afed5df1ddc8a46438",
+      "prompt_sha256": "ddd219ed9f01a9431ba91ee040cf5cbe4df976aad3f62998f3c146f9881fb7dc",
+      "reference_sha256": "c641b9eb785bd64b9f61c727e3e7aa7e37a9e89d6ff92030e48329dc9a3385bf"
+    },
+    {
+      "name": "c_swap_inc",
+      "period": 2,
+      "sha256": "36141c107d956a4e218a9209e5be231a947679d855f451ee19f67856fd0903a8",
+      "prompt_sha256": "d83bc2d8e0b3d707b48bec4ca380646780c7610b61c3e19f548939e045e57ae4",
+      "reference_sha256": "701bf7d163a1f42ade0275223f16b337111a0e40970cfb2f2871ba7109aadbe9"
+    },
+    {
+      "name": "c_period5",
+      "period": 5,
+      "sha256": "0ccae074be82c144668659cbc351ce17f47ef26f86fd09e7a7254e00cbaf530b",
+      "prompt_sha256": "36d84592bccafbba04cfc5e24daf381f6a56eef5ea7b818cd7d03a77ae452fa5",
+      "reference_sha256": "6f0113e5a326b2c66b07b1bd5ec086de4fb12762b10eeb9dbea197c31356feae"
+    },
+    {
+      "name": "c_triple_mix",
+      "period": 3,
+      "sha256": "ce3970c95d2899c90e4d582bd2955246a24dc30960a9c8ffedf2bce8328a5637",
+      "prompt_sha256": "8e14cdb675ce27c572d6d5a0836b90e097379cf18f9275ff92aa4492f5583a61",
+      "reference_sha256": "395245eca86acaf93bad7c43bcd8249b12b5113b31ae80cf6a476efcc6642727"
+    },
+    {
+      "name": "c_chain3",
+      "period": 3,
+      "sha256": "f40f504b4f9110323f1da77d3c1898c6b9ae6abf5b67b941f9585165542930d9",
+      "prompt_sha256": "56eadc6cc85102d2c6143b6f79b40d3fa9781f9a417918f7007c5fec56473511",
+      "reference_sha256": "f47e782813b14ab90e44d271e41b7c0f2012a4cd4207f04c91235988f5aaa19d"
+    }
+  ],
+  "corpus_validation": "all maintainer reference cycle maps accepted by the verifier before any model call",
+  "note": "Reference maps are never shown to models. Shipped prompt gives only variables and phases (no initial state/parameters) and says \"state names\" even for parameter programs (c_param).",
+  "split_caveat": "Programs are new (not in examples/); training contamination cannot be excluded."
+}
