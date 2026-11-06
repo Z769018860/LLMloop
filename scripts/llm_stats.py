@@ -110,6 +110,21 @@ def study_c():
     T['soundness'] = {'unsafe_certified': [(v['model'], v['program'], v['variant'], v['rep']) for v in ver if ROLE[v['program']] == 'unsafe_source_control' and cert(v)],
                       'certified_value_mismatch': [(v['model'], v['program']) for v in ver if v['pipeline'] and v['pipeline'].get('value_matches_native') is False],
                       'frontier_certified_examples': [(v['model'], v['program'], v['variant'], v['candidates']) for v in ver if ROLE[v['program']] == 'frontier_no_known_closed_form' and cert(v)]}
+    # backend breakdown (nested summaries need a different output format) and failure kind
+    T['backend_breakdown'] = {}
+    for m in MODELS:
+        for var in ['fewshot_T07', 'zeroshot_T07']:
+            for grp, test in [('nested', lambda n: FAM[n] == 'E_nested'), ('recurrence', lambda n: FAM[n] != 'E_nested')]:
+                rows = [v for v in ver if v['model'] == m and v['variant'] == var and ROLE[v['program']] == 'provable' and test(v['program'])]
+                T['backend_breakdown'][f'{m}|{var}|{grp}'] = f"{sum(map(cert, rows))}/{len(rows)}"
+    T['zeroshot_failure_kind'] = {}
+    for m in MODELS:
+        c = collections.Counter()
+        for v in ver:
+            if v['model'] == m and v['variant'] == 'zeroshot_T07' and ROLE[v['program']] == 'provable' and v['pipeline'] and not cert(v):
+                why = ' '.join(str(x) for x in v['pipeline']['trial_reason'] if x)
+                c['format_missing_coordinate' if 'Summary must cover' in why else 'semantic_or_solver'] += 1
+        T['zeroshot_failure_kind'][m] = dict(c)
     # baselines
     T['baselines'] = {}
     for mode in ('bounded_cfg', 'auto'):
