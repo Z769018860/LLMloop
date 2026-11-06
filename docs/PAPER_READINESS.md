@@ -109,3 +109,13 @@ frontier 程序上的 0 认证主要是 8000 token 截断。P0-02 由 blocked �
 预设的“前沿无闭式”标签被证伪（3/8 被认证，短周期查表）。MALICE/会议版 LoopSCC artifact 仍无法获取，机制消融仍缺，
 无加速结论。见 [v0.63 报告](../paper/llm_experiment_report_v063_zh.md) 与
 [台账更新](../experiments/v063/p0_ledger_update.json)。
+
+
+## v0.64 外部工具与机制消融
+
+MALICE 已通过论文脚注与 PMLR 页面定位，仓库固定到提交 `4675d37c`；**未运行**：其流水线以子进程调用第三方预编译 QCP 二进制，
+沙箱拒绝执行，且仓库无 LICENSE。因此没有 MALICE 对比数字。机制消融完成四组：有界测试（C 语义）会接受验证器给出确定反例的候选
+（20 个，含 14 个未定义行为）；数学整数测试既多接受又错误拒绝 17 个正确的 wrap 候选；只有完整嵌套摘要能证明嵌套程序（8/8，
+去外层/内层/压平/有界均 0/8）；有界展开在域 ≥64 时 0/30，而摘要验证时间不随域增长（不含生成成本，不构成端到端加速）。
+“有不变式但无加速”对照与会议版 LoopSCC 参考配置仍缺。见
+[v0.64 报告](../paper/external_and_ablation_report_v064_zh.md) 与 [台账更新](../experiments/v064/p0_ledger_update.json)。
