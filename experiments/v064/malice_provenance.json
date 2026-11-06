@@ -1,0 +1,38 @@
+{
+ "tool": "MALICE",
+ "paper": "Chen et al., \"MALICE: Memory-aware Loop Invariants Generation on Symbolic Execution Traces\", ICML 2026, PMLR 306:15754-15774",
+ "paper_page": "https://proceedings.mlr.press/v306/chen26cm.html",
+ "paper_pdf": "https://raw.githubusercontent.com/mlresearch/v306/main/assets/chen26cm/chen26cm.pdf",
+ "paper_pdf_sha256": "d45fafb5999b11c0dcef9c9c2efa8941c2676270a4ee32d3d5f0429d4526e01a",
+ "openreview": "https://openreview.net/forum?id=O7Vf0wNY2T",
+ "code_url_source": "paper footnote 1: \"Code available at https://github.com/sensuschung/MALICE\" (URL wraps across a line in the PDF text)",
+ "repository": "https://github.com/sensuschung/malice",
+ "commit": "4675d37c4f66531a29e0ccd2a746f357ae8dfd7a",
+ "commit_date": "2026-01-29",
+ "license_file_present": false,
+ "binaries": {
+  "loopinv": {
+   "bytes": 1551176,
+   "sha256": "34d78fce6a869ede304abb5726408eac0ff61a06d649a7bff540cff868beacb5",
+   "type": "ELF64 PIE x86-64"
+  },
+  "symexec": {
+   "bytes": 1551128,
+   "sha256": "bd562c2589bb6e67383073085fbf894be9616ead12abee9aac292cb1024613c4",
+   "type": "ELF64 PIE x86-64"
+  },
+  "lsp": {
+   "bytes": 1493616,
+   "sha256": "7ddc8e917aa5fec8d45073675304e27c01030f4169cfac900cfb66dfd491efad",
+   "type": "ELF64 PIE x86-64"
+  }
+ },
+ "task": "LLM generates loop invariants (separation-logic assertions) for C programs with Require/Ensure; QCP validates entailment; refinement uses QCP error feedback",
+ "benchmarks_in_repo": "dataset/{Course,SLING,SV-COMP,System,simple_array} (LIG-MM programs + traditional array programs); paper: LIG-MM+ = 260 programs (DLL 133, SLL 96, Array 8, Others 23)",
+ "execution_status": "NOT EXECUTED. The sandbox auto-mode classifier denied running the third-party prebuilt QCP binaries (loopinv, symexec, lsp). Pipeline calls them as subprocesses (prediction/utils/binary.py), so MALICE cannot run without that permission.",
+ "files_not_committed": [
+  "paper PDF",
+  "binaries",
+  "repository contents"
+ ]
+}
