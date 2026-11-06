@@ -1,0 +1,30 @@
+{
+  "milestone": "v062",
+  "supersedes_item": "P0-02 in experiments/v061/p0_ledger.json (v061 file left unchanged as historical record)",
+  "all_p0_complete": false,
+  "remote_model_calls_recorded": 273,
+  "remote_model_calls_discarded_smoke": 3,
+  "items": [
+    {
+      "id": "P0-02",
+      "requirement": "真实 LLM",
+      "status": "partial_evidence_obtained",
+      "completed_evidence": [
+        "三个真实模型（provider 返回的模型标识已记录）",
+        "Study A：153 次 typed 轨迹提案，全部经未修改的 typed_summary_portfolio 认证；含提示哈希、参数、token、延迟、重试、截断记录",
+        "Study B：120 次周期全周期映射提案，使用项目自带提示与验证器",
+        "17 程序源码不相交语料，先冻结后运行；soundness 控制 0 误认证、0 值不符",
+        "非 LLM 对照：128 步有界 CFG 与确定性 auto 生成器各 51 次"
+      ],
+      "remaining_acceptance": [
+        "族不相交且来源独立的留出语料（当前仅源码不相交，提示示例风格有重叠）",
+        "更多模型/提示/温度消融与程序级统计检验",
+        "推理预算大于 8000 token 的 frontier 行为",
+        "含真实 LLM 生成的端到端对比外部工具（MALICE、会议版 LoopSCC）"
+      ],
+      "evidence_paths": ["results.json", "analysis.json", "tables.json", "../../paper/llm_experiment_report_zh.md"]
+    }
+  ],
+  "unchanged_open_items": ["P0-01 broader common tasks", "P0-03 MALICE and ICSE 2026 artifact", "P0-04 full ablation incl. mechanism ablations", "P0-07 novelty review"],
+  "no_speedup_claimed": true
+}
