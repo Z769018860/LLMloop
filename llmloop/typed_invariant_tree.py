@@ -176,6 +176,7 @@ class TypedCInvariantTree(TypedCRecurrence):
         lab = '%s/%s' % (label, L)
         self.types[L] = itype; self.declarations[L] = id(d)
         k = z3.FreshInt('k_' + L); counters = {n: c for n, c, _ in ctx}
+        self.witness['count_' + L] = k  # reported in counterexamples
         enclosing = {n: t for n, _, t in ctx}
         env_free = {**self.parameters, **enclosing}
         try: bound = self.evaluate(bexpr, env_free)
@@ -204,7 +205,9 @@ class TypedCInvariantTree(TypedCRecurrence):
             vals = {n: env[n].value for n in self.state}
             self.check(f'{lab} invariant at entry (path {ph})', z3.And(premise, extra, g), self._inv(L, vals, counters, zero))
         # body (once)
-        s1 = self._fresh('b'); env1 = {**self.parameters, **enclosing, **s1, L: idx_term}
+        s1 = self._fresh('b')
+        for n_, t_ in s1.items(): self.witness['state_in_%s_%s' % (L, n_)] = t_.value  # state at the start of an iteration (counterexamples)
+        env1 = {**self.parameters, **enclosing, **s1, L: idx_term}
         pre_b = z3.And(premise, k >= 0, k < N, *self._typerange(s1), self._inv(L, {n: s1[n].value for n in self.state}, counters, k))
         body = loop.stmt.block_items if isinstance(loop.stmt, c_ast.Compound) else [loop.stmt]
         ctx2 = ctx + [(L, k, idx_term)]
