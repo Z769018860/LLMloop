@@ -103,7 +103,8 @@ def stage(dirp):
 def qcp(path, binary='symexec'):
     r = subprocess.run([str(MAL / 'bin' / binary), '--input-file=' + str(path), '--full-auto', '--no-exec-info', '--basic-assertion'],
                        cwd=str(Path(path).parent), env={'PATH': '/usr/bin:/bin'}, capture_output=True, text=True, timeout=300)
-    return {'exit_code': r.returncode, 'verified': SUCCESS in r.stdout, 'tail': (r.stdout + r.stderr)[-300:]}
+    full = re.sub(r'\x1b\[[0-9;]*m', '', r.stdout + r.stderr)
+    return {'exit_code': r.returncode, 'verified': SUCCESS in r.stdout, 'tail': full[-300:], 'full': full[:20000]}
 
 
 def main():
