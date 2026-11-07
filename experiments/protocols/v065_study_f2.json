@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "study": "v065_study_f_invariants_g_nested_schema",
+  "seed": 20261115,
+  "models": [
+    "deepseek-v4.1-flash-ark",
+    "glm-5.3-ark",
+    "deepseek-v4.1-flash-itkk"
+  ],
+  "variants": {
+    "inv_fewshot_T07": {
+      "study": "F",
+      "prompt": "inv_fewshot",
+      "temperature": 0.7,
+      "reps": 2
+    }
+  },
+  "max_tokens": 12000,
+  "corpus": "v0.63 procedurally generated corpus (scripts/llm_corpus2.py, seed 20261108); F uses the 40 non-nested programs, G the 8 nested",
+  "verifier": "typed_summary_portfolio with backend typed_invariant (F) / typed_nested (G); no fallback; solver budget 5 s (not increased)",
+  "hypotheses": {
+    "F": "Interval-invariant mode certifies safety of programs that exact mode cannot (no closed form, e.g. F family) and never certifies unsafe programs.",
+    "G": "An explicit nested schema removes the zero-shot format failures seen in v0.63 (ark 5/16, glm 0/16 on nested programs)."
+  },
+  "prompt_sha256": {
+    "inv_fewshot_T07": {
+      "h_countdown": "aa19a1701f7c41dd9e940b4d363f345d1d89ca2623e725d0b4c200232383df88",
+      "h_sum_index": "39098aeca4eed43016a412d1900d353c0d66f643320ddf0031a3768fa6636f80",
+      "h_u8_step3": "81fddee0de18417247c19944fa45f6f3529d7e4242d740d23b0fe9d340b8621a",
+      "h_two_counters": "f5a1ad30b8d93ae53a8b3a0aa0d58f148e72500e2c2f19166e1303daffb77dfc",
+      "h_alternating": "80ce1e4fccbf03599b1c48ff039f0aab85694bcdc44b6a5ee5780d5677347655",
+      "h_floor_zero": "af8dbead6759116291a99a5972f74de91f44b5cb64fb6634558b2bb394fd939e",
+      "h_toggle": "65f6b2b2093a130f8093bc5378d82d45c78711df3ba305afc6ff46bf08df1fd6",
+      "h_threshold_step": "f568d0f030b80bec4883b2250134b355e44eae64f49e24533924a4915755f415",
+      "h_u16_triangular": "8f2d444945374c6a0fd00b04067828b8c1b6ca84fbde5444b7fca51cef029d8a",
+      "h_mod3_ramp": "eb49e68065762a7601f33d858b62cdfc5f86458063dd96ca5c9bae21ac60cf83",
+      "h_fib_mod": "bfa5b01d57d365993c7ef5465d7256d58967ecdea21a192c4e55b7d80b3b04a9",
+      "h_exp_mod": "bddfeeb75a71600aae6c708e99f7d221da817cad644346e6443eb9349790238c",
+      "h_overflow_accum": "992f364c57dc6a02a6feff441150c2c8c08b230a0abce5749620afc05c5c06bb",
+      "h_div_zero": "79cd6a89522e49a3929c5ef212f62827a1478ef69fcb564754e4b403fe9f5dce"
+    }
+  },
+  "roles_from": "experiments/protocols/v063_study_c.json (frozen before any model call)"
+}
