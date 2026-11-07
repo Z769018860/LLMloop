@@ -66,6 +66,9 @@ def normalize_formula(text):
     out, applied = text, []
     t = _CAST.sub('', out)
     if t != out: applied.append('strip_c_casts'); out = t
+    t = re.sub(r'entry\(\s*([A-Za-z_]\w*)\s*\)', r'entry("\1")', out)
+    t = re.sub(r"entry\(\s*'([A-Za-z_]\w*)'\s*\)", r'entry("\1")', t)
+    if t != out: applied.append('quote_entry_argument'); out = t
     t = re.sub(r'\b(min|max|abs)\s*\(', lambda m: _FN[m.group(1)] + '(', out)
     if t != out: applied.append('capitalize_min_max_abs'); out = t
     if '?' in out:
@@ -103,6 +106,9 @@ def drop_non_state_coordinates(summary, source):
     {var: formula} or a loop_summaries map {loop: {var: formula}}. Returns (new_summary, [dropped names]). UNTRUSTED: the verifier
     still checks the remaining summary and rejects it if a real coordinate is missing."""
     params, indices = source_names(source); banned = params | indices; dropped = []
+    if isinstance(summary, dict) and any(isinstance(v, dict) for v in summary.values()) and any(not isinstance(v, dict) for v in summary.values()):
+        stray = [k for k, v in summary.items() if not isinstance(v, dict)]
+        summary = {k: v for k, v in summary.items() if isinstance(v, dict)}; dropped += stray
     if isinstance(summary, dict) and summary and all(isinstance(v, dict) for v in summary.values()):
         out = {}
         for loop, mp in summary.items():

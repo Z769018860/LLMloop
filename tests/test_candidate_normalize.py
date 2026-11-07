@@ -52,3 +52,13 @@ def test_drop_non_state_coordinates():
     flat, d2 = drop_non_state_coordinates({'x': 'i', 'n': 'n'}, 'long f(int n){long x=0;for(int i=0;i<n;i++){x++;}return x;}')
     assert flat == {'x': 'i'} and d2 == ['n']
     assert s['i']['n'] == 'n'  # input not mutated
+
+
+def test_entry_argument_quoting_and_stray_top_level_keys():
+    from llmloop.candidate_normalize import drop_non_state_coordinates
+    assert normalize_formula('entry(x) + i*(1 + 5*m)') == ('entry("x") + i*(1 + 5*m)', ['quote_entry_argument'])
+    assert normalize_formula("entry('c')+j") == ('entry("c")+j', ['quote_entry_argument'])
+    assert normalize_formula('entry("x")+j') == ('entry("x")+j', [])
+    src = 'long f(int n){long x=0;for(int i=0;i<n;i++){for(int j=0;j<n;j++){x++;}}return x;}'
+    out, dropped = drop_non_state_coordinates({'i': {'x': 'entry(x)', 'n': 'n'}, 'j': {'x': 'entry(x)+j'}, 'x': 'entry(x)'}, src)
+    assert out == {'i': {'x': 'entry(x)'}, 'j': {'x': 'entry(x)+j'}} and sorted(dropped) == ['n', 'x']
