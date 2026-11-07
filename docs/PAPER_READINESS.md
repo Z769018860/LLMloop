@@ -145,3 +145,5 @@ MALICE 已定位（论文脚注与 PMLR 页面），仓库固定到提交 `4675d
 
 ## v0.67：循环树区间不变式
 新增 `typed_invariant_tree`（任意深度/顺序/步长循环）。Study T（6 模型×33 程序×2 重复）：27/27 安全程序至少被一个模型认证，不安全控制 0/72 认证，规范化器无增益；反馈修复仅 +1～+2/27；CBMC 完整域 0/27。仍不支持状态相关内层边界、关系型不变式、while。见 [v0.67 报告](../paper/llm_experiment_report_v067_zh.md) 与 [台账](../experiments/v067/p0_ledger_update.json)。
+
+全量测试：3295 passed（v0.67 提交后）。
