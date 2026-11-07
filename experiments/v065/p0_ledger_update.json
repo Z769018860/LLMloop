@@ -1,0 +1,77 @@
+{
+  "milestone": "v065",
+  "all_p0_complete": false,
+  "items": [
+    {
+      "id": "P0-03",
+      "requirement": "外部基线",
+      "status": "partial_matched_contract_comparison_done",
+      "completed_evidence": [
+        "同契约（安全性）13 个共同程序：LLMloop 区间不变式 8/8（3 个模型），MALICE 仅预测 1/8、修正后 7/8，两者不安全控制均 0；LLMloop 8/8 对 7/8 统计上不可区分（p=1.0）",
+        "强契约（精确返回值）：QCP 真值仅 1/8 可验证，6/8 被拒绝为 invariant case is branching；LLMloop 用 Z3 证明同一后置条件 8/8",
+        "类型覆盖：18 个无符号/窄类型程序，LLMloop 18/18，QCP 此构建 2/18",
+        "成本观察：MALICE 修正阶段约 320 次 LLM 输出/程序；最便宜的通过候选中位数 1–2 轮修正"
+      ],
+      "remaining_acceptance": [
+        "MALICE 在堆形状不变式（LIG-MM+）任务上的评估",
+        "glm 在 MALICE 调用方式下无法评估",
+        "更大的共同程序集（均为我方设计，13 个）",
+        "会议版 LoopSCC artifact 仍无法获取"
+      ],
+      "evidence_paths": [
+        "../v064/malice_results/compare_with_llmloop.json",
+        "matched_13_invariant_mode.json",
+        "../v064/malice_strong_ground_truth.json",
+        "../v064/llmloop_strong_spec.json",
+        "../v064/type_coverage_qcp_vs_llmloop.json"
+      ]
+    },
+    {
+      "id": "P0-04",
+      "requirement": "消融",
+      "status": "substantially_addressed",
+      "completed_evidence": [
+        "“有不变式但无加速”的 sound 对照已完成：新增 typed_invariant 前端，Study F 在 40 个程序上用真实 LLM 评估；认证 34/34 个安全程序（ark、glm），不安全 0/54",
+        "76 个被认证不变式经运行时断言 + UBSan 复核，74 个运行 0 违反",
+        "性质测试：随机程序上验证器接受 ⇒ 精确 C 语义模拟无违反"
+      ],
+      "remaining_acceptance": [
+        "会议版 LoopSCC 参考配置（artifact 不可得）",
+        "嵌套循环的区间不变式模式"
+      ],
+      "evidence_paths": [
+        "stats_fg.json",
+        "invariant_runtime_check.json",
+        "../../tests/test_typed_invariant.py"
+      ]
+    },
+    {
+      "id": "P0-02",
+      "requirement": "真实 LLM（接口缺陷修复）",
+      "status": "improved",
+      "completed_evidence": [
+        "多写坐标的失败机制更正（v0.63 原写作漏写）",
+        "主机侧丢弃非状态坐标：留出实验 glm 0/16→12/16（p=0.0078），ark 10/16→16/16，不安全 0/12",
+        "语法规范化与 30 秒求解器预算：175 个无结论候选上产出 0（负结果）",
+        "更明确的嵌套 schema 提示无效"
+      ],
+      "remaining_acceptance": [
+        "对 itkk 一类弱模型的能力下降无主机侧修复",
+        "修复在更多结构族上的留出验证"
+      ],
+      "evidence_paths": [
+        "stats_h.json",
+        "replay_coordinate_fix.json",
+        "replay_fixes.json"
+      ]
+    }
+  ],
+  "code_changes": [
+    "llmloop/typed_invariant.py (new frontend typed_invariant)",
+    "llmloop/api.py (frontend, range_invariants, solver_timeout_ms)",
+    "llmloop/summary_portfolio.py (typed_invariant backend, solver_timeout_ms)",
+    "llmloop/typed_recurrence.py (optional solver_timeout_ms, default unchanged)",
+    "llmloop/candidate_normalize.py (untrusted host-side repair)"
+  ],
+  "no_speedup_claimed": true
+}

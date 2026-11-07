@@ -122,3 +122,14 @@ MALICE 已定位（论文脚注与 PMLR 页面），仓库固定到提交 `4675d
 只有完整嵌套摘要能证明嵌套程序（8/8，去外层/内层/压平/有界均 0/8）；有界展开在域 ≥64 时 0/30，摘要验证时间不随域增长
 （不含生成成本，不构成端到端加速）。“有不变式但无加速”对照与会议版 LoopSCC 参考配置仍缺。见
 [v0.64 报告](../paper/external_and_ablation_report_v064_zh.md) 与 [台账更新](../experiments/v064/p0_ledger_update.json)。
+
+
+## v0.65 LLMloop 缺陷修复与同契约对比
+
+新增区间不变式安全模式（`typed_invariant`），使 LLMloop 能在与 MALICE 相同的契约（只证安全）下比较，并补上无闭式程序的缺口：
+40 个程序、3 个模型，ark/glm 认证 34/34 个安全程序，54 个不安全响应 0 误认证，76 个被认证不变式经运行时断言 + UBSan 复核 74 个 0 违反。
+同契约 13 个共同程序：LLMloop 8/8，MALICE 修正后 7/8（**统计上不可区分**，p=1.0）。强契约（精确返回值）下 QCP 对同一规格只有 1/8 的真值可验证
+（分段轨迹被 QCP 以“invariant case is branching”拒绝），LLMloop 8/8；18 个无符号/窄类型程序 LLMloop 18/18、QCP 此构建 2/18。
+嵌套摘要失败的机制被更正（多写而非漏写坐标），主机侧丢弃后留出实验 glm 0→12/16；语法规范化与 6 倍求解器预算产出为 0（负结果）。
+**不能声称 LLMloop 总体优于 MALICE**：堆形状任务未测，MALICE 在安全契约下修正后与 LLMloop 无差异，区间模式是为弥补对比缺口而事后设计的。见
+[v0.65 报告](../paper/llm_experiment_report_v065_zh.md) 与 [台账更新](../experiments/v065/p0_ledger_update.json)。
