@@ -14,6 +14,22 @@ for pl in plan['plan']:
             if m:
                 k = (pl['model'], m.group(1)); tgt = rows if m.group(2) == 'before' else after
                 tgt[k]['verified'] += int(m.group(3)); tgt[k]['valid'] += int(m.group(4)); tgt[k]['passes'] += 1
+# refinement archive summaries (the authoritative refinement result; result.txt '(after)' is a parsed subprocess list)
+refine = collections.defaultdict(lambda: {'cases': 0, 'passed': 0, 'passed_at_iter0': 0, 'passed_after_refinement': 0, 'runs': 0, 'pass_iterations': []})
+for pl in plan['plan']:
+    wd = pl.get('workdir')
+    if not wd or not plan.get('correct'): continue
+    for sm in Path(wd, 'prediction', 'error_correction').glob('*/summary.txt'):
+        prog = re.sub(r'_\d+_\d{4}_\d\d_\d\d_\d\d_\d\d$', '', sm.parent.name)
+        txt = sm.read_text(errors='ignore')
+        r = refine[(pl['model'], prog)]
+        mt, mp = re.search(r'总用例数:\s*(\d+)', txt), re.search(r'通过用例数:\s*(\d+)', txt)
+        if not mt or not mp:
+            r['unparsed_runs'] = r.get('unparsed_runs', 0) + 1; r['runs'] += 1; continue
+        tot, ps = int(mt.group(1)), int(mp.group(1))
+        its = [None if x == 'None' else int(x) for x in re.findall(r'^- \d+: (\w+)$', txt, re.M)]
+        r['cases'] += tot; r['passed'] += ps; r['runs'] += 1; r['pass_iterations'] += its
+        r['passed_at_iter0'] += sum(1 for x in its if x == 0); r['passed_after_refinement'] += sum(1 for x in its if x is not None and x > 0)
 # failure kinds from logs
 kinds = collections.defaultdict(collections.Counter)
 pats = [('invariant_case_branching', 'invariant case is branching'), ('safety_check_failed', 'Safety Check Failed'), ('entailment_check_failed', 'Entailment Check Failed'),
@@ -26,6 +42,7 @@ out = {'protocol': {k: plan[k] for k in ('pass_at_times', 'concurrency', 'correc
 for (model, prog), v in sorted(rows.items()):
     a = after.get((model, prog))
     out['rows'].append({'model': model, 'program': prog, 'role': val[prog]['role'], **v, 'any_verified': v['verified'] > 0,
-                        'after_refinement': ({**a, 'any_verified': a['verified'] > 0} if a else None)})
+                        'after_refinement_parsed_result_txt': ({**a, 'any_verified': a['verified'] > 0} if a else None),
+                        'refinement_archive': refine.get((model, prog))})
 Path(sys.argv[2]).write_text(json.dumps(out, indent=1, ensure_ascii=False) + '\n')
 print(json.dumps({'n_rows': len(out['rows']), 'failure_kinds': out['failure_kind_mentions_in_logs']}, indent=1))
