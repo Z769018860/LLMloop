@@ -2,7 +2,7 @@
 
 实验日期：2026 年 11 月 8 日至 9 日。本报告承接 [v0.62](llm_experiment_report_zh.md)、[v0.63](llm_experiment_report_v063_zh.md)、
 [v0.64](external_and_ablation_report_v064_zh.md)。这一轮**修改了 LLMloop 的验证器代码**（新增一个前端和一个可选参数），
-所有改动都有测试；完整测试套件结果见 §3.6。
+所有改动都有测试；最终完整测试套件 3263 项全部通过（§3.6）。
 
 ## 1 先回答你的问题：怎样让“LLMloop 优于 MALICE”的对比更有说服力
 
@@ -88,7 +88,7 @@
 ### 3.6 回归测试
 
 新增 3 个测试文件（`test_typed_invariant.py` 9 项、`test_candidate_normalize.py` 5 项、`test_v065_integrity.py` 原始数据完整性）。第一次完整套件（在新增 `typed_invariant` 与 `solver_timeout_ms` 之后）：**3258 项全部通过，0 失败**（13 分 17 秒）。
-最终状态的完整套件结果：见 §8（若未补充，表示最后一次运行仍在进行）。
+**最终状态的完整套件（含全部新增测试与本轮完整性测试）：3263 项全部通过，0 失败，0 跳过**（13 分 01 秒）。
 
 ## 4 Study F：区间不变式的真实 LLM 实验
 
