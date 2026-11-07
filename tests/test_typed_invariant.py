@@ -110,3 +110,25 @@ def test_property_accepted_invariants_hold_on_every_execution():
             for i, v in enumerate(trace):
                 assert lo_c + lo_d * i <= v <= hi_c + hi_d * i, ('accepted but violated', src, inv, n, i, v)
     assert accepted >= 20  # the property is exercised, not vacuous
+
+
+POLY26 = 'long f(int n){long s=0;for(int i=0;i<n;i++){s+=i%3;}return s;}'
+
+
+def test_native_division_profile_proves_what_default_times_out_on_and_still_rejects_wrong_formulas():
+    good = {'source': POLY26, 'frontend': 'typed_recurrence', 'closed_forms': {'s': '3*(i//3)+(i%3)//2'}, 'parameter_bounds': {'n': [0, 20000000]}}
+    assert analyze_request({**good, 'solver_profile': 'native_division'})['status'] == 'PROVED_DEFINED_TYPED_C_RECURRENCE'
+    wrong = {**good, 'closed_forms': {'s': '3*(i//3)+(i%3)'}, 'solver_profile': 'native_division'}
+    r = analyze_request(wrong)
+    assert r['status'] == 'UNKNOWN' and 'counterexample' in r['reason']
+    assert analyze_request({**good, 'solver_profile': 'bogus'})['status'] == 'UNKNOWN'
+
+
+def test_auto_profile_retries_only_on_timeout_and_records_it():
+    q = {'source': POLY26, 'frontend': 'typed_summary_portfolio', 'summary_backend': 'typed_recurrence', 'parameter_bounds': {'n': [0, 20000000]}, 'solver_profile': 'auto',
+         'proposals': [{'id': 'wrong', 'summary': {'s': '3*(i//3)+(i%3)'}}, {'id': 'good', 'summary': {'s': '3*(i//3)+(i%3)//2'}}]}
+    p = analyze_request(q)
+    trials = p['summary_portfolio']['trials']
+    assert p['status'] == 'PROVED_DEFINED_TYPED_C_RECURRENCE' and p['summary_portfolio']['selected_id'] == 'good'
+    assert trials[0]['profiles_tried'] == ['default']          # a counterexample is final, no retry
+    assert trials[1]['profiles_tried'] == ['default', 'native_division']

@@ -133,3 +133,12 @@ MALICE 已定位（论文脚注与 PMLR 页面），仓库固定到提交 `4675d
 嵌套摘要失败的机制被更正（多写而非漏写坐标），主机侧丢弃后留出实验 glm 0→12/16；语法规范化与 6 倍求解器预算产出为 0（负结果）。
 **不能声称 LLMloop 总体优于 MALICE**：堆形状任务未测，MALICE 在安全契约下修正后与 LLMloop 无差异，区间模式是为弥补对比缺口而事后设计的。见
 [v0.65 报告](../paper/llm_experiment_report_v065_zh.md) 与 [台账更新](../experiments/v065/p0_ledger_update.json)。
+
+
+## v0.66 新增模型、其他工具、优势区间与修复
+
+新增 `gpt-4.1-mini`、`gemini-3-flash`（新家族）与 `claude-dsflash-itkk`（实为 DeepSeek V4.1 Flash 别名，非独立 Claude）。新增 CBMC 与 Z3 Spacer 两个非 LLM 工具
+（ESBMC/CPAchecker/Ultimate 下载被拒，未运行）。**区间图**：大域（上界 10⁴–10⁷）CBMC 证明 0/42、LLMloop 34/34（单层）与 8/8（嵌套）；小域（≤1024 的单层）CBMC 与 LLMloop 打平；
+**找 bug 是 CBMC 的强项**；Spacer 对范围型不变式秒证、对关系型（如 x=n−i）超时。修复：嵌套区间不变式模式；规范化扩展（H2 留出：ark 6→16/16、glm 0→11/16、gpt-4.1-mini 0→7/16）；
+`native_division` 编码（404 候选找回 10、丢失 1、0 可靠性翻转）与 `auto` 策略。不安全控制在所有模型、所有模式下 0 次认证。MALICE 在新模型上修正后（独立复核）1/7/4 of 8。
+见 [v0.66 报告](../paper/llm_experiment_report_v066_zh.md) 与 [台账更新](../experiments/v066/p0_ledger_update.json)。

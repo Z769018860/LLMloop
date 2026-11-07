@@ -96,14 +96,14 @@ class TypedCInvariant(TypedCRecurrence):
                 if side not in spec: continue
                 if not isinstance(spec[side], str): raise SMTGraphError('Invariant bounds must be formula strings')
                 form = parse_closed(spec[side], names)
-                now = exact_term(s.expand_func(form), mapping); nxt_ = exact_term(s.expand_func(form.subs(k, k + 1)), mapping)
+                now = exact_term(s.expand_func(form), mapping, integer_division=self.native_division); nxt_ = exact_term(s.expand_func(form.subs(k, k + 1)), mapping, integer_division=self.native_division)
                 sides[side] = (form, now, nxt_)
             bounds_at[name] = sides
         def inv(name, value, which):  # which: 1 = at count, 2 = at count+1, 3 = at exit
             parts = []
             for side, (form, now, nxt_) in bounds_at[name].items():
                 if which == 3:
-                    b = exact_term(s.expand_func(form), {**mapping, k: iterations})
+                    b = exact_term(s.expand_func(form), {**mapping, k: iterations}, integer_division=self.native_division)
                 else:
                     b = now if which == 1 else nxt_
                 parts.append(_le(b, value) if side == 'lo' else _le(value, b))

@@ -4,7 +4,7 @@ and content-level deduplication, protect against archive double counting and che
 import hashlib, json, re, subprocess, sys
 from pathlib import Path
 S = Path(sys.argv[1]); BIN = Path(sys.argv[2]); out = Path(sys.argv[3])
-plan = json.loads((S / 'malice_plan_ref.json').read_text())
+plan = json.loads((S / (sys.argv[4] if len(sys.argv) > 4 else 'malice_plan_ref.json')).read_text())
 OK = 'Successfully finished full automation check'
 rows = []; seen = {}
 for pl in plan['plan']:

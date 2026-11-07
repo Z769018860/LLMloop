@@ -4,7 +4,7 @@ import z3
 from .smt_spath import SMTGraphError, _z3_expr
 
 
-def exact_term(expr, env, *, integer_modulo=False):
+def exact_term(expr, env, *, integer_modulo=False, integer_division=False):
     """Translate exact SymPy arithmetic, preserving floors and rational factors.
 
     Rational subterms stay real until the complete expression is checked for
@@ -20,13 +20,13 @@ def exact_term(expr, env, *, integer_modulo=False):
         value = None
         for item, condition in reversed(expr.args):
             if condition is s.true:
-                value = exact_term(item, env, integer_modulo=integer_modulo)
+                value = exact_term(item, env, integer_modulo=integer_modulo, integer_division=integer_division)
             else:
                 if value is None:
                     raise SMTGraphError('Closed-form Piecewise must have a default branch')
-                value = z3.If(exact_condition(condition, env, integer_modulo=integer_modulo), exact_term(item, env, integer_modulo=integer_modulo), value)
+                value = z3.If(exact_condition(condition, env, integer_modulo=integer_modulo, integer_division=integer_division), exact_term(item, env, integer_modulo=integer_modulo, integer_division=integer_division), value)
         return value
-    args = [exact_term(a, env, integer_modulo=integer_modulo) for a in expr.args]
+    args = [exact_term(a, env, integer_modulo=integer_modulo, integer_division=integer_division) for a in expr.args]
     if expr.func == s.Add:
         return z3.Sum(*args)
     if expr.func == s.Mul:
@@ -39,6 +39,14 @@ def exact_term(expr, env, *, integer_modulo=False):
         for _ in range(int(expr.exp)):
             result = result * args[0]
         return result
+    if expr.func in (s.floor, s.ceiling) and integer_division:
+        # opt-in profile: floor/ceiling of (integer polynomial)/(positive integer literal) as Z3's native integer division (floor for positive divisors)
+        num, den = s.fraction(s.together(expr.args[0]))
+        if den.is_Integer and den > 1:
+            numz = exact_term(s.expand(num), env, integer_modulo=integer_modulo, integer_division=integer_division)
+            if z3.is_int(numz):
+                d = z3.IntVal(int(den))
+                return numz / d if expr.func == s.floor else -((-numz) / d)
     if expr.func in (s.floor, s.ceiling):
         arg = args[0]
         if z3.is_int(arg):
@@ -58,25 +66,25 @@ def exact_term(expr, env, *, integer_modulo=False):
         # Keep the same atom as typed unsigned conversions instead of forcing
         # nonlinear users to rediscover a-b*floor(a/b) under multiplication.
         # Negative divisors and nonintegral dividends retain the floor rule.
-        if integer_modulo and z3.is_int(a) and expr.args[1] > 0:
+        if (integer_modulo or integer_division) and z3.is_int(a) and expr.args[1] > 0:
             return a % b
         quotient = z3.ToInt(z3.ToReal(a) / z3.ToReal(b)) if z3.is_int(a) else z3.ToInt(a / b)
         return a - b * quotient
     raise SMTGraphError('Unsupported exact phase arithmetic: ' + str(expr))
 
 
-def exact_condition(condition, env, *, integer_modulo=False):
+def exact_condition(condition, env, *, integer_modulo=False, integer_division=False):
     if condition is s.true:
         return z3.BoolVal(True)
     if condition is s.false:
         return z3.BoolVal(False)
     if condition.func in (s.And, s.Or):
-        terms = [exact_condition(term, env, integer_modulo=integer_modulo) for term in condition.args]
+        terms = [exact_condition(term, env, integer_modulo=integer_modulo, integer_division=integer_division) for term in condition.args]
         return z3.And(*terms) if condition.func == s.And else z3.Or(*terms)
     if condition.func == s.Not:
-        return z3.Not(exact_condition(condition.args[0], env, integer_modulo=integer_modulo))
+        return z3.Not(exact_condition(condition.args[0], env, integer_modulo=integer_modulo, integer_division=integer_division))
     if isinstance(condition, s.core.relational.Relational):
-        a, b = exact_term(condition.lhs, env, integer_modulo=integer_modulo), exact_term(condition.rhs, env, integer_modulo=integer_modulo)
+        a, b = exact_term(condition.lhs, env, integer_modulo=integer_modulo, integer_division=integer_division), exact_term(condition.rhs, env, integer_modulo=integer_modulo, integer_division=integer_division)
         operators = {'==':lambda:a==b, '!=':lambda:a!=b, '<':lambda:a<b,
                      '<=':lambda:a<=b, '>':lambda:a>b, '>=':lambda:a>=b}
         return operators[condition.rel_op]()

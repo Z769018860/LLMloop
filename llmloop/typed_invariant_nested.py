@@ -101,7 +101,7 @@ class TypedCInvariantNested(TypedCInvariant):
             sub = dict(mp)
             if at.get('i') is not None: sub[ki] = at['i']
             if at.get('j') is not None: sub[kj] = at['j']
-            return exact_term(f, sub)
+            return exact_term(f, sub, integer_division=self.native_division)
         def inv_outer(vals, i_at): return z3.And(*[(_le(bound(oi, n, side, {'i': i_at}), vals[n]) if side == 'lo' else _le(vals[n], bound(oi, n, side, {'i': i_at}))) for n in state for side in inv[oi][n]])
         def inv_inner(vals, i_at, j_at): return z3.And(*[(_le(bound(ii, n, side, {'i': i_at, 'j': j_at}), vals[n]) if side == 'lo' else _le(vals[n], bound(ii, n, side, {'i': i_at, 'j': j_at}))) for n in state for side in inv[ii][n]])
         def fresh(tag):

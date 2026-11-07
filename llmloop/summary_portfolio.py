@@ -10,7 +10,7 @@ import time
 from .smt_spath import SMTGraphError
 
 
-BASE={'source','function','parameter_bounds','abi','char_signed','max_paths','inputs','solver_timeout_ms'}
+BASE={'source','function','parameter_bounds','abi','char_signed','max_paths','inputs','solver_timeout_ms','solver_profile'}
 BACKENDS={'typed_recurrence':('closed_forms','PROVED_DEFINED_TYPED_C_RECURRENCE'),
           'typed_nested':('loop_summaries','PROVED_DEFINED_TYPED_C_NESTED'),
           'typed_invariant':('range_invariants','PROVED_DEFINED_TYPED_C_INVARIANT'),
@@ -69,6 +69,7 @@ def analyze_portfolio(request,analyze):
     if 'function' in request and (not isinstance(request['function'],str) or not 1<=len(request['function'])<=128):raise SMTGraphError('Invalid portfolio function')
     if 'abi' in request and (not isinstance(request['abi'],str) or request['abi'] not in ('LP64','ILP32','LLP64')):raise SMTGraphError('Invalid portfolio ABI')
     if 'char_signed' in request and type(request['char_signed']) is not bool:raise SMTGraphError('Invalid portfolio char policy')
+    if 'solver_profile' in request and request['solver_profile'] not in ('default','native_division','auto'):raise SMTGraphError('Invalid portfolio solver profile')
     if 'solver_timeout_ms' in request and (type(request['solver_timeout_ms']) is not int or not 1000<=request['solver_timeout_ms']<=120000):raise SMTGraphError('Invalid portfolio solver timeout')
     if 'max_paths' in request and (type(request['max_paths']) is not int or not 1<=request['max_paths']<=512):raise SMTGraphError('Invalid portfolio path limit')
     base=copy.deepcopy({k:v for k,v in request.items() if k in BASE})
@@ -78,7 +79,7 @@ def analyze_portfolio(request,analyze):
               'summary_backend':backend,'proposal_origin':'supplied_untrusted',
               'remote_model_called':False,'policy':'first_certified_in_supplied_order',
               'certified_summary':False,'fallback_used':False,'trials':trials,
-              'candidate_limit':8,'per_query_budget_increased':request.get('solver_timeout_ms',5000)!=5000,
+              'candidate_limit':8,'per_query_budget_increased':request.get('solver_timeout_ms',5000)!=5000,'solver_profile':request.get('solver_profile','default'),
               'notice':'Candidate failure/UNKNOWN is not a source-undefinedness proof. Bounded fallback is not an accelerated summary.'}
     field,success=BACKENDS[backend]
     def finish(result):
@@ -87,10 +88,17 @@ def analyze_portfolio(request,analyze):
         return {**result,'schema_version':1,'summary_portfolio':metadata}
     for p in proposals:
         tick=time.perf_counter()
-        result=analyze({**copy.deepcopy(base),'frontend':backend,field:copy.deepcopy(p['summary'])})
+        profile=request.get('solver_profile','default')
+        base_c=copy.deepcopy(base);base_c.pop('solver_profile',None)
+        can_profile=backend in ('typed_recurrence','typed_invariant','typed_invariant_nested')
+        first={'solver_profile':'native_division'} if (profile=='native_division' and can_profile) else {}
+        result=analyze({**base_c,**first,'frontend':backend,field:copy.deepcopy(p['summary'])})
+        profiles_tried=['native_division' if first else 'default']
+        if profile=='auto' and can_profile and result.get('status')=='UNKNOWN' and result.get('reason')=='timeout':
+            result=analyze({**base_c,'solver_profile':'native_division','frontend':backend,field:copy.deepcopy(p['summary'])});profiles_tried.append('native_division')
         accepted=(result.get('status')==success and result.get('c_overflow_verified') is True and result.get('termination_proved') is True)
         trials.append({'id':p['id'],'summary_sha256':hashlib.sha256(json.dumps(p['summary'],sort_keys=True).encode()).hexdigest(),
-                       'certified':accepted,'verification_seconds':time.perf_counter()-tick,'result':copy.deepcopy(result)})
+                       'certified':accepted,'verification_seconds':time.perf_counter()-tick,'profiles_tried':profiles_tried,'result':copy.deepcopy(result)})
         if accepted:
             metadata.update(certified_summary=True,selected_id=p['id'])
             return finish(result)

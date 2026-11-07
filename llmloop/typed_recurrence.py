@@ -15,7 +15,9 @@ from .smt_spath import SMTGraphError
 class TypedCRecurrence(TypedCFunction):
     integer_engine = TypedWordIntegers
 
-    def __init__(self,source,closed_forms,function=None,parameter_bounds=None,abi='LP64',char_signed=True,max_paths=48,solver_timeout_ms=5000):
+    def __init__(self,source,closed_forms,function=None,parameter_bounds=None,abi='LP64',char_signed=True,max_paths=48,solver_timeout_ms=5000,solver_profile='default'):
+        if solver_profile not in ('default','native_division'):raise SMTGraphError('solver_profile must be default or native_division')
+        self.native_division=solver_profile=='native_division'
         if type(solver_timeout_ms) is not int or not 1000<=solver_timeout_ms<=120000:raise SMTGraphError('solver_timeout_ms must be an integer in 1000..120000')
         self.solver_timeout_ms=solver_timeout_ms
         if type(max_paths) is not int or not 1<=max_paths<=64:raise SMTGraphError('Typed recurrence paths must be 1..64')
@@ -126,8 +128,8 @@ class TypedCRecurrence(TypedCFunction):
         current={};next_values={}
         for name in state:
             t=self.types[name];expression=s.expand_func(forms[name])
-            value=exact_term(expression,mapping)
-            successor=exact_term(s.expand_func(forms[name].subs(k,k+1)),mapping)
+            value=exact_term(expression,mapping,integer_division=self.native_division)
+            successor=exact_term(s.expand_func(forms[name].subs(k,k+1)),mapping,integer_division=self.native_division)
             if not z3.is_int(value):
                 self.check('candidate integrality '+name,inclusive,z3.IsInt(value));value=z3.ToInt(value)
             if not z3.is_int(successor):
