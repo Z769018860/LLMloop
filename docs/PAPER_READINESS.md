@@ -142,3 +142,6 @@ MALICE 已定位（论文脚注与 PMLR 页面），仓库固定到提交 `4675d
 **找 bug 是 CBMC 的强项**；Spacer 对范围型不变式秒证、对关系型（如 x=n−i）超时。修复：嵌套区间不变式模式；规范化扩展（H2 留出：ark 6→16/16、glm 0→11/16、gpt-4.1-mini 0→7/16）；
 `native_division` 编码（404 候选找回 10、丢失 1、0 可靠性翻转）与 `auto` 策略。不安全控制在所有模型、所有模式下 0 次认证。MALICE 在新模型上修正后（独立复核）1/7/4 of 8。
 见 [v0.66 报告](../paper/llm_experiment_report_v066_zh.md) 与 [台账更新](../experiments/v066/p0_ledger_update.json)。
+
+## v0.67：循环树区间不变式
+新增 `typed_invariant_tree`（任意深度/顺序/步长循环）。Study T（6 模型×33 程序×2 重复）：27/27 安全程序至少被一个模型认证，不安全控制 0/72 认证，规范化器无增益；反馈修复仅 +1～+2/27；CBMC 完整域 0/27。仍不支持状态相关内层边界、关系型不变式、while。见 [v0.67 报告](../paper/llm_experiment_report_v067_zh.md) 与 [台账](../experiments/v067/p0_ledger_update.json)。
