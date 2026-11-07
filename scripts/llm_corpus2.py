@@ -16,8 +16,8 @@ def case(name, family, source, backend, bounds, inputs, ref=None, role=None, not
                 inputs=inputs, reference=ref, role=role, note=note)
 
 
-def build():
-    r = random.Random(SEED)
+def build(seed=SEED):
+    r = random.Random(seed)
     C = []
     k = 0
 

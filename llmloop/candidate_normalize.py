@@ -85,3 +85,31 @@ def normalize_summary(summary):
         if isinstance(node, dict): return {k: walk(v) for k, v in node.items()}
         return node
     return walk(summary), rewrites
+
+
+def source_names(source):
+    """(parameter names, loop index names) of a one-function C source; used only to drop coordinates that cannot be state."""
+    m = re.search(r'\w[\w\s\*]*?\b\w+\s*\(([^)]*)\)\s*\{', source)
+    params = set()
+    if m:
+        for part in m.group(1).split(','):
+            toks = re.findall(r'[A-Za-z_]\w*', part)
+            if toks and toks[-1] not in ('void',): params.add(toks[-1])
+    return params, set(re.findall(r'for\s*\(\s*(?:int|long|unsigned|short|char)?\s*(\w+)\s*=', source))
+
+
+def drop_non_state_coordinates(summary, source):
+    """Remove coordinates named after a function parameter or a loop index (never mutable locals) from a closed_forms map
+    {var: formula} or a loop_summaries map {loop: {var: formula}}. Returns (new_summary, [dropped names]). UNTRUSTED: the verifier
+    still checks the remaining summary and rejects it if a real coordinate is missing."""
+    params, indices = source_names(source); banned = params | indices; dropped = []
+    if isinstance(summary, dict) and summary and all(isinstance(v, dict) for v in summary.values()):
+        out = {}
+        for loop, mp in summary.items():
+            out[loop] = {k: v for k, v in mp.items() if k not in banned}
+            dropped += [k for k in mp if k in banned]
+        return out, dropped
+    if isinstance(summary, dict):
+        dropped = [k for k in summary if k in banned]
+        return {k: v for k, v in summary.items() if k not in banned}, dropped
+    return summary, dropped

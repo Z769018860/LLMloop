@@ -40,3 +40,15 @@ def test_idempotent_and_structure_walk():
     out, rewrites = normalize_summary(summary)
     assert out['i']['x'] == 'Min(i,3)' and out['i']['y'] == 'i' and '?' not in out['j']['x'] and len(rewrites) == 2
     assert summary['i']['x'] == 'min(i,3)'  # input not mutated
+
+
+def test_drop_non_state_coordinates():
+    from llmloop.candidate_normalize import drop_non_state_coordinates, source_names
+    src = 'long f(int n,int m){long x=0;for(int i=0;i<n;i++){for(int j=0;j<m;j++){x+=j;}}return x;}'
+    assert source_names(src) == ({'n', 'm'}, {'i', 'j'})
+    s = {'i': {'x': 'entry("x")+i', 'n': 'n', 'i': 'i+1'}, 'j': {'x': 'entry("x")+j', 'j': 'j', 'm': 'm'}}
+    out, dropped = drop_non_state_coordinates(s, src)
+    assert out == {'i': {'x': 'entry("x")+i'}, 'j': {'x': 'entry("x")+j'}} and sorted(dropped) == ['i', 'j', 'm', 'n']
+    flat, d2 = drop_non_state_coordinates({'x': 'i', 'n': 'n'}, 'long f(int n){long x=0;for(int i=0;i<n;i++){x++;}return x;}')
+    assert flat == {'x': 'i'} and d2 == ['n']
+    assert s['i']['n'] == 'n'  # input not mutated
