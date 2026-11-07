@@ -10,9 +10,10 @@ import time
 from .smt_spath import SMTGraphError
 
 
-BASE={'source','function','parameter_bounds','abi','char_signed','max_paths','inputs'}
+BASE={'source','function','parameter_bounds','abi','char_signed','max_paths','inputs','solver_timeout_ms'}
 BACKENDS={'typed_recurrence':('closed_forms','PROVED_DEFINED_TYPED_C_RECURRENCE'),
-          'typed_nested':('loop_summaries','PROVED_DEFINED_TYPED_C_NESTED')}
+          'typed_nested':('loop_summaries','PROVED_DEFINED_TYPED_C_NESTED'),
+          'typed_invariant':('range_invariants','PROVED_DEFINED_TYPED_C_INVARIANT')}
 
 
 def analyze_portfolio(request,analyze):
@@ -21,7 +22,7 @@ def analyze_portfolio(request,analyze):
     if not isinstance(request.get('source'),str) or not request['source'] or len(request['source'])>200000:
         raise SMTGraphError('Portfolio source must be a nonempty string of at most 200000 characters')
     backend=request.get('summary_backend','typed_recurrence')
-    if not isinstance(backend,str) or backend not in BACKENDS:raise SMTGraphError('Portfolio requires typed_recurrence or typed_nested')
+    if not isinstance(backend,str) or backend not in BACKENDS:raise SMTGraphError('Portfolio requires typed_recurrence, typed_nested or typed_invariant')
     proposals=request.get('proposals')
     if not isinstance(proposals,list) or not 1<=len(proposals)<=8:raise SMTGraphError('Portfolio requires 1..8 supplied proposals')
     # Validate every envelope before solving; candidates cannot replace source,
@@ -34,6 +35,10 @@ def analyze_portfolio(request,analyze):
         seen.add(name)
         if not isinstance(summary,dict) or len(summary)>16:raise SMTGraphError('Proposal summary must be a map with at most 16 coordinates/loops')
         maps=[summary] if backend=='typed_recurrence' else list(summary.values())
+        if backend=='typed_invariant':
+            for mapping in summary.values():
+                if not isinstance(mapping,dict) or not mapping or set(mapping)-{'lo','hi'} or any(not isinstance(v,str) or not 1<=len(v)<=5000 for v in mapping.values()):raise SMTGraphError('Invariant proposals require {lo,hi} formula strings per coordinate')
+            maps=[]
         if any(not isinstance(k,str) or not 1<=len(k)<=128 for k in summary):raise SMTGraphError('Invalid summary coordinate/loop name')
         for mapping in maps:
             if not isinstance(mapping,dict) or len(mapping)>16:raise SMTGraphError('Nested proposals require coordinate maps, not automatic mode')
@@ -57,6 +62,7 @@ def analyze_portfolio(request,analyze):
     if 'function' in request and (not isinstance(request['function'],str) or not 1<=len(request['function'])<=128):raise SMTGraphError('Invalid portfolio function')
     if 'abi' in request and (not isinstance(request['abi'],str) or request['abi'] not in ('LP64','ILP32','LLP64')):raise SMTGraphError('Invalid portfolio ABI')
     if 'char_signed' in request and type(request['char_signed']) is not bool:raise SMTGraphError('Invalid portfolio char policy')
+    if 'solver_timeout_ms' in request and (type(request['solver_timeout_ms']) is not int or not 1000<=request['solver_timeout_ms']<=120000):raise SMTGraphError('Invalid portfolio solver timeout')
     if 'max_paths' in request and (type(request['max_paths']) is not int or not 1<=request['max_paths']<=512):raise SMTGraphError('Invalid portfolio path limit')
     base=copy.deepcopy({k:v for k,v in request.items() if k in BASE})
     started=time.perf_counter();trials=[]
@@ -65,7 +71,7 @@ def analyze_portfolio(request,analyze):
               'summary_backend':backend,'proposal_origin':'supplied_untrusted',
               'remote_model_called':False,'policy':'first_certified_in_supplied_order',
               'certified_summary':False,'fallback_used':False,'trials':trials,
-              'candidate_limit':8,'per_query_budget_increased':False,
+              'candidate_limit':8,'per_query_budget_increased':request.get('solver_timeout_ms',5000)!=5000,
               'notice':'Candidate failure/UNKNOWN is not a source-undefinedness proof. Bounded fallback is not an accelerated summary.'}
     field,success=BACKENDS[backend]
     def finish(result):

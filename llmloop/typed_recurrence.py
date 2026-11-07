@@ -15,7 +15,9 @@ from .smt_spath import SMTGraphError
 class TypedCRecurrence(TypedCFunction):
     integer_engine = TypedWordIntegers
 
-    def __init__(self,source,closed_forms,function=None,parameter_bounds=None,abi='LP64',char_signed=True,max_paths=48):
+    def __init__(self,source,closed_forms,function=None,parameter_bounds=None,abi='LP64',char_signed=True,max_paths=48,solver_timeout_ms=5000):
+        if type(solver_timeout_ms) is not int or not 1000<=solver_timeout_ms<=120000:raise SMTGraphError('solver_timeout_ms must be an integer in 1000..120000')
+        self.solver_timeout_ms=solver_timeout_ms
         if type(max_paths) is not int or not 1<=max_paths<=64:raise SMTGraphError('Typed recurrence paths must be 1..64')
         if not isinstance(closed_forms,dict):raise SMTGraphError('Typed recurrence requires candidate closed_forms')
         try:unit=c_parser.CParser().parse(source)
@@ -44,7 +46,7 @@ class TypedCRecurrence(TypedCFunction):
         if len(parameters)>16:raise SMTGraphError('At most 16 typed parameters')
         self.parameters=parameters;self.engine.variables=parameters
         self.domain=z3.And(*constraints)
-        solver=z3.Solver();solver.set(timeout=5000);solver.add(self.domain)
+        solver=z3.Solver();solver.set(timeout=self.solver_timeout_ms);solver.add(self.domain)
         if solver.check()!=z3.sat:raise SMTGraphError('Typed parameter domain must be proved nonempty')
         self.checks=[];self.witness={name:term.value for name,term in parameters.items()}
         self.failure=None
@@ -64,7 +66,7 @@ class TypedCRecurrence(TypedCFunction):
             enclosure=prove_interval(premise,claim)
             if enclosure is not None:
                 self.checks.append({'obligation':label,'proved':True,'certificate':enclosure});return
-        context=z3.Context();solver=z3.Solver(ctx=context);solver.set(timeout=5000)
+        context=z3.Context();solver=z3.Solver(ctx=context);solver.set(timeout=self.solver_timeout_ms)
         solver.add(premise.translate(context),z3.Not(claim).translate(context))
         answer=solver.check()
         if answer!=z3.unsat:raise ProofFailure(label,answer,solver,{name:term.translate(context) for name,term in self.witness.items()})
