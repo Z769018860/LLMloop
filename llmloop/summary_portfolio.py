@@ -14,7 +14,8 @@ BASE={'source','function','parameter_bounds','abi','char_signed','max_paths','in
 BACKENDS={'typed_recurrence':('closed_forms','PROVED_DEFINED_TYPED_C_RECURRENCE'),
           'typed_nested':('loop_summaries','PROVED_DEFINED_TYPED_C_NESTED'),
           'typed_invariant':('range_invariants','PROVED_DEFINED_TYPED_C_INVARIANT'),
-          'typed_invariant_nested':('range_invariants','PROVED_DEFINED_TYPED_C_INVARIANT_NESTED')}
+          'typed_invariant_nested':('range_invariants','PROVED_DEFINED_TYPED_C_INVARIANT_NESTED'),
+          'typed_invariant_tree':('range_invariants','PROVED_DEFINED_TYPED_C_INVARIANT_TREE')}
 
 
 def analyze_portfolio(request,analyze):
@@ -23,7 +24,7 @@ def analyze_portfolio(request,analyze):
     if not isinstance(request.get('source'),str) or not request['source'] or len(request['source'])>200000:
         raise SMTGraphError('Portfolio source must be a nonempty string of at most 200000 characters')
     backend=request.get('summary_backend','typed_recurrence')
-    if not isinstance(backend,str) or backend not in BACKENDS:raise SMTGraphError('Portfolio requires typed_recurrence, typed_nested, typed_invariant or typed_invariant_nested')
+    if not isinstance(backend,str) or backend not in BACKENDS:raise SMTGraphError('Portfolio requires typed_recurrence, typed_nested or a typed_invariant* backend')
     proposals=request.get('proposals')
     if not isinstance(proposals,list) or not 1<=len(proposals)<=8:raise SMTGraphError('Portfolio requires 1..8 supplied proposals')
     # Validate every envelope before solving; candidates cannot replace source,
@@ -36,7 +37,7 @@ def analyze_portfolio(request,analyze):
         seen.add(name)
         if not isinstance(summary,dict) or len(summary)>16:raise SMTGraphError('Proposal summary must be a map with at most 16 coordinates/loops')
         maps=[summary] if backend=='typed_recurrence' else list(summary.values())
-        if backend=='typed_invariant_nested':
+        if backend in ('typed_invariant_nested','typed_invariant_tree'):
             for level in summary.values():
                 if not isinstance(level,dict) or len(level)>16:raise SMTGraphError('Nested invariant proposals require one coordinate map per loop')
                 for mapping in level.values():
@@ -90,7 +91,7 @@ def analyze_portfolio(request,analyze):
         tick=time.perf_counter()
         profile=request.get('solver_profile','default')
         base_c=copy.deepcopy(base);base_c.pop('solver_profile',None)
-        can_profile=backend in ('typed_recurrence','typed_invariant','typed_invariant_nested')
+        can_profile=backend in ('typed_recurrence','typed_invariant','typed_invariant_nested','typed_invariant_tree')
         first={'solver_profile':'native_division'} if (profile=='native_division' and can_profile) else {}
         result=analyze({**base_c,**first,'frontend':backend,field:copy.deepcopy(p['summary'])})
         profiles_tried=['native_division' if first else 'default']
