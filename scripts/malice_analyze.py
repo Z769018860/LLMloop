@@ -20,7 +20,7 @@ for pl in plan['plan']:
     wd = pl.get('workdir')
     if not wd or not plan.get('correct'): continue
     for sm in Path(wd, 'prediction', 'error_correction').glob('*/summary.txt'):
-        prog = re.sub(r'_\d+_\d{4}_\d\d_\d\d_\d\d_\d\d$', '', sm.parent.name)
+        prog = re.sub(r'_\d+_\d{4}_\d\d_\d\d_\d\d_\d\d(?:_\d+)?$', '', sm.parent.name)
         txt = sm.read_text(errors='ignore')
         r = refine[(pl['model'], prog)]
         mt, mp = re.search(r'总用例数:\s*(\d+)', txt), re.search(r'通过用例数:\s*(\d+)', txt)

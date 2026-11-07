@@ -39,11 +39,36 @@ def test_scaling_ablation_complete_and_values_agree():
             assert r['value'] == summ[(r['rep'], r['program'], r['S'])]
 
 
-def test_malice_provenance_states_not_executed_and_pins_commit():
+def test_malice_provenance_pins_commit_and_records_execution():
     p = J('malice_provenance.json')
     assert p['commit'] == '4675d37c4f66531a29e0ccd2a746f357ae8dfd7a'
-    assert p['execution_status'].startswith('NOT EXECUTED')
+    assert p['execution_status'].startswith('EXECUTED after the user explicitly allowed')
     assert set(p['binaries']) == {'loopinv', 'symexec', 'lsp'}
+    assert 'glm-5.3-ark' in p['not_evaluable'] and 'glm-5.3-ark' not in p['evaluated_models']
+
+
+def test_malice_results_consistent_and_key_free():
+    d = OUT / 'malice_results'
+    pred = json.loads((d / 'prediction_only_summary.json').read_text())
+    ver = json.loads((d / 'refined_independent_symexec_verify.json').read_text())
+    cmp_ = json.loads((d / 'compare_with_llmloop.json').read_text())
+    assert len(cmp_) == 13
+    # every refinement pass was independently re-verified by the other QCP checker, none missing
+    assert ver['distinct_refined_files'] == ver['symexec_agrees'] == 42 and ver['file_missing'] == 0
+    # soundness: no unsafe control has a verified MALICE prediction or a refined verified file
+    unsafe = {r['program'] for r in cmp_ if r['role'] == 'unsafe'}
+    assert not any(r['verified'] for r in pred['rows'] if r['program'] in unsafe)
+    assert not any(r['program'] in unsafe for r in ver['rows'])
+    for f in d.glob('*.json'):
+        t = f.read_text()
+        assert 'api_key' not in t and 'sk-' not in t
+
+
+def test_ground_truth_validation_matches_selected_programs():
+    g = J('malice_ground_truth_validation.json')
+    safe_ok = [r for r in g if r['role'] == 'safe' and r['ground_truth_invariant_verified_by_qcp']]
+    assert len(safe_ok) == 8 and sum(r['role'] == 'unsafe' for r in g) == 5
+    assert not any(r['ground_truth_invariant_verified_by_qcp'] for r in g if r['role'] == 'unsafe')
 
 
 def test_no_credential_in_v064_files():

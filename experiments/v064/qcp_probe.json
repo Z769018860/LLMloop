@@ -1,0 +1,48 @@
+{
+ "description": "Observations from hand-written probe programs run with the pinned QCP binary symexec (`--full-auto --no-exec-info --basic-assertion`), env cleared, in a scratch directory. Probes are small and not exhaustive; they establish why the common projection is restricted, not general QCP limits.",
+ "binary": "symexec from sensuschung/malice commit 4675d37c (sha256 in malice_provenance.json)",
+ "success_marker": "Successfully finished full automation check",
+ "probes": [
+  {
+   "program": "long x=0; for i<n: x+=2; Inv x==2*i && 0<=i<=n@pre; Ensure __return == 2*n",
+   "result": "verified"
+  },
+  {
+   "program": "same with wrong Inv x==3*i",
+   "result": "exit 139 (segmentation fault), no success marker"
+  },
+  {
+   "program": "int x; x+=1000000000 for n<=5, Inv x==1000000000*i",
+   "result": "'Safety Check Failed' at the overflowing statement: QCP checks signed int overflow"
+  },
+  {
+   "program": "`Ensure 1`",
+   "result": "type error 'Cannot unify types Assertion and Z'; used `Ensure __return == __return` instead"
+  },
+  {
+   "program": "unsigned char a+=84 with Inv 0<=a<=255 (also unsigned short, unsigned, xor on unsigned char, unsigned *=3)",
+   "result": "exit 139 (segfault) even though the programs are well defined"
+  },
+  {
+   "program": "long x; x+=i%3 with Inv 0<=x<=2*i",
+   "result": "'Safety Check Failed' (modulo not handled in the safety check)"
+  },
+  {
+   "program": "long x; if(i<100){x+=2}else{x+=1} with Inv 0<=x<=2*i",
+   "result": "verified"
+  },
+  {
+   "program": "nested for with inner Inv `0<=x && x<=12000*i + 4*j ...` (several equivalent spellings)",
+   "result": "exit 139 (segfault); inner Inv without the product term fails normally; equality form with 4*m@pre*i fails safety"
+  },
+  {
+   "program": "model-generated invariant with a top-level `||`",
+   "result": "'invariant case is branching'"
+  },
+  {
+   "program": "model-generated invariant using min()/max()",
+   "result": "'Use of undeclared identifier'"
+  }
+ ],
+ "consequence": "Common projection limited to int/long programs with + - * comparisons and if/else whose ground-truth invariant QCP verifies; of 21 candidate safe programs only 8 qualified (ground-truth validation in malice_ground_truth_validation.json)."
+}

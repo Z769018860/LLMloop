@@ -5,20 +5,24 @@
     {
       "id": "P0-03",
       "requirement": "外部基线",
-      "status": "partial_malice_located_not_executed",
+      "status": "partial_malice_run_narrow_projection",
       "completed_evidence": [
         "MALICE 论文（PMLR 306）、代码仓库（论文脚注）、固定提交 4675d37c、论文 PDF 与三个 QCP 二进制的 SHA-256 已记录",
-        "仓库静态检查：目录、依赖、数据集结构、流水线以子进程调用 QCP 二进制"
+        "在用户允许后运行固定版本 MALICE（仓库代码未改）：13 个程序（8 安全 + 5 不安全控制）× 2 个模型；仅预测 1/8，开启 QCP 反馈修正后 7/8；两者在不安全控制上均为 0",
+        "42 个修正后文件用另一检查器 symexec 独立复核 42/42 一致",
+        "与 LLMloop 在同一批程序上对齐（契约不同，不报统一成功率）"
       ],
       "remaining_acceptance": [
-        "获得执行第三方预编译 QCP 二进制的许可后运行 MALICE（沙箱当前拒绝）",
-        "确认 QCP 对 C 整数（wrap/溢出）的语义，以判断与类型化义务是否可比",
-        "在窄共同投影（标量循环、返回值规格）上报告观察，不报告统一成功率",
+        "MALICE 在其目标任务（堆形状不变式、LIG-MM+）上的评估",
+        "glm-5.3-ark 无法在 MALICE 的调用方式下评估",
+        "更大的共同投影与 pass@8、更多模型家族（QCP 不支持无符号类型限制了范围）",
         "会议版 LoopSCC artifact 仍无法获取"
       ],
-      "execution_status": "MALICE NOT EXECUTED",
+      "execution_status": "MALICE executed (narrow common projection, two models)",
       "evidence_paths": [
         "malice_provenance.json",
+        "malice_results/compare_with_llmloop.json",
+        "malice_results/refined_independent_symexec_verify.json",
         "../../paper/external_and_ablation_report_v064_zh.md"
       ]
     },

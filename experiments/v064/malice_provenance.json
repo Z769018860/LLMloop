@@ -29,10 +29,18 @@
  },
  "task": "LLM generates loop invariants (separation-logic assertions) for C programs with Require/Ensure; QCP validates entailment; refinement uses QCP error feedback",
  "benchmarks_in_repo": "dataset/{Course,SLING,SV-COMP,System,simple_array} (LIG-MM programs + traditional array programs); paper: LIG-MM+ = 260 programs (DLL 133, SLL 96, Array 8, Others 23)",
- "execution_status": "NOT EXECUTED. The sandbox auto-mode classifier denied running the third-party prebuilt QCP binaries (loopinv, symexec, lsp). Pipeline calls them as subprocesses (prediction/utils/binary.py), so MALICE cannot run without that permission.",
+ "execution_status": "EXECUTED after the user explicitly allowed running the third-party QCP binaries. Binaries were run with a cleared environment (no API key passed to them) inside the session container. Results: experiments/v064/malice_results/ and paper/external_and_ablation_report_v064_zh.md section 2.",
  "files_not_committed": [
   "paper PDF",
   "binaries",
   "repository contents"
- ]
+ ],
+ "evaluated_models": [
+  "deepseek-v4.1-flash-ark",
+  "deepseek-v4.1-flash-itkk"
+ ],
+ "not_evaluable": {
+  "glm-5.3-ark": "MALICE hard-codes thinking disabled, which this model rejects (HTTP 400). With a patched copy (experiments/v064/malice_patches.diff) responses were truncated at max_tokens=12000 before the invariant, and calls timed out at 24000/30000. No glm data is reported."
+ },
+ "unmodified_code": "All reported results use the pinned repository files unmodified (main.py checked identical); configuration only. Required layout fix: a hash-verified copy of loopinv at <bin>/test/build/loopinv because refinement code hard-codes that path."
 }
