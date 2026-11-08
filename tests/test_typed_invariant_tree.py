@@ -62,7 +62,10 @@ def test_loop_index_overflow_is_not_hidden():
 
 def test_unsupported_shapes_are_errors():
     with pytest.raises(Exception): run('long f(int n){long x=1;for(int i=0;i<n;i++){for(int j=0;j<x;j++){x++;}}return x;}', {'i': {'x': iv('0', '9')}, 'j': {'x': iv('0', '9')}}, {'n': [0, 5]})
-    with pytest.raises(Exception): run('long f(int n){long x=0;for(int i=0;i<n;i++){if(i>2){for(int j=0;j<2;j++){x++;}}}return x;}', {'i': {'x': iv('0', '9')}, 'j': {'x': iv('0', '9')}}, {'n': [0, 5]})
+    # loops inside if-branches became supported in v0.68 (see test_typed_invariant_if_loops.py); this program is now certified, an unsound claim is not
+    src_if = 'long f(int n){long x=0;for(int i=0;i<n;i++){if(i>2){for(int j=0;j<2;j++){x++;}}}return x;}'
+    assert run(src_if, {'i': {'x': iv('0', '2*i')}, 'j': {'x': iv('0', '2*i+j')}}, {'n': [0, 5]})['status'] == OK
+    assert run(src_if, {'i': {'x': iv('0', 'i')}, 'j': {'x': iv('0', 'i+j')}}, {'n': [0, 5]})['status'] == 'UNKNOWN'
     with pytest.raises(Exception): run('long f(int n){long x=0;int i=0;while(i<n){x++;i++;}return x;}', {'i': {'x': iv('0', '9')}}, {'n': [0, 5]})
     with pytest.raises(Exception): run('long f(int n){long x=0;for(int i=0;i<n;i++){x++;}return x;}', {'q': {'x': iv('0', '9')}}, {'n': [0, 5]})
     with pytest.raises(Exception): run('long f(int n){long x=0;for(int i=0;i<n;i*=2){x++;}return x;}', {'i': {'x': iv('0', '9')}}, {'n': [0, 5]})

@@ -54,6 +54,15 @@ def _shape(loop):
     return d, a, (1 if up else -1), c.op in ('<=', '>='), c.right, step
 
 
+def _has_loop(node):
+    class F(c_ast.NodeVisitor):
+        found = False
+        def visit_For(s_, n): s_.found = True
+        def visit_While(s_, n): s_.found = True
+        def visit_DoWhile(s_, n): s_.found = True
+    f = F(); f.visit(node); return f.found
+
+
 class TypedCInvariantTree(TypedCRecurrence):
     def build(self, inv):
         items = self.func.body.block_items or []; pos = 0
@@ -72,6 +81,14 @@ class TypedCInvariantTree(TypedCRecurrence):
                     d = _shape(st)[0]; loops.append((d.name, st)); body = st.stmt.block_items if isinstance(st.stmt, c_ast.Compound) else [st.stmt]
                     if depth >= 6: raise SMTGraphError('At most 6 loop levels')
                     scan(body or [], depth + 1)
+                elif isinstance(st, c_ast.If) and _has_loop(st):
+                    for br in (st.iftrue, st.iffalse):
+                        if br is None: continue
+                        items_ = br.block_items if isinstance(br, c_ast.Compound) else [br]
+                        scan(items_ or [], depth)
+                    class CondNoLoop(c_ast.NodeVisitor):
+                        def visit_For(s_, n): raise SMTGraphError('Loop inside an if condition unsupported')
+                    CondNoLoop().visit(st.cond)
                 else:
                     class NoLoop(c_ast.NodeVisitor):
                         def visit_For(s_, n): raise SMTGraphError('Loops must be direct children of statement lists (not inside if/other statements)')
@@ -184,10 +201,27 @@ class TypedCInvariantTree(TypedCRecurrence):
             if isinstance(st, c_ast.For):
                 if seg: states = self._run_seg(seg, states, premise, label); seg = []
                 states = self.do_loop(st, states, ctx, premise, label)
+            elif isinstance(st, c_ast.If) and _has_loop(st):
+                if seg: states = self._run_seg(seg, states, premise, label); seg = []
+                states = self.do_if(st, states, ctx, premise, label)
             else:
                 seg.append(st)
         if seg: states = self._run_seg(seg, states, premise, label)
         return states
+
+    def do_if(self, st, states, ctx, premise, label):
+        """if/else whose branches contain loops: split every path on the (state-dependent) condition, process both branches with the guard, union the exits."""
+        out = []
+        for ph, (g, env, extra) in enumerate(states):
+            self.obligations = []
+            c = self.evaluate(st.cond, dict(env))
+            self.check('%s if-condition defined (path %d)' % (label, ph), z3.And(premise, extra, g), c.safe)
+            tv = self.engine.truth(c)
+            for br, guard in ((st.iftrue, tv), (st.iffalse, z3.Not(tv))):
+                if br is None: out.append((z3.And(g, guard), dict(env), extra)); continue
+                items_ = br.block_items if isinstance(br, c_ast.Compound) else [br]
+                out += self.process(items_ or [], [(z3.And(g, guard), dict(env), extra)], ctx, premise, label + ('/then' if br is st.iftrue else '/else'))
+        return out
 
     def do_loop(self, loop, states, ctx, premise, label):
         d, a, direction, inclusive, bexpr, step = _shape(loop); L = d.name; itype = c_type(d, self.engine.abi)
