@@ -40,7 +40,10 @@ def analyze_portfolio(request,analyze):
         if backend in ('typed_invariant_nested','typed_invariant_tree'):
             for level in summary.values():
                 if not isinstance(level,dict) or len(level)>16:raise SMTGraphError('Nested invariant proposals require one coordinate map per loop')
-                for mapping in level.values():
+                for coord,mapping in level.items():
+                    if backend=='typed_invariant_tree' and coord=='@rel':
+                        if not isinstance(mapping,dict) or not mapping or set(mapping)-{'eq','le'} or any(not isinstance(v,list) or any(not isinstance(f,str) or not 1<=len(f)<=5000 for f in v) for v in mapping.values()) or sum(len(v) for v in mapping.values())>8:raise SMTGraphError('@rel requires eq/le lists of at most 8 formula strings')
+                        continue
                     if not isinstance(mapping,dict) or not mapping or set(mapping)-{'lo','hi'} or any(not isinstance(v,str) or not 1<=len(v)<=5000 for v in mapping.values()):raise SMTGraphError('Invariant proposals require {lo,hi} formula strings per coordinate')
             maps=[]
         if backend=='typed_invariant':

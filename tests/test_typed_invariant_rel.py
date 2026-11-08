@@ -35,3 +35,14 @@ def test_unsafe_program_not_certified_with_relation():
     src = 'int f(int n){int x=0;int y=0;for(int i=0;i<n;i++){if(i%3==0){x++;}else{y++;}}return 100/(x+y-n);}'
     r = analyze_request({**BASE, 'source': src, 'range_invariants': {'i': {**BOX, '@rel': {'eq': ['x+y-i']}}}})
     assert r['status'] != 'PROVED_DEFINED_TYPED_C_INVARIANT_TREE'
+
+
+def test_portfolio_accepts_rel_and_still_certifies_only_safe():
+    inv = {'i': {**BOX, '@rel': {'eq': ['x+y-i']}}}
+    req = lambda src: {'source': src, 'frontend': 'typed_summary_portfolio', 'summary_backend': 'typed_invariant_tree', 'proposals': [{'id': 'c0', 'summary': inv}],
+                       'parameter_bounds': {'n': [0, 100000]}, 'inputs': {'n': 100000}, 'abi': 'LP64'}
+    assert analyze_request(req(SRC))['status'] == 'PROVED_DEFINED_TYPED_C_INVARIANT_TREE'
+    unsafe = SRC.replace('x+y-n+1', 'x+y-n')
+    assert analyze_request(req(unsafe))['status'] != 'PROVED_DEFINED_TYPED_C_INVARIANT_TREE'
+    bad = req(SRC); bad['proposals'][0]['summary'] = {'i': {**BOX, '@rel': {'eq': 'x'}}}
+    assert analyze_request(bad)['status'] != 'PROVED_DEFINED_TYPED_C_INVARIANT_TREE'
