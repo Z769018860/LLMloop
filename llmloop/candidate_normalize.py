@@ -112,7 +112,7 @@ def drop_non_state_coordinates(summary, source):
     if isinstance(summary, dict) and summary and all(isinstance(v, dict) for v in summary.values()):
         out = {}
         for loop, mp in summary.items():
-            out[loop] = {k: v for k, v in mp.items() if k not in banned}
+            out[loop] = {k: v for k, v in mp.items() if k not in banned or k == '@rel'}
             dropped += [k for k in mp if k in banned]
         return out, dropped
     if isinstance(summary, dict):

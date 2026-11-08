@@ -85,7 +85,7 @@ class TypedCInvariantTree(TypedCRecurrence):
         if not loops or len(set(names)) != len(names) or set(names) & (set(self.parameters) | set(self.state)): raise SMTGraphError('Unique loop index names distinct from parameters and locals required')
         if not isinstance(inv, dict) or set(inv) != set(names): raise SMTGraphError('Invariant needs exactly one entry per loop index: ' + ', '.join(names))
         for lv in inv.values():
-            if not isinstance(lv, dict) or set(lv) != set(self.state): raise SMTGraphError('Each loop invariant must cover every outer scalar local')
+            if not isinstance(lv, dict) or not (set(lv) - {'@rel'}) <= set(self.state) or ('@rel' not in lv and set(lv) != set(self.state)): raise SMTGraphError('Each loop invariant must cover every outer scalar local (or give @rel)')
         banned = set(self.parameters) | set(names)
         class Mods(c_ast.NodeVisitor):
             def visit_Assignment(s_, n):
@@ -110,14 +110,27 @@ class TypedCInvariantTree(TypedCRecurrence):
         sym_names = {n: s.Symbol(n, integer=True) for n in self.parameters}
         for n in names: sym_names[n] = s.Symbol(n, integer=True, nonnegative=True)
         self._forms = {}
+        state_syms = {v: s.Symbol('st_' + v, integer=True) for v in self.state}
+        rel_names = {**sym_names, **{v: state_syms[v] for v in self.state}}
+        self._rel = {}
         for lname, lv in inv.items():
+            rel = lv.get('@rel')
+            if rel is not None:
+                if not isinstance(rel, dict) or not rel or set(rel) - {'eq', 'le'}: raise SMTGraphError('@rel must be an object with eq and/or le lists')
+                lst = []
+                for kind in ('eq', 'le'):
+                    fs = rel.get(kind, [])
+                    if not isinstance(fs, list) or len(fs) > 8 or not all(isinstance(f, str) for f in fs): raise SMTGraphError('@rel entries must be at most 8 formula strings')
+                    lst += [(kind, parse_closed(f, rel_names)) for f in fs]
+                self._rel[lname] = lst
             for v in self.state:
-                spec = lv[v]
+                spec = lv.get(v)
+                if not spec and lname in self._rel: continue
                 if not isinstance(spec, dict) or not spec or set(spec) - {'lo', 'hi'}: raise SMTGraphError('Invariant for each coordinate must be an object with lo and/or hi')
                 for side in spec:
                     if not isinstance(spec[side], str): raise SMTGraphError('Invariant bounds must be formula strings')
                     self._forms[(lname, v, side)] = parse_closed(spec[side], sym_names)
-        self._invd = inv; self._sym = sym_names; self._names = names; self._counter_ct = 0
+        self._invd = inv; self._state_syms = state_syms; self._sym = sym_names; self._names = names; self._counter_ct = 0
         self._param_map = {sym_names[n]: t.value for n, t in self.parameters.items()}
         self.loop_certs = []
         premise0 = self.domain
@@ -144,8 +157,13 @@ class TypedCInvariantTree(TypedCRecurrence):
         for n, v in counters.items(): mp[self._sym[n]] = v
         mp[self._sym[lname]] = at
         parts = []
+        for kind, f in self._rel.get(lname, []):
+            mp2 = dict(mp)
+            for v in self.state: mp2[self._state_syms[v]] = vals[v]
+            e = exact_term(s.expand_func(f), mp2, integer_division=self.native_division)
+            parts.append(e == 0 if kind == "eq" else _le(e, z3.IntVal(0)))
         for v in self.state:
-            for side in self._invd[lname][v]:
+            for side in (self._invd[lname].get(v) or {}):
                 b = exact_term(s.expand_func(self._forms[(lname, v, side)]), mp, integer_division=self.native_division)
                 parts.append(_le(b, vals[v]) if side == 'lo' else _le(vals[v], b))
         return z3.And(*parts)
