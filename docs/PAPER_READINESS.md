@@ -150,3 +150,5 @@ MALICE 已定位（论文脚注与 PMLR 页面），仓库固定到提交 `4675d
 
 ## v0.68：关系型不变式 @rel 与级联
 Study Rel（648 次生成）：@rel 提示臂安全程序认证 203/264 vs 区间臂 80/264（配对 129:6，聚类 bootstrap +46.6pp），不安全 0/120 认证。披露：首次验证因 portfolio 信封缺陷无效（已修复并对同批生成重验）、rel 示例邻近、提示联合效应、精确箱形参考存在。Spacer 优先级联省 52% LLM 调用。见 [v0.68 报告](../paper/llm_experiment_report_v068_zh.md)、[规划](EXPERIMENT_PLAN_v068_zh.md)。
+
+全量测试（v0.69，含 if-循环）：3311 passed。
