@@ -173,3 +173,6 @@ Study Rel（648 次生成）：@rel 提示臂安全程序认证 203/264 vs 区�
 
 ## v0.71：精确区间/入口一致性提示（否定）
 Study ES：base 154/228 vs exact 123/228（p=3e-6，I_nested 15→2/60），不安全 0/120。结合 IfR（无差异）与 Rel（显著有益），结论：改进验证器表达力优于改提示。见 [报告](../paper/report_v071_bilingual.md)。
+
+## v0.72：SV-COMP 自动译写覆盖率与 LLM-free 轨迹拟合
+264 个 SV-COMP 循环程序（含 zilu/invgen）仅 11 个（4.2%）可自动译写并落入片段；LLM-free 拟合器（不受信，同一验证器）留出集：循环树 17/27、关系型 18/22、if-循环 5/19，不安全 0。见 [报告](../paper/report_v072_bilingual.md)。
