@@ -23,7 +23,7 @@
 **English.** Prompt rules were neutral or harmful whereas expanding the verifier's expressiveness (`@rel`) helped substantially; future work should favour the candidate space and the verifier over prompt wording.
 
 ## 4. 局限 / Caveats
-**中文。** 合成语料、单一提示改动；I_nested 仅 12 个程序实例（每臂 60 次试验）；模型/家族比较为探索性、无多重比较校正；`claude-dsflash-itkk` 是 DeepSeek V4.1 Flash 别名；无加速声明。
+**中文。** 合成语料、单一提示改动；I_nested 仅 5 个程序（每臂 60 次试验）；模型/家族比较为探索性、无多重比较校正；`claude-dsflash-itkk` 是 DeepSeek V4.1 Flash 别名；无加速声明。
 **English.** Synthetic corpus, one prompt change; I_nested has only 5 programs (60 trials per arm); exploratory comparisons without multiplicity correction; `claude-dsflash-itkk` is a DeepSeek V4.1 Flash alias; no speedup claims.
 
 ## 5. 下一步 / Next steps
