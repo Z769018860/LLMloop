@@ -160,7 +160,7 @@ if __name__ == '__main__':
                 try:
                     from llmloop.api import analyze_request
                     from llmloop.loop_index_normalize import hoist_loop_indices
-                    fa = parse_func(code); hoist_loop_indices(fa.body)
+                    fa = parse_func(code); hoist_loop_indices(fa.body, frozenset(p.name for p in fa.decl.type.args.params))
                     items = fa.body.block_items; first = next(k for k, s in enumerate(items) if any(isinstance(x, c_ast.For) for x in _walk(s)))
                     state = [d.name for d in items[:first] if isinstance(d, c_ast.Decl)]
                     loops = [x.init.decls[0].name for s in items for x in _walk(s) if isinstance(x, c_ast.For) and isinstance(x.init, c_ast.DeclList)]
@@ -173,5 +173,6 @@ if __name__ == '__main__':
             except Reject as e: r['stage'] = 'reject:' + str(e)
             except Exception as e: r['stage'] = 'error:' + type(e).__name__ + ':' + str(e)[:60]
             rows.append(r); cnt[r['stage'].split(':')[0] if not r['stage'].startswith('structural') else r['stage'][:60]] += 1
-    (ROOT / 'experiments/v072').mkdir(exist_ok=True); (ROOT / 'experiments/v072/translated.json').write_text(json.dumps(rows, indent=1) + '\n')
+    OUTD = sys.argv[sys.argv.index('--out') + 1] if '--out' in sys.argv else 'v072'
+    (ROOT / 'experiments' / OUTD).mkdir(exist_ok=True); (ROOT / 'experiments' / OUTD / 'translated.json').write_text(json.dumps(rows, indent=1) + '\n')
     print(len(rows), cnt.most_common(30))

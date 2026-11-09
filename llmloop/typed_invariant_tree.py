@@ -66,7 +66,7 @@ def _has_loop(node):
 
 class TypedCInvariantTree(TypedCRecurrence):
     def build(self, inv):
-        self.index_normalization = hoist_loop_indices(self.func.body)
+        self.index_normalization = hoist_loop_indices(self.func.body, frozenset(self.parameters))
         items = self.func.body.block_items or []; pos = 0
         initial = [(z3.BoolVal(True), dict(self.parameters), None)]
         while pos < len(items) and isinstance(items[pos], c_ast.Decl):
@@ -74,7 +74,7 @@ class TypedCInvariantTree(TypedCRecurrence):
         if pos >= len(items) or not isinstance(items[-1], c_ast.Return): raise SMTGraphError('Loop-tree invariant needs scalar locals, loops and a final return')
         middle = items[pos:-1]; entry = initial[0][1]
         self.state = [n for n in entry if n not in self.parameters]
-        if not 1 <= len(self.state) <= 15: raise SMTGraphError('1..15 outer scalar locals required')
+        if not 0 <= len(self.state) <= 15: raise SMTGraphError('0..15 outer scalar locals required')
         # discover loops; forbid loops anywhere except as direct children of statement lists
         loops = []
         def scan(stmts, depth):

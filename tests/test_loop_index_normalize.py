@@ -84,3 +84,63 @@ def test_differential_native_while_rewrite():
 def test_unsafe_while_program_not_certified():
     src = 'int f(int n,int m){long x=0;int i=0;while(i<n){x+=1;i++;}return 10/(m-3);}'
     assert run(src, {'i': {'x': {'lo': '0', 'hi': 'i'}}}, {'n': [0, 100], 'm': [0, 10]}) != 'PROVED_DEFINED_TYPED_C_INVARIANT_TREE'
+
+
+SDSRC = 'int f(unsigned int n){unsigned int x=n;unsigned int y=0;while(x>0){x--;y++;}return 1/(y==n);}'
+
+
+def test_state_driven_countdown_while_is_normalized_and_certified():
+    # x counts down from the parameter; its init is not adjacent to the loop and the decrement is not the last statement
+    inv = {'x': {'y': {'lo': '0', 'hi': 'x'}}}   # count x (iterations done) ; y == count
+    inv = {'x': {'y': {'lo': 'x', 'hi': 'x'}}}
+    assert run(SDSRC, inv, {'n': [0, 100000]}) == 'PROVED_DEFINED_TYPED_C_INVARIANT_TREE'
+
+
+def test_rotation_not_applied_when_later_statement_reads_the_variable():
+    src = 'int f(unsigned int n){unsigned int x=n;unsigned int y=0;while(x>0){x--;y+=x;}return y;}'
+    ast, body = func_body(src)
+    # y += x reads the decremented x: rotating would change the value, so the loop must NOT be converted on x
+    hoist_loop_indices(body, frozenset({'n'}))
+    from pycparser import c_generator
+    assert 'for (x' not in c_generator.CGenerator().visit(ast)
+
+
+def test_differential_native_state_driven_rewrite():
+    ast, body = func_body(SDSRC); assert hoist_loop_indices(body, frozenset({'n'}))
+    new = c_generator.CGenerator().visit(ast).replace('int f(', 'int g(')
+    args = list(range(0, 40)); main = '#include <stdio.h>\nint main(){' + ''.join('printf("%%d %%d\\n", f(%d), g(%d));' % (a, a) for a in args) + 'return 0;}'
+    d = tempfile.mkdtemp(); open(d + '/a.c', 'w').write(SDSRC + '\n' + new + '\n' + main)
+    assert subprocess.run(['gcc', '-fsanitize=undefined', '-fno-sanitize-recover=all', d + '/a.c', '-o', d + '/a'], capture_output=True).returncode == 0
+    out = subprocess.run([d + '/a'], capture_output=True, text=True); assert out.returncode == 0
+    assert all(l.split()[0] == l.split()[1] for l in out.stdout.splitlines()) and len(out.stdout.splitlines()) == 40
+
+
+PSRC = 'int f(int n){long x=1;int y=0;while(y<n){x=x+y;y=y+1;}return 1/((x>=y)+(y==n||n<0));}'
+
+
+def test_post_loop_index_use_is_replaced_by_exit_value_and_certified():
+    inv = {'y': {'x': {'lo': '1', 'hi': '1 + y*y'}}}
+    assert run(PSRC, inv, {'n': [0, 1000]}) == 'PROVED_DEFINED_TYPED_C_INVARIANT_TREE'
+
+
+def test_differential_native_post_loop_use():
+    ast, body = func_body(PSRC); assert hoist_loop_indices(body, frozenset({'n'}))
+    new = c_generator.CGenerator().visit(ast).replace('int f(', 'int g(')
+    args = list(range(-5, 60)); main = '#include <stdio.h>\nint main(){' + ''.join('printf("%%d %%d\\n", f(%d), g(%d));' % (a, a) for a in args) + 'return 0;}'
+    d = tempfile.mkdtemp(); open(d + '/a.c', 'w').write(PSRC + '\n' + new + '\n' + main)
+    assert subprocess.run(['gcc', '-fsanitize=undefined', '-fno-sanitize-recover=all', d + '/a.c', '-o', d + '/a'], capture_output=True).returncode == 0
+    out = subprocess.run([d + '/a'], capture_output=True, text=True); assert out.returncode == 0
+    assert all(l.split()[0] == l.split()[1] for l in out.stdout.splitlines()) and len(out.stdout.splitlines()) == len(args)
+
+
+def test_post_loop_use_not_replaced_when_bound_is_state():
+    src = 'int f(int n){long x=3;int y=0;while(y<x){x=x+0;y=y+1;}return 1/(y>=0);}'
+    ast, body = func_body(src); notes = hoist_loop_indices(body, frozenset({'n'}))
+    assert not any('exit value' in s for s in notes)
+
+
+def test_zero_state_variables_supported_and_unsafe_not_certified():
+    ok = 'int f(int n){int y=0;while(y<n){y=y+1;}return 1/((y==n)||(n<0));}'
+    assert run(ok, {'y': {}}, {'n': [-100, 100]}) == 'PROVED_DEFINED_TYPED_C_INVARIANT_TREE'
+    bad = 'int f(int n){int y=0;while(y<n){y=y+1;}return 1/(y==n+1);}'
+    assert run(bad, {'y': {}}, {'n': [-100, 100]}) != 'PROVED_DEFINED_TYPED_C_INVARIANT_TREE'

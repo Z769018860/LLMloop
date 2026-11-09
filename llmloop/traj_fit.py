@@ -97,8 +97,7 @@ def sample_values(lo, hi):
 
 
 def run_all(func, bounds, limit=20000):
-    hoist_loop_indices(func.body)
-    names = list(bounds); points = []
+    names = list(bounds); hoist_loop_indices(func.body, frozenset(names)); points = []
     items = func.body.block_items; first = next(k for k, s in enumerate(items) if any(isinstance(x, c_ast.For) for x in _walk(s)))
     state = [d.name for d in items[:first] if isinstance(d, c_ast.Decl)]
     loops = [x.init.decls[0].name for s in items for x in _walk(s) if isinstance(x, c_ast.For) and isinstance(x.init, c_ast.DeclList)]
