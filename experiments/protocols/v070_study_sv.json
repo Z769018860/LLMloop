@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "study": "v070_study_sv",
+  "seed": 20261220,
+  "models": [
+    "deepseek-v4.1-flash-ark",
+    "glm-5.3-ark",
+    "deepseek-v4.1-flash-itkk",
+    "gpt-4.1-mini",
+    "claude-dsflash-itkk",
+    "gemini-3-flash"
+  ],
+  "arms": [
+    "if"
+  ],
+  "reps": 2,
+  "temperature": 0.7,
+  "max_tokens": 12000,
+  "corpus_seed": 20261201,
+  "roles": {
+    "sum04_2": "provable_safe",
+    "sum01_2": "provable_safe",
+    "const_1_1": "provable_safe",
+    "gauss_sum": "provable_safe",
+    "half": "provable_safe",
+    "nested_1": "provable_safe",
+    "sum04_1": "unsafe_source_control",
+    "sum01_1": "unsafe_source_control",
+    "sum01_bug02": "unsafe_source_control",
+    "const_1_2": "unsafe_source_control"
+  },
+  "hypothesis": "H1: models certify a substantial share of safe if-loop programs (descriptive). H2: 0 unsafe controls certified. Exploratory: per-family/model.",
+  "note": "The worked example (branch-selected loops, constant increments) resembles the I_branch family; claude-dsflash-itkk is a DeepSeek V4.1 Flash alias. Unsafe controls confirmed natively (UBSan). Exact references certified for all safe programs.",
+  "verifier": "typed_summary_portfolio backend typed_invariant_tree, solver_profile auto, no fallback",
+  "programs": [
+    {
+      "name": "sum04_2",
+      "family": "V_svcomp",
+      "role": "provable_safe",
+      "source_sha256": "73175ef6ae0088d6d7f12bdeadb2c26e62b564d72411a9ce625baf74bc8882bb",
+      "prompt_sha256": {
+        "if": "fae553bf11f41d8c7b61e87985d3d671b8709f99766b6e40f7906b19fc684520"
+      }
+    },
+    {
+      "name": "sum01_2",
+      "family": "V_svcomp",
+      "role": "provable_safe",
+      "source_sha256": "9aef3a520f64884cbb28263d8bdfbb1642469a18d38df3e0247db4f9911599a3",
+      "prompt_sha256": {
+        "if": "9e7ec6af97e83d3577133e47c915f3f32db3b71dcefdf21e157145a3f895bf56"
+      }
+    },
+    {
+      "name": "const_1_1",
+      "family": "V_svcomp",
+      "role": "provable_safe",
+      "source_sha256": "a9ff49f1092a073c7b5805dbf641dfd4792ffaf35233d5bb4e486f39695d633b",
+      "prompt_sha256": {
+        "if": "4ff655645aae7bf37ec256d2ae32f2cb70617ff6c00ce377f432f7836fe13622"
+      }
+    },
+    {
+      "name": "gauss_sum",
+      "family": "V_svcomp",
+      "role": "provable_safe",
+      "source_sha256": "37d35685cd5f7726c5b48a0ddd4ee22b8b6ddcee1f371687d989744d3afe6750",
+      "prompt_sha256": {
+        "if": "df5948e7134d9459e84cfb99c0cc5cfee4d438252ec1efb20354c3794e91a6be"
+      }
+    },
+    {
+      "name": "half",
+      "family": "V_svcomp",
+      "role": "provable_safe",
+      "source_sha256": "ed51e983711868585bf30c59b804612b890fe6e77a80393a052b41a12fe30231",
+      "prompt_sha256": {
+        "if": "2d72d31f48cc0de61c96bec7ad533e0b75057e6d539151ca3750ab76575b5743"
+      }
+    },
+    {
+      "name": "nested_1",
+      "family": "V_svcomp",
+      "role": "provable_safe",
+      "source_sha256": "ae437d0d3dbac464bd55c4fa2704282332a3dc39f62c131ecea8e38fafdfce36",
+      "prompt_sha256": {
+        "if": "8665b741a50c08655c029ce7dd18947b2b4f9685e5a8c5afeb10737faf256615"
+      }
+    },
+    {
+      "name": "sum04_1",
+      "family": "V_svcomp",
+      "role": "unsafe_source_control",
+      "source_sha256": "c2ac797ae409fe2988b44825293da65e965b7f86865cf6170c5b1cd78ed6ff5e",
+      "prompt_sha256": {
+        "if": "dad37175727c391cfc9a11444ed49edf7e1a56371d77ce93bca00f1303213ee4"
+      }
+    },
+    {
+      "name": "sum01_1",
+      "family": "V_svcomp",
+      "role": "unsafe_source_control",
+      "source_sha256": "9f75b131875a5286ac3ed827e166c280ba30b14208aa0af233ec535f48bb26d2",
+      "prompt_sha256": {
+        "if": "df8a2aa7a8e7694cbf5de23980c58a28507b7a724cb62f385a1ce255ccad92ad"
+      }
+    },
+    {
+      "name": "sum01_bug02",
+      "family": "V_svcomp",
+      "role": "unsafe_source_control",
+      "source_sha256": "d5d0065b198b1b2d1348ae6c7ba351f815f245b3438c2a94d97ce689e13cc51f",
+      "prompt_sha256": {
+        "if": "faff47a2833357721ff96f7619ecc0bdbf6d60741c144fc0bc9ab24305b3883d"
+      }
+    },
+    {
+      "name": "const_1_2",
+      "family": "V_svcomp",
+      "role": "unsafe_source_control",
+      "source_sha256": "9c43391067da8a7509eaf2482d8b325212ac761904073abc18cec77c50961034",
+      "prompt_sha256": {
+        "if": "24303ba8a5771f0551af989796bebf7a6ff16b0b0f83c9be9bf8135c5ec0e5a5"
+      }
+    }
+  ]
+}
