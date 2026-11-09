@@ -31,7 +31,8 @@ def harness(c, S):
 def run(c, S):
     top = None
     tops = [(hi if S == 'full' else min(hi, S)) for lo, hi in c['parameter_bounds'].values()]
-    unwind = min(max(tops) + 2, FULL_UNWIND_CAP)
+    unwind = min(max(tops) * c.get('unwind_factor', 1) + 2, FULL_UNWIND_CAP)
+    unwind = max(unwind, c.get('min_unwind', 0))  # constant-bound loops / bounds that are multiples of the parameter (corpus6 only; absent elsewhere)
     code = harness(c, S)
     d = Path(tempfile.mkdtemp()); (d / 'p.c').write_text(code)
     cmd = ['cbmc', str(d / 'p.c'), '--signed-overflow-check', '--div-by-zero-check', '--undefined-shift-check', '--unwind', str(unwind), '--unwinding-assertions', '--object-bits', '12']

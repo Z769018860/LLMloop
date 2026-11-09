@@ -165,3 +165,6 @@ Study Rel（648 次生成）：@rel 提示臂安全程序认证 203/264 vs 区�
 受信的 while→for 改写（含索引提升）；SV-COMP 规范 for 3→121/202，完全落入片段程序 0→5，剩余 while 程序 37。见 [报告](../paper/report_v0692_bilingual.md)。
 
 全量测试（v0.69.2，含 while 规范化）：3330 passed。
+
+## v0.70：SV-COMP 派生程序与 I_nested 诊断
+手工译写 10 个 SV-COMP 程序；LLM 安全 26/72，6/6 程序至少一个模型认证，违反程序 0/48；CBMC 完整域证明 4/6（基线 unwind 缺陷已修复）。I_nested：75/96 失败响应含轨迹正确但非归纳的候选。见 [报告](../paper/report_v070_bilingual.md)。
