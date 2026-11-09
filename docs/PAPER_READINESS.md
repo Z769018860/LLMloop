@@ -181,3 +181,5 @@ Study ES：base 154/228 vs exact 123/228（p=3e-6，I_nested 15→2/60），不�
 
 ## v0.73：公认基准（SV-COMP、Code2Inv）
 扩展规范化后自动译写：SV-COMP 20/264、Code2Inv 42/134 落入片段。LLM 研究：SV-COMP 20/66、Code2Inv 38/252（27/42 程序至少一次），违反程序 0/54；拟合器 ∪ LLM 认证 Code2Inv 30/42，未认证的 12 个中 11 个找到 C 语义下的具体违例。见 [报告](../paper/report_v073_bilingual.md)。
+
+全量测试（v0.73，含扩展规范化与公认基准证据）：3355 passed。
