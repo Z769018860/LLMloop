@@ -29,11 +29,13 @@ def fit_job(p):
 
 if __name__ == '__main__':
     ps = programs()
-    with ProcessPoolExecutor(4) as ex: fits = list(ex.map(fit_job, ps))
+    if '--cbmc-only' in sys.argv: fits = [r['fitter'] for r in json.loads((ROOT / 'experiments/v073/benchmark_eval.json').read_text())]
+    else:
+        with ProcessPoolExecutor(4) as ex: fits = list(ex.map(fit_job, ps))
     from scripts import cbmc_baseline as B
     cb = {}
     for S in ('full',):
-        with ThreadPoolExecutor(3) as ex: res = list(ex.map(lambda p: B.run({'source': p['source'], 'parameter_bounds': p['parameter_bounds'], 'name': p['name']}, S), ps))
+        with ThreadPoolExecutor(3) as ex: res = list(ex.map(lambda p: B.run({'source': p['source'], 'parameter_bounds': p['parameter_bounds'], 'name': p['name'], 'min_unwind': 1030}, S), ps))
         cb[S] = res
     rows = [{**{k: p[k] for k in ('corpus', 'name', 'expected')}, 'fitter': f, 'cbmc_full': cb['full'][i]} for i, (p, f) in enumerate(zip(ps, fits))]
     (ROOT / 'experiments/v073/benchmark_eval.json').write_text(json.dumps(rows, indent=1) + '\n')
