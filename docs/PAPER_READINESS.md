@@ -163,3 +163,5 @@ Study Rel（648 次生成）：@rel 提示臂安全程序认证 203/264 vs 区�
 
 ## v0.69.2：while 规范化
 受信的 while→for 改写（含索引提升）；SV-COMP 规范 for 3→121/202，完全落入片段程序 0→5，剩余 while 程序 37。见 [报告](../paper/report_v0692_bilingual.md)。
+
+全量测试（v0.69.2，含 while 规范化）：3330 passed。
