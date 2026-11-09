@@ -178,3 +178,6 @@ Study ES：base 154/228 vs exact 123/228（p=3e-6，I_nested 15→2/60），不�
 264 个 SV-COMP 循环程序（含 zilu/invgen）仅 11 个（4.2%）可自动译写并落入片段；LLM-free 拟合器（不受信，同一验证器）留出集：循环树 17/27、关系型 18/22、if-循环 5/19，不安全 0。见 [报告](../paper/report_v072_bilingual.md)。
 
 全量测试（v0.72，含轨迹拟合与 SV-COMP 译写证据）：3345 passed。
+
+## v0.73：公认基准（SV-COMP、Code2Inv）
+扩展规范化后自动译写：SV-COMP 20/264、Code2Inv 42/134 落入片段。LLM 研究：SV-COMP 20/66、Code2Inv 38/252（27/42 程序至少一次），违反程序 0/54；拟合器 ∪ LLM 认证 Code2Inv 30/42，未认证的 12 个中 11 个找到 C 语义下的具体违例。见 [报告](../paper/report_v073_bilingual.md)。
