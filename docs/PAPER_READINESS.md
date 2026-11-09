@@ -170,3 +170,6 @@ Study Rel（648 次生成）：@rel 提示臂安全程序认证 203/264 vs 区�
 手工译写 10 个 SV-COMP 程序；LLM 安全 26/72，6/6 程序至少一个模型认证，违反程序 0/48；CBMC 完整域证明 4/6（基线 unwind 缺陷已修复）。I_nested：75/96 失败响应含轨迹正确但非归纳的候选。见 [报告](../paper/report_v070_bilingual.md)。
 
 全量测试（v0.70）：3333 passed。
+
+## v0.71：精确区间/入口一致性提示（否定）
+Study ES：base 154/228 vs exact 123/228（p=3e-6，I_nested 15→2/60），不安全 0/120。结合 IfR（无差异）与 Rel（显著有益），结论：改进验证器表达力优于改提示。见 [报告](../paper/report_v071_bilingual.md)。
