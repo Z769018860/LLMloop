@@ -176,3 +176,5 @@ Study ES：base 154/228 vs exact 123/228（p=3e-6，I_nested 15→2/60），不�
 
 ## v0.72：SV-COMP 自动译写覆盖率与 LLM-free 轨迹拟合
 264 个 SV-COMP 循环程序（含 zilu/invgen）仅 11 个（4.2%）可自动译写并落入片段；LLM-free 拟合器（不受信，同一验证器）留出集：循环树 17/27、关系型 18/22、if-循环 5/19，不安全 0。见 [报告](../paper/report_v072_bilingual.md)。
+
+全量测试（v0.72，含轨迹拟合与 SV-COMP 译写证据）：3345 passed。
