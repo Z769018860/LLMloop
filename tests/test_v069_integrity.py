@@ -19,3 +19,18 @@ def test_unsafe_never_certified():
 def test_every_safe_program_certified_by_some_model_and_totals():
     s = [v for v in rows('verifications.jsonl') if v['role'] == 'provable_safe']
     assert {v['program'] for v in s} == {v['program'] for v in s if cert(v)} and len({v['program'] for v in s}) == 19 and sum(map(cert, s)) == 149 and len(s) == 228
+
+
+def test_study_ifr_counts_unsafe_and_negative_result():
+    base = ROOT / 'experiments' / 'v069' / 'ifr'
+    ver = [json.loads(l) for l in (base / 'verifications.jsonl').read_text().splitlines() if l.strip()]
+    gen = [json.loads(l) for l in (base / 'generations.jsonl').read_text().splitlines() if l.strip()]
+    assert len(ver) == 576 and len(gen) == 576 and not any(g['transport_failed'] for g in gen)
+    assert not any(cert(v) for v in ver if v['role'] != 'provable_safe')
+    s = [v for v in ver if v['role'] == 'provable_safe']; c = lambda a: sum(cert(v) for v in s if v['arm'] == a)
+    assert (c('base'), c('rule')) == (151, 148)
+
+
+def test_svcomp_coverage_hoisting_effect():
+    a = json.loads((ROOT / 'experiments' / 'v069' / 'svcomp_coverage.json').read_text()); b = json.loads((ROOT / 'experiments' / 'v069' / 'svcomp_coverage_hoisted.json').read_text())
+    assert a['programs'] == b['programs'] == 155 and a['canonical_for_loops'] == 3 and b['canonical_for_loops'] == 115 and a['for_loops'] == b['for_loops'] == 164

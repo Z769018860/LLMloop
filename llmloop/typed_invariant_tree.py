@@ -26,6 +26,7 @@ from .closed_forms import parse_closed
 from .phase_invariants import exact_term
 from .typed_c import c_type
 from .smt_spath import SMTGraphError
+from .loop_index_normalize import hoist_loop_indices
 
 
 def _shape(loop):
@@ -65,6 +66,7 @@ def _has_loop(node):
 
 class TypedCInvariantTree(TypedCRecurrence):
     def build(self, inv):
+        self.index_normalization = hoist_loop_indices(self.func.body)
         items = self.func.body.block_items or []; pos = 0
         initial = [(z3.BoolVal(True), dict(self.parameters), None)]
         while pos < len(items) and isinstance(items[pos], c_ast.Decl):
