@@ -45,3 +45,42 @@ def test_differential_native_original_vs_rewritten():
 def test_unsafe_c89_program_not_certified():
     src = 'int f(int n,int m){long x=0;int i;for(i=0;i<n;i++){x+=1;}return 10/(m-3);}'
     assert run(src, {'i': {'x': {'lo': '0', 'hi': 'i'}}}, {'n': [0, 100], 'm': [0, 10]}) != 'PROVED_DEFINED_TYPED_C_INVARIANT_TREE'
+
+
+WSRC = 'int f(int n,int m){long x=0;int i=0;while(i<n){x+=2;i++;}int j;j=0;while(j<m){x+=3;j+=1;}return x;}'
+WINV = {'i': {'x': {'lo': '0', 'hi': '2*i'}}, 'j': {'x': {'lo': '0', 'hi': '2*n+3*j'}}}
+
+
+def test_while_loops_are_normalized_and_certified():
+    assert run(WSRC, WINV, {'n': [0, 100000], 'm': [0, 100000]}) == 'PROVED_DEFINED_TYPED_C_INVARIANT_TREE'
+    assert run(WSRC, {**WINV, 'j': {'x': {'lo': '0', 'hi': '3*j'}}}, {'n': [0, 100000], 'm': [0, 100000]}) == 'UNKNOWN'
+
+
+@pytest.mark.parametrize('src', [
+    'int f(int n){long x=0;int i=0;while(i<n){i++;if(x>3){continue;}x+=1;}return x;}',        # continue would skip the increment in the while form only
+    'int f(int n){long x=0;int i=0;while(i<n){x+=1;i++;x+=2;}return x;}',                    # update is not the last statement
+    'int f(int n){long x=0;int i;x=1;while(i<n){x+=1;i++;}return x;}',                       # predecessor is not the index initialisation
+    'int f(int n){long x=0;int i=0;while(x<n){x+=1;i++;}return x;}',                         # condition not over the index (still converted, verifier rejects later)
+])
+def test_while_not_converted_or_rejected_downstream(src):
+    ast, body = func_body(src); notes = hoist_loop_indices(body)
+    res = None
+    try: res = run(src, {'i': {'x': {'lo': '0', 'hi': '100'}}}, {'n': [0, 100]})
+    except Exception: pass
+    assert res != 'PROVED_DEFINED_TYPED_C_INVARIANT_TREE'
+
+
+def test_differential_native_while_rewrite():
+    ast, body = func_body(WSRC); assert hoist_loop_indices(body)
+    new = c_generator.CGenerator().visit(ast).replace('int f(', 'int g(')
+    rng = random.Random(5); args = [(rng.randint(0, 80), rng.randint(0, 80)) for _ in range(40)]
+    main = '#include <stdio.h>\nint main(){' + ''.join('printf("%%d %%d\\n", f(%d,%d), g(%d,%d));' % (a + a) for a in args) + 'return 0;}'
+    d = tempfile.mkdtemp(); open(d + '/a.c', 'w').write(WSRC + '\n' + new + '\n' + main)
+    assert subprocess.run(['gcc', '-fsanitize=undefined', '-fno-sanitize-recover=all', d + '/a.c', '-o', d + '/a'], capture_output=True).returncode == 0
+    out = subprocess.run([d + '/a'], capture_output=True, text=True); assert out.returncode == 0
+    assert all(l.split()[0] == l.split()[1] for l in out.stdout.splitlines()) and len(out.stdout.splitlines()) == 40
+
+
+def test_unsafe_while_program_not_certified():
+    src = 'int f(int n,int m){long x=0;int i=0;while(i<n){x+=1;i++;}return 10/(m-3);}'
+    assert run(src, {'i': {'x': {'lo': '0', 'hi': 'i'}}}, {'n': [0, 100], 'm': [0, 10]}) != 'PROVED_DEFINED_TYPED_C_INVARIANT_TREE'

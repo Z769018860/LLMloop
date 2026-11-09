@@ -30,8 +30,45 @@ def _rename(node, old, new):
         if isinstance(x, c_ast.ID) and x.name == old: x.name = new
 
 
+def _is_update_of(node, v):
+    if isinstance(node, c_ast.UnaryOp): return node.op in ('++', 'p++', '--', 'p--') and isinstance(node.expr, c_ast.ID) and node.expr.name == v
+    if isinstance(node, c_ast.Assignment): return node.op in ('+=', '-=', '=') and isinstance(node.lvalue, c_ast.ID) and node.lvalue.name == v
+    return False
+
+
+def while_to_for(body):
+    """`i = a; while (c) { B; i++; }`  ->  `for (i = a; c; i++) { B }` (also when the predecessor is `int i = a;`, which becomes `int i; for (i = a; ...)`).
+    Exactly equivalent when B contains no continue/break/goto/return (a continue would skip the increment in the while form only); applied to every statement list."""
+    notes = []
+    for comp in [x for x in _walk(body) if isinstance(x, c_ast.Compound)]:
+        items = comp.block_items or []; k = 1
+        while k < len(items):
+            w, prev = items[k], items[k - 1]
+            ok = False
+            if isinstance(w, c_ast.While) and isinstance(w.stmt, c_ast.Compound) and w.stmt.block_items and w.cond is not None:
+                last = w.stmt.block_items[-1]
+                v = last.expr.name if isinstance(last, c_ast.UnaryOp) and isinstance(last.expr, c_ast.ID) else (last.lvalue.name if isinstance(last, c_ast.Assignment) and isinstance(last.lvalue, c_ast.ID) else None)
+                if v is not None and _is_update_of(last, v) and not any(isinstance(x, (c_ast.Continue, c_ast.Break, c_ast.Goto, c_ast.Return)) for x in _walk(w.stmt)):
+                    init = None
+                    if isinstance(prev, c_ast.Assignment) and prev.op == '=' and isinstance(prev.lvalue, c_ast.ID) and prev.lvalue.name == v: init = ('assign', prev)
+                    elif isinstance(prev, c_ast.Decl) and prev.name == v and prev.init is not None and isinstance(prev.type, c_ast.TypeDecl): init = ('decl', prev)
+                    if init is not None:
+                        if init[0] == 'assign': init_node = init[1]; items[k - 1:k + 1] = []
+                        else:
+                            d = init[1]; init_node = c_ast.Assignment('=', c_ast.ID(v), d.init); d.init = None; items[k:k + 1] = []; k_decl = True
+                        w.stmt.block_items = w.stmt.block_items[:-1]
+                        f = c_ast.For(init_node, w.cond, last, w.stmt)
+                        if init[0] == 'assign': items.insert(k - 1, f); k -= 1
+                        else: items.insert(k, f)
+                        notes.append('while->for(%s)' % v); ok = True
+            k += 1
+        comp.block_items = items
+    return notes
+
+
 def hoist_loop_indices(body):
-    items = body.block_items or []; notes = []
+    notes = while_to_for(body)
+    items = body.block_items or []
     for decl in list(items):
         if not isinstance(decl, c_ast.Decl) or not isinstance(decl.type, c_ast.TypeDecl) or not isinstance(decl.type.type, c_ast.IdentifierType): continue
         v = decl.name

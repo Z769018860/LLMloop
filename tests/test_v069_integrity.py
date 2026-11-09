@@ -33,4 +33,6 @@ def test_study_ifr_counts_unsafe_and_negative_result():
 
 def test_svcomp_coverage_hoisting_effect():
     a = json.loads((ROOT / 'experiments' / 'v069' / 'svcomp_coverage.json').read_text()); b = json.loads((ROOT / 'experiments' / 'v069' / 'svcomp_coverage_hoisted.json').read_text())
-    assert a['programs'] == b['programs'] == 155 and a['canonical_for_loops'] == 3 and b['canonical_for_loops'] == 115 and a['for_loops'] == b['for_loops'] == 164
+    assert a['programs'] == b['programs'] == 155 and a['canonical_for_loops'] == 3 and a['for_loops'] == 164
+    # after index hoisting AND while->for normalization (v0.69.2): converted whiles count as for loops
+    assert b['canonical_for_loops'] == 121 and b['for_loops'] == 202 and b['while_loops'] == 91 and b['categories'].get('fragment_candidate') == 5

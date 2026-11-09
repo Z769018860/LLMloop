@@ -66,7 +66,7 @@ def test_unsupported_shapes_are_errors():
     src_if = 'long f(int n){long x=0;for(int i=0;i<n;i++){if(i>2){for(int j=0;j<2;j++){x++;}}}return x;}'
     assert run(src_if, {'i': {'x': iv('0', '2*i')}, 'j': {'x': iv('0', '2*i+j')}}, {'n': [0, 5]})['status'] == OK
     assert run(src_if, {'i': {'x': iv('0', 'i')}, 'j': {'x': iv('0', 'i+j')}}, {'n': [0, 5]})['status'] == 'UNKNOWN'
-    with pytest.raises(Exception): run('long f(int n){long x=0;int i=0;while(i<n){x++;i++;}return x;}', {'i': {'x': iv('0', '9')}}, {'n': [0, 5]})
+    with pytest.raises(Exception): run('long f(int n){long x=0;while(x<n){x++;}return x;}', {'x': {'x': iv('0', '9')}}, {'n': [0, 5]})  # while over a state variable (not a loop index): still unsupported; index-style whiles are normalized since v0.69.2
     with pytest.raises(Exception): run('long f(int n){long x=0;for(int i=0;i<n;i++){x++;}return x;}', {'q': {'x': iv('0', '9')}}, {'n': [0, 5]})
     with pytest.raises(Exception): run('long f(int n){long x=0;for(int i=0;i<n;i*=2){x++;}return x;}', {'i': {'x': iv('0', '9')}}, {'n': [0, 5]})
 
