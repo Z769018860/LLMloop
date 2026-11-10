@@ -55,6 +55,7 @@ def prompt(c, arm='w'):
         '', 'Worked example 2:', 'Source: ' + EX_W2['source'], 'Parameter bounds: ' + json.dumps(EX_W2['bounds']), 'Answer: ' + json.dumps({'candidates': [{'invariant': EX_W2['answer']}]}), '', 'Now the target.', 'Source: ' + c['source'], 'Parameter bounds: ' + json.dumps(c['parameter_bounds']), 'Answer:'])
 
 
+OUT = ROOT / 'experiments' / 'v074' / 'w'; PROTOCOL = ROOT / 'experiments' / 'protocols' / 'v074_study_w.json'
 MODELS = T.MODELS; ARMS = ['if']; SEED = 20270120; REPS = 1; TEMP = 0.7; MAXTOK = 12000
 IF_TEXT = ('\nNOTE: the function may end with `return 1/(cond)`, which is defined exactly when `cond` is true (an assertion encoded as a division). Loop index variables may be declared outside the `for`, and `while` loops driven by an index may occur. '
            'Name each loop in the invariant by its index variable (when one variable indexes several loops, the 2nd, 3rd... loop is named `<var>_2`, `<var>_3`). Give one entry for EVERY loop, covering every local declared before the first loop except loop indices and parameters; '
