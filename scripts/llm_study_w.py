@@ -57,19 +57,6 @@ def prompt(c, arm='w'):
 
 OUT = ROOT / 'experiments' / 'v074' / 'w'; PROTOCOL = ROOT / 'experiments' / 'protocols' / 'v074_study_w.json'
 MODELS = T.MODELS; ARMS = ['if']; SEED = 20270120; REPS = 1; TEMP = 0.7; MAXTOK = 12000
-IF_TEXT = ('\nNOTE: the function may end with `return 1/(cond)`, which is defined exactly when `cond` is true (an assertion encoded as a division). Loop index variables may be declared outside the `for`, and `while` loops driven by an index may occur. '
-           'Name each loop in the invariant by its index variable (when one variable indexes several loops, the 2nd, 3rd... loop is named `<var>_2`, `<var>_3`). Give one entry for EVERY loop, covering every local declared before the first loop except loop indices and parameters; '
-           'a `while (y<N){...; y++;}` over an index y counts as a loop named y. Parameters named `<v>_in` are inputs that the program copies into the local `<v>`. Exact interval bounds (lo = hi) are allowed and sometimes needed; formulas may use `a if cond else b`.\n')
-EX_IF = {'source': 'long f(int n,int m){long x=0;if(m>4){for(int i=0;i<n;i++){x+=2;}}else{for(int j=0;j<n;j++){x+=5;}}return x;}', 'bounds': {'n': [0, 1000], 'm': [0, 10]},
-         'answer': {'i': {'x': {'lo': '0', 'hi': '2*i'}}, 'j': {'x': {'lo': '0', 'hi': '5*j'}}}}
-
-
-def prompt(c, arm='if'):
-    p = T.prompt(c).replace('\nGive up to', IF_TEXT + 'Give up to', 1)
-    p = p.replace('\nNow the target.', '\nSecond worked example with loops in branches:\nSource: ' + EX_IF['source'] + '\nParameter bounds: ' + json.dumps(EX_IF['bounds']) + '\nAnswer: ' + json.dumps({'candidates': [{'invariant': EX_IF['answer']}]}) + '\n\nNow the target.', 1)
-    assert IF_TEXT in p and 'Second worked example' in p
-    return p
-
 
 def freeze():
     OUT.mkdir(parents=True, exist_ok=True); cs = build(); rl = {c['name']: (c['role'] or 'provable_safe') for c in cs}
