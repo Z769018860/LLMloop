@@ -32,6 +32,10 @@ if __name__ == '__main__':
     if '--cbmc-only' in sys.argv: fits = [r['fitter'] for r in json.loads((ROOT / 'experiments/v073/benchmark_eval.json').read_text())]
     else:
         with ProcessPoolExecutor(4) as ex: fits = list(ex.map(fit_job, ps))
+    if '--fit-only' in sys.argv:
+        old = json.loads((ROOT / 'experiments/v073/benchmark_eval.json').read_text()); (ROOT / 'experiments/v073/benchmark_eval_prefix.json').write_text(json.dumps(old, indent=1) + '\n')
+        rows = [{**{k: p[k] for k in ('corpus', 'name', 'expected')}, 'fitter': f, 'cbmc_full': o['cbmc_full']} for p, f, o in zip(ps, fits, old)]
+        (ROOT / 'experiments/v073/benchmark_eval.json').write_text(json.dumps(rows, indent=1) + '\n'); sys.exit(0)
     from scripts import cbmc_baseline as B
     cb = {}
     for S in ('full',):

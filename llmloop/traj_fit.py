@@ -51,14 +51,23 @@ class Interp:
             a, b = self.ev(n.left, env), self.ev(n.right, env)
             if n.op == '/': return int(abs(a) // abs(b)) * (1 if (a < 0) == (b < 0) else -1) if b else 0
             if n.op == '%': return (abs(a) % abs(b)) * (1 if a >= 0 else -1) if b else 0
-            return {'+': a + b, '-': a - b, '*': a * b, '<': int(a < b), '<=': int(a <= b), '>': int(a > b), '>=': int(a >= b), '==': int(a == b), '!=': int(a != b), '<<': a << b, '>>': a >> b, '&': a & b, '|': a | b, '^': a ^ b}[n.op]
+            op = n.op
+            if op == '+': return a + b
+            if op == '-': return a - b
+            if op == '*': return a * b
+            if op in ('<<', '>>') and (b < 0 or b > 128): raise Stop()
+            return {'<': lambda: int(a < b), '<=': lambda: int(a <= b), '>': lambda: int(a > b), '>=': lambda: int(a >= b), '==': lambda: int(a == b), '!=': lambda: int(a != b), '<<': lambda: a << b, '>>': lambda: a >> b, '&': lambda: a & b, '|': lambda: a | b, '^': lambda: a ^ b}[op]()
         if isinstance(n, c_ast.TernaryOp): return self.ev(n.iftrue if self.ev(n.cond, env) else n.iffalse, env)
         if isinstance(n, c_ast.Cast): return wrap(self.ev(n.expr, env), tkey(n.to_type.type.type.names))
         if isinstance(n, c_ast.Assignment):
             nm = n.lvalue.name; r = self.ev(n.rvalue, env); old = env[nm]
             if n.op == '=': new = r
             else:
-                op = n.op[:-1]; new = {'+': old + r, '-': old - r, '*': old * r, '/': int(abs(old) // abs(r)) * (1 if (old < 0) == (r < 0) else -1) if r else 0, '%': (abs(old) % abs(r)) * (1 if old >= 0 else -1) if r else 0, '<<': old << r, '>>': old >> r, '&': old & r, '|': old | r, '^': old ^ r}[op]
+                op = n.op[:-1]
+                def cdiv(x, y): return int(abs(x) // abs(y)) * (1 if (x < 0) == (y < 0) else -1) if y else 0
+                def crem(x, y): return (abs(x) % abs(y)) * (1 if x >= 0 else -1) if y else 0
+                if op in ('<<', '>>') and (r < 0 or r > 128): raise Stop()
+                new = {'+': lambda: old + r, '-': lambda: old - r, '*': lambda: old * r, '/': lambda: cdiv(old, r), '%': lambda: crem(old, r), '<<': lambda: old << r, '>>': lambda: old >> r, '&': lambda: old & r, '|': lambda: old | r, '^': lambda: old ^ r}[op]()
             env[nm] = wrap(new, self.types[nm]); return env[nm]
         raise Stop()
 

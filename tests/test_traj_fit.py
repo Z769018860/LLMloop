@@ -35,3 +35,12 @@ def test_exact_fits_are_certified(src, bounds):
 ])
 def test_unsafe_never_certified(src, bounds):
     assert certify(src, bounds)[0] != 'PROVED_DEFINED_TYPED_C_INVARIANT_TREE'
+
+
+def test_interpreter_handles_negative_operands_without_aborting():
+    # regression (v0.74): the binary-operator table was evaluated eagerly, so `a << b` with a negative b aborted every run in which any variable was negative
+    src = 'int f(int n){int x=0;int i;for(i=0;i<n;i++){x=x-3;}return 1/(x<=0);}'
+    cand = fit_function(func(src), {'n': (0, 1000)})
+    assert cand['i']['x']['lo'] == '(-3*i)' or '3' in cand['i']['x']['lo']
+    status, c = certify('int f(int n,int m){int x=0;int i;for(i=0;i<n;i++){x=x+m;}return 1/((x==n*m)||(n<0));}', {'n': [0, 1000], 'm': [-1000, 1000]})
+    assert status == 'PROVED_DEFINED_TYPED_C_INVARIANT_TREE', c
