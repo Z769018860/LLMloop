@@ -9,7 +9,7 @@ cert = lambda v: bool(v['result'] and v['result']['certified_summary'])
 
 def study(name, vpath, rpath, gen_ok, expected):
     V = {(v['model'], v['program']): v for v in L(vpath) if v['rep'] == 0}; R = {(r['model'], r['program']): r for r in L(rpath)}
-    models = sorted({m for m, _ in V}); progs = sorted({p for _, p in V}); out = {'study': name, 'programs': len(progs), 'models': {}}
+    models = sorted({m for m, _ in V}); progs = sorted({p for _, p in V if p in expected}); out = {'study': name, 'programs': len(progs), 'models': {}}
     valid = [p for p in progs if expected[p] == 'valid']; viol = [p for p in progs if expected[p] == 'violated']
     out['valid'] = len(valid); out['violated'] = len(viol); out['generator_only'] = sum(bool(gen_ok.get(p)) for p in valid); out['generator_on_violated'] = sum(bool(gen_ok.get(p)) for p in viol)
     for m in models:
