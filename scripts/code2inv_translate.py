@@ -8,7 +8,7 @@ from pathlib import Path
 from pycparser import c_parser, c_ast, c_generator
 sys.setrecursionlimit(20000)
 ROOT = Path('/home/user/LLMloop'); sys.path.insert(0, str(ROOT)); sys.path.insert(0, str(ROOT / 'scripts'))
-from svcomp_translate import const, atoms, Reject, _walk, parse_func, GEN  # noqa: E402
+from svcomp_translate import const, atoms, Reject, _walk, parse_func, GEN, stage_of  # noqa: E402
 SRC = Path('/home/user/ext/code2inv/benchmarks/C_instances/c'); DOM = 10 ** 6
 
 
@@ -34,7 +34,6 @@ def translate(path):
     wi = next((k for k, s in enumerate(rest) if isinstance(s, c_ast.While)), None)
     if wi is None: raise Reject('no loop')
     pre, loop, post = rest[:wi], rest[wi], rest[wi + 1:]
-    if uses_unknown(loop): raise Reject('nondeterministic (unknown()) loop or branch')
     for s in pre + post:
         if uses_unknown(s): raise Reject('unknown() outside the loop')
     inits = collections.OrderedDict(); bounds = collections.defaultdict(list); ats = []
@@ -47,7 +46,10 @@ def translate(path):
     asserts = []
     for s in post:
         if isinstance(s, c_ast.FuncCall) and getattr(s.name, 'name', '') == 'assert': asserts.append(('plain', None, s.args.exprs[0]))
-        elif isinstance(s, c_ast.If) and s.iffalse is None and isinstance(s.iftrue, c_ast.FuncCall) and getattr(s.iftrue.name, 'name', '') == 'assert': asserts.append(('if', s.cond, s.iftrue.args.exprs[0]))
+        elif isinstance(s, c_ast.If) and s.iffalse is None and isinstance((s.iftrue.block_items[0] if isinstance(s.iftrue, c_ast.Compound) and s.iftrue.block_items and len(s.iftrue.block_items) == 1 else s.iftrue), c_ast.FuncCall) \
+                and getattr((s.iftrue.block_items[0] if isinstance(s.iftrue, c_ast.Compound) else s.iftrue).name, 'name', '') == 'assert':
+            inner = s.iftrue.block_items[0] if isinstance(s.iftrue, c_ast.Compound) else s.iftrue
+            asserts.append(('if', s.cond, inner.args.exprs[0]))
         else: raise Reject('unsupported post-condition statement')
     if not asserts: raise Reject('no assertion')
     used = {x.name for n in [loop] + [a[1] for a in asserts] + [a[2] for a in asserts] + list(inits.values()) if n is not None for x in _walk(n) if isinstance(x, c_ast.ID)}
@@ -86,18 +88,7 @@ if __name__ == '__main__':
         r = {'file': p.name}
         try:
             code, ranges = translate(p); r.update(source=code, parameter_bounds=ranges)
-            try:
-                from llmloop.api import analyze_request
-                from llmloop.loop_index_normalize import hoist_loop_indices
-                fa = parse_func(code); hoist_loop_indices(fa.body, frozenset(q.name for q in fa.decl.type.args.params))
-                its = fa.body.block_items; first = next(k for k, s in enumerate(its) if any(isinstance(x, c_ast.For) for x in _walk(s)))
-                state = [d.name for d in its[:first] if isinstance(d, c_ast.Decl)]
-                loops = [x.init.decls[0].name for s in its for x in _walk(s) if isinstance(x, c_ast.For) and isinstance(x.init, c_ast.DeclList)]
-                wide = {'lo': '-9223372036854775808', 'hi': '9223372036854775807'}
-                res = analyze_request({'source': code, 'frontend': 'typed_invariant_tree', 'range_invariants': {l: {v: dict(wide) for v in state} for l in loops}, 'parameter_bounds': ranges, 'abi': 'LP64'})
-                r['loops'] = loops; r['state'] = state
-                r['stage'] = 'in_fragment' if (res.get('failed_obligation') or str(res.get('status', '')).startswith('PROVED')) else 'structural:' + str(res.get('reason') or res.get('error') or res.get('status'))[:90]
-            except Exception as e: r['stage'] = 'structural:' + type(e).__name__ + ':' + str(e)[:80]
+            r['stage'] = stage_of(code, ranges, 'LP64')
         except Reject as e: r['stage'] = 'reject:' + str(e)
         except Exception as e: r['stage'] = 'error:' + type(e).__name__ + ':' + str(e)[:60]
         rows.append(r); cnt[r['stage'][:70]] += 1

@@ -8,7 +8,7 @@ from pathlib import Path
 from pycparser import c_parser, c_ast, c_generator
 ROOT = Path(__file__).resolve().parents[1]; BENCH = Path('/home/user/sosy-lab/sv-benchmarks/c'); sys.path.insert(0, str(ROOT))
 DIRS = ['loops', 'loop-lit', 'loop-invariants', 'loop-simple', 'loop-acceleration', 'loop-new', 'loop-invgen', 'loop-zilu', 'loop-crafted', 'loop-industry-pattern']
-NONDET = {'int': 'int', 'uint': 'unsigned int', 'short': 'short', 'ushort': 'unsigned short', 'char': 'char', 'uchar': 'unsigned char', 'long': 'long', 'ulong': 'unsigned long', 'longlong': 'long long', 'ulonglong': 'unsigned long long', 'unsigned': 'unsigned int'}
+NONDET = {'bool': 'int', 'int': 'int', 'uint': 'unsigned int', 'short': 'short', 'ushort': 'unsigned short', 'char': 'char', 'uchar': 'unsigned char', 'long': 'long', 'ulong': 'unsigned long', 'longlong': 'long long', 'ulonglong': 'unsigned long long', 'unsigned': 'unsigned int'}
 LARGE = {'LARGE_INT': 1000000}
 GEN = c_generator.CGenerator()
 
@@ -72,7 +72,9 @@ def translate(path):
         if isinstance(init, c_ast.FuncCall) and getattr(init.name, 'name', '').startswith('__VERIFIER_nondet_'):
             k = init.name.name[len('__VERIFIER_nondet_'):]
             if k not in NONDET: raise Reject('unsupported nondet type ' + k)
-            params[d.name] = NONDET[k]; d.init = None; i += 1; continue
+            params[d.name] = NONDET[k]; d.init = None; i += 1
+            if k == 'bool': bounds[d.name].append(('<=', 1)); bounds[d.name].append(('>=', 0))
+            continue
         decls.append(d); i += 1
     # leading `x = __VERIFIER_nondet_T();` assignments (C89 style declarations without init)
     while i < len(body) and isinstance(body[i], c_ast.Assignment) and body[i].op == '=' and isinstance(body[i].lvalue, c_ast.ID) and isinstance(body[i].rvalue, c_ast.FuncCall) and getattr(body[i].rvalue.name, 'name', '').startswith('__VERIFIER_nondet_'):
@@ -109,7 +111,10 @@ def translate(path):
     while prog and assert_of(prog[-1]) is not None: asserts.insert(0, assert_of(prog.pop()))
     if not asserts: raise Reject('no trailing assertion')
     class Chk(c_ast.NodeVisitor):
-        def visit_FuncCall(s, n): raise Reject('call inside program body: ' + getattr(n.name, 'name', '?'))
+        def visit_FuncCall(s, n):
+            nm = getattr(n.name, 'name', '?')
+            if nm.startswith('__VERIFIER_nondet_') or nm == 'unknown': return
+            raise Reject('call inside program body: ' + nm)
         def visit_Return(s, n): raise Reject('early return in body')
         def visit_Goto(s, n): raise Reject('goto')
         def visit_Label(s, n): raise Reject('label')
@@ -140,6 +145,30 @@ def _walk(n):
     for _, c in n.children(): yield from _walk(c)
 
 
+
+def stage_of(code, ranges, abi):
+    """'in_fragment' (counted-loop tree mode), 'in_while_fragment' (single loop, inductive mode) or 'structural:<reason>'."""
+    from llmloop.api import analyze_request
+    from llmloop.loop_index_normalize import hoist_loop_indices
+    why = []
+    try:
+        fa = parse_func(code); hoist_loop_indices(fa.body, frozenset(p.name for p in fa.decl.type.args.params))
+        items = fa.body.block_items; first = next(k for k, s in enumerate(items) if any(isinstance(x, c_ast.For) for x in _walk(s)))
+        state = [d.name for d in items[:first] if isinstance(d, c_ast.Decl)]
+        loops = [x.init.decls[0].name for s in items for x in _walk(s) if isinstance(x, c_ast.For) and isinstance(x.init, c_ast.DeclList)]
+        wide = {'lo': '-9223372036854775808', 'hi': '9223372036854775807'}
+        res = analyze_request({'source': code, 'frontend': 'typed_invariant_tree', 'range_invariants': {l: {v: dict(wide) for v in state} for l in loops}, 'parameter_bounds': ranges, 'abi': abi})
+        if res.get('failed_obligation') or str(res.get('status', '')).startswith('PROVED'): return 'in_fragment'
+        why.append('tree:' + str(res.get('reason') or res.get('status'))[:50])
+    except Exception as e: why.append('tree:' + type(e).__name__ + ':' + str(e)[:50])
+    try:
+        res = analyze_request({'source': code, 'frontend': 'typed_invariant_while', 'range_invariants': {'invariant': ['True']}, 'parameter_bounds': ranges, 'abi': abi})
+        if res.get('failed_obligation') or str(res.get('status', '')).startswith('PROVED'): return 'in_while_fragment'
+        why.append('while:' + str(res.get('reason') or res.get('status'))[:60])
+    except Exception as e: why.append('while:' + type(e).__name__ + ':' + str(e)[:60])
+    return 'structural:' + ' | '.join(why)
+
+
 def verdict(path):
     y = path.with_suffix('.yml')
     if not y.exists(): return None
@@ -156,20 +185,7 @@ if __name__ == '__main__':
             r = {'dir': d, 'file': p.name, 'expected_unreach': verdict(p)}
             try:
                 code, ranges = translate(p); r.update(source=code, parameter_bounds=ranges)
-                # structural fragment check: dummy (very wide) invariants with the right keys; a PROOF obligation failing (failed_obligation present) means the structure was accepted
-                try:
-                    from llmloop.api import analyze_request
-                    from llmloop.loop_index_normalize import hoist_loop_indices
-                    fa = parse_func(code); hoist_loop_indices(fa.body, frozenset(p.name for p in fa.decl.type.args.params))
-                    items = fa.body.block_items; first = next(k for k, s in enumerate(items) if any(isinstance(x, c_ast.For) for x in _walk(s)))
-                    state = [d.name for d in items[:first] if isinstance(d, c_ast.Decl)]
-                    loops = [x.init.decls[0].name for s in items for x in _walk(s) if isinstance(x, c_ast.For) and isinstance(x.init, c_ast.DeclList)]
-                    wide = {'lo': '-9223372036854775808', 'hi': '9223372036854775807'}
-                    inv = {l: {v: dict(wide) for v in state} for l in loops}
-                    res = analyze_request({'source': code, 'frontend': 'typed_invariant_tree', 'range_invariants': inv, 'parameter_bounds': ranges, 'abi': 'ILP32'})
-                    r['loops'] = loops; r['state'] = state
-                    r['stage'] = 'in_fragment' if (res.get('failed_obligation') or str(res.get('status', '')).startswith('PROVED')) else 'structural:' + str(res.get('reason') or res.get('error') or res.get('status'))[:90]
-                except Exception as e: r['stage'] = 'structural:' + type(e).__name__ + ':' + str(e)[:80]
+                r['stage'] = stage_of(code, ranges, 'ILP32')
             except Reject as e: r['stage'] = 'reject:' + str(e)
             except Exception as e: r['stage'] = 'error:' + type(e).__name__ + ':' + str(e)[:60]
             rows.append(r); cnt[r['stage'].split(':')[0] if not r['stage'].startswith('structural') else r['stage'][:60]] += 1

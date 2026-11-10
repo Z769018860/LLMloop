@@ -15,7 +15,9 @@ BACKENDS={'typed_recurrence':('closed_forms','PROVED_DEFINED_TYPED_C_RECURRENCE'
           'typed_nested':('loop_summaries','PROVED_DEFINED_TYPED_C_NESTED'),
           'typed_invariant':('range_invariants','PROVED_DEFINED_TYPED_C_INVARIANT'),
           'typed_invariant_nested':('range_invariants','PROVED_DEFINED_TYPED_C_INVARIANT_NESTED'),
-          'typed_invariant_tree':('range_invariants','PROVED_DEFINED_TYPED_C_INVARIANT_TREE')}
+          'typed_invariant_tree':('range_invariants','PROVED_DEFINED_TYPED_C_INVARIANT_TREE'),
+          'typed_invariant_while':('range_invariants','PROVED_DEFINED_TYPED_C_INVARIANT_WHILE')}
+SAFETY_ONLY={'typed_invariant_while'}  # partial correctness: termination is not proved and not required
 
 
 def analyze_portfolio(request,analyze):
@@ -37,6 +39,11 @@ def analyze_portfolio(request,analyze):
         seen.add(name)
         if not isinstance(summary,dict) or len(summary)>16:raise SMTGraphError('Proposal summary must be a map with at most 16 coordinates/loops')
         maps=[summary] if backend=='typed_recurrence' else list(summary.values())
+        if backend=='typed_invariant_while':
+            forms=summary.get('invariant') if set(summary)=={'invariant'} else None
+            if isinstance(forms,str):forms=[forms]
+            if not isinstance(forms,list) or not 1<=len(forms)<=256 or any(not isinstance(f,str) or not 1<=len(f)<=1000 for f in forms):raise SMTGraphError('typed_invariant_while proposals require {"invariant": [formula strings]}')
+            maps=[]
         if backend in ('typed_invariant_nested','typed_invariant_tree'):
             for level in summary.values():
                 if not isinstance(level,dict) or len(level)>16:raise SMTGraphError('Nested invariant proposals require one coordinate map per loop')
@@ -94,13 +101,13 @@ def analyze_portfolio(request,analyze):
         tick=time.perf_counter()
         profile=request.get('solver_profile','default')
         base_c=copy.deepcopy(base);base_c.pop('solver_profile',None)
-        can_profile=backend in ('typed_recurrence','typed_invariant','typed_invariant_nested','typed_invariant_tree')
+        can_profile=backend in ('typed_recurrence','typed_invariant','typed_invariant_nested','typed_invariant_tree','typed_invariant_while')
         first={'solver_profile':'native_division'} if (profile=='native_division' and can_profile) else {}
         result=analyze({**base_c,**first,'frontend':backend,field:copy.deepcopy(p['summary'])})
         profiles_tried=['native_division' if first else 'default']
         if profile=='auto' and can_profile and result.get('status')=='UNKNOWN' and result.get('reason')=='timeout':
             result=analyze({**base_c,'solver_profile':'native_division','frontend':backend,field:copy.deepcopy(p['summary'])});profiles_tried.append('native_division')
-        accepted=(result.get('status')==success and result.get('c_overflow_verified') is True and result.get('termination_proved') is True)
+        accepted=(result.get('status')==success and result.get('c_overflow_verified') is True and (result.get('termination_proved') is True or backend in SAFETY_ONLY))
         trials.append({'id':p['id'],'summary_sha256':hashlib.sha256(json.dumps(p['summary'],sort_keys=True).encode()).hexdigest(),
                        'certified':accepted,'verification_seconds':time.perf_counter()-tick,'profiles_tried':profiles_tried,'result':copy.deepcopy(result)})
         if accepted:
