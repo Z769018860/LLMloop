@@ -183,3 +183,6 @@ Study ES：base 154/228 vs exact 123/228（p=3e-6，I_nested 15→2/60），不�
 扩展规范化后自动译写：SV-COMP 20/264、Code2Inv 42/134 落入片段。LLM 研究：SV-COMP 20/66、Code2Inv 38/252（27/42 程序至少一次），违反程序 0/54；拟合器 ∪ LLM 认证 Code2Inv 30/42，未认证的 12 个中 11 个找到 C 语义下的具体违例。见 [报告](../paper/report_v073_bilingual.md)。
 
 全量测试（v0.73，含扩展规范化与公认基准证据）：3355 passed。
+
+## v0.74：非确定性循环模式、端到端级联、真实代码覆盖
+`typed_invariant_while`（单循环，安全性）+ Houdini：Code2Inv 24/69、SV-COMP 10/32；LLM（Study W）Code2Inv 122/414、SV-COMP 122/192，违反程序 0/54；34 个 Code2Inv 程序在 C 语义下有违例见证；级联省 LLM 调用但对认证数增益有限；Juliet/LIG-MM 覆盖 0。披露：Study W 首次运行无效（提示覆盖）、解释器缺陷修复（拟合器结果未变）。见 [报告](../paper/report_v074_bilingual.md) 与 [缺失与下一步](EXPERIMENT_PLAN_v075_bilingual.md)。
