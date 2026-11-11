@@ -5,12 +5,17 @@ from concurrent.futures import ProcessPoolExecutor
 ROOT = Path(__file__).resolve().parents[1]; sys.path.insert(0, str(ROOT))
 
 
+FIX = bool(__import__('os').environ.get('FIXSET'))   # v0.76: re-run only the Code2Inv programs whose translation was corrected (declaration initializers)
+FIXKEYS = set(json.loads((ROOT / 'experiments/v076/code2inv_changed.json').read_text())) if FIX else None
+
+
 def programs(out='v074'):
     ps = []
-    for r in json.loads((ROOT / 'experiments' / out / 'translated.json').read_text()):
+    if FIX: out = 'v076'
+    for r in ([] if FIX else json.loads((ROOT / 'experiments' / out / 'translated.json').read_text())):
         if r['stage'] == 'in_while_fragment': ps.append(dict(corpus='svcomp', name=r['dir'] + '/' + r['file'], source=r['source'], parameter_bounds=r['parameter_bounds'], abi='ILP32', expected='valid' if r['expected_unreach'] == 'true' else ('violated' if r['expected_unreach'] == 'false' else 'unknown')))
     for r in json.loads((ROOT / 'experiments' / out / 'code2inv_translated.json').read_text()):
-        if r['stage'] == 'in_while_fragment': ps.append(dict(corpus='code2inv', name=r['file'], source=r['source'], parameter_bounds=r['parameter_bounds'], abi='LP64', expected='valid'))
+        if r['stage'] == 'in_while_fragment' and (not FIX or r['file'] in FIXKEYS): ps.append(dict(corpus='code2inv', name=r['file'], source=r['source'], parameter_bounds=r['parameter_bounds'], abi='LP64', expected='valid'))
     return ps
 
 
@@ -34,7 +39,7 @@ if __name__ == '__main__':
     ps = programs()
     with ProcessPoolExecutor(4) as ex: res = list(ex.map(job, ps))
     rows = [{**{k: p[k] for k in ('corpus', 'name', 'expected')}, 'houdini': r} for p, r in zip(ps, res)]
-    (ROOT / 'experiments/v074').mkdir(exist_ok=True); (ROOT / 'experiments/v074' / ('while_eval_math.json' if MATH else 'while_eval.json')).write_text(json.dumps(rows, indent=1) + '\n')
+    OD = 'v076' if FIX else 'v074'; (ROOT / 'experiments' / OD).mkdir(exist_ok=True); (ROOT / 'experiments' / OD / ('while_eval_math.json' if MATH else 'while_eval.json')).write_text(json.dumps(rows, indent=1) + '\n')
     import collections
     for c in ('svcomp', 'code2inv'):
         rs = [r for r in rows if r['corpus'] == c]; print(c, len(rs), collections.Counter((r['expected'], r['houdini']['status'].split(':')[0]) for r in rs).most_common(10))

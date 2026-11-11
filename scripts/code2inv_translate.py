@@ -37,6 +37,8 @@ def translate(path):
     for s in pre + post:
         if uses_unknown(s): raise Reject('unknown() outside the loop')
     inits = collections.OrderedDict(); bounds = collections.defaultdict(list); ats = []
+    for s in items:  # declaration initializers (`int x = 0;`) are part of the pre-condition: v0.76 fix (they were dropped in v0.73-v0.75, making such variables free inputs)
+        if isinstance(s, c_ast.Decl) and s.init is not None: inits[s.name] = s.init
     for s in pre:
         if isinstance(s, c_ast.FuncCall) and getattr(s.name, 'name', '') == 'assume':
             atoms(s.args.exprs[0], ats)

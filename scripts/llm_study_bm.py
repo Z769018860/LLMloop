@@ -18,7 +18,9 @@ def build():
 from scripts.llm_study_n import extract  # noqa: E402
 from llmloop.candidate_normalize import drop_non_state_coordinates, normalize_summary  # noqa: E402
 
-OUT = ROOT / 'experiments' / 'v073' / 'bm'; PROTOCOL = ROOT / 'experiments' / 'protocols' / 'v073_study_bm.json'
+import os
+FIXSET = bool(os.environ.get('FIXSET'))
+OUT = ROOT / 'experiments' / ('v076' if FIXSET else 'v073') / 'bm'; PROTOCOL = ROOT / 'experiments' / 'protocols' / ('v076_study_bm_fix.json' if FIXSET else 'v073_study_bm.json')
 MODELS = T.MODELS; ARMS = ['if']; SEED = 20270110; REPS = 1; TEMP = 0.7; MAXTOK = 12000
 IF_TEXT = ('\nNOTE: the function may end with `return 1/(cond)`, which is defined exactly when `cond` is true (an assertion encoded as a division). Loop index variables may be declared outside the `for`, and `while` loops driven by an index may occur. '
            'Name each loop in the invariant by its index variable (when one variable indexes several loops, the 2nd, 3rd... loop is named `<var>_2`, `<var>_3`). Give one entry for EVERY loop, covering every local declared before the first loop except loop indices and parameters; '

@@ -40,14 +40,16 @@ def run(p):
 
 
 if __name__ == '__main__':
+    import os
+    FIX = bool(os.environ.get('FIXSET')); FIXKEYS = set(json.loads((ROOT / 'experiments/v076/code2inv_changed.json').read_text())) if FIX else None
     ps = []
-    for r in json.loads((ROOT / 'experiments/v074/translated.json').read_text()):
+    for r in ([] if FIX else json.loads((ROOT / 'experiments/v074/translated.json').read_text())):
         if r['stage'] in ('in_fragment', 'in_while_fragment') and r['expected_unreach'] in ('true', 'false'): ps.append(dict(corpus='svcomp', name=r['dir'] + '/' + r['file'], source=r['source'], parameter_bounds=r['parameter_bounds'], abi='ILP32', expected='valid' if r['expected_unreach'] == 'true' else 'violated', mode='tree' if r['stage'] == 'in_fragment' else 'while'))
-    for r in json.loads((ROOT / 'experiments/v074/code2inv_translated.json').read_text()):
-        if r['stage'] in ('in_fragment', 'in_while_fragment'): ps.append(dict(corpus='code2inv', name=r['file'], source=r['source'], parameter_bounds=r['parameter_bounds'], abi='LP64', expected='valid', mode='tree' if r['stage'] == 'in_fragment' else 'while'))
+    for r in json.loads((ROOT / 'experiments' / ('v076' if FIX else 'v074') / 'code2inv_translated.json').read_text()):
+        if r['stage'] in ('in_fragment', 'in_while_fragment') and (not FIX or r['file'] in FIXKEYS): ps.append(dict(corpus='code2inv', name=r['file'], source=r['source'], parameter_bounds=r['parameter_bounds'], abi='LP64', expected='valid', mode='tree' if r['stage'] == 'in_fragment' else 'while'))
     with ThreadPoolExecutor(3) as ex: res = list(ex.map(run, ps))
     rows = [{k: p[k] for k in ('corpus', 'name', 'expected', 'mode')} | {'cpachecker': r} for p, r in zip(ps, res)]
-    (ROOT / 'experiments/v075').mkdir(exist_ok=True); (ROOT / 'experiments/v075/cpachecker.json').write_text(json.dumps(rows, indent=1) + '\n')
+    OD = 'v076' if FIX else 'v075'; (ROOT / 'experiments' / OD).mkdir(exist_ok=True); (ROOT / 'experiments' / OD / 'cpachecker.json').write_text(json.dumps(rows, indent=1) + '\n')
     for c in ('svcomp', 'code2inv'):
         for e in ('valid', 'violated'):
             rs = [r for r in rows if r['corpus'] == c and r['expected'] == e]

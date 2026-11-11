@@ -5,12 +5,16 @@ from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 ROOT = Path(__file__).resolve().parents[1]; sys.path.insert(0, str(ROOT))
 
 
+FIX = bool(__import__('os').environ.get('FIXSET'))
+FIXKEYS = set(json.loads((ROOT / 'experiments/v076/code2inv_changed.json').read_text())) if FIX else None
+
+
 def programs():
     out = []
-    for r in json.loads((ROOT / 'experiments/v073/translated.json').read_text()):
+    for r in ([] if FIX else json.loads((ROOT / 'experiments/v073/translated.json').read_text())):
         if r['stage'] == 'in_fragment': out.append(dict(corpus='svcomp', name=r['dir'] + '/' + r['file'], source=r['source'], parameter_bounds=r['parameter_bounds'], abi='ILP32', expected='valid' if r['expected_unreach'] == 'true' else 'violated'))
-    for r in json.loads((ROOT / 'experiments/v073/code2inv_translated.json').read_text()):
-        if r['stage'] == 'in_fragment': out.append(dict(corpus='code2inv', name=r['file'], source=r['source'], parameter_bounds=r['parameter_bounds'], abi='LP64', expected='valid'))
+    for r in json.loads((ROOT / 'experiments' / ('v076' if FIX else 'v073') / 'code2inv_translated.json').read_text()):
+        if r['stage'] == 'in_fragment' and (not FIX or r['file'] in FIXKEYS): out.append(dict(corpus='code2inv', name=r['file'], source=r['source'], parameter_bounds=r['parameter_bounds'], abi='LP64', expected='valid'))
     return out
 
 
@@ -42,7 +46,7 @@ if __name__ == '__main__':
         with ThreadPoolExecutor(3) as ex: res = list(ex.map(lambda p: B.run({'source': p['source'], 'parameter_bounds': p['parameter_bounds'], 'name': p['name'], 'min_unwind': 1030}, S), ps))
         cb[S] = res
     rows = [{**{k: p[k] for k in ('corpus', 'name', 'expected')}, 'fitter': f, 'cbmc_full': cb['full'][i]} for i, (p, f) in enumerate(zip(ps, fits))]
-    (ROOT / 'experiments/v073/benchmark_eval.json').write_text(json.dumps(rows, indent=1) + '\n')
+    (ROOT / 'experiments' / ('v076' if FIX else 'v073') / 'benchmark_eval.json').write_text(json.dumps(rows, indent=1) + '\n')
     for c in ('svcomp', 'code2inv'):
         rs = [r for r in rows if r['corpus'] == c]; v = [r for r in rs if r['expected'] == 'valid']; b = [r for r in rs if r['expected'] != 'valid']
         print(c, 'n', len(rs), 'valid', len(v), 'fitter certified', sum(r['fitter']['status'].startswith('PROVED') for r in v), 'cbmc proved', sum(r['cbmc_full']['outcome'] == 'PROVED_SAFE' for r in v),

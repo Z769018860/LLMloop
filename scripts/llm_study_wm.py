@@ -55,7 +55,9 @@ def prompt(c, arm='w'):
         '', 'Worked example 2:', 'Source: ' + EX_W2['source'], 'Parameter bounds: ' + json.dumps(EX_W2['bounds']), 'Answer: ' + json.dumps({'candidates': [{'invariant': EX_W2['answer']}]}), '', 'Now the target.', 'Source: ' + c['source'], 'Parameter bounds: ' + json.dumps(c['parameter_bounds']), 'Answer:'])
 
 
-OUT = ROOT / 'experiments' / 'v075' / 'wm'; PROTOCOL = ROOT / 'experiments' / 'protocols' / 'v075_study_wm.json'
+import os
+FIXSET = bool(os.environ.get('FIXSET'))
+OUT = ROOT / 'experiments' / ('v076' if FIXSET else 'v075') / 'wm'; PROTOCOL = ROOT / 'experiments' / 'protocols' / ('v076_study_wm_fix.json' if FIXSET else 'v075_study_wm.json')
 MODELS = T.MODELS; ARMS = ['if']; SEED = 20270301; REPS = 1; TEMP = 0.7; MAXTOK = 12000
 
 def freeze():
