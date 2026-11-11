@@ -16,14 +16,16 @@ if MODE in ('w', 'wm'):
         from scripts import llm_study_wm as S
         from scripts.llm_study_wm import extract_w as extract
     OUT = S.OUT; BACKEND = 'typed_invariant_while'; EXTRA = {'integer_model': 'mathematical'} if MODE == 'wm' else {}
-    GEN = {('code2inv:' if r['corpus'] == 'code2inv' else 'svcomp:') + r['name'].replace('/', '_'): r['houdini']['status'] == 'PROVED' for r in json.loads((ROOT / 'experiments/v074' / ('while_eval_math.json' if MODE == 'wm' else 'while_eval.json')).read_text())}
+    import os
+    GEN = {('code2inv:' if r['corpus'] == 'code2inv' else 'svcomp:') + r['name'].replace('/', '_'): r['houdini']['status'] == 'PROVED' for r in json.loads((ROOT / 'experiments' / ('v076' if os.environ.get('FIXSET') else 'v074') / ('while_eval_math.json' if MODE == 'wm' else 'while_eval.json')).read_text())}
     norm = lambda cands, c: cands
 else:
     from scripts import llm_study_bm as S
     from scripts.llm_study_n import extract
     from llmloop.candidate_normalize import drop_non_state_coordinates, normalize_summary
     OUT = S.OUT; BACKEND = 'typed_invariant_tree'; EXTRA = {}
-    GEN = {r['corpus'] + ':' + r['name'].replace('/', '_'): r['fitter']['status'].startswith('PROVED') for r in json.loads((ROOT / 'experiments/v073/benchmark_eval.json').read_text())}
+    import os
+    GEN = {r['corpus'] + ':' + r['name'].replace('/', '_'): r['fitter']['status'].startswith('PROVED') for r in json.loads((ROOT / 'experiments' / ('v076' if os.environ.get('FIXSET') else 'v073') / 'benchmark_eval.json').read_text())}
     norm = lambda cands, c: [normalize_summary(drop_non_state_coordinates(x, c['source'])[0])[0] for x in cands]
 
 

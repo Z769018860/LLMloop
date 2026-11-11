@@ -3,6 +3,8 @@ Per model: certified programs and LLM calls for (a) cascade, (b) LLM-only (1 sam
 import collections, json, sys
 from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
+MERGED = '--merged' in sys.argv   # v0.76: use experiments/v076/merged (corrected Code2Inv translations)
+M = 'experiments/v076/merged/'
 L = lambda p: [json.loads(l) for l in (ROOT / p).read_text().splitlines() if l.strip()] if (ROOT / p).exists() else []
 cert = lambda v: bool(v['result'] and v['result']['certified_summary'])
 
@@ -33,22 +35,22 @@ def study(name, vpath, rpath, gen_ok, expected):
 
 if __name__ == '__main__':
     res = []
-    ev = json.loads((ROOT / 'experiments/v074/while_eval.json').read_text())
+    ev = json.loads((ROOT / (M + 'while_eval.json' if MERGED else 'experiments/v074/while_eval.json')).read_text())
     gen = {('code2inv:' if r['corpus'] == 'code2inv' else 'svcomp:') + r['name'].replace('/', '_'): r['houdini']['status'] == 'PROVED' for r in ev}; exp = {('code2inv:' if r['corpus'] == 'code2inv' else 'svcomp:') + r['name'].replace('/', '_'): r['expected'] for r in ev}
     for fam in ('code2inv', 'svcomp'):
         sel = {p: e for p, e in exp.items() if p.startswith(fam + ':') and e in ('valid', 'violated')}
-        res.append(study('while_mode_' + fam, 'experiments/v074/w/verifications.jsonl', 'experiments/v074/w/repairs.jsonl', {p: g for p, g in gen.items() if p in sel}, sel))
-    evm = json.loads((ROOT / 'experiments/v074/while_eval_math.json').read_text())
+        res.append(study('while_mode_' + fam, (M + 'w_verifications.jsonl') if MERGED else 'experiments/v074/w/verifications.jsonl', (M + 'w_repairs.jsonl') if MERGED else 'experiments/v074/w/repairs.jsonl', {p: g for p, g in gen.items() if p in sel}, sel))
+    evm = json.loads((ROOT / (M + 'while_eval_math.json' if MERGED else 'experiments/v074/while_eval_math.json')).read_text())
     genm = {('code2inv:' if r['corpus'] == 'code2inv' else 'svcomp:') + r['name'].replace('/', '_'): r['houdini']['status'] == 'PROVED' for r in evm}; expm = {('code2inv:' if r['corpus'] == 'code2inv' else 'svcomp:') + r['name'].replace('/', '_'): r['expected'] for r in evm}
     for fam in ('code2inv', 'svcomp'):
         sel = {p: e for p, e in expm.items() if p.startswith(fam + ':') and e in ('valid', 'violated')}
-        res.append(study('math_while_mode_' + fam, 'experiments/v075/wm/verifications.jsonl', 'experiments/v075/wm/repairs.jsonl', {p: g for p, g in genm.items() if p in sel}, sel))
-    bm = json.loads((ROOT / 'experiments/v073/benchmark_eval.json').read_text())
+        res.append(study('math_while_mode_' + fam, (M + 'wm_verifications.jsonl') if MERGED else 'experiments/v075/wm/verifications.jsonl', (M + 'wm_repairs.jsonl') if MERGED else 'experiments/v075/wm/repairs.jsonl', {p: g for p, g in genm.items() if p in sel}, sel))
+    bm = json.loads((ROOT / (M + 'benchmark_eval.json' if MERGED else 'experiments/v073/benchmark_eval.json')).read_text())
     gen2 = {r['corpus'] + ':' + r['name'].replace('/', '_'): r['fitter']['status'].startswith('PROVED') for r in bm}; exp2 = {r['corpus'] + ':' + r['name'].replace('/', '_'): r['expected'] for r in bm}
     for fam in ('code2inv', 'svcomp'):
         sel = {p: e for p, e in exp2.items() if p.startswith(fam + ':')}
-        res.append(study('tree_mode_' + fam, 'experiments/v073/bm/verifications.jsonl', 'experiments/v073/bm/repairs.jsonl', {p: g for p, g in gen2.items() if p in sel}, sel))
-    (ROOT / 'experiments/v074/cascade.json').write_text(json.dumps(res, indent=1) + '\n')
+        res.append(study('tree_mode_' + fam, (M + 'bm_verifications.jsonl') if MERGED else 'experiments/v073/bm/verifications.jsonl', (M + 'bm_repairs.jsonl') if MERGED else 'experiments/v073/bm/repairs.jsonl', {p: g for p, g in gen2.items() if p in sel}, sel))
+    (ROOT / ('experiments/v076/cascade_merged.json' if MERGED else 'experiments/v074/cascade.json')).write_text(json.dumps(res, indent=1) + '\n')
     for s in res:
         print(s['study'], 'programs', s['programs'], 'valid', s['valid'], 'generator', s['generator_only'], 'gen-on-violated', s['generator_on_violated'])
         for m, r in s['models'].items(): print('   %-26s cascade %d (calls gen %d + repair %d) | llm-only %d (calls %d) | llm+repair %d | violated certified %d | %s' % (m, r['cascade_cert'], r['cascade_calls_gen'], r['cascade_calls_repair'], r['llm_only_cert'], r['llm_calls_all'], r['llm_only_repair_cert'], r['violated_certified'], r['stage']))
