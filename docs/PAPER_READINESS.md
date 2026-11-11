@@ -191,3 +191,5 @@ Study ES：base 154/228 vs exact 123/228（p=3e-6，I_nested 15→2/60），不�
 
 ## v0.75–v0.76：数学整数模式、终止性、混合方案、CPAchecker、Juliet，以及 Code2Inv 译写更正
 **更正：** Code2Inv 译写脚本曾丢弃声明初始值（28 个程序受影响），v0.73/v0.74 的 Code2Inv 数字作废，v0.76 合并结果：数学语义 while 模式 Code2Inv 64/69 个程序被认证（Houdini 53）、C 语义 41/69（Houdini 32）；违反程序 0/54。混合方案 131/192 vs LLM 直接 91/192；级联省 LLM 调用 77%；终止性 9（C）/13（数学）；CPAchecker 决断率更高但性质不同；Juliet 子集 120/120 分类正确。见 [报告](../paper/report_v076_bilingual.md) 与 [缺失与下一步](EXPERIMENT_PLAN_v077_bilingual.md)。
+
+全量测试（v0.76）：3405 passed。
