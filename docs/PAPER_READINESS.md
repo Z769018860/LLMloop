@@ -196,3 +196,5 @@ Study ES：base 154/228 vs exact 123/228（p=3e-6，I_nested 15→2/60），不�
 
 ## v0.77：多循环模式、拟合器 v2、CPAchecker 逐程序比较、Juliet 全变体、重复与成本、论文草稿
 多循环模式（验证器+测试，覆盖增益很小）；拟合器 v2 在计数模式开发集 54/60（无回退）；CPAchecker 比较：我们认证 Code2Inv 108/118、SV-COMP 41/43，对其中 22+6 个 CPAchecker 返回 UNKNOWN，但它找违例更强（14/18）；Juliet 全变体 1500 个函数无误判；WM 3 次重复：ark 0.92、glm 0.89，其余 0.38–0.62，pass@3 增益 ≤0.12，违反程序 0/162。论文草稿已成稿。见 [报告](../paper/report_v077_bilingual.md)、[论文草稿](../paper/PAPER_DRAFT_bilingual.md)。
+
+全量测试（v0.77）：3428 passed。
