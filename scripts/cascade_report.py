@@ -38,6 +38,11 @@ if __name__ == '__main__':
     for fam in ('code2inv', 'svcomp'):
         sel = {p: e for p, e in exp.items() if p.startswith(fam + ':') and e in ('valid', 'violated')}
         res.append(study('while_mode_' + fam, 'experiments/v074/w/verifications.jsonl', 'experiments/v074/w/repairs.jsonl', {p: g for p, g in gen.items() if p in sel}, sel))
+    evm = json.loads((ROOT / 'experiments/v074/while_eval_math.json').read_text())
+    genm = {('code2inv:' if r['corpus'] == 'code2inv' else 'svcomp:') + r['name'].replace('/', '_'): r['houdini']['status'] == 'PROVED' for r in evm}; expm = {('code2inv:' if r['corpus'] == 'code2inv' else 'svcomp:') + r['name'].replace('/', '_'): r['expected'] for r in evm}
+    for fam in ('code2inv', 'svcomp'):
+        sel = {p: e for p, e in expm.items() if p.startswith(fam + ':') and e in ('valid', 'violated')}
+        res.append(study('math_while_mode_' + fam, 'experiments/v075/wm/verifications.jsonl', 'experiments/v075/wm/repairs.jsonl', {p: g for p, g in genm.items() if p in sel}, sel))
     bm = json.loads((ROOT / 'experiments/v073/benchmark_eval.json').read_text())
     gen2 = {r['corpus'] + ':' + r['name'].replace('/', '_'): r['fitter']['status'].startswith('PROVED') for r in bm}; exp2 = {r['corpus'] + ':' + r['name'].replace('/', '_'): r['expected'] for r in bm}
     for fam in ('code2inv', 'svcomp'):

@@ -8,17 +8,21 @@ from scripts.llm_study_c import call_chat  # noqa: E402
 from scripts.llm_repair_t import feedback as feedback_tree  # noqa: E402
 ROUNDS = 2
 MODE = sys.argv[1] if len(sys.argv) > 1 else 'w'
-if MODE == 'w':
-    from scripts import llm_study_w as S
-    from scripts.llm_study_w import extract_w as extract
-    OUT = S.OUT; BACKEND = 'typed_invariant_while'
-    GEN = {('code2inv:' if r['corpus'] == 'code2inv' else 'svcomp:') + r['name'].replace('/', '_'): r['houdini']['status'] == 'PROVED' for r in json.loads((ROOT / 'experiments/v074/while_eval.json').read_text())}
+if MODE in ('w', 'wm'):
+    if MODE == 'w':
+        from scripts import llm_study_w as S
+        from scripts.llm_study_w import extract_w as extract
+    else:
+        from scripts import llm_study_wm as S
+        from scripts.llm_study_wm import extract_w as extract
+    OUT = S.OUT; BACKEND = 'typed_invariant_while'; EXTRA = {'integer_model': 'mathematical'} if MODE == 'wm' else {}
+    GEN = {('code2inv:' if r['corpus'] == 'code2inv' else 'svcomp:') + r['name'].replace('/', '_'): r['houdini']['status'] == 'PROVED' for r in json.loads((ROOT / 'experiments/v074' / ('while_eval_math.json' if MODE == 'wm' else 'while_eval.json')).read_text())}
     norm = lambda cands, c: cands
 else:
     from scripts import llm_study_bm as S
     from scripts.llm_study_n import extract
     from llmloop.candidate_normalize import drop_non_state_coordinates, normalize_summary
-    OUT = S.OUT; BACKEND = 'typed_invariant_tree'
+    OUT = S.OUT; BACKEND = 'typed_invariant_tree'; EXTRA = {}
     GEN = {r['corpus'] + ':' + r['name'].replace('/', '_'): r['fitter']['status'].startswith('PROVED') for r in json.loads((ROOT / 'experiments/v073/benchmark_eval.json').read_text())}
     norm = lambda cands, c: [normalize_summary(drop_non_state_coordinates(x, c['source'])[0])[0] for x in cands]
 
@@ -31,12 +35,12 @@ def feedback_w(p, cands):
         lines.append('- candidate %d: failed obligation: %s; reason: %s%s' % (i + 1, fo, why, ('; counterexample (parameters; state_in_<v> = state at the loop head; __ndK = values returned by the K-th unknown()/nondet call; state_exit_<v> for the exit check): ' + json.dumps(cex)) if cex else ''))
     n_un = len(cands) - len(p['trial_certified'])
     if n_un > 0: lines.append('- %d further candidate(s) were not attempted.' % n_un)
-    lines.append('Remember: the invariant is checked for ANY typed state that satisfies it (not only reachable ones): entry, inductive step including signed-overflow freedom of the body, and the exit/return obligation. If the program can execute undefined behaviour, reply {"candidates":[]}.')
+    lines.append('Remember: the invariant is checked for ANY typed state that satisfies it (not only reachable ones): entry, inductive step (defined body), and the exit/return obligation. If the program can execute undefined behaviour, reply {"candidates":[]}.')
     lines.append('Give up to %d corrected candidates in the same JSON schema {"candidates":[{"invariant":["<formula>", ...]}, ...]}, nothing else.' % E.MAX_CANDIDATES)
     return '\n'.join(lines)
 
 
-feedback = feedback_w if MODE == 'w' else feedback_tree
+feedback = feedback_w if MODE in ('w', 'wm') else feedback_tree
 
 
 def main():
@@ -63,7 +67,7 @@ def main():
                 rec = {'round': rd, 'parse_status': ps, 'candidates': ncands, 'usage': usage, 'generation_seconds': att[-1]['seconds'] if resp else None, 'result': None}
                 if ncands:
                     req = {'source': c['source'], 'frontend': 'typed_summary_portfolio', 'summary_backend': BACKEND, 'proposals': [{'id': 'c%d' % i, 'summary': s} for i, s in enumerate(norm(ncands, c))],
-                           'parameter_bounds': c['parameter_bounds'], 'inputs': c['inputs'], 'abi': c.get('abi', 'LP64'), 'solver_profile': 'auto'}
+                           'parameter_bounds': c['parameter_bounds'], 'inputs': c['inputs'], 'abi': c.get('abi', 'LP64'), 'solver_profile': 'auto', **EXTRA}
                     rec['result'] = E.summarize_result(E.run_worker(req))
                 rounds.append(rec); msgs.append({'role': 'assistant', 'content': text})
                 if rec['result'] and rec['result']['certified_summary']: certified = rd; break
