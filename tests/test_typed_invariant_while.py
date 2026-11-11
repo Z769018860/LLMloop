@@ -81,3 +81,37 @@ def test_certified_implies_no_reachable_ub_on_exhaustive_exploration(K, s, d):
         if run(src, inv, {'a': [0, 0]})['status'] == OK: assert not unsafe, (inv, K, s, d)
     if not unsafe:  # completeness on these shapes: the strongest candidate is inductive whenever the program is safe
         assert run(src, ['x >= 0', 'x <= %d' % (K + s - 1), 'x %% %d == 0' % s], {'a': [0, 0]})['status'] == OK
+
+
+def run_m(src, inv, bounds, model='mathematical'):
+    return analyze_request({'source': src, 'frontend': 'typed_invariant_while', 'range_invariants': {'invariant': inv}, 'parameter_bounds': bounds, 'abi': 'LP64', 'integer_model': model})
+
+
+MATH_OK = 'PROVED_MATH_INT_TYPED_C_INVARIANT_WHILE'
+
+
+def test_mathematical_integer_model_accepts_unbounded_signed_growth_c_model_does_not():
+    src = 'int f(int a){int x=a;while(unknown()){x=x+10;}return 1/(x>=a);}'
+    assert run_m(src, ['x >= a'], {'a': [0, 10]})['status'] == MATH_OK
+    assert run_m(src, ['x >= a'], {'a': [0, 10]}, 'c')['status'] == 'UNKNOWN'
+    r = run_m(src, ['x >= a'], {'a': [0, 10]}); assert r['integer_model'] == 'mathematical' and r['c_overflow_verified'] is False and r['termination_proved'] is False
+
+
+def test_mathematical_model_still_rejects_failed_assertions_and_division_by_zero():
+    assert run_m('int f(int a){int x=a;while(unknown()){x=x+10;}return 1/(x>a);}', ['x >= a'], {'a': [0, 10]})['status'] == 'UNKNOWN'   # x==a possible
+    assert run_m('int f(int a){int x=a;while(unknown()){x=x+1;}return 100/(x-3);}', ['x >= a'], {'a': [0, 10]})['status'] == 'UNKNOWN'
+
+
+def test_mathematical_model_keeps_unsigned_wraparound():
+    src = 'int f(int a){unsigned char x=0;while(unknown()){x=x+1;}return 1/(x<=255);}'
+    assert run_m(src, ['x >= 0'], {'a': [0, 0]})['status'] == MATH_OK       # x is unsigned char: still in [0,255]
+    src2 = 'int f(int a){unsigned char x=0;while(unknown()){x=x+1;}return 1/(x<=254);}'
+    assert run_m(src2, ['x >= 0'], {'a': [0, 0]})['status'] == 'UNKNOWN'    # x can wrap to 255
+
+
+def test_integer_model_option_is_validated_and_portfolio_uses_math_status():
+    assert run_m('int f(int a){int x=a;while(unknown()){x=x+1;}return 1/(x>=a);}', ['x >= a'], {'a': [0, 1]}, 'wide')['status'] == 'UNKNOWN'
+    req = {'source': 'int f(int a){int x=a;while(unknown()){x=x+1;}return 1/(x>=a);}', 'frontend': 'typed_summary_portfolio', 'summary_backend': 'typed_invariant_while', 'integer_model': 'mathematical',
+           'proposals': [{'id': 'p', 'summary': {'invariant': ['x >= a']}}], 'parameter_bounds': {'a': [0, 1]}, 'inputs': {'a': 0}, 'abi': 'LP64'}
+    assert analyze_request(req)['status'] == MATH_OK
+    assert analyze_request({**req, 'integer_model': 'c'})['status'] != MATH_OK

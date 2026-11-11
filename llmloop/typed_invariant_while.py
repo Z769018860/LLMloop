@@ -107,6 +107,22 @@ def formula_to_z3(text, env):
 
 
 class TypedCInvariantWhile(TypedCInvariantTree):
+    def __init__(self, source, closed_forms, *a, integer_model='c', **kw):
+        if integer_model not in ('c', 'mathematical'): raise SMTGraphError('integer_model must be c or mathematical')
+        self.integer_model = integer_model
+        if integer_model == 'mathematical':
+            from .integer_lift import MathWordIntegers
+            self.integer_engine = MathWordIntegers
+        super().__init__(source, closed_forms, *a, **kw)
+
+    def _typerange(self, sy):
+        if self.integer_model != 'mathematical': return super()._typerange(sy)
+        out = []
+        for n in self.state:  # mathematical signed values are unbounded; unsigned/narrow keep their C range
+            t = self.types[n]
+            if not (t.signed and t.bits >= 32): out += [sy[n].value >= t.minimum, sy[n].value <= t.maximum]
+        return out
+
     def build(self, inv):
         if not isinstance(inv, dict) or set(inv) != {'invariant'}: raise SMTGraphError('Candidate must be {"invariant": [formula, ...]}')
         forms = inv['invariant']
@@ -196,4 +212,4 @@ class TypedCInvariantWhile(TypedCInvariantTree):
             result = {**base, 'status': 'UNKNOWN', 'failed_obligation': self.failure.label, 'reason': self.failure.reason, 'c_overflow_verified': False, 'termination_proved': False}
             if self.failure.witness is not None: result['counterexample'] = self.failure.witness
             return result
-        return {**base, 'status': 'PROVED_DEFINED_TYPED_C_INVARIANT_WHILE', 'c_overflow_verified': True, 'termination_proved': False, 'invariants': self.invariants, 'state_types': {n: self.types[n].name for n in self.state}}
+        return {**base, 'status': 'PROVED_DEFINED_TYPED_C_INVARIANT_WHILE' if self.integer_model == 'c' else 'PROVED_MATH_INT_TYPED_C_INVARIANT_WHILE', 'integer_model': self.integer_model, 'c_overflow_verified': self.integer_model == 'c', 'termination_proved': False, 'invariants': self.invariants, 'state_types': {n: self.types[n].name for n in self.state}}

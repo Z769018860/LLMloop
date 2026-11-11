@@ -14,13 +14,16 @@ def programs(out='v074'):
     return ps
 
 
+MATH = '--math' in sys.argv
+
+
 def job(p):
     from llmloop.houdini_while import houdini
     t = time.time()
     def h(*a): raise TimeoutError()
     signal.signal(signal.SIGALRM, h); signal.alarm(400)
     try:
-        st, inv, rounds, log = houdini(p['source'], {k: tuple(v) for k, v in p['parameter_bounds'].items()}, p['abi'])
+        st, inv, rounds, log = houdini(p['source'], {k: tuple(v) for k, v in p['parameter_bounds'].items()}, p['abi'], integer_model='mathematical' if MATH else 'c')
         return {'status': st, 'rounds': rounds, 'invariant': inv if st == 'PROVED' else None, 'last_failure': log[-1] if log else None, 'seconds': round(time.time() - t, 1)}
     except TimeoutError: return {'status': 'TIMEOUT', 'seconds': round(time.time() - t, 1)}
     except Exception as e: return {'status': 'ERROR', 'detail': type(e).__name__ + ':' + str(e)[:80], 'seconds': round(time.time() - t, 1)}
@@ -31,7 +34,7 @@ if __name__ == '__main__':
     ps = programs()
     with ProcessPoolExecutor(4) as ex: res = list(ex.map(job, ps))
     rows = [{**{k: p[k] for k in ('corpus', 'name', 'expected')}, 'houdini': r} for p, r in zip(ps, res)]
-    (ROOT / 'experiments/v074').mkdir(exist_ok=True); (ROOT / 'experiments/v074/while_eval.json').write_text(json.dumps(rows, indent=1) + '\n')
+    (ROOT / 'experiments/v074').mkdir(exist_ok=True); (ROOT / 'experiments/v074' / ('while_eval_math.json' if MATH else 'while_eval.json')).write_text(json.dumps(rows, indent=1) + '\n')
     import collections
     for c in ('svcomp', 'code2inv'):
         rs = [r for r in rows if r['corpus'] == c]; print(c, len(rs), collections.Counter((r['expected'], r['houdini']['status'].split(':')[0]) for r in rs).most_common(10))

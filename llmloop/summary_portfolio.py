@@ -10,7 +10,7 @@ import time
 from .smt_spath import SMTGraphError
 
 
-BASE={'source','function','parameter_bounds','abi','char_signed','max_paths','inputs','solver_timeout_ms','solver_profile'}
+BASE={'source','function','parameter_bounds','abi','char_signed','max_paths','inputs','solver_timeout_ms','solver_profile','integer_model'}
 BACKENDS={'typed_recurrence':('closed_forms','PROVED_DEFINED_TYPED_C_RECURRENCE'),
           'typed_nested':('loop_summaries','PROVED_DEFINED_TYPED_C_NESTED'),
           'typed_invariant':('range_invariants','PROVED_DEFINED_TYPED_C_INVARIANT'),
@@ -107,7 +107,8 @@ def analyze_portfolio(request,analyze):
         profiles_tried=['native_division' if first else 'default']
         if profile=='auto' and can_profile and result.get('status')=='UNKNOWN' and result.get('reason')=='timeout':
             result=analyze({**base_c,'solver_profile':'native_division','frontend':backend,field:copy.deepcopy(p['summary'])});profiles_tried.append('native_division')
-        accepted=(result.get('status')==success and result.get('c_overflow_verified') is True and (result.get('termination_proved') is True or backend in SAFETY_ONLY))
+        math_mode=backend=='typed_invariant_while' and request.get('integer_model')=='mathematical'
+        accepted=((result.get('status')=='PROVED_MATH_INT_TYPED_C_INVARIANT_WHILE' if math_mode else (result.get('status')==success and result.get('c_overflow_verified') is True)) and (result.get('termination_proved') is True or backend in SAFETY_ONLY))
         trials.append({'id':p['id'],'summary_sha256':hashlib.sha256(json.dumps(p['summary'],sort_keys=True).encode()).hexdigest(),
                        'certified':accepted,'verification_seconds':time.perf_counter()-tick,'profiles_tried':profiles_tried,'result':copy.deepcopy(result)})
         if accepted:

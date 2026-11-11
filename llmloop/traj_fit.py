@@ -28,6 +28,14 @@ class Stop(Exception): pass
 
 
 class Interp:
+    math = False   # mathematical signed int/long: no wrap-around
+
+    def w(self, v, ty):
+        if self.math:
+            bits, signed = TYPES.get(ty, (32, True))
+            if signed and bits >= 32: return v
+        return wrap(v, ty)
+
     def __init__(self, func, limit=20000):
         self.func = func; self.types = {}; self.limit = limit; self.steps = 0; self.trace = []  # (loop, counts dict, state dict)
         self.loopstack = []; self.state_names = []
@@ -43,7 +51,7 @@ class Interp:
         if isinstance(n, c_ast.ID): return env[n.name]
         if isinstance(n, c_ast.UnaryOp):
             if n.op in ('++', 'p++', '--', 'p--'):
-                nm = n.expr.name; old = env[nm]; env[nm] = wrap(old + (1 if '+' in n.op else -1), self.types[nm]); return old if n.op.startswith('p') else env[nm]
+                nm = n.expr.name; old = env[nm]; env[nm] = self.w(old + (1 if '+' in n.op else -1), self.types[nm]); return old if n.op.startswith('p') else env[nm]
             v = self.ev(n.expr, env); return {'-': -v, '+': v, '!': int(not v), '~': ~v}[n.op]
         if isinstance(n, c_ast.BinaryOp):
             if n.op == '&&': return int(bool(self.ev(n.left, env)) and bool(self.ev(n.right, env)))
@@ -58,7 +66,7 @@ class Interp:
             if op in ('<<', '>>') and (b < 0 or b > 128): raise Stop()
             return {'<': lambda: int(a < b), '<=': lambda: int(a <= b), '>': lambda: int(a > b), '>=': lambda: int(a >= b), '==': lambda: int(a == b), '!=': lambda: int(a != b), '<<': lambda: a << b, '>>': lambda: a >> b, '&': lambda: a & b, '|': lambda: a | b, '^': lambda: a ^ b}[op]()
         if isinstance(n, c_ast.TernaryOp): return self.ev(n.iftrue if self.ev(n.cond, env) else n.iffalse, env)
-        if isinstance(n, c_ast.Cast): return wrap(self.ev(n.expr, env), tkey(n.to_type.type.type.names))
+        if isinstance(n, c_ast.Cast): return self.w(self.ev(n.expr, env), tkey(n.to_type.type.type.names))
         if isinstance(n, c_ast.Assignment):
             nm = n.lvalue.name; r = self.ev(n.rvalue, env); old = env[nm]
             if n.op == '=': new = r
@@ -68,7 +76,7 @@ class Interp:
                 def crem(x, y): return (abs(x) % abs(y)) * (1 if x >= 0 else -1) if y else 0
                 if op in ('<<', '>>') and (r < 0 or r > 128): raise Stop()
                 new = {'+': lambda: old + r, '-': lambda: old - r, '*': lambda: old * r, '/': lambda: cdiv(old, r), '%': lambda: crem(old, r), '<<': lambda: old << r, '>>': lambda: old >> r, '&': lambda: old & r, '|': lambda: old | r, '^': lambda: old ^ r}[op]()
-            env[nm] = wrap(new, self.types[nm]); return env[nm]
+            env[nm] = self.w(new, self.types[nm]); return env[nm]
         raise Stop()
 
     def run_stmts(self, items, env):
@@ -76,13 +84,13 @@ class Interp:
 
     def stmt(self, s, env):
         if isinstance(s, c_ast.Decl):
-            self.types[s.name] = tkey(s.type.type.names); env[s.name] = wrap(self.ev(s.init, env), self.types[s.name]) if s.init is not None else 0
+            self.types[s.name] = tkey(s.type.type.names); env[s.name] = self.w(self.ev(s.init, env), self.types[s.name]) if s.init is not None else 0
         elif isinstance(s, c_ast.Compound): self.run_stmts(s.block_items or [], env)
         elif isinstance(s, c_ast.If):
             if self.ev(s.cond, env): self.stmt(s.iftrue, env)
             elif s.iffalse is not None: self.stmt(s.iffalse, env)
         elif isinstance(s, c_ast.For):
-            d = s.init.decls[0]; self.types[d.name] = tkey(d.type.type.names); env[d.name] = wrap(self.ev(d.init, env), self.types[d.name]); k = 0
+            d = s.init.decls[0]; self.types[d.name] = tkey(d.type.type.names); env[d.name] = self.w(self.ev(d.init, env), self.types[d.name]); k = 0
             self.loopstack.append((d.name, [0])); cnt = self.loopstack[-1][1]
             while True:
                 self.record(env)
