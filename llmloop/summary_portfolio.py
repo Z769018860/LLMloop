@@ -40,9 +40,9 @@ def analyze_portfolio(request,analyze):
         if not isinstance(summary,dict) or len(summary)>16:raise SMTGraphError('Proposal summary must be a map with at most 16 coordinates/loops')
         maps=[summary] if backend=='typed_recurrence' else list(summary.values())
         if backend=='typed_invariant_while':
-            forms=summary.get('invariant') if set(summary)=={'invariant'} else None
+            forms=summary.get('invariant') if {'invariant'}<=set(summary)<={'invariant','ranking'} and isinstance(summary.get('ranking',''),str) else None
             if isinstance(forms,str):forms=[forms]
-            if not isinstance(forms,list) or not 1<=len(forms)<=256 or any(not isinstance(f,str) or not 1<=len(f)<=1000 for f in forms):raise SMTGraphError('typed_invariant_while proposals require {"invariant": [formula strings]}')
+            if not isinstance(forms,list) or not 1<=len(forms)<=1024 or any(not isinstance(f,str) or not 1<=len(f)<=1000 for f in forms):raise SMTGraphError('typed_invariant_while proposals require {"invariant": [formula strings]}')
             maps=[]
         if backend in ('typed_invariant_nested','typed_invariant_tree'):
             for level in summary.values():

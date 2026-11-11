@@ -115,3 +115,23 @@ def test_integer_model_option_is_validated_and_portfolio_uses_math_status():
            'proposals': [{'id': 'p', 'summary': {'invariant': ['x >= a']}}], 'parameter_bounds': {'a': [0, 1]}, 'inputs': {'a': 0}, 'abi': 'LP64'}
     assert analyze_request(req)['status'] == MATH_OK
     assert analyze_request({**req, 'integer_model': 'c'})['status'] != MATH_OK
+
+
+def test_ranking_function_proves_termination_only_when_valid():
+    src = 'int f(int n){int x=0;int y=0;while(x<n){x=x+1;y=y+2;}return 1/(y==2*x);}'
+    inv = ['x >= 0', 'y == 2*x', 'x <= n or n < 0']
+    ok = run(src, inv, {'n': [0, 1000]}); assert ok['status'] == OK and ok['termination_proved'] is False
+    r = analyze_request({'source': src, 'frontend': 'typed_invariant_while', 'range_invariants': {'invariant': inv, 'ranking': 'n - x'}, 'parameter_bounds': {'n': [0, 1000]}, 'abi': 'LP64'})
+    assert r['status'] == OK and r['termination_proved'] is True
+    for bad in ('x', 'n', '0', 'n - x - 2'):     # increasing, constant, not strictly decreasing, negative at the last iteration (n - x - 1 would be valid)
+        r = analyze_request({'source': src, 'frontend': 'typed_invariant_while', 'range_invariants': {'invariant': inv, 'ranking': bad}, 'parameter_bounds': {'n': [0, 1000]}, 'abi': 'LP64'})
+        assert r['status'] == 'UNKNOWN' and r.get('termination_proved') is False, bad
+
+
+def test_ranking_is_rejected_for_nondeterministic_loop_conditions_and_bad_syntax():
+    src = 'int f(int n){int x=0;while(unknown()){x=x+1;}return 1/(x>=0);}'
+    for rk in ('x', 'n - x', 5):
+        r = analyze_request({'source': src, 'frontend': 'typed_invariant_while', 'range_invariants': {'invariant': ['x >= 0'], 'ranking': rk}, 'parameter_bounds': {'n': [0, 1]}, 'abi': 'LP64'})
+        assert r['status'] == 'UNKNOWN' and r.get('termination_proved') in (False, None)
+    r = analyze_request({'source': 'int f(int n){int x=n;while(x>0){x=x-1;}return 1/(x<=0);}', 'frontend': 'typed_invariant_while', 'range_invariants': {'invariant': ['x <= n'], 'ranking': 'x > 0'}, 'parameter_bounds': {'n': [0, 5]}, 'abi': 'LP64'})
+    assert r['status'] == 'UNKNOWN'         # a boolean is not an integer ranking expression

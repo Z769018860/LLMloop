@@ -51,7 +51,7 @@ def _rewrite_calls(root, counter):
     return out
 
 
-def formula_to_z3(text, env):
+def formula_to_z3(text, env, kind='bool'):
     """Translate a formula string (python syntax) over integer-valued names in env to a z3 Bool/Int expression. Raises SMTGraphError on anything outside the grammar."""
     if not isinstance(text, str) or not 1 <= len(text) <= 1000: raise SMTGraphError('Invariant formulas must be strings of at most 1000 characters')
     try: tree = pyast.parse(text.strip(), mode='eval')
@@ -102,7 +102,8 @@ def formula_to_z3(text, env):
         raise SMTGraphError('Unsupported syntax in invariant formula')
 
     r = go(tree.body)
-    if not z3.is_bool(r): raise SMTGraphError('Invariant formulas must be boolean (use a comparison)')
+    if kind == 'bool' and not z3.is_bool(r): raise SMTGraphError('Invariant formulas must be boolean (use a comparison)')
+    if kind == 'int' and not z3.is_arith(r): raise SMTGraphError('A ranking function must be an integer expression')
     return r
 
 
@@ -124,10 +125,11 @@ class TypedCInvariantWhile(TypedCInvariantTree):
         return out
 
     def build(self, inv):
-        if not isinstance(inv, dict) or set(inv) != {'invariant'}: raise SMTGraphError('Candidate must be {"invariant": [formula, ...]}')
-        forms = inv['invariant']
+        if not isinstance(inv, dict) or not {'invariant'} <= set(inv) <= {'invariant', 'ranking'}: raise SMTGraphError('Candidate must be {"invariant": [formula, ...], optional "ranking": expr}')
+        forms = inv['invariant']; ranking = inv.get('ranking'); self.termination = False
+        if ranking is not None and not isinstance(ranking, str): raise SMTGraphError('ranking must be an integer expression string')
         if isinstance(forms, str): forms = [forms]
-        if not isinstance(forms, list) or not 1 <= len(forms) <= 256: raise SMTGraphError('invariant must be 1..256 formula strings')
+        if not isinstance(forms, list) or not 1 <= len(forms) <= 1024: raise SMTGraphError('invariant must be 1..1024 formula strings')
         items = self.func.body.block_items or []
         if not items or not isinstance(items[-1], c_ast.Return): raise SMTGraphError('Function must end with a return')
         counter = [0]; nds = _rewrite_calls(self.func.body, counter); self._counter_ct = 0
@@ -181,6 +183,16 @@ class TypedCInvariantWhile(TypedCInvariantTree):
         exits = self._run_seg(body, [(z3.BoolVal(True), env1, z3.BoolVal(True))], pre_b, 'body')
         for ph, (g, env, extra) in enumerate(exits):
             self.check('invariant preserved (body path %d)' % ph, z3.And(pre_b, extra, g), inv_at({n: env[n].value for n in self.state}))
+        # termination (optional): a ranking function that is non-negative and strictly decreases on every iteration from ANY state satisfying Inv and the (deterministic) loop condition
+        if ranking is not None:
+            if any(isinstance(x, c_ast.ID) and x.name.startswith('__nd') for x in _walk(cond)): raise SMTGraphError('A ranking function needs a deterministic loop condition')
+            def rk(vals):
+                mp = {n: t.value for n, t in self.parameters.items()}; mp.update({n: vals[n] for n in self.state}); return formula_to_z3(ranking, mp, 'int')
+            r0 = rk({n: s1[n].value for n in self.state})
+            self.check('ranking function is non-negative', pre_b, r0 >= 0)
+            for ph, (g, env, extra) in enumerate(exits):
+                self.check('ranking function decreases (body path %d)' % ph, z3.And(pre_b, extra, g), rk({n: env[n].value for n in self.state}) < r0)
+            self.termination = True
         # exit
         s2 = self._fresh('x'); nd2 = self._nd_terms('exit')
         for n_, t_ in s2.items(): self.witness['state_exit_' + n_] = t_.value
@@ -205,11 +217,11 @@ class TypedCInvariantWhile(TypedCInvariantTree):
     def report(self, inputs=None):
         base = {'abi': self.engine.abi.model, 'function': self.func.decl.name, 'domain_smt2': self.domain.sexpr(), 'parameter_types': {name: term.type.name for name, term in self.parameters.items()},
                 'semantics': 'typed C integer semantics with explicit implementation choices',
-                'certificate': {'method': 'typed inductive predicate invariant for one possibly nondeterministic loop (safety only: no undefined behaviour on any finite prefix; termination NOT proved)', 'obligations': self.checks},
+                'certificate': {'method': 'typed inductive predicate invariant for one possibly nondeterministic loop (safety only: no undefined behaviour on any finite prefix; termination only if a ranking function is supplied and verified)', 'obligations': self.checks},
                 'implementation_choices': {'signed_cast': 'two-complement modular', 'signed_right_shift': 'arithmetic'},
                 'scope': 'one top-level while/for loop, loop-free body without break/continue/return/declarations; unknown()/nondet calls are universally quantified inputs; NOT exact values; no heap', 'exact_value_certified': False}
         if self.failure is not None:
             result = {**base, 'status': 'UNKNOWN', 'failed_obligation': self.failure.label, 'reason': self.failure.reason, 'c_overflow_verified': False, 'termination_proved': False}
             if self.failure.witness is not None: result['counterexample'] = self.failure.witness
             return result
-        return {**base, 'status': 'PROVED_DEFINED_TYPED_C_INVARIANT_WHILE' if self.integer_model == 'c' else 'PROVED_MATH_INT_TYPED_C_INVARIANT_WHILE', 'integer_model': self.integer_model, 'c_overflow_verified': self.integer_model == 'c', 'termination_proved': False, 'invariants': self.invariants, 'state_types': {n: self.types[n].name for n in self.state}}
+        return {**base, 'status': 'PROVED_DEFINED_TYPED_C_INVARIANT_WHILE' if self.integer_model == 'c' else 'PROVED_MATH_INT_TYPED_C_INVARIANT_WHILE', 'integer_model': self.integer_model, 'c_overflow_verified': self.integer_model == 'c', 'termination_proved': self.termination, 'invariants': self.invariants, 'state_types': {n: self.types[n].name for n in self.state}}

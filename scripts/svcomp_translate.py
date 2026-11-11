@@ -103,13 +103,37 @@ def translate(path):
         tgt = [d for d in decls if d.name == prog[0].lvalue.name and d.init is None]
         if not tgt: break
         tgt[0].init = prog[0].rvalue; prog.pop(0)
+    # assertions / reach_error() inside the program (loops, branches): turn each into `__a = 1/(cond);` (UB iff the assertion fails) using a dummy local
+    n_inner = [0]
+    def rewrite(stmts):
+        out = []
+        for s in stmts:
+            a = assert_of(s)
+            if a is None and isinstance(s, c_ast.If) and s.iffalse is None:
+                body = s.iftrue.block_items if isinstance(s.iftrue, c_ast.Compound) else [s.iftrue]
+                calls = [getattr(x.name, 'name', '') for x in (body or []) if isinstance(x, c_ast.FuncCall)]
+                if body and calls and 'reach_error' in calls and all(c in ('reach_error', 'abort') for c in calls) and len(calls) == len(body):
+                    a = c_ast.UnaryOp('!', s.cond)
+            if a is not None:
+                n_inner[0] += 1; out.append(c_ast.Assignment('=', c_ast.ID('__a'), c_ast.BinaryOp('/', c_ast.Constant('int', '1'), a))); continue
+            for attr in ('stmt', 'iftrue', 'iffalse'):
+                sub = getattr(s, attr, None)
+                if isinstance(sub, c_ast.Compound): sub.block_items = rewrite(sub.block_items or [])
+                elif sub is not None and isinstance(s, (c_ast.While, c_ast.For, c_ast.DoWhile, c_ast.If)):
+                    new_items = rewrite([sub])
+                    setattr(s, attr, new_items[0] if len(new_items) == 1 else c_ast.Compound(new_items))
+            out.append(s)
+        return out
     # trailing asserts
     asserts = []
     while prog and (assert_of(prog[-1]) is not None or (isinstance(prog[-1], c_ast.Return) and False)):
         asserts.insert(0, assert_of(prog.pop()))
     if prog and isinstance(prog[-1], c_ast.Return): prog.pop()  # trailing `return 0;`
     while prog and assert_of(prog[-1]) is not None: asserts.insert(0, assert_of(prog.pop()))
-    if not asserts: raise Reject('no trailing assertion')
+    prog = rewrite(prog)
+    if n_inner[0]:
+        decls = decls + [c_parser.CParser().parse('int __a = 0;').ext[0]]
+    if not asserts and not n_inner[0]: raise Reject('no assertion')
     class Chk(c_ast.NodeVisitor):
         def visit_FuncCall(s, n):
             nm = getattr(n.name, 'name', '?')
@@ -136,7 +160,7 @@ def translate(path):
     if not params: params['__z'] = 'int'; ranges['__z'] = [0, 0]
     sig = ', '.join('%s %s' % (t, n) for n, t in params.items())
     code = 'int f(%s){\n' % sig + ''.join(GEN.visit(d) + ';\n' for d in decls) + ''.join(GEN.visit(s) + (';\n' if not isinstance(s, (c_ast.Compound, c_ast.For, c_ast.While, c_ast.DoWhile, c_ast.If)) else '\n') for s in prog)
-    code += 'return 1/(%s);\n}\n' % ' && '.join('(%s)' % GEN.visit(a) for a in asserts)
+    code += ('return 1/(%s);\n}\n' % ' && '.join('(%s)' % GEN.visit(a) for a in asserts)) if asserts else 'return 0;\n}\n'
     return code, ranges
 
 

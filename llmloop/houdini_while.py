@@ -124,7 +124,7 @@ def _holds(atom, mp):
     except Exception: return False
 
 
-def houdini(source, bounds, abi='LP64', runs=60, max_rounds=40, solver_timeout_ms=5000, seed=1, integer_model='c'):
+def houdini(source, bounds, abi='LP64', runs=60, max_rounds=40, solver_timeout_ms=5000, seed=1, integer_model='c', extra_atoms=()):
     """Returns (status, invariant list, rounds, log)."""
     bounds = {k: list(v) for k, v in bounds.items()}
     states, entries, func, nds = sample_states(source, bounds, runs=runs, seed=seed, math=integer_model == 'mathematical')
@@ -132,10 +132,18 @@ def houdini(source, bounds, abi='LP64', runs=60, max_rounds=40, solver_timeout_m
     consts = {int(x) for x in re.findall(r'(?<![\w.])\d+', source)}; consts |= {c + d for c in list(consts) for d in (-1, 1)} | {0, 1, -1}
     cand = atoms_from(states, tuple(sorted(c for c in consts if abs(c) <= 10 ** 7))); log = []
     if not states: return 'NO_SAMPLES', [], 0, log
+    if extra_atoms:
+        from .typed_invariant_while import formula_to_z3
+        import z3
+        names = {n: z3.Int(n) for n in set(list(bounds)) | {k for p, s in states[:1] for k in s}}
+        for a in extra_atoms:
+            try: formula_to_z3(a, names); ok = True
+            except Exception: ok = False
+            if ok and a not in cand: cand.append(a)
     ast2 = c_parser.CParser().parse(source); f2 = [n for n in ast2.ext if isinstance(n, c_ast.FuncDef)][0]
     for rnd in range(max_rounds):
         if not cand: return 'EMPTY', [], rnd, log
-        r = analyze_request({'source': source, 'frontend': 'typed_invariant_while', 'range_invariants': {'invariant': cand[:256]}, 'parameter_bounds': bounds, 'abi': abi, 'solver_timeout_ms': solver_timeout_ms, 'integer_model': integer_model})
+        r = analyze_request({'source': source, 'frontend': 'typed_invariant_while', 'range_invariants': {'invariant': cand[:1024]}, 'parameter_bounds': bounds, 'abi': abi, 'solver_timeout_ms': solver_timeout_ms, 'integer_model': integer_model})
         if r['status'].startswith('PROVED'): return 'PROVED', cand, rnd + 1, log
         fo = r.get('failed_obligation') or ''; cx = r.get('counterexample') or {}
         log.append(fo or str(r.get('reason')))
