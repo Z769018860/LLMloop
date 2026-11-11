@@ -32,8 +32,8 @@
 | while，C | Code2Inv | 69 | 164/414 (40%) | 41 | Houdini 32 | 41 |
 | while，数学 | SV-COMP 期望成立 | 32 | 131/192 (68%) | 29 | Houdini 16 | 30 |
 | while，C | SV-COMP 期望成立 | 32 | 122/192 (64%) | 29 | Houdini 10 | 29 |
-| 计数循环 / counted | Code2Inv | 48 | 51/288 | 40 | 拟合器 30（含 min/max 基后 54/60 个计数程序合计）| 43 |
-期望违反断言的 SV-COMP 程序：两种语义、所有阶段 **0/54** 次被认证。 Programs whose assertion fails (SV-COMP): 0/54 certified in either model at every stage. 来源 / sources: `experiments/v076/final_summary.json`, `experiments/v077/benchmark_eval_v2.json`.
+| 计数循环 / counted | Code2Inv | 48 | 51/288 | 40 | 拟合器 30 | 43 |
+拟合器加入 min/max/指示项基（v0.77，开发集上调整）后，在计数模式的 49 个 Code2Inv + 11 个 SV-COMP 期望成立程序上认证 54/60（此前 40/59），期望违反程序 0 个。 After adding min/max/indicator features (tuned on this development set) the fitter certifies 54/60 counted-loop programs (previously 40/59), 0 violating. 期望违反断言的 SV-COMP 程序：两种语义、所有阶段 **0/54** 次被认证。 Programs whose assertion fails (SV-COMP): 0/54 certified in either model at every stage. 来源 / sources: `experiments/v076/final_summary.json`, `experiments/v077/benchmark_eval_v2.json`.
 **3.4 级联 / cascade.** 数学语义 Code2Inv：LLM 生成调用 16 vs 69（省 77%），级联认证 56–65 vs LLM 单独 28–63；修复多认证 0–3 个、额外 0–29 次调用。 Mathematical Code2Inv: 16 vs 69 LLM calls (−77%), cascade 56–65 vs LLM-only 28–63 certified, repair +0–3 programs.
 **3.5 混合与终止性 / hybrid and termination.** 候选原子 + Houdini 131/192 vs LLM 直接 91/192（对弱模型约两倍，对最强的两个模型略差）；排名函数：C 语义 9/42、数学语义 13/71 个已认证程序证明终止（其余多为 `while(unknown())`）。
 **3.6 未决程序 / unresolved.** 数学语义下 6 个期望成立程序未被认证：4 个被有界 CBMC + CPAchecker 反驳，2 个仍未决；C 语义下 31 个中 23 个有原生违例、8 个未决（`experiments/v076/final_summary.json`）。
