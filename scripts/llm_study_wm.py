@@ -57,8 +57,9 @@ def prompt(c, arm='w'):
 
 import os
 FIXSET = bool(os.environ.get('FIXSET'))
-OUT = ROOT / 'experiments' / ('v076' if FIXSET else 'v075') / 'wm'; PROTOCOL = ROOT / 'experiments' / 'protocols' / ('v076_study_wm_fix.json' if FIXSET else 'v075_study_wm.json')
-MODELS = T.MODELS; ARMS = ['if']; SEED = 20270301; REPS = 1; TEMP = 0.7; MAXTOK = 12000
+REPSET = bool(os.environ.get('WM_REPS'))   # v0.77 protocol amendment: repetitions 1..2 on the MERGED (corrected) corpus, separate output directory
+OUT = ROOT / 'experiments' / ('v077/wm_reps' if REPSET else ('v076' if FIXSET else 'v075')) / ('' if False else 'wm') if False else ROOT / 'experiments' / ('v077' if REPSET else ('v076' if FIXSET else 'v075')) / ('wm_reps' if REPSET else 'wm'); PROTOCOL = ROOT / 'experiments' / 'protocols' / ('v077_study_wm_reps.json' if REPSET else ('v076_study_wm_fix.json' if FIXSET else 'v075_study_wm.json'))
+MODELS = T.MODELS; ARMS = ['if']; SEED = 20270301 + (7 if REPSET else 0); REPS = 3 if REPSET else 1; REP_START = 1 if REPSET else 0; TEMP = 0.7; MAXTOK = 12000
 
 def freeze():
     OUT.mkdir(parents=True, exist_ok=True); cs = build(); rl = {c['name']: (c['role'] or 'provable_safe') for c in cs}
@@ -74,7 +75,7 @@ def generate():
     key = os.environ['LLM_API_KEY']; base = os.environ.get('LLM_BASE_URL', 'https://api.square16.org/v1')
     path = OUT / 'generations.jsonl'; done = {(r['model'], r['program'], r['arm'], r['rep']) for r in E.load_jsonl(path)}
     rng = random.Random(SEED); items = []; cs = build()
-    for rep in range(REPS):
+    for rep in range(REP_START, REPS):
         blk = [(m, c['name'], a, rep) for m in MODELS for c in cs for a in ARMS]; rng.shuffle(blk); items += blk
     q = collections.defaultdict(list)
     for it in items:
