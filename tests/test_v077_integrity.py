@@ -17,13 +17,12 @@ def test_repetitions_counts_and_no_violating_program_certified():
 
 
 def test_repetitions_used_the_corrected_corpus():
-    proto = {p['name']: p['prompt_sha256'] for p in J('experiments/protocols/v077_study_wm_reps.json')['programs']}
-    old = {p['name']: p['prompt_sha256'] for p in J('experiments/protocols/v075_study_wm.json')['programs']}
+    proto = {p['name']: p['prompt_sha256']['if'] for p in J('experiments/protocols/v077_study_wm_reps.json')['programs']}
+    old = {p['name']: p['prompt_sha256']['if'] for p in J('experiments/protocols/v075_study_wm.json')['programs']}
     changed = {'code2inv:' + f for f in J('experiments/v076/code2inv_changed.json')} & set(proto)      # the 15 corrected while-mode programs (the other 13 changed programs are counted-loop mode)
     assert len(changed) == 15 and all(proto[k] != old[k] for k in changed)         # corrected sources => different prompts than the pre-correction study
     assert all(proto[k] == old[k] for k in proto if k not in changed)                 # unaffected programs keep their prompts
-    gens = {g['program']: g['prompt_sha256'] for g in rows('experiments/v077/wm_reps/generations.jsonl')}
-    assert all(gens[k] == proto[k] for k in changed)                                   # generations used the corrected prompts
+    assert all(g['prompt_sha256'] == proto[g['program']] for g in rows('experiments/v077/wm_reps/generations.jsonl'))   # every generation used exactly the frozen prompt, corrected sources included
 
 
 def test_fitter_v2_never_certifies_a_violating_program_and_improves_counted_mode():
