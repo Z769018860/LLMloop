@@ -6,6 +6,10 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 ROOT = Path(__file__).resolve().parents[1]; EXT = Path('/home/user/ext')
 ASSERT_LIKE = {'assert', '__assert_fail', 'abort', 'exit', 'reach_error'}
+STUBS = '--stubs' in sys.argv   # treat output calls as side-effect-free and rand-like calls as nondeterministic inputs
+IO_STUBS = {'printLine', 'printIntLine', 'printWLine', 'printLongLine', 'printLongLongLine', 'printSizeTLine', 'printHexCharLine', 'printUnsignedLine', 'printSinkLine', 'printDoubleLine', 'printFloatLine', 'printBytesLine', 'printf', 'puts', 'putchar', 'fprintf', 'printStructLine', 'printWcharLine', 'printShortLine', 'printLine', 'printCharLine'}
+ND_STUBS = {'rand', 'RAND32', 'RAND64', 'globalReturnsTrueOrFalse', 'staticReturnsTrueOrFalse', 'globalReturnsTrue', 'globalReturnsFalse', 'staticReturnsTrue', 'staticReturnsFalse', 'fscanf', 'atoi', 'getchar'}
+CALLHIST = collections.Counter()
 
 
 def ast_of(path, includes):
@@ -31,7 +35,8 @@ def classify_function(fn):
         if k == 'CallExpr':
             ref = [x for x in walk(n) if x.get('kind') == 'DeclRefExpr']
             nm = (ref[0].get('referencedDecl') or {}).get('name', '?') if ref else '?'
-            if nm not in ASSERT_LIKE: calls.add(nm)
+            if nm not in ASSERT_LIKE and not (STUBS and (nm in IO_STUBS or nm in ND_STUBS)): calls.add(nm)
+            if nm not in ASSERT_LIKE: CALLHIST[nm] += 1
         q = (n.get('type') or {}).get('qualType', '') if isinstance(n.get('type'), dict) else ''
         if k in ('VarDecl', 'ParmVarDecl'):
             if '*' in q or '[' in q: feats['mem'] += 1
@@ -65,7 +70,7 @@ def suite(name, files, includes, limit=None, seed=1):
     cnt = collections.Counter(); parse_fail = sum(r[0] == 'PARSE_FAIL' for r in res); funcs = 0
     for st, fs in res:
         for nm, c in fs: cnt[c] += 1; funcs += 1
-    return {'suite': name, 'files_sampled': len(files), 'files_total': None, 'parse_fail_files': parse_fail, 'functions': funcs, 'function_classes': dict(cnt)}
+    return {'suite': name, 'call_histogram_top': CALLHIST.most_common(8), 'files_sampled': len(files), 'files_total': None, 'parse_fail_files': parse_fail, 'functions': funcs, 'function_classes': dict(cnt)}
 
 
 if __name__ == '__main__':
@@ -74,4 +79,8 @@ if __name__ == '__main__':
     for cwe in ('CWE190_Integer_Overflow', 'CWE191_Integer_Underflow', 'CWE369_Divide_by_Zero', 'CWE835_Infinite_Loop', 'CWE193_Off_by_One_Error'):
         fs = list((jt / 'testcases' / cwe).rglob('*.c')); r = suite('juliet:' + cwe, fs, [jt / 'testcasesupport'], limit=60); r['files_total'] = len(fs); out.append(r); print(r, flush=True)
     lm = EXT / 'LIG-MM'; fs = list(lm.rglob('*.c')); r = suite('LIG-MM', fs, [lm / 'src', lm], limit=80); r['files_total'] = len(fs); out.append(r); print(r, flush=True)
-    (ROOT / 'experiments/v074').mkdir(exist_ok=True); (ROOT / 'experiments/v074/realcode_coverage.json').write_text(json.dumps(out, indent=1) + '\n')
+    outname = 'realcode_coverage_stubs.json' if STUBS else 'realcode_coverage.json'
+    for name, d, inc in (('zlib', EXT / 'zlib', [EXT / 'zlib']), ('lz4', EXT / 'lz4' / 'lib', [EXT / 'lz4' / 'lib'])):
+        fs = [f for f in d.glob('*.c')]
+        if fs: r = suite(name, fs, inc, limit=None); r['files_total'] = len(fs); out.append(r); print(r, flush=True)
+    (ROOT / 'experiments/v074').mkdir(exist_ok=True); (ROOT / 'experiments/v074' / outname).write_text(json.dumps(out, indent=1) + '\n')
