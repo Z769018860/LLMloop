@@ -21,3 +21,8 @@
 4. **E4 拟合器增强**（N1）：加入 min/max/分段/条件基函数与按分支的拟合，仍在新种子语料上做一次性留出评估。
 5. **E5 真实代码验证**（M4/M5）：为 Juliet 扩展到更多变体（02–22）和 CWE122/415 的堆用例（需要数组/指针模式）；获取 coreutils 的 `config.h`/gnulib（需放行 GNU 镜像）并做函数级验证；busybox 小工具。
 6. **E6 论文整合**（M10）：一份中英文论文草稿，统一结果表、更正说明、威胁有效性与复现命令。
+
+
+## C. 更新（v0.77 后）/ Update after v0.77
+- **完成 / done:** E1 验证器（收益小）、E2 重复与成本、E4 拟合器 v2、E6 论文草稿、E3 的逐程序比较、E5 的 Juliet 全变体。 E1 verifier (small gain), E2, E4, E6 draft, per-program CPAchecker comparison, Juliet all variants.
+- **仍缺 / still missing:** ESBMC/Ultimate、CPAchecker 同性质配置；数组/指针/堆；coreutils/busybox；多循环覆盖的译写改进（未初始化局部变量的语义保持处理）；更多提示臂与重复；论文审阅。
