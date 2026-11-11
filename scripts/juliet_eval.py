@@ -17,16 +17,26 @@ FAKE = '''#define INT_MAX 2147483647
 #define printIntLine(x) (__sink = (x))
 #define printLine(x) (__sink = 0)
 #define OMIT_NOTHING
+#define GLOBAL_CONST_TRUE 1
+#define GLOBAL_CONST_FALSE 0
+#define GLOBAL_CONST_FIVE 5
+#define staticReturnsTrue() 1
+#define staticReturnsFalse() 0
+#define globalReturnsTrue() 1
+#define globalReturnsFalse() 0
+#define staticReturnsTrueOrFalse() unknown_int()
 extern int unknown_int(void); extern int __sink;
 '''
 SOURCES = ('rand', 'zero', 'max', 'min')
+VARIANTS = None if '--all-variants' in sys.argv else ('01', '17')
 
 
 def files():
     out = []
     for cwe, ops in (('CWE369_Divide_by_Zero', ('divide', 'modulo')), ('CWE190_Integer_Overflow', ('add', 'multiply', 'postinc', 'preinc', 'square')), ('CWE191_Integer_Underflow', ('sub', 'multiply', 'postdec', 'predec'))):
         for f in sorted((JT / cwe).glob('s*/*.c')):
-            m = re.match(r'(CWE\d+_[A-Za-z_]+)__int_([a-z]+)_([a-z]+)_(01|17)\.c$', f.name)
+            m = re.match(r'(CWE\d+_[A-Za-z_]+)__int_([a-z]+)_([a-z]+)_(\d\d)\.c$', f.name)
+            if m and VARIANTS and m.group(4) not in VARIANTS: continue
             if m and m.group(2) in SOURCES and m.group(3) in ops: out.append(f)
     return out
 
@@ -61,8 +71,10 @@ def unroll(stmts):
     return out
 
 
-def to_param_function(fd):
+def to_param_function(fd, consts=()):
     body = unroll(copy.deepcopy(fd.body.block_items or []))
+    used = {x.name for s in body for x in walk(s) if isinstance(x, c_ast.ID)}
+    body = [copy.deepcopy(c) for c in consts if c.name in used] + body
     wrapper = c_ast.Compound(body); k = [0]; params = []
     for x in walk(wrapper):  # Juliet declares locals without initializer and assigns before use: give them a value so the verifier's 'initialized scalar locals' rule holds
         if isinstance(x, c_ast.Decl) and x.init is None and isinstance(x.type, c_ast.TypeDecl): x.init = c_ast.Constant('int', '0')
@@ -86,16 +98,18 @@ if __name__ == '__main__':
     for f in files():
         try: ast = preprocess(f)
         except Exception as e: skipped['parse_fail'] += 1; continue
+        consts = [n for n in ast.ext if isinstance(n, c_ast.Decl) and isinstance(n.type, c_ast.TypeDecl) and isinstance(n.init, c_ast.Constant) and n.name]
+        for c in consts: c.storage = []; c.quals = []
         for fd in [n for n in ast.ext if isinstance(n, c_ast.FuncDef)]:
             nm = fd.decl.name
             if fd.decl.type.args is not None and fd.decl.type.args.params: continue
             kind = 'bad' if nm.endswith('_bad') else ('good' if re.search(r'good(G2B|B2G)', nm) else None)
             if kind is None: continue
-            try: code = to_param_function(fd)
+            try: code = to_param_function(fd, consts)
             except Exception as e: skipped[str(e)[:30]] += 1; continue
             try:
-                r = analyze_request({'source': code, 'frontend': 'typed_c', 'abi': 'LP64'}); st = r['status']
-            except Exception as e: st = 'ERROR:' + str(e)[:50]
-            rows.append({'file': f.name, 'function': nm, 'kind': kind, 'status': st})
-    (ROOT / 'experiments/v075').mkdir(exist_ok=True); (ROOT / 'experiments/v075/juliet.json').write_text(json.dumps({'rows': rows, 'skipped': dict(skipped)}, indent=1) + '\n')
+                r = analyze_request({'source': code, 'frontend': 'typed_c', 'abi': 'LP64'}); st = r['status']; why = str(r.get('reason') or r.get('error') or '')[:70]
+            except Exception as e: st = 'ERROR:' + str(e)[:50]; why = ''
+            rows.append({'file': f.name, 'function': nm, 'kind': kind, 'status': st, 'reason': why, 'variant': f.name[-5:-3]})
+    (ROOT / 'experiments/v075').mkdir(exist_ok=True); (ROOT / 'experiments/v077/juliet_all_variants.json' if VARIANTS is None else ROOT / 'experiments/v075/juliet.json').write_text(json.dumps({'rows': rows, 'skipped': dict(skipped)}, indent=1) + '\n')
     print(len(rows), dict(skipped)); print(collections.Counter((r['kind'], r['status'][:40]) for r in rows).most_common(10))
