@@ -24,4 +24,6 @@ if __name__ == '__main__':
     n['while_eval_math'] = merge_json('experiments/v074/while_eval_math.json', 'experiments/v076/while_eval_math.json', 'while_eval_math.json')
     n['benchmark_eval'] = merge_json('experiments/v073/benchmark_eval.json', 'experiments/v076/benchmark_eval.json', 'benchmark_eval.json')
     n['cpachecker'] = merge_json('experiments/v075/cpachecker.json', 'experiments/v076/cpachecker.json', 'cpachecker.json')
+    old = {r['file']: r for r in json.loads((ROOT / 'experiments/v074/code2inv_translated.json').read_text())}; new = {r['file']: r for r in json.loads((ROOT / 'experiments/v076/code2inv_translated.json').read_text())}
+    ch = {k.split(':')[1] for k in CH}; (OUT / 'code2inv_translated.json').write_text(json.dumps([new[f] if f in ch else old[f] for f in old], indent=1) + '\n')
     print(n)

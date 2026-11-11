@@ -14,7 +14,8 @@ def programs(out='v074'):
     if FIX: out = 'v076'
     for r in ([] if FIX else json.loads((ROOT / 'experiments' / out / 'translated.json').read_text())):
         if r['stage'] == 'in_while_fragment': ps.append(dict(corpus='svcomp', name=r['dir'] + '/' + r['file'], source=r['source'], parameter_bounds=r['parameter_bounds'], abi='ILP32', expected='valid' if r['expected_unreach'] == 'true' else ('violated' if r['expected_unreach'] == 'false' else 'unknown')))
-    for r in json.loads((ROOT / 'experiments' / out / 'code2inv_translated.json').read_text()):
+    MERGED = bool(__import__('os').environ.get('MERGED'))
+    for r in json.loads((ROOT / 'experiments' / ('v076/merged' if MERGED else out) / 'code2inv_translated.json').read_text()):
         if r['stage'] == 'in_while_fragment' and (not FIX or r['file'] in FIXKEYS): ps.append(dict(corpus='code2inv', name=r['file'], source=r['source'], parameter_bounds=r['parameter_bounds'], abi='LP64', expected='valid'))
     return ps
 

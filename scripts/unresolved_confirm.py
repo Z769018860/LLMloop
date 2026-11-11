@@ -18,19 +18,22 @@ def cbmc(p):
 
 
 if __name__ == '__main__':
+    import os
+    os.environ['MERGED'] = '1'
     from scripts.while_eval import programs
-    H = {r['corpus'] + ':' + r['name']: r['houdini']['status'] == 'PROVED' for r in json.loads((ROOT / 'experiments/v074/while_eval_math.json').read_text())}
+    M = 'experiments/v076/merged/'
+    H = {r['corpus'] + ':' + r['name']: r['houdini']['status'] == 'PROVED' for r in json.loads((ROOT / M / 'while_eval_math.json').read_text())}
     W = {}
-    for l in (ROOT / 'experiments/v075/wm/verifications.jsonl').read_text().splitlines():
+    for l in (ROOT / M / 'wm_verifications.jsonl').read_text().splitlines():
         v = json.loads(l)
         if v['result'] and v['result']['certified_summary']: W[v['program']] = True
     HA = {}
-    pa = ROOT / 'experiments/v075/ha/results.jsonl'
+    pa = ROOT / M / 'ha_results.jsonl'
     if pa.exists():
         for l in pa.read_text().splitlines():
             v = json.loads(l)
             if v['result']['status'] == 'PROVED': HA[v['program']] = True
-    CP = {r['corpus'] + ':' + r['name']: r['cpachecker'] for r in json.loads((ROOT / 'experiments/v075/cpachecker.json').read_text())}
+    CP = {r['corpus'] + ':' + r['name']: r['cpachecker'] for r in json.loads((ROOT / M / 'cpachecker.json').read_text())}
     todo = []
     for p in programs():
         if p['expected'] != 'valid': continue
@@ -38,5 +41,5 @@ if __name__ == '__main__':
         if not (H.get(key) or W.get(k2) or HA.get(k2)): todo.append((p, key))
     with ThreadPoolExecutor(3) as ex: res = list(ex.map(lambda t: cbmc(t[0]), todo))
     rows = [{'program': k, 'cbmc_bounded': r, 'cpachecker': CP.get(k)} for (p, k), r in zip(todo, res)]
-    (ROOT / 'experiments/v075/unresolved.json').write_text(json.dumps(rows, indent=1) + '\n')
+    (ROOT / 'experiments/v076/unresolved_merged.json').write_text(json.dumps(rows, indent=1) + '\n')
     print(len(rows), collections.Counter((r['cbmc_bounded'], r['cpachecker']) for r in rows).most_common(10))

@@ -6,14 +6,18 @@ from concurrent.futures import ProcessPoolExecutor
 ROOT = Path(__file__).resolve().parents[1]; sys.path.insert(0, str(ROOT))
 from scripts import llm_experiment as E, llm_study_t as T  # noqa: E402
 from scripts.while_eval import programs  # noqa: E402
-OUT = ROOT / 'experiments' / 'v075' / 'ha'; PROTOCOL = ROOT / 'experiments' / 'protocols' / 'v075_study_ha.json'
+FIXSET = bool(os.environ.get('FIXSET'))
+OUT = ROOT / 'experiments' / ('v076' if FIXSET else 'v075') / 'ha'; PROTOCOL = ROOT / 'experiments' / 'protocols' / ('v076_study_ha_fix.json' if FIXSET else 'v075_study_ha.json')
 MODELS = T.MODELS; SEED = 20270310; TEMP = 0.7; MAXTOK = 12000
 
 
 def corpus():
-    ev = {r['corpus'] + ':' + r['name']: r for r in json.loads((ROOT / 'experiments/v074/while_eval_math.json').read_text())}
+    ev = {r['corpus'] + ':' + r['name']: r for r in json.loads((ROOT / ('experiments/v076/merged/while_eval_math.json' if FIXSET else 'experiments/v074/while_eval_math.json')).read_text())}
     out = []
+    os.environ['MERGED'] = '1' if FIXSET else ''
+    FK = set(json.loads((ROOT / 'experiments/v076/code2inv_changed.json').read_text())) if FIXSET else None
     for p in programs():
+        if FIXSET and not (p['corpus'] == 'code2inv' and p['name'] in FK): continue
         h = ev[p['corpus'] + ':' + p['name']]['houdini']['status']
         if p['expected'] == 'unknown': continue
         if (p['expected'] == 'valid' and h != 'PROVED') or p['expected'] == 'violated': out.append(dict(p, key=p['corpus'] + ':' + p['name'].replace('/', '_')))

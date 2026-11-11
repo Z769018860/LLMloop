@@ -34,10 +34,12 @@ def search(p):
 
 
 if __name__ == '__main__':
-    ev = {r['corpus'] + ':' + r['name']: r for r in json.loads((ROOT / 'experiments/v074/while_eval.json').read_text())}
+    import os
+    OD = 'v076' if os.environ.get('FIXSET') else 'v074'
+    ev = {r['corpus'] + ':' + r['name']: r for r in json.loads((ROOT / 'experiments' / OD / 'while_eval.json').read_text())}
     todo = [p for p in programs() if p['expected'] != 'unknown' and ev[p['corpus'] + ':' + p['name']]['houdini']['status'] != 'PROVED']
     with ThreadPoolExecutor(3) as ex: res = list(ex.map(search, todo))
     out = {p['corpus'] + ':' + p['name']: {'expected': p['expected'], 'houdini': ev[p['corpus'] + ':' + p['name']]['houdini']['status'], 'witness': r} for p, r in zip(todo, res)}
-    (ROOT / 'experiments/v074/while_witnesses.json').write_text(json.dumps(out, indent=1) + '\n')
+    (ROOT / 'experiments' / OD / 'while_witnesses.json').write_text(json.dumps(out, indent=1) + '\n')
     import collections
     print(collections.Counter((v['expected'], 'witness' if isinstance(v['witness'], dict) else v['witness']) for v in out.values()))

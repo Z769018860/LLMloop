@@ -4,13 +4,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]; sys.path.insert(0, str(ROOT))
 from llmloop.api import analyze_request
 from llmloop.ranking_templates import candidates
+import os
+MERGED = bool(os.environ.get('MERGED')); D = 'experiments/v076/merged' if MERGED else 'experiments/v074'
 rows = []
 for mode, f in (('c', 'while_eval.json'), ('mathematical', 'while_eval_math.json')):
-    ev = json.loads((ROOT / 'experiments/v074' / f).read_text())
+    ev = json.loads((ROOT / D / f).read_text())
     src = {}
     for r in json.loads((ROOT / 'experiments/v074/translated.json').read_text()):
         if r['stage'] == 'in_while_fragment': src['svcomp:' + r['dir'] + '/' + r['file']] = (r['source'], r['parameter_bounds'], 'ILP32')
-    for r in json.loads((ROOT / 'experiments/v074/code2inv_translated.json').read_text()):
+    for r in json.loads((ROOT / D / 'code2inv_translated.json').read_text()):
         if r['stage'] == 'in_while_fragment': src['code2inv:' + r['file']] = (r['source'], r['parameter_bounds'], 'LP64')
     for r in ev:
         h = r['houdini']
@@ -22,7 +24,7 @@ for mode, f in (('c', 'while_eval.json'), ('mathematical', 'while_eval_math.json
             if res.get('termination_proved') is True: status = 'terminating_proved'; used = c; break
             status = 'ranking_failed'
         rows.append({'mode': mode, 'program': key, 'expected': r['expected'], 'status': status, 'ranking': used, 'candidates': cands})
-(ROOT / 'experiments/v075/termination.json').write_text(json.dumps(rows, indent=1) + '\n')
+(ROOT / ('experiments/v076/termination_merged.json' if MERGED else 'experiments/v075/termination.json')).write_text(json.dumps(rows, indent=1) + '\n')
 import collections
 for mode in ('c', 'mathematical'):
     rs = [r for r in rows if r['mode'] == mode]; print(mode, len(rs), dict(collections.Counter(r['status'] for r in rs)))
