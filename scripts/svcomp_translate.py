@@ -190,6 +190,13 @@ def stage_of(code, ranges, abi):
         if res.get('failed_obligation') or str(res.get('status', '')).startswith('PROVED'): return 'in_while_fragment'
         why.append('while:' + str(res.get('reason') or res.get('status'))[:60])
     except Exception as e: why.append('while:' + type(e).__name__ + ':' + str(e)[:60])
+    try:
+        k = len(re.findall(r'\b(?:while|for)\s*\(', code))
+        if 2 <= k <= 8:
+            res = analyze_request({'source': code, 'frontend': 'typed_invariant_loops', 'range_invariants': {'invariants': [['True']] * k}, 'parameter_bounds': ranges, 'abi': abi})
+            if res.get('failed_obligation') or str(res.get('status', '')).startswith('PROVED'): return 'in_loops_fragment'
+            why.append('loops:' + str(res.get('reason') or res.get('status'))[:60])
+    except Exception as e: why.append('loops:' + type(e).__name__ + ':' + str(e)[:60])
     return 'structural:' + ' | '.join(why)
 
 
