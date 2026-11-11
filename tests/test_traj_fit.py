@@ -1,4 +1,5 @@
 """Trajectory-fitting candidate generator: exact fits on known programs, unsafe programs never certified (the verifier decides), interpreter wrap semantics."""
+import json
 import pytest
 from pycparser import c_parser, c_ast
 from llmloop.api import analyze_request
@@ -44,3 +45,11 @@ def test_interpreter_handles_negative_operands_without_aborting():
     assert cand['i']['x']['lo'] == '(-3*i)' or '3' in cand['i']['x']['lo']
     status, c = certify('int f(int n,int m){int x=0;int i;for(i=0;i<n;i++){x=x+m;}return 1/((x==n*m)||(n<0));}', {'n': [0, 1000], 'm': [-1000, 1000]})
     assert status == 'PROVED_DEFINED_TYPED_C_INVARIANT_TREE', c
+
+
+def test_min_max_and_indicator_features_fit_piecewise_terminal_values():
+    src = 'int f(int y_in, int z){int y = y_in;int x = 0;while (x < 5){x += 1;if (z <= y){y = z;}}return 1/((z >= y));}'
+    status, cand = certify(src, {'y_in': [-1000000, 1000000], 'z': [-1000000, 1000000]})
+    assert status == 'PROVED_DEFINED_TYPED_C_INVARIANT_TREE' and 'Min(' in json.dumps(cand)
+    unsafe = src.replace('z >= y', 'z > y')
+    assert certify(unsafe, {'y_in': [-1000000, 1000000], 'z': [-1000000, 1000000]})[0] != 'PROVED_DEFINED_TYPED_C_INVARIANT_TREE'

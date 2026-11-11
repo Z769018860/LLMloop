@@ -8,6 +8,7 @@ from fractions import Fraction
 from pycparser import c_ast
 from .loop_index_normalize import hoist_loop_indices
 
+MINMAX = True   # v0.77: min/max of parameter pairs and [count==0]*parameter features (piecewise terminal values such as y = min(y_in, z))
 TYPES = {'char': (8, True), 'signedchar': (8, True), 'unsignedchar': (8, False), 'short': (16, True), 'unsignedshort': (16, False), 'int': (32, True), 'unsigned': (32, False), 'unsignedint': (32, False),
          'long': (64, True), 'unsignedlong': (64, False), 'longlong': (64, True), 'unsignedlonglong': (64, False)}
 
@@ -159,6 +160,14 @@ def basis(vars_, counts, level):
             for p in (2, 3, 4): B.append(('%s//%d' % (c, p), (lambda c, p: lambda v: v[c] // p)(c, p)))
             for p in (2, 3, 4): B.append(('((%s+%d)//%d)' % (c, p - 1, p), (lambda c, p: lambda v: (v[c] + p - 1) // p)(c, p)))
             B.append(('(1 if %s==0 else 0)' % c, (lambda c: lambda v: int(v[c] == 0))(c)))
+    if level >= 1 and MINMAX:
+        pv = [x for x in vars_ if x not in counts]
+        for a, b in itertools.combinations(pv, 2):
+            B.append(('Min(%s,%s)' % (a, b), (lambda a, b: lambda v: min(v[a], v[b]))(a, b))); B.append(('Max(%s,%s)' % (a, b), (lambda a, b: lambda v: max(v[a], v[b]))(a, b)))
+        for c in counts:
+            for x in pv: B.append(('(1 if %s==0 else 0)*%s' % (c, x), (lambda c, x: lambda v: int(v[c] == 0) * v[x])(c, x)))
+            for a, b in itertools.combinations(pv, 2):
+                B.append(('(1 if %s==0 else 0)*Min(%s,%s)' % (c, a, b), (lambda c, a, b: lambda v: int(v[c] == 0) * min(v[a], v[b]))(c, a, b))); B.append(('(1 if %s==0 else 0)*Max(%s,%s)' % (c, a, b), (lambda c, a, b: lambda v: int(v[c] == 0) * max(v[a], v[b]))(c, a, b)))
     if level >= 2:
         for a, b in itertools.combinations_with_replacement(vars_, 2): B.append(('%s*%s' % (a, b), (lambda a, b: lambda v: v[a] * v[b])(a, b)))
     if level >= 3:

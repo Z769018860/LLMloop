@@ -16,8 +16,9 @@ BACKENDS={'typed_recurrence':('closed_forms','PROVED_DEFINED_TYPED_C_RECURRENCE'
           'typed_invariant':('range_invariants','PROVED_DEFINED_TYPED_C_INVARIANT'),
           'typed_invariant_nested':('range_invariants','PROVED_DEFINED_TYPED_C_INVARIANT_NESTED'),
           'typed_invariant_tree':('range_invariants','PROVED_DEFINED_TYPED_C_INVARIANT_TREE'),
-          'typed_invariant_while':('range_invariants','PROVED_DEFINED_TYPED_C_INVARIANT_WHILE')}
-SAFETY_ONLY={'typed_invariant_while'}  # partial correctness: termination is not proved and not required
+          'typed_invariant_while':('range_invariants','PROVED_DEFINED_TYPED_C_INVARIANT_WHILE'),
+          'typed_invariant_loops':('range_invariants','PROVED_DEFINED_TYPED_C_INVARIANT_LOOPS')}
+SAFETY_ONLY={'typed_invariant_while','typed_invariant_loops'}  # partial correctness: termination is not proved and not required
 
 
 def analyze_portfolio(request,analyze):
@@ -39,6 +40,10 @@ def analyze_portfolio(request,analyze):
         seen.add(name)
         if not isinstance(summary,dict) or len(summary)>16:raise SMTGraphError('Proposal summary must be a map with at most 16 coordinates/loops')
         maps=[summary] if backend=='typed_recurrence' else list(summary.values())
+        if backend=='typed_invariant_loops':
+            lists=summary.get('invariants') if set(summary)=={'invariants'} else None
+            if not isinstance(lists,list) or not 1<=len(lists)<=8 or any(not isinstance(l,list) or not 1<=len(l)<=256 or any(not isinstance(f,str) or not 1<=len(f)<=1000 for f in l) for l in lists):raise SMTGraphError('typed_invariant_loops proposals require {"invariants": [[formula strings], ...]}')
+            maps=[]
         if backend=='typed_invariant_while':
             forms=summary.get('invariant') if {'invariant'}<=set(summary)<={'invariant','ranking'} and isinstance(summary.get('ranking',''),str) else None
             if isinstance(forms,str):forms=[forms]
@@ -101,14 +106,14 @@ def analyze_portfolio(request,analyze):
         tick=time.perf_counter()
         profile=request.get('solver_profile','default')
         base_c=copy.deepcopy(base);base_c.pop('solver_profile',None)
-        can_profile=backend in ('typed_recurrence','typed_invariant','typed_invariant_nested','typed_invariant_tree','typed_invariant_while')
+        can_profile=backend in ('typed_recurrence','typed_invariant','typed_invariant_nested','typed_invariant_tree','typed_invariant_while','typed_invariant_loops')
         first={'solver_profile':'native_division'} if (profile=='native_division' and can_profile) else {}
         result=analyze({**base_c,**first,'frontend':backend,field:copy.deepcopy(p['summary'])})
         profiles_tried=['native_division' if first else 'default']
         if profile=='auto' and can_profile and result.get('status')=='UNKNOWN' and result.get('reason')=='timeout':
             result=analyze({**base_c,'solver_profile':'native_division','frontend':backend,field:copy.deepcopy(p['summary'])});profiles_tried.append('native_division')
-        math_mode=backend=='typed_invariant_while' and request.get('integer_model')=='mathematical'
-        accepted=((result.get('status')=='PROVED_MATH_INT_TYPED_C_INVARIANT_WHILE' if math_mode else (result.get('status')==success and result.get('c_overflow_verified') is True)) and (result.get('termination_proved') is True or backend in SAFETY_ONLY))
+        math_mode=backend in ('typed_invariant_while','typed_invariant_loops') and request.get('integer_model')=='mathematical'
+        accepted=((result.get('status')==('PROVED_MATH_INT_TYPED_C_INVARIANT_WHILE' if backend=='typed_invariant_while' else 'PROVED_MATH_INT_TYPED_C_INVARIANT_LOOPS') if math_mode else (result.get('status')==success and result.get('c_overflow_verified') is True)) and (result.get('termination_proved') is True or backend in SAFETY_ONLY))
         trials.append({'id':p['id'],'summary_sha256':hashlib.sha256(json.dumps(p['summary'],sort_keys=True).encode()).hexdigest(),
                        'certified':accepted,'verification_seconds':time.perf_counter()-tick,'profiles_tried':profiles_tried,'result':copy.deepcopy(result)})
         if accepted:

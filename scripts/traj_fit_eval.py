@@ -8,6 +8,10 @@ ROOT = Path(__file__).resolve().parents[1]; sys.path.insert(0, str(ROOT))
 def corpora():
     from scripts import llm_corpus3, llm_corpus4, llm_corpus5, llm_corpus6
     out = []
+    if '--heldout3' in sys.argv:  # third fresh held-out set, evaluated once after the v0.77 basis extension (min/max, indicator products)
+        for name, mod, seed in (('heldout3_corpus3_tree', llm_corpus3, 20270401), ('heldout3_corpus4_rel', llm_corpus4, 20270402), ('heldout3_corpus5_if', llm_corpus5, 20270403)):
+            for c in mod.build(seed): out.append((name, c['name'], c['source'], c['parameter_bounds'], c['role'] or 'provable_safe', 'LP64'))
+        return out
     if '--heldout2' in sys.argv:  # second fresh held-out set, evaluated once after the v0.74 interpreter fix
         for name, mod, seed in (('heldout2_corpus3_tree', llm_corpus3, 20270201), ('heldout2_corpus4_rel', llm_corpus4, 20270202), ('heldout2_corpus5_if', llm_corpus5, 20270203)):
             for c in mod.build(seed): out.append((name, c['name'], c['source'], c['parameter_bounds'], c['role'] or 'provable_safe', 'LP64'))
@@ -43,7 +47,7 @@ def job(j):
 if __name__ == '__main__':
     js = corpora()
     with ProcessPoolExecutor(4) as ex: rows = list(ex.map(job, js))
-    (ROOT / 'experiments/v072').mkdir(exist_ok=True); (ROOT / 'experiments/v072' / ('traj_fit_heldout2.json' if '--heldout2' in sys.argv else ('traj_fit_heldout.json' if '--heldout' in sys.argv else 'traj_fit.json'))).write_text(json.dumps(rows, indent=1) + '\n')
+    (ROOT / 'experiments/v072').mkdir(exist_ok=True); (ROOT / 'experiments/v072' / ('traj_fit_heldout3.json' if '--heldout3' in sys.argv else 'traj_fit_heldout2.json' if '--heldout2' in sys.argv else ('traj_fit_heldout.json' if '--heldout' in sys.argv else 'traj_fit.json'))).write_text(json.dumps(rows, indent=1) + '\n')
     for c in dict.fromkeys(r['corpus'] for r in rows):
         rs = [r for r in rows if r['corpus'] == c]; safe = [r for r in rs if r['role'] != 'unsafe_source_control' and r['role'] != 'hard_unconfirmed']
         print(c, 'safe', sum(r['status'].startswith('PROVED') for r in safe), '/', len(safe), 'unsafe certified', sum(r['status'].startswith('PROVED') for r in rs if r['role'] == 'unsafe_source_control'), '/', sum(r['role'] == 'unsafe_source_control' for r in rs), 'errors', sum(r['status'] == 'ERROR' for r in rs))
