@@ -66,7 +66,9 @@ def files():
 def preprocess(f):
     d = Path(tempfile.mkdtemp()); (d / 'std_testcase.h').write_text(FAKE)
     for h in ('wchar.h', 'string.h', 'stdlib.h', 'alloca.h', 'stdio.h'): (d / h).write_text('')
-    src = subprocess.run(['gcc', '-E', '-P', '-nostdinc', '-I', str(d), '-D__attribute__(x)=', str(f)], capture_output=True, text=True).stdout
+    txt = re.sub(r'static int staticReturns(?:True|False)\(\)\s*\{[^}]*\}', '', f.read_text(errors='replace'))     # variant 08 defines these as functions; the stub macros replace them
+    (d / 'tc.c').write_text(txt)
+    src = subprocess.run(['gcc', '-E', '-P', '-nostdinc', '-I', str(d), '-D__attribute__(x)=', str(d / 'tc.c')], capture_output=True, text=True).stdout
     return c_parser.CParser().parse(re.sub(r'#.*', '', src))
 
 
@@ -199,7 +201,7 @@ if __name__ == '__main__':
         for fd in [n for n in ast.ext if isinstance(n, c_ast.FuncDef)]:
             nm = fd.decl.name
             if fd.decl.type.args is not None and fd.decl.type.args.params: continue
-            kind = 'bad' if nm.endswith('_bad') else ('good' if re.search(r'good(G2B|B2G)', nm) else None)
+            kind = 'bad' if nm.endswith('_bad') else ('good' if re.search(r'good(G2B|B2G)\d?$', nm) else None)
             if kind is None: continue
             try: code = to_param_function(fd, consts, funcs, gptrs)
             except Exception as e: skipped[str(e)[:30]] += 1; continue

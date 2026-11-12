@@ -41,7 +41,7 @@ def add_off(off, k, sign=1):
 class Rewriter:
     def __init__(self, funcs=None):
         self.size = {}; self.alias = {}; self.ptrs = {}; self.consts = {}; self.fill = {}; self.slen = {}; self.seen = set(); self.nsh = 0
-        self.funcs = funcs or {}; self.pp = {}; self.fnptr = {}; self.ret = None; self.depth = 0; self.ptabs = set(); self.structs = set(); self.unions = set()
+        self.funcs = funcs or {}; self.pp = {}; self.fnptr = {}; self.ret = None; self.depth = 0; self.ptabs = set(); self.structs = set(); self.unions = set(); self.sptr = {}; self.sarr = set(); self.smap = {}; self.sdecl = set(); self.pending = []; self.passed = set()
 
     # ------------------------------------------------------------------ constants
     def cexpr(self, e):
@@ -67,6 +67,23 @@ class Rewriter:
             ops = {'+': a + b, '-': a - b, '*': a * b, '==': int(a == b), '!=': int(a != b), '<': int(a < b), '<=': int(a <= b), '>': int(a > b), '>=': int(a >= b)}
             if e.op in ops: return ops[e.op]
         raise ValueError('non-constant expression')
+
+    # ------------------------------------------------------------------ scalar slots: `int *p = &x` (*p is x), int array elements a[k] and struct/union fields s.f are scalar variables
+    def sname(self, e):
+        if isinstance(e, c_ast.UnaryOp) and e.op == '*' and isinstance(e.expr, c_ast.ID) and e.expr.name in self.sptr: return self.sptr[e.expr.name]
+        if isinstance(e, c_ast.ArrayRef) and isinstance(e.name, c_ast.ID) and self.smap.get(e.name.name, e.name.name) in self.sarr:
+            try: k = self.cexpr(e.subscript)
+            except ValueError: raise ValueError('variable index into a scalar-slot array')
+            return '%s__%d' % (self.smap.get(e.name.name, e.name.name), k)
+        if isinstance(e, c_ast.StructRef) and e.type == '.' and isinstance(e.name, c_ast.ID) and self.smap.get(e.name.name, e.name.name) in self.structs:
+            b = self.smap.get(e.name.name, e.name.name); f = 'u' if b in self.unions else e.field.name
+            if '%s.%s' % (b, '*' if b in self.unions else e.field.name) in self.alias: return None      # a pointer slot
+            return '%s__%s' % (b, f)
+        return None
+
+    def ensure(self, nm):
+        if '__' in nm and nm not in self.sdecl and nm not in self.consts:
+            self.sdecl.add(nm); self.pending.append(c_ast.Decl(nm, [], [], [], [], c_ast.TypeDecl(nm, [], None, c_ast.IdentifierType(['int'])), num(0), None))
 
     # ------------------------------------------------------------------ pointer slots: array-of-pointer elements `a[2]` and struct fields `s.f` are tracked like pointer variables
     def slot(self, e):
@@ -113,7 +130,9 @@ class Rewriter:
         for name, child in list(n.children()):
             self.expr(child)
             new = None
-            if isinstance(child, c_ast.ArrayRef) and isinstance(child.name, c_ast.ID) and child.name.name in self.ptrs: new = self.deref(child.name.name, child.subscript)
+            sn = self.sname(child)
+            if sn is not None: self.ensure(sn); new = c_ast.ID(sn)
+            elif isinstance(child, c_ast.ArrayRef) and isinstance(child.name, c_ast.ID) and child.name.name in self.ptrs: new = self.deref(child.name.name, child.subscript)
             elif isinstance(child, c_ast.UnaryOp) and child.op == '*' and isinstance(child.expr, c_ast.ID) and child.expr.name in self.ptrs: new = self.deref(child.expr.name, num(0))
             elif isinstance(child, c_ast.UnaryOp) and child.op == '*' and isinstance(child.expr, c_ast.ID) and child.expr.name in self.pp: raise ValueError('pointer-to-pointer value in arithmetic')
             elif isinstance(child, c_ast.FuncCall) and getattr(child.name, 'name', '') in ('strlen', 'wcslen'): new = num(self.cexpr(child))
@@ -187,8 +206,11 @@ class Rewriter:
                         if k.startswith(a.name + '['): self.alias[nm + k[len(a.name):]] = v; self.ptrs[nm + k[len(a.name):]] = None
                 elif isinstance(a, c_ast.UnaryOp) and a.op == '&' and isinstance(a.expr, c_ast.ID) and a.expr.name in self.ptrs: self.pp[nm] = a.expr.name; self.ptabs.discard(nm)
                 else: raise ValueError('pointer-to-pointer parameter')
+            elif isinstance(p.type, c_ast.ArrayDecl) and isinstance(a, c_ast.ID) and self.smap.get(a.name, a.name) in self.sarr: self.smap[nm] = self.smap.get(a.name, a.name); self.sarr.add(nm)
+            elif isinstance(p.type, c_ast.PtrDecl) and isinstance(a, c_ast.UnaryOp) and a.op == '&' and isinstance(a.expr, c_ast.ID) and a.expr.name not in self.ptrs and a.expr.name not in self.size: self.sptr[nm] = a.expr.name
+            elif isinstance(p.type, c_ast.PtrDecl) and isinstance(a, c_ast.ID) and a.name in self.sptr: self.sptr[nm] = self.sptr[a.name]
             elif isinstance(p.type, c_ast.TypeDecl) and isinstance(p.type.type, c_ast.IdentifierType) and p.type.type.names[0] not in BASIC and isinstance(a, c_ast.ID) and a.name in self.structs:
-                self.structs.add(nm)
+                self.structs.add(nm); self.smap[nm] = self.smap.get(a.name, a.name)
                 for k, v in list(self.alias.items()):
                     if k.startswith(a.name + '.'): self.alias[nm + k[len(a.name):]] = v; self.ptrs[nm + k[len(a.name):]] = None
             elif isinstance(p.type, c_ast.PtrDecl) and isinstance(a, c_ast.UnaryOp) and a.op == '&' and isinstance(a.expr, c_ast.ID) and a.expr.name in self.ptrs: self.pp[nm] = a.expr.name   # void * carrying &ptr
@@ -215,14 +237,22 @@ class Rewriter:
         if isinstance(s, c_ast.Decl): return self.decl(s)
         if isinstance(s, c_ast.Assignment) and isinstance(s.lvalue, c_ast.ID) and s.lvalue.name in self.ptrs and s.op == '=': return self.passign(s.lvalue.name, s.rvalue)
         if isinstance(s, c_ast.Assignment) and isinstance(s.lvalue, c_ast.UnaryOp) and s.lvalue.op == '*' and isinstance(s.lvalue.expr, c_ast.ID) and s.lvalue.expr.name in self.pp and s.op == '=': return self.passign(self.pp[s.lvalue.expr.name], s.rvalue)
-        if isinstance(s, c_ast.Assignment) and s.op == '=' and self.slot(s.lvalue) is not None: self.ptrs.setdefault(self.slot(s.lvalue), None); return self.passign(self.slot(s.lvalue), s.rvalue)
+        if isinstance(s, c_ast.Assignment) and s.op == '=' and self.slot(s.lvalue) is not None and self.sname(s.lvalue) is None or (isinstance(s, c_ast.Assignment) and s.op == '=' and self.slot(s.lvalue) is not None and self.is_ptr(s.rvalue) and not isinstance(s.rvalue, c_ast.Constant)):
+            self.ptrs.setdefault(self.slot(s.lvalue), None); return self.passign(self.slot(s.lvalue), s.rvalue)
+        if isinstance(s, c_ast.Assignment) and s.op == '=' and self.sname(s.lvalue) is not None:
+            nm = self.sname(s.lvalue); self.ensure(nm); s.lvalue = c_ast.ID(nm)
         if isinstance(s, c_ast.FuncCall): return self.call(s)
-        if isinstance(s, c_ast.For): return self.loop(s)
-        if isinstance(s, c_ast.While) and self.truth(s.cond) is True:       # while(1){ ...; break; }
+        if isinstance(s, c_ast.For):
+            try: return self.loop(s)
+            except ValueError as e:
+                if str(e) not in ('loop shape', 'non-constant expression'): raise
+                return self.loop2(s)
+        if isinstance(s, c_ast.While) and self.cexpr_or_none(s.cond) is True:       # while(1){ ...; break; }
             items = list(s.stmt.block_items if isinstance(s.stmt, c_ast.Compound) else [s.stmt])
             if items and isinstance(items[-1], c_ast.Break) and not any(isinstance(x, (c_ast.Break, c_ast.Continue)) for it in items[:-1] for x in walk(it)): return self.stmt(c_ast.Compound(items[:-1]))
             raise ValueError('control flow')
         if isinstance(s, c_ast.Switch): return self.switch(s)
+        if isinstance(s, c_ast.While) and self.cexpr_or_none(s.cond) is None: return self.loop2(s)
         if isinstance(s, c_ast.If):
             t = self.truth(s.cond)
             if t is not None:
@@ -250,6 +280,10 @@ class Rewriter:
             if k is not None and self.fill.get(b) == k: self.slen[b] = k
         return [s]
 
+    def cexpr_or_none(self, c):
+        try: return bool(self.cexpr(c))
+        except ValueError: return None
+
     def truth(self, c):
         try: return bool(self.cexpr(c))
         except ValueError: pass
@@ -264,7 +298,12 @@ class Rewriter:
 
     def decl(self, s):
         ty = s.type
-        if isinstance(ty, c_ast.ArrayDecl) and isinstance(ty.type, c_ast.PtrDecl): self.ptabs.add(s.name); return []                      # char *a[N]
+        if isinstance(ty, c_ast.ArrayDecl) and isinstance(ty.type, c_ast.PtrDecl): self.ptabs.add(s.name); return []
+        if isinstance(ty, c_ast.ArrayDecl) and s.name in self.passed and isinstance(ty.type, c_ast.TypeDecl): self.sarr.add(s.name); return []          # int a[N] passed to a function: scalar slots
+        if isinstance(ty, c_ast.PtrDecl) and isinstance(ty.type, c_ast.TypeDecl) and s.init is not None:
+            init0 = s.init.expr if isinstance(s.init, c_ast.Cast) else s.init
+            if isinstance(init0, c_ast.UnaryOp) and init0.op == '&' and isinstance(init0.expr, c_ast.ID) and init0.expr.name not in self.ptrs and init0.expr.name not in self.size: self.sptr[s.name] = init0.expr.name; return []
+            if isinstance(init0, c_ast.ID) and init0.name in self.sptr: self.sptr[s.name] = self.sptr[init0.name]; return []                      # char *a[N]
         if isinstance(ty, c_ast.TypeDecl) and isinstance(ty.type, c_ast.IdentifierType) and ty.type.names[0] not in BASIC and s.init is None:
             self.structs.add(s.name)
             if 'union' in ty.type.names[0]: self.unions.add(s.name)
@@ -283,7 +322,7 @@ class Rewriter:
         if isinstance(ty, c_ast.ArrayDecl):
             n = self.cexpr(ty.dim); self.size[s.name] = n; ty.dim = num(n); return [s]
         if s.init is not None and not isinstance(s.init, c_ast.InitList):
-            self.expr(s.init)
+            holder = c_ast.ExprList([s.init]); self.expr(holder); s.init = holder.exprs[0]
             try: self.consts[s.name] = self.cexpr(s.init)
             except ValueError: self.consts.pop(s.name, None)
         else: self.consts.pop(s.name, None)
@@ -325,6 +364,84 @@ class Rewriter:
             out.append(c_ast.Compound(self.stmts(copy.deepcopy(list(body)))))
         out.append(c_ast.Assignment('=', c_ast.ID(v), num(b))); self.consts[v] = b; return out
 
+    # ------------------------------------------------------------------ loops with symbolic bounds: first/last-iteration peeling (sound for subscripts that are linear in the induction variable)
+    def assigned(self, node):
+        out = set()
+        for n in walk(node):
+            if isinstance(n, c_ast.Assignment) and isinstance(n.lvalue, c_ast.ID): out.add(n.lvalue.name)
+            if isinstance(n, c_ast.UnaryOp) and n.op in ('p++', 'p--', '++', '--') and isinstance(n.expr, c_ast.ID): out.add(n.expr.name)
+            if isinstance(n, c_ast.Decl) and n.name: out.add(n.name)
+        return out
+
+    def linear(self, e, vs, inv):
+        ids = {x.name for x in walk(e) if isinstance(x, c_ast.ID)}
+        if not (ids & vs): return not (ids & inv)
+        if isinstance(e, c_ast.ID): return e.name in vs
+        if isinstance(e, c_ast.Constant): return True
+        if isinstance(e, c_ast.BinaryOp) and e.op in '+-': return self.linear(e.left, vs, inv) and self.linear(e.right, vs, inv)
+        if isinstance(e, c_ast.BinaryOp) and e.op == '*': return (isinstance(e.left, c_ast.Constant) and self.linear(e.right, vs, inv)) or (isinstance(e.right, c_ast.Constant) and self.linear(e.left, vs, inv))
+        return False
+
+    def loop2(self, s):
+        if isinstance(s, c_ast.For): init, cond, nxt, body = s.init, s.cond, s.next, list(s.stmt.block_items if isinstance(s.stmt, c_ast.Compound) else [s.stmt])
+        else:
+            init, cond, nxt, body = None, s.cond, None, list(s.stmt.block_items if isinstance(s.stmt, c_ast.Compound) else [s.stmt])
+            if body and isinstance(body[-1], c_ast.UnaryOp) and body[-1].op in ('p++', '++'): nxt = body.pop()
+            elif body and isinstance(body[-1], c_ast.Assignment) and body[-1].op == '+=' and isinstance(body[-1].rvalue, c_ast.Constant) and body[-1].rvalue.value == '1': nxt = body.pop()
+        if not (isinstance(cond, c_ast.BinaryOp) and cond.op in ('<', '<=') and isinstance(cond.left, c_ast.ID) and nxt is not None): raise ValueError('loop shape')
+        v = cond.left.name
+        isstep = (isinstance(nxt, c_ast.UnaryOp) and nxt.op in ('p++', '++') and isinstance(nxt.expr, c_ast.ID) and nxt.expr.name == v) or (isinstance(nxt, c_ast.Assignment) and nxt.op == '+=' and isinstance(nxt.lvalue, c_ast.ID) and nxt.lvalue.name == v and isinstance(nxt.rvalue, c_ast.Constant) and nxt.rvalue.value == '1')
+        if not isstep: raise ValueError('loop step')
+        pre = []
+        if init is not None:
+            if isinstance(init, c_ast.Assignment) and isinstance(init.lvalue, c_ast.ID) and init.lvalue.name == v:
+                pre = self.stmt(init) if v in self.ptrs else self.stmt(init)
+            else: raise ValueError('loop init')
+        mod = set()
+        for b in body: mod |= self.assigned(b)
+        if v in mod: raise ValueError('induction variable modified in the body')
+        if any(isinstance(x, (c_ast.Break, c_ast.Continue, c_ast.Return, c_ast.Goto, c_ast.While, c_ast.DoWhile, c_ast.For)) for b in body for x in walk(b)): raise ValueError('loop body control flow')
+        for b in body:
+            for x in walk(b):
+                if isinstance(x, c_ast.If) and ({y.name for y in walk(x.cond) if isinstance(y, c_ast.ID)} & ({v} | mod)): raise ValueError('induction-dependent condition in the body')
+        out = list(pre); self.nsh += 1; kn = '__k%d' % self.nsh
+        if v in self.ptrs:                           # pointer loop: p runs from alias[p] while p < end
+            a = self.alias.get(v); e = self.pexpr(cond.right)
+            if a is None or e is None or a[0] != e[0]: raise ValueError('pointer loop over unrelated pointers')
+            lo, hi = (a[1], e[1]); base = a[0]
+            for kk in (kn, kn + 'e'): self.sdecl.add(kk)
+            out.append(c_ast.Decl(kn, [], [], [], [], c_ast.TypeDecl(kn, [], None, c_ast.IdentifierType(['int'])), num(0), None)); out.append(c_ast.Decl(kn + 'e', [], [], [], [], c_ast.TypeDecl(kn + 'e', [], None, c_ast.IdentifierType(['int'])), num(0), None))
+            inv = {x.name for x in walk(c_ast.Compound([num(0)])) if False}
+            L = num(lo) if isinstance(lo, int) else copy.deepcopy(lo); H = num(hi) if isinstance(hi, int) else copy.deepcopy(hi)
+            if cond.op == '<=': H = c_ast.BinaryOp('+', H, num(1))
+            def one(kval):
+                self.alias[v] = (base, c_ast.ID(kn)); self.consts.pop(kn, None)
+                return [c_ast.Assignment('=', c_ast.ID(kn), kval), c_ast.Compound(self.stmts(copy.deepcopy(body)))]
+            first = one(copy.deepcopy(L)); last = one(c_ast.BinaryOp('-', copy.deepcopy(H), num(1)))
+            then = c_ast.Compound(first + last + [c_ast.Assignment('=', c_ast.ID(kn + 'e'), copy.deepcopy(H))])
+            els = c_ast.Compound([c_ast.Assignment('=', c_ast.ID(kn + 'e'), copy.deepcopy(L))])
+            out.append(c_ast.If(c_ast.BinaryOp('<', copy.deepcopy(L), copy.deepcopy(H)), then, els)); self.alias[v] = (base, c_ast.ID(kn + 'e'))
+        else:                                        # integer loop
+            hv = c_ast.Compound([c_ast.ExprList([cond.right])]); self.expr(hv); H = copy.deepcopy(cond.right)
+            if cond.op == '<=': H = c_ast.BinaryOp('+', H, num(1))
+            L = c_ast.ID(v); self.nsh += 1; lo = '__lo%d' % self.nsh
+            out.append(c_ast.Decl(lo, [], [], [], [], c_ast.TypeDecl(lo, [], None, c_ast.IdentifierType(['int'])), c_ast.ID(v), None))
+            inv = {x.name for x in walk(H) if isinstance(x, c_ast.ID)}
+            if inv & mod: raise ValueError('loop bound modified in the body')
+            vs = {v}
+            for b in body:
+                for x in walk(b):
+                    for sub in ([x.subscript] if isinstance(x, c_ast.ArrayRef) else [x.expr] if isinstance(x, c_ast.UnaryOp) and x.op == '*' else []):
+                        if not self.linear(sub, vs, mod): raise ValueError('non-linear index in a peeled loop')
+            def one(kval):
+                self.consts.pop(v, None)
+                return [c_ast.Assignment('=', c_ast.ID(v), kval), c_ast.Compound(self.stmts(copy.deepcopy(body)))]
+            first = one(c_ast.ID(lo)); last = one(c_ast.BinaryOp('-', copy.deepcopy(H), num(1)))
+            then = c_ast.Compound(first + last + [c_ast.Assignment('=', c_ast.ID(v), copy.deepcopy(H))])
+            out.append(c_ast.If(c_ast.BinaryOp('<', c_ast.ID(lo), copy.deepcopy(H)), then, None))
+        for x in mod: self.consts.pop(x, None)
+        self.consts.pop(v, None); return out
+
     def uniquify(self, items):
         """block-scope redeclaration (or a name used by an enclosing/earlier scope, including arrays and pointers): fresh name, because sizes/aliases are keyed by name. Renaming is sequential:
         an initializer that mentions the OUTER variable keeps referring to it (char *data = dataCopy; ... {char *data = dataCopy;})"""
@@ -349,7 +466,8 @@ class Rewriter:
         for k, s in enumerate(ss):
             if isinstance(s, c_ast.Goto) and k + 1 < len(ss) and isinstance(ss[k + 1], c_ast.Label) and ss[k + 1].name == s.name: continue      # goto to the next statement
             if isinstance(s, c_ast.Label): s = s.stmt
-            try: out += self.stmt(s)
+            try:
+                r = self.stmt(s); out += self.pending + r; self.pending = []
             except ValueError as e:
                 if str(e) != '__split__': raise
                 rest = ss[k + 1:]; self.expr(s.cond) if False else None
@@ -365,6 +483,7 @@ class Rewriter:
 def ptr_rewrite(body, funcs=None, globals_ptrs=()):
     rw = Rewriter(funcs)
     for n, elt in globals_ptrs: rw.ptrs[n] = elt; rw.alias[n] = None
+    rw.passed = {a.name for s in list(body) + [fn.body for fn in (funcs or {}).values()] for x in walk(s) if isinstance(x, c_ast.FuncCall) and x.args and getattr(x.name, 'name', '') in (funcs or {}) for a in x.args.exprs if isinstance(a, c_ast.ID)}
     rw.seen = {i.name for i in body if isinstance(i, c_ast.Decl) and i.name} | set(rw.ptrs)
     out = rw.stmts(body); root = c_ast.Compound(out)
     for n in walk(root):
