@@ -83,13 +83,22 @@ class Interp:
     def run_stmts(self, items, env):
         for s in items: self.stmt(s, env)
 
+    resample = None   # optional callback(env) invoked before every statement (nondeterministic values are re-drawn)
+
     def stmt(self, s, env):
+        if self.resample is not None: self.resample(env)
         if isinstance(s, c_ast.Decl):
             self.types[s.name] = tkey(s.type.type.names); env[s.name] = self.w(self.ev(s.init, env), self.types[s.name]) if s.init is not None else 0
         elif isinstance(s, c_ast.Compound): self.run_stmts(s.block_items or [], env)
         elif isinstance(s, c_ast.If):
             if self.ev(s.cond, env): self.stmt(s.iftrue, env)
             elif s.iffalse is not None: self.stmt(s.iffalse, env)
+        elif isinstance(s, c_ast.While):
+            k = self.lid.get(id(s)) if getattr(self, 'lid', None) else None; steps = 0
+            while True:
+                if k is not None and len(self.heads[k]) < 400: self.heads[k].append(dict(env))
+                if not self.ev(s.cond, env) or steps >= 60: break
+                self.stmt(s.stmt, env); steps += 1
         elif isinstance(s, c_ast.For):
             d = s.init.decls[0]; self.types[d.name] = tkey(d.type.type.names); env[d.name] = self.w(self.ev(d.init, env), self.types[d.name]); k = 0
             self.loopstack.append((d.name, [0])); cnt = self.loopstack[-1][1]

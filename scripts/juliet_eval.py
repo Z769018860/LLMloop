@@ -17,6 +17,7 @@ FAKE = '''#define INT_MAX 2147483647
 #define printIntLine(x) (__sink = (x))
 #define printLine(x) (__sink = 0)
 #define OMIT_NOTHING
+#define NULL 0
 #define GLOBAL_CONST_TRUE 1
 #define GLOBAL_CONST_FALSE 0
 #define GLOBAL_CONST_FIVE 5
@@ -28,7 +29,8 @@ FAKE = '''#define INT_MAX 2147483647
 #define ARRAY_SIZE_UNUSED 0
 extern int unknown_int(void); extern int __sink;
 '''
-ARRAYS = '--arrays' in sys.argv
+HEAP = '--heap' in sys.argv
+ARRAYS = '--arrays' in sys.argv or HEAP
 SOURCES = ('rand', 'large') if ARRAYS else ('rand', 'zero', 'max', 'min')
 VARIANTS = None if '--all-variants' in sys.argv else ('01', '17')
 
@@ -36,8 +38,8 @@ VARIANTS = None if '--all-variants' in sys.argv else ('01', '17')
 def files():
     out = []
     if ARRAYS:
-        for f in sorted((JT / 'CWE121_Stack_Based_Buffer_Overflow').glob('s*/*.c')):
-            m = re.match(r'CWE121_Stack_Based_Buffer_Overflow__CWE129_([a-z]+)_(\d\d)\.c$', f.name)
+        for f in sorted((JT / ('CWE122_Heap_Based_Buffer_Overflow' if HEAP else 'CWE121_Stack_Based_Buffer_Overflow')).glob('s*/*.c')):
+            m = re.match(r'CWE12[12]_[A-Za-z_]+?__(?:c_)?CWE129_([a-z]+)_(\d\d)\.c$', f.name)
             if m and m.group(1) in SOURCES and (not VARIANTS or m.group(2) in VARIANTS): out.append(f)
         return out
     for cwe, ops in (('CWE369_Divide_by_Zero', ('divide', 'modulo')), ('CWE190_Integer_Overflow', ('add', 'multiply', 'postinc', 'preinc', 'square')), ('CWE191_Integer_Underflow', ('sub', 'multiply', 'postdec', 'predec'))):
@@ -98,6 +100,14 @@ def rewrite_arrays(body):
     for comp in [n for n in walk(root) if isinstance(n, c_ast.Compound)]:
         keep = []
         for it in comp.block_items or []:
+            if isinstance(it, c_ast.Decl) and isinstance(it.type, c_ast.PtrDecl) and it.init is not None:     # heap buffer: T * p = (T *)malloc(CONST * sizeof(T));  (malloc assumed to succeed)
+                call = it.init.expr if isinstance(it.init, c_ast.Cast) else it.init
+                if isinstance(call, c_ast.FuncCall) and getattr(call.name, 'name', '') == 'malloc':
+                    a = call.args.exprs[0]
+                    if isinstance(a, c_ast.BinaryOp) and a.op == '*' and isinstance(a.left, c_ast.Constant) and isinstance(a.right, c_ast.UnaryOp) and a.right.op == 'sizeof': sizes[it.name] = int(a.left.value); continue
+                    raise ValueError('unsupported malloc size expression')
+            if isinstance(it, c_ast.If) and isinstance(it.cond, c_ast.BinaryOp) and it.cond.op == '==' and isinstance(it.cond.left, c_ast.ID) and it.cond.left.name in sizes and ((isinstance(it.cond.right, c_ast.ID) and it.cond.right.name == 'NULL') or (isinstance(it.cond.right, c_ast.Constant) and it.cond.right.value == '0')): continue   # NULL check of a successful malloc
+            if isinstance(it, c_ast.FuncCall) and getattr(it.name, 'name', '') == 'free' and it.args is not None and isinstance(it.args.exprs[0], c_ast.ID) and it.args.exprs[0].name in sizes: continue
             if isinstance(it, c_ast.Decl) and isinstance(it.type, c_ast.ArrayDecl):
                 dim = it.type.dim
                 if not isinstance(dim, c_ast.Constant): raise ValueError('non-constant array size')
@@ -167,5 +177,8 @@ if __name__ == '__main__':
                 r = analyze_request({'source': code, 'frontend': 'typed_c', 'abi': 'LP64'}); st = r['status']; why = str(r.get('reason') or r.get('error') or '')[:70]
             except Exception as e: st = 'ERROR:' + str(e)[:50]; why = ''
             rows.append({'file': f.name, 'function': nm, 'kind': kind, 'status': st, 'reason': why, 'variant': f.name[-5:-3]})
-    (ROOT / 'experiments/v075').mkdir(exist_ok=True); (ROOT / ('experiments/v078/juliet_arrays_all.json' if ARRAYS and VARIANTS is None else ('experiments/v078/juliet_arrays.json' if ARRAYS else ('experiments/v077/juliet_all_variants.json' if VARIANTS is None else 'experiments/v075/juliet.json')))).write_text(json.dumps({'rows': rows, 'skipped': dict(skipped)}, indent=1) + '\n')
+    if HEAP: outp = 'experiments/v079/juliet_heap_all.json' if VARIANTS is None else 'experiments/v079/juliet_heap.json'
+    elif ARRAYS: outp = 'experiments/v078/juliet_arrays_all.json' if VARIANTS is None else 'experiments/v078/juliet_arrays.json'
+    else: outp = 'experiments/v077/juliet_all_variants.json' if VARIANTS is None else 'experiments/v075/juliet.json'
+    (ROOT / outp).parent.mkdir(exist_ok=True); (ROOT / outp).write_text(json.dumps({'rows': rows, 'skipped': dict(skipped)}, indent=1) + '\n')
     print(len(rows), dict(skipped)); print(collections.Counter((r['kind'], r['status'][:40]) for r in rows).most_common(10))

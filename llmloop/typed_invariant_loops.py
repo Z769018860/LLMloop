@@ -96,6 +96,7 @@ class TypedCInvariantLoops(TypedCInvariantWhile):
         k = self._lid[id(loop)]; lab = '%s/loop%d' % (label, k); cond = loop.cond
         env_nd = {n: t for n, t in states[0][1].items() if n in self.nd_types}   # nondeterministic symbols of the enclosing segment stay as they are
         for ph, (g, env, extra) in enumerate(states):
+            for n_ in self.state: self.witness['entry_%d_%d_%s' % (k, ph, n_)] = env[n_].value      # lets a counterexample-guided generator read the offending entry state
             self.check('%s: invariant at entry (path %d)' % (lab, ph), z3.And(premise, g, extra if extra is not None else z3.BoolVal(True)), self._inv(k, {n: env[n].value for n in self.state}))
         s1 = self._fresh('b%d' % k); nd1 = self._nd_terms('body%d' % k)
         for n_, t_ in s1.items(): self.witness['state_in_%d_%s' % (k, n_)] = t_.value
@@ -106,6 +107,7 @@ class TypedCInvariantLoops(TypedCInvariantWhile):
         pre_b = z3.And(pre_c, self.engine.truth(c1)); body = list(loop.stmt.block_items or [])
         outs = self.process(body, [(z3.BoolVal(True), env1, z3.BoolVal(True))], ctx, pre_b, lab + '/body')
         for ph, (g, env, extra) in enumerate(outs):
+            for n_ in self.state: self.witness['post_%d_%d_%s' % (k, ph, n_)] = env[n_].value
             self.check('%s: invariant preserved (body path %d)' % (lab, ph), z3.And(pre_b, extra if extra is not None else z3.BoolVal(True), g), self._inv(k, {n: env[n].value for n in self.state}))
         s2 = self._fresh('x%d' % k); nd2 = {**env_nd}; env2 = {**self.parameters, **s2, **nd2}
         pre_x0 = z3.And(premise, *self._typerange(s2), self._inv(k, {n: s2[n].value for n in self.state}))
