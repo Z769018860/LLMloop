@@ -11,11 +11,13 @@ def ast_of(path, includes):
     except Exception: return None
 rc.ast_of = ast_of
 inc = [CU / 'fake', CU / 'gnulib/lib', CU / 'coreutils/src', CU / 'coreutils/lib']
-out = []; cands = []
+out = []; cands = []; allc = []
 for name, d in (('gnulib:lib', CU / 'gnulib/lib'), ('coreutils:src', CU / 'coreutils/src')):
     fs = sorted(d.glob('*.c')); r = rc.suite(name, fs, inc); r['files_total'] = len(fs); out.append(r); print(r, flush=True)
     for f in fs:
         st, funcs = rc.file_job((f, inc))
         for fn, c in funcs:
             if c == 'scalar_loop_candidate': cands.append({'suite': name, 'file': f.name, 'function': fn})
+            if c in ('scalar_loop_candidate', 'calls_to_other_functions'): allc.append({'suite': name, 'file': str(f), 'class': c, 'function': fn})
 (ROOT / 'experiments/v080/gnulib_coverage.json').write_text(json.dumps({'suites': out, 'scalar_candidates': cands}, indent=1) + '\n'); print(cands)
+(ROOT / 'experiments/v081').mkdir(exist_ok=True); (ROOT / 'experiments/v081/gnulib_coverage_candidates.json').write_text(json.dumps(allc, indent=1) + '\n')
