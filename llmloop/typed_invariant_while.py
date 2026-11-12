@@ -168,7 +168,8 @@ class TypedCInvariantWhile(TypedCInvariantTree):
             if isinstance(s, c_ast.Decl): states = self._norm(self.run(s, states))
             else: states = self._run_seg([s], states, premise0, 'pre')
         entry_env = states[0][1]
-        self.state = [n for n in entry_env if n not in self.parameters and n not in self.nd_types]
+        mut_ = {x.lvalue.name for x in _walk(self.func.body) if isinstance(x, c_ast.Assignment) and isinstance(x.lvalue, c_ast.ID)} | {x.expr.name for x in _walk(self.func.body) if isinstance(x, c_ast.UnaryOp) and x.op in ('p++', 'p--', '++', '--') and isinstance(x.expr, c_ast.ID)}
+        self.state = [n for n in entry_env if (n not in self.parameters or n in mut_) and n not in self.nd_types]   # parameters modified in the code are loop state too
         if not 1 <= len(self.state) <= 15 and not (len(self.state) == 0): raise SMTGraphError('0..15 scalar locals required')
         names_ok = list(self.parameters) + self.state
         def inv_at(vals):

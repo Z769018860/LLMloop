@@ -158,3 +158,15 @@ def test_jumps_do_not_make_unsafe_programs_certifiable():
     bad = 'int f(int n,int m){int x=0;int i=0;while(i<n){if(x>m){return 1;}x=x+i;i=i+1;}return 1/(x-x);}'
     for inv in (['x >= 0'], ['True'], ['x >= 0', 'i >= 0']):
         assert run(bad, inv, {'n': [0, 5], 'm': [0, 5]})['status'] != OK
+
+
+def test_mutated_parameters_are_loop_state():
+    from llmloop.api import analyze_request
+    inv = ['s >= 0', 'n - s >= 0', 'n - s <= 3', 'n <= 5']
+    def run(ret):
+        src = 'int f(int n){int s=0; while (n < 5) { n = n + 1; s = s + 1; } return %s;}' % ret
+        return analyze_request({'source': src, 'frontend': 'typed_invariant_while', 'range_invariants': {'invariant': inv}, 'parameter_bounds': {'n': [0, 3]}, 'abi': 'LP64'})['status']
+    assert run('1/(n-6)').startswith('PROVED') and not run('1/(n-5)').startswith('PROVED')
+    g = 'unsigned int f(unsigned int u, unsigned int v){unsigned int t = 0; while (v != 0) { t = u % v; u = v; v = t; } return u; }'
+    r = analyze_request({'source': g, 'frontend': 'typed_invariant_while', 'range_invariants': {'invariant': ['True'], 'ranking': 'v'}, 'parameter_bounds': {'u': [0, 4294967295], 'v': [0, 4294967295]}, 'abi': 'LP64'})
+    assert r['status'].startswith('PROVED') and r['termination_proved']

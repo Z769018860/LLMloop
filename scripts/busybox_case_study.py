@@ -3,13 +3,13 @@ import json, subprocess, tempfile, os, random
 from pathlib import Path
 from llmloop.api import analyze_request
 ROOT = Path(__file__).resolve().parents[1]
-GCD = 'unsigned int f(unsigned int u0, unsigned int v0){unsigned int u = u0; unsigned int v = v0; unsigned int t = 0; while (v != 0) { t = u % v; u = v; v = t; } return u; }'
+GCD = 'unsigned int f(unsigned int u, unsigned int v){unsigned int t = 0; while (v != 0) { t = u % v; u = v; v = t; } return u; }'
 ISQRT = 'unsigned long f(unsigned long long N){unsigned long x = 0; unsigned shift = 0; shift = 64 - 2; x = 0; do { x = (x << 1) + 1; if ((unsigned long long)x * x > (N >> shift)) x--; shift -= 2; } while ((int)shift >= 0); return x; }'
 # isqrt: do-while with post-body test; rewrite as while with first-iteration peel is not needed: loop body executes 32 times -> use for-form with counter
 ISQRT_W = 'unsigned long f(unsigned long long N){unsigned long x = 0; unsigned shift = 0; int i = 0; shift = 62; x = 0; i = 0; while (i < 32) { x = (x << 1) + 1; if ((unsigned long long)x * x > (N >> shift)) x--; shift -= 2; i = i + 1; } return x; }'
 out = {}
-r = analyze_request({'source': GCD, 'frontend': 'typed_invariant_while', 'range_invariants': {'invariant': ['True'], 'ranking': 'v'}, 'parameter_bounds': {'u0': [0, 4294967295], 'v0': [0, 4294967295]}, 'abi': 'LP64'})
-out['od_bloaty_gcd'] = {'status': r['status'], 'termination_proved': r.get('termination_proved'), 'ranking': 'v', 'note': 'parameters copied to locals u,v first (the verifier tracks only locals across iterations; a parameter mutated in the loop is not part of the loop state); u % v guarded by v != 0; unsigned arithmetic, no UB for any inputs; ranking v needs u%v<v'}
+r = analyze_request({'source': GCD, 'frontend': 'typed_invariant_while', 'range_invariants': {'invariant': ['True'], 'ranking': 'v'}, 'parameter_bounds': {'u': [0, 4294967295], 'v': [0, 4294967295]}, 'abi': 'LP64'})
+out['od_bloaty_gcd'] = {'status': r['status'], 'termination_proved': r.get('termination_proved'), 'ranking': 'v', 'note': 'u % v guarded by v != 0; unsigned arithmetic, no UB for any inputs; ranking v needs u%v<v'}
 r = analyze_request({'source': ISQRT_W, 'frontend': 'typed_invariant_while', 'range_invariants': {'invariant': ['i >= 0', 'i <= 32', 'i == 32 or shift + 2*i == 62']}, 'parameter_bounds': {'N': [0, 18446744073709551615]}, 'abi': 'LP64', 'solver_timeout_ms': 120000})
 out['libbb_isqrt'] = {'status': r['status'], 'note': 'do-while (int)shift>=0 over 32 iterations rewritten as counted while (equivalence checked natively below); unsigned arithmetic only; disjunctive invariant (the final shift -= 2 wraps, harmless for unsigned)'}
 # native equivalence of the rewrite for isqrt and of gcd

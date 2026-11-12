@@ -67,7 +67,8 @@ class TypedCInvariantLoops(TypedCInvariantWhile):
             if not isinstance(s, c_ast.While) and any(isinstance(x, (c_ast.Return, c_ast.Goto, c_ast.DoWhile, c_ast.Decl)) for x in _walk(s)): raise SMTGraphError('Unsupported control flow')
         self.check('initialization defined', self.domain, z3.And(*self.obligations))
         entry_env = initial[0][1]
-        self.state = [n for n in entry_env if n not in self.parameters and n not in self.nd_types]
+        mut_ = {x.lvalue.name for x in _walk(self.func.body) if isinstance(x, c_ast.Assignment) and isinstance(x.lvalue, c_ast.ID)} | {x.expr.name for x in _walk(self.func.body) if isinstance(x, c_ast.UnaryOp) and x.op in ('p++', 'p--', '++', '--') and isinstance(x.expr, c_ast.ID)}
+        self.state = [n for n in entry_env if (n not in self.parameters or n in mut_) and n not in self.nd_types]   # parameters modified in the code are loop state too
         self._forms = inv['invariants']; self._premise0 = z3.And(self.domain, nd_range)
         exits = self.process(middle, initial, [], self._premise0, 'top')
         for ph, (g, env, extra) in enumerate(exits):
