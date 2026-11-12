@@ -198,3 +198,6 @@ Study ES：base 154/228 vs exact 123/228（p=3e-6，I_nested 15→2/60），不�
 多循环模式（验证器+测试，覆盖增益很小）；拟合器 v2 在计数模式开发集 54/60（无回退）；CPAchecker 比较：我们认证 Code2Inv 108/118、SV-COMP 41/43，对其中 22+6 个 CPAchecker 返回 UNKNOWN，但它找违例更强（14/18）；Juliet 全变体 1500 个函数无误判；WM 3 次重复：ark 0.92、glm 0.89，其余 0.38–0.62，pass@3 增益 ≤0.12，违反程序 0/162。论文草稿已成稿。见 [报告](../paper/report_v077_bilingual.md)、[论文草稿](../paper/PAPER_DRAFT_bilingual.md)。
 
 全量测试（v0.77）：3428 passed。
+
+## v0.78：Ultimate/ESBMC 对比、数组有界模式、真实库函数、多循环真实程序、缺陷修复
+Ultimate Automizer 是最强工具（Code2Inv 110/118 TRUE，无超时），ESBMC 29，CPAchecker 86，我们（并集）108；我们的价值在可检查证书与未定义行为检查。Juliet CWE121/129 数组下标 150 个函数无误判；zlib `bi_reverse` 在文档前提下被证明无未定义行为且终止，无前提时有真实溢出；多循环模式在 6 个真实 SV-COMP 程序上 14/61 认证（gemini 11/12 传输失败）；修复循环前普通语句崩溃的缺陷。见 [报告](../paper/report_v078_bilingual.md)。

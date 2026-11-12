@@ -26,3 +26,8 @@
 ## C. 更新（v0.77 后）/ Update after v0.77
 - **完成 / done:** E1 验证器（收益小）、E2 重复与成本、E4 拟合器 v2、E6 论文草稿、E3 的逐程序比较、E5 的 Juliet 全变体。 E1 verifier (small gain), E2, E4, E6 draft, per-program CPAchecker comparison, Juliet all variants.
 - **仍缺 / still missing:** ESBMC/Ultimate、CPAchecker 同性质配置；数组/指针/堆；coreutils/busybox；多循环覆盖的译写改进（未初始化局部变量的语义保持处理）；更多提示臂与重复；论文审阅。
+
+
+## D. 更新（v0.78 后）/ Update after v0.78
+- **完成 / done:** ESBMC 与 Ultimate 评测；数组有界模式（Juliet CWE121/129）；真实库函数案例（zlib `bi_reverse`）；多循环模式在 6 个真实 SV-COMP 程序上的 LLM 研究；验证器缺陷修复与重新译写。
+- **仍缺 / still missing:** 指针与堆（Juliet CWE122/124/126/127、LIG-MM）；coreutils/busybox（需 `config.h`/gnulib 来源）；与我们性质一致的工具配置（溢出规范）；Houdini 的多循环支持；`multmodp`/`LZ4F_optimalBSID` 所需的 `break`/循环内 `return` 支持；更多真实库函数；Study LP 的更多程序与模型（gemini 传输失败需排查）。
