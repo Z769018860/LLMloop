@@ -140,6 +140,7 @@ class TypedCInvariantWhile(TypedCInvariantTree):
         nd_now = self._nd_terms('entry'); nd_range = z3.And(*self._nd_range(nd_now)) if nd_now else z3.BoolVal(True)
         initial = [(g, {**e, **nd_now}, x) for g, e, x in initial]
         while pos < len(items) and isinstance(items[pos], c_ast.Decl): initial = self.run(items[pos], initial); pos += 1
+        initial = self._norm(initial)
         middle = items[pos:-1]
         loops = [k for k, s in enumerate(middle) if isinstance(s, (c_ast.While, c_ast.For))]
         if len(loops) != 1 or sum(1 for s in middle for x in _walk(s) if isinstance(x, (c_ast.While, c_ast.For, c_ast.DoWhile))) != 1: raise SMTGraphError('Exactly one top-level loop (and no other loops) is required')
@@ -160,7 +161,7 @@ class TypedCInvariantWhile(TypedCInvariantTree):
         # pre-loop statements (declarations of a for-init included)
         states = [(g, e, x) for g, e, x in initial]
         for s in pre:
-            if isinstance(s, c_ast.Decl): states = self.run(s, states)
+            if isinstance(s, c_ast.Decl): states = self._norm(self.run(s, states))
             else: states = self._run_seg([s], states, premise0, 'pre')
         entry_env = states[0][1]
         self.state = [n for n in entry_env if n not in self.parameters and n not in self.nd_types]
@@ -205,6 +206,10 @@ class TypedCInvariantWhile(TypedCInvariantTree):
             ret = self.engine.convert(self.evaluate(items[-1].expr, {**env}), self.return_type)
             self.check('return expression defined (path %d)' % ph, z3.And(pre_x, extra, g), ret.safe)
         self.invariants = inv; self.loop_state = self.state; self.loops_found = ['while']
+
+    @staticmethod
+    def _norm(states):
+        return [(g, e, z3.BoolVal(True) if x is None else x) for g, e, x in states]
 
     def _nd_terms(self, tag):
         return {nm: TypedTerm(z3.FreshInt('nd_%s_%s' % (tag, nm)), t, z3.BoolVal(True)) for nm, t in self.nd_types.items()}

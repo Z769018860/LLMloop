@@ -135,3 +135,10 @@ def test_ranking_is_rejected_for_nondeterministic_loop_conditions_and_bad_syntax
         assert r['status'] == 'UNKNOWN' and r.get('termination_proved') in (False, None)
     r = analyze_request({'source': 'int f(int n){int x=n;while(x>0){x=x-1;}return 1/(x<=0);}', 'frontend': 'typed_invariant_while', 'range_invariants': {'invariant': ['x <= n'], 'ranking': 'x > 0'}, 'parameter_bounds': {'n': [0, 5]}, 'abi': 'LP64'})
     assert r['status'] == 'UNKNOWN'         # a boolean is not an integer ranking expression
+
+
+def test_statements_before_the_loop_are_supported():
+    # regression (v0.78): straight-line statements (not declarations) before the loop crashed the pre-loop segment (missing path condition)
+    src = 'int f(int a){int x=0;int y=0;x=a+1;y=2*x;while(x<a+5){x=x+1;y=y+2;}return 1/(y==2*x);}'
+    r = run(src, ['y == 2*x', 'x >= a + 1', 'x <= a + 5'], {'a': [0, 100]})
+    assert r['status'] == OK

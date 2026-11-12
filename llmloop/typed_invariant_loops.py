@@ -50,6 +50,7 @@ class TypedCInvariantLoops(TypedCInvariantWhile):
         nd0 = self._nd_terms('entry'); nd_range = z3.And(*self._nd_range(nd0)) if nd0 else z3.BoolVal(True)
         initial = [(g, {**e, **nd0}, x) for g, e, x in initial]
         while pos < len(items) and isinstance(items[pos], c_ast.Decl): initial = self.run(items[pos], initial); pos += 1
+        initial = self._norm(initial)
         middle = _desugar(list(items[pos:-1]))
         self._loops = [x for s in middle for x in _walk(s) if isinstance(x, c_ast.While)]
         if not 1 <= len(self._loops) <= 8: raise SMTGraphError('1..8 loops required')

@@ -124,7 +124,7 @@ def _holds(atom, mp):
     except Exception: return False
 
 
-def houdini(source, bounds, abi='LP64', runs=60, max_rounds=40, solver_timeout_ms=5000, seed=1, integer_model='c', extra_atoms=()):
+def houdini(source, bounds, abi='LP64', runs=60, max_rounds=40, solver_timeout_ms=5000, seed=1, integer_model='c', extra_atoms=(), atom_mode='full'):
     """Returns (status, invariant list, rounds, log)."""
     bounds = {k: list(v) for k, v in bounds.items()}
     states, entries, func, nds = sample_states(source, bounds, runs=runs, seed=seed, math=integer_model == 'mathematical')
@@ -140,6 +140,10 @@ def houdini(source, bounds, abi='LP64', runs=60, max_rounds=40, solver_timeout_m
             try: formula_to_z3(a, names); ok = True
             except Exception: ok = False
             if ok and a not in cand: cand.append(a)
+    if atom_mode == 'bounds':  # single-variable bound/modular atoms only: keeps the verifier queries easy for bit-vector heavy programs
+        import re as _re
+        names = set(bounds) | {k for p, s in states[:1] for k in s}
+        cand = [a for a in cand if len(set(_re.findall(r'[A-Za-z_]\w*', a)) & names) <= 1]
     ast2 = c_parser.CParser().parse(source); f2 = [n for n in ast2.ext if isinstance(n, c_ast.FuncDef)][0]
     for rnd in range(max_rounds):
         if not cand: return 'EMPTY', [], rnd, log
