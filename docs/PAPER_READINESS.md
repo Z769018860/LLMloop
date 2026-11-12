@@ -201,3 +201,5 @@ Study ES：base 154/228 vs exact 123/228（p=3e-6，I_nested 15→2/60），不�
 
 ## v0.78：Ultimate/ESBMC 对比、数组有界模式、真实库函数、多循环真实程序、缺陷修复
 Ultimate Automizer 是最强工具（Code2Inv 110/118 TRUE，无超时），ESBMC 29，CPAchecker 86，我们（并集）108；我们的价值在可检查证书与未定义行为检查。Juliet CWE121/129 数组下标 150 个函数无误判；zlib `bi_reverse` 在文档前提下被证明无未定义行为且终止，无前提时有真实溢出；多循环模式在 6 个真实 SV-COMP 程序上 14/61 认证（gemini 11/12 传输失败）；修复循环前普通语句崩溃的缺陷。见 [报告](../paper/report_v078_bilingual.md)。
+
+全量测试（v0.78）：3435 passed。
