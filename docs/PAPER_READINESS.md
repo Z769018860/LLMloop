@@ -210,3 +210,4 @@ Ultimate Automizer 是最强工具（Code2Inv 110/118 TRUE，无超时），ESBM
 - v0.79 追加：busybox 覆盖（966 函数，约 330 含循环，4 个标量候选）与 gcd/isqrt 认证；溢出属性对齐对比（CPAchecker 54、Ultimate 82 判安全；我们 C 模式 54；无误判，大量超时）；形参修改修复。报告 paper/report_v079_bilingual.md。
 - 全量测试（v0.79）：3452 passed
 - v0.79 追加2：指针算术 Juliet CWE124/126/127（变体 01+17：bad 164/164 标出，good 172/172 证明，0 错判；全部变体可翻译子集 280/398，0 错判）；多循环 Houdini 整体评测（多循环 5/6，单循环对照 25/42，不安全 0 认证）。
+- v0.80：Juliet CWE124/126/127 全变体 6828 个函数（bad 2792 标出、good 3999 证明、0 错判；曾发现并修复 2 个 bad 误证明）；指针动态偏移/比较微基准 10/10；多循环 Houdini 6/6（析取/蕴含原子）；gnulib/coreutils 覆盖（1124+147 文件 0 解析失败）与 3 个真实函数认证。报告 paper/report_v080_bilingual.md。
