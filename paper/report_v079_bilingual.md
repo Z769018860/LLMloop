@@ -15,4 +15,19 @@
 - 指针算术（CWE124/126/127）仍不支持。/ Pointer arithmetic still unsupported.
 
 ## 3. 溢出属性对齐的工具对比 / Property-aligned overflow tool comparison
-见 `experiments/v079/overflow_{cpachecker,ultimate}.json`（运行完成后补充）。 / see the JSON files; summary appended below when the runs finish.
+方法 Method：179 个 SV-COMP/Code2Inv 程序；"工具判安全" = unreach-call 为 TRUE 且 no-overflow 为 TRUE（各 60 s）；我们按语义拆分：C 模式认证（含溢出，可比）与仅数学整数模式认证（无溢出义务，**不可比**）。脚本 `scripts/overflow_comparison.py`，数据 `experiments/v079/overflow_*.json`。
+
+| 指标 / Metric | CPAchecker | Ultimate Automizer |
+|---|---|---|
+| 工具判安全 tool says safe (unreach ∧ overflow) | 54 | 82 |
+| 其中与我们 C 模式认证重合 / overlap with our C-mode certs | 19 | 31 |
+| 工具安全但我们 C 模式未认证 / tool-only | 35 | 51 |
+| 我们 C 模式认证但该工具未判安全 / ours-only | 35 | 23 |
+
+- 我们 C 模式认证 54 个；仅数学模式认证 95 个（与溢出属性不可比）；任一工具判安全 94 个；我们 C 模式认证且两工具都未判安全 20 个。/ Ours C-mode 54; math-only 95 (not comparable); either tool safe 94; ours C-mode but neither tool 20.
+- 无误判：两个工具和我们的 C 模式都没有在预期"违反"的程序上给出安全。/ No wrong verdicts: neither tool nor our C mode says safe on any expected-violated program.
+- 警示 Caveats：工具有 60 s 限制，大量 TIMEOUT（CPAchecker：svcomp 32/61、code2inv 74/118；Ultimate：13/61、63/118），所以"仅我们"部分受超时影响，不能解读为我们更强；Ultimate 在该属性上整体强于我们的 C 模式覆盖。/ 60 s limit with many TIMEOUTs, so "ours-only" is not evidence of superiority; Ultimate certifies more than our C mode overall.
+- 无加速声明 / no speedup claim.
+
+## 4. 修复 / Fix
+循环内被修改的形参现在视为循环状态（while/loops 模式），`gcd` 无需手工复制形参；回归测试 `test_mutated_parameters_are_loop_state`。/ Parameters modified in the code are now loop state; regression test added.
