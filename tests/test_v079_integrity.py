@@ -17,3 +17,20 @@ def test_busybox_coverage_counts():
 def test_heap_no_wrong():
     d = json.load(open(E / 'juliet_heap.json'))
     assert d, 'empty'
+
+
+def test_ptr_juliet_no_wrong():
+    for fn in ('juliet_ptr.json', 'juliet_ptr_all.json'):
+        rows = json.load(open(E / fn))['rows']
+        assert not [r for r in rows if r['kind'] == 'bad' and r['status'].startswith('PROVED')]
+        assert not [r for r in rows if r['kind'] == 'good' and r['status'].startswith('POSSIBLE')]
+    r = json.load(open(E / 'juliet_ptr.json'))
+    assert sum(x['kind'] == 'bad' and x['status'].startswith('POSSIBLE') for x in r['rows']) == 164
+    assert sum(x['kind'] == 'good' and x['status'].startswith('PROVED') for x in r['rows']) == 172
+
+
+def test_houdini_loops_eval_no_unsafe_certified():
+    d = json.load(open(E / 'houdini_loops_eval.json'))
+    assert d['unsafe_certified'] == []
+    ml = [r for r in d['rows'] if r['stage'] == 'in_loops_fragment']
+    assert len(ml) == 6 and sum(r['status'] == 'PROVED' for r in ml) == 5

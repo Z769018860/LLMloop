@@ -18,6 +18,9 @@ FAKE = '''#define INT_MAX 2147483647
 #define printLine(x) (__sink = 0)
 #define OMIT_NOTHING
 #define NULL 0
+#define ALLOCA malloc
+typedef int wchar_t; typedef unsigned long size_t;
+#define printWLine(x) (__sink = 0)
 #define GLOBAL_CONST_TRUE 1
 #define GLOBAL_CONST_FALSE 0
 #define GLOBAL_CONST_FIVE 5
@@ -30,13 +33,20 @@ FAKE = '''#define INT_MAX 2147483647
 extern int unknown_int(void); extern int __sink;
 '''
 HEAP = '--heap' in sys.argv
-ARRAYS = '--arrays' in sys.argv or HEAP
-SOURCES = ('rand', 'large') if ARRAYS else ('rand', 'zero', 'max', 'min')
+PTR = '--ptr' in sys.argv
+ARRAYS = '--arrays' in sys.argv or HEAP or PTR
+SOURCES = ('rand', 'large', 'negative') if ARRAYS else ('rand', 'zero', 'max', 'min')
 VARIANTS = None if '--all-variants' in sys.argv else ('01', '17')
 
 
 def files():
     out = []
+    if PTR:
+        for cwe in ('CWE124_Buffer_Underwrite', 'CWE126_Buffer_Overread', 'CWE127_Buffer_Underread'):
+            for f in sorted((JT / cwe).glob('s*/*.c')):
+                m = re.search(r'__(?:malloc_)?(?:w?char(?:_t)?)(?:_alloca|_declare)?_(cpy|loop|memcpy|memmove|ncpy)_(\d\d)\.c$', f.name) or re.search(r'__CWE839_(negative|rand)_(\d\d)\.c$', f.name)
+                if m and (not VARIANTS or m.group(2) in VARIANTS): out.append(f)
+        return out
     if ARRAYS:
         for f in sorted((JT / ('CWE122_Heap_Based_Buffer_Overflow' if HEAP else 'CWE121_Stack_Based_Buffer_Overflow')).glob('s*/*.c')):
             m = re.match(r'CWE12[12]_[A-Za-z_]+?__(?:c_)?CWE129_([a-z]+)_(\d\d)\.c$', f.name)
@@ -52,6 +62,7 @@ def files():
 
 def preprocess(f):
     d = Path(tempfile.mkdtemp()); (d / 'std_testcase.h').write_text(FAKE)
+    for h in ('wchar.h', 'string.h', 'stdlib.h', 'alloca.h', 'stdio.h'): (d / h).write_text('')
     src = subprocess.run(['gcc', '-E', '-P', '-nostdinc', '-I', str(d), '-D__attribute__(x)=', str(f)], capture_output=True, text=True).stdout
     return c_parser.CParser().parse(re.sub(r'#.*', '', src))
 
@@ -74,20 +85,21 @@ def rename_locals(stmts, suffix):
     return root.block_items
 
 
-def unroll(stmts):
+def unroll(stmts, keep_big=False):
     out = []
     for s in stmts:
         if isinstance(s, c_ast.For) and isinstance(s.init, c_ast.Assignment) and isinstance(s.cond, c_ast.BinaryOp) and s.cond.op == '<' and isinstance(s.cond.right, c_ast.Constant) and isinstance(s.init.rvalue, c_ast.Constant):
             trip = int(s.cond.right.value) - int(s.init.rvalue.value)
+            if keep_big and trip > 12: out.append(s); continue
             if not 0 <= trip <= 12: raise ValueError('loop not unrollable')
             out.append(s.init)
             body = s.stmt.block_items if isinstance(s.stmt, c_ast.Compound) else [s.stmt]
-            for it in range(trip): out.append(c_ast.Compound(unroll(rename_locals(copy.deepcopy(list(body)), '__u%d_%d' % (id(s) % 100000, it))))); out.append(copy.deepcopy(s.next))
-        elif isinstance(s, c_ast.Compound): out.append(c_ast.Compound(unroll(s.block_items or [])))
+            for it in range(trip): out.append(c_ast.Compound(unroll(rename_locals(copy.deepcopy(list(body)), '__u%d_%d' % (id(s) % 100000, it)), keep_big))); out.append(copy.deepcopy(s.next))
+        elif isinstance(s, c_ast.Compound): out.append(c_ast.Compound(unroll(s.block_items or [], keep_big)))
         elif isinstance(s, c_ast.If):
             for a in ('iftrue', 'iffalse'):
                 sub = getattr(s, a)
-                if isinstance(sub, c_ast.Compound): sub.block_items = unroll(sub.block_items or [])
+                if isinstance(sub, c_ast.Compound): sub.block_items = unroll(sub.block_items or [], keep_big)
             out.append(s)
         else: out.append(s)
     return out
@@ -137,6 +149,9 @@ def rewrite_arrays(body):
 
 def to_param_function(fd, consts=()):
     body = copy.deepcopy(fd.body.block_items or [])
+    if PTR:
+        from scripts.juliet_ptr import ptr_rewrite
+        body = ptr_rewrite(unroll(body, keep_big=True))
     if ARRAYS: body = rewrite_arrays(body)
     body = unroll(body)
     used = {x.name for s in body for x in walk(s) if isinstance(x, c_ast.ID)}
@@ -177,7 +192,8 @@ if __name__ == '__main__':
                 r = analyze_request({'source': code, 'frontend': 'typed_c', 'abi': 'LP64'}); st = r['status']; why = str(r.get('reason') or r.get('error') or '')[:70]
             except Exception as e: st = 'ERROR:' + str(e)[:50]; why = ''
             rows.append({'file': f.name, 'function': nm, 'kind': kind, 'status': st, 'reason': why, 'variant': f.name[-5:-3]})
-    if HEAP: outp = 'experiments/v079/juliet_heap_all.json' if VARIANTS is None else 'experiments/v079/juliet_heap.json'
+    if PTR: outp = 'experiments/v079/juliet_ptr_all.json' if VARIANTS is None else 'experiments/v079/juliet_ptr.json'
+    elif HEAP: outp = 'experiments/v079/juliet_heap_all.json' if VARIANTS is None else 'experiments/v079/juliet_heap.json'
     elif ARRAYS: outp = 'experiments/v078/juliet_arrays_all.json' if VARIANTS is None else 'experiments/v078/juliet_arrays.json'
     else: outp = 'experiments/v077/juliet_all_variants.json' if VARIANTS is None else 'experiments/v075/juliet.json'
     (ROOT / outp).parent.mkdir(exist_ok=True); (ROOT / outp).write_text(json.dumps({'rows': rows, 'skipped': dict(skipped)}, indent=1) + '\n')

@@ -209,3 +209,4 @@ Ultimate Automizer 是最强工具（Code2Inv 110/118 TRUE，无超时），ESBM
 - 未完成/Not done: 属性对齐的溢出工具运行（结果文件未生成，进程被重启中断）；coreutils/busybox 真实代码（`git clone busybox`+`make defconfig` 被权限分类器拒绝，等待用户决定）；指针算术（CWE124/126/127）仍不支持。
 - v0.79 追加：busybox 覆盖（966 函数，约 330 含循环，4 个标量候选）与 gcd/isqrt 认证；溢出属性对齐对比（CPAchecker 54、Ultimate 82 判安全；我们 C 模式 54；无误判，大量超时）；形参修改修复。报告 paper/report_v079_bilingual.md。
 - 全量测试（v0.79）：3452 passed
+- v0.79 追加2：指针算术 Juliet CWE124/126/127（变体 01+17：bad 164/164 标出，good 172/172 证明，0 错判；全部变体可翻译子集 280/398，0 错判）；多循环 Houdini 整体评测（多循环 5/6，单循环对照 25/42，不安全 0 认证）。
