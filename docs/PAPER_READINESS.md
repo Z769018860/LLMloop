@@ -208,3 +208,4 @@ Ultimate Automizer 是最强工具（Code2Inv 110/118 TRUE，无超时），ESBM
 - 新增：堆有界模式（Juliet CWE122/129：150 函数，22 个 bad 被标出，80 个 good 被证明，0 错判）；多循环 Houdini（`llmloop/houdini_loops.py`，按循环取样 + 反例状态削弱，验证器未改动；顺序/嵌套循环证明，不安全程序不被认证）。
 - 未完成/Not done: 属性对齐的溢出工具运行（结果文件未生成，进程被重启中断）；coreutils/busybox 真实代码（`git clone busybox`+`make defconfig` 被权限分类器拒绝，等待用户决定）；指针算术（CWE124/126/127）仍不支持。
 - v0.79 追加：busybox 覆盖（966 函数，约 330 含循环，4 个标量候选）与 gcd/isqrt 认证；溢出属性对齐对比（CPAchecker 54、Ultimate 82 判安全；我们 C 模式 54；无误判，大量超时）；形参修改修复。报告 paper/report_v079_bilingual.md。
+- 全量测试（v0.79）：3452 passed
