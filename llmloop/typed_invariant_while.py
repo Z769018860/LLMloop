@@ -133,6 +133,10 @@ class TypedCInvariantWhile(TypedCInvariantTree):
         items = self.func.body.block_items or []
         if not items or not isinstance(items[-1], c_ast.Return): raise SMTGraphError('Function must end with a return')
         counter = [0]; nds = _rewrite_calls(self.func.body, counter); self._counter_ct = 0
+        from .jump_eliminate import eliminate_jumps
+        try: self.jump_notes = eliminate_jumps(self.func)
+        except ValueError as e: raise SMTGraphError(str(e))
+        items = self.func.body.block_items or []
         self.nd_decls = nds
         nd_decl_ast = lambda nm, ty: c_parser.CParser().parse('%s %s;' % (ty, nm)).ext[0]
         self.nd_types = {nm: c_type(nd_decl_ast(nm, ty), self.engine.abi) for nm, ty in nds}

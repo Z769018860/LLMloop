@@ -142,3 +142,19 @@ def test_statements_before_the_loop_are_supported():
     src = 'int f(int a){int x=0;int y=0;x=a+1;y=2*x;while(x<a+5){x=x+1;y=y+2;}return 1/(y==2*x);}'
     r = run(src, ['y == 2*x', 'x >= a + 1', 'x <= a + 5'], {'a': [0, 100]})
     assert r['status'] == OK
+
+
+def test_break_continue_and_return_inside_loops_are_supported_via_flag_elimination():
+    brk = 'int f(int n,int m){int x=0;int i=0;while(i<n){if(i>m){break;}x=x+i;i=i+1;}return 1/(x>=0);}'
+    assert run(brk, ['x >= 0', 'i >= 0', 'i <= 50', 'x <= i*i'], {'n': [0, 50], 'm': [0, 50]})['status'] == OK
+    ret = 'int f(int n,int m){int x=0;int i=0;while(i<n){if(x>m){return 1;}x=x+i;i=i+1;}return 1/(x>=0);}'
+    assert run(ret, ['x >= 0', 'i >= 0', 'i <= 50', 'x <= i*i'], {'n': [0, 50], 'm': [0, 50]})['status'] == OK
+    cont = 'int f(int n,int m){int x=0;int i=0;while(i<n){i=i+1;if(i%2==0){continue;}x=x+i;}return 1/(x>=0);}'
+    assert run(cont, ['x >= 0', 'i >= 0', 'i <= 50', 'x <= i*i'], {'n': [0, 50], 'm': [0, 50]})['status'] == OK
+
+
+def test_jumps_do_not_make_unsafe_programs_certifiable():
+    # the early return skips the division only when x > m; for x <= m the divisor 0 is reachable
+    bad = 'int f(int n,int m){int x=0;int i=0;while(i<n){if(x>m){return 1;}x=x+i;i=i+1;}return 1/(x-x);}'
+    for inv in (['x >= 0'], ['True'], ['x >= 0', 'i >= 0']):
+        assert run(bad, inv, {'n': [0, 5], 'm': [0, 5]})['status'] != OK

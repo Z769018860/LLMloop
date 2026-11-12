@@ -55,5 +55,13 @@ if __name__ == '__main__':
         out[tag] = {'houdini': st, 'atom_mode': mode, 'rounds': rounds, 'invariant': inv if st == 'PROVED' else None}
         if st == 'PROVED':
             r = analyze_request({'source': TRANS, 'frontend': 'typed_invariant_while', 'range_invariants': {'invariant': inv, 'ranking': 'len'}, 'parameter_bounds': {k: list(v) for k, v in bounds.items()}, 'abi': 'LP64'}); out[tag]['termination_proved'] = r.get('termination_proved')
+    # two more real functions that need break / return-in-loop support (v0.79 jump elimination)
+    from llmloop.api import analyze_request as AR
+    MM = 'unsigned int f(unsigned int a, unsigned int b){unsigned int m = 1u << 31; unsigned int p = 0; for (;;) { if (a & m) { p ^= b; if ((a & (m - 1)) == 0) break; } m >>= 1; b = (b & 1) ? ((b >> 1) ^ 3988292384u) : (b >> 1); } return p; }'
+    BS = 'int f(int requestedBSID, unsigned long srcSize){int proposedBSID = 4; unsigned long maxBlockSize = 65536; while (requestedBSID > proposedBSID) { if (srcSize <= maxBlockSize) return proposedBSID; proposedBSID = proposedBSID + 1; maxBlockSize <<= 2; } return requestedBSID; }'
+    r1 = AR({'source': MM, 'frontend': 'typed_invariant_while', 'range_invariants': {'invariant': ['True']}, 'parameter_bounds': {'a': [1, 4294967295], 'b': [0, 4294967295]}, 'abi': 'LP64'})
+    r2 = AR({'source': BS, 'frontend': 'typed_invariant_while', 'range_invariants': {'invariant': ['proposedBSID >= 4']}, 'parameter_bounds': {'requestedBSID': [4, 7], 'srcSize': [0, 18446744073709551615]}, 'abi': 'LP64'})
+    out['zlib_multmodp'] = {'status': r1['status'], 'invariant': ['True'], 'note': 'for(;;)+break eliminated by flag variables; unsigned arithmetic only, so no undefined behaviour for any a, b (a=0 never terminates, which is not undefined behaviour)'}
+    out['lz4_LZ4F_optimalBSID'] = {'status': r2['status'], 'invariant': ['proposedBSID >= 4'], 'note': 'enum replaced by int constants 4..7 (LZ4F_max64KB..LZ4F_max4MB); return inside the loop eliminated by __done/__rv'}
     w = native(ORIG.replace('register ', ''), ['printf("%u\\n", bi_reverse(5u, -2147483647-1));']); out['native_witness_len_INT_MIN'] = {'returncode': w[1], 'stderr': w[3].strip()}
     (ROOT / 'experiments/v078/real_function_bi_reverse.json').write_text(json.dumps(out, indent=1) + '\n'); print(json.dumps(out)[:900])
