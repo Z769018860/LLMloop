@@ -25,14 +25,21 @@ FAKE = '''#define INT_MAX 2147483647
 #define globalReturnsTrue() 1
 #define globalReturnsFalse() 0
 #define staticReturnsTrueOrFalse() unknown_int()
+#define ARRAY_SIZE_UNUSED 0
 extern int unknown_int(void); extern int __sink;
 '''
-SOURCES = ('rand', 'zero', 'max', 'min')
+ARRAYS = '--arrays' in sys.argv
+SOURCES = ('rand', 'large') if ARRAYS else ('rand', 'zero', 'max', 'min')
 VARIANTS = None if '--all-variants' in sys.argv else ('01', '17')
 
 
 def files():
     out = []
+    if ARRAYS:
+        for f in sorted((JT / 'CWE121_Stack_Based_Buffer_Overflow').glob('s*/*.c')):
+            m = re.match(r'CWE121_Stack_Based_Buffer_Overflow__CWE129_([a-z]+)_(\d\d)\.c$', f.name)
+            if m and m.group(1) in SOURCES and (not VARIANTS or m.group(2) in VARIANTS): out.append(f)
+        return out
     for cwe, ops in (('CWE369_Divide_by_Zero', ('divide', 'modulo')), ('CWE190_Integer_Overflow', ('add', 'multiply', 'postinc', 'preinc', 'square')), ('CWE191_Integer_Underflow', ('sub', 'multiply', 'postdec', 'predec'))):
         for f in sorted((JT / cwe).glob('s*/*.c')):
             m = re.match(r'(CWE\d+_[A-Za-z_]+)__int_([a-z]+)_([a-z]+)_(\d\d)\.c$', f.name)
@@ -52,15 +59,28 @@ def walk(n):
     for _, c in n.children(): yield from walk(c)
 
 
+def rename_locals(stmts, suffix):
+    """Locals declared inside an unrolled loop body get a per-copy suffix so repeated copies do not redeclare the same name."""
+    root = c_ast.Compound(stmts); names = {n.name for n in walk(root) if isinstance(n, c_ast.Decl) and n.name}
+    for n in walk(root):
+        if isinstance(n, c_ast.Decl) and n.name in names:
+            n.name = n.name + suffix
+            ty = n.type
+            while ty is not None and not isinstance(ty, c_ast.TypeDecl): ty = getattr(ty, 'type', None)
+            if ty is not None: ty.declname = n.name
+        elif isinstance(n, c_ast.ID) and n.name in names: n.name = n.name + suffix
+    return root.block_items
+
+
 def unroll(stmts):
     out = []
     for s in stmts:
         if isinstance(s, c_ast.For) and isinstance(s.init, c_ast.Assignment) and isinstance(s.cond, c_ast.BinaryOp) and s.cond.op == '<' and isinstance(s.cond.right, c_ast.Constant) and isinstance(s.init.rvalue, c_ast.Constant):
             trip = int(s.cond.right.value) - int(s.init.rvalue.value)
-            if not 0 <= trip <= 4: raise ValueError('loop not unrollable')
+            if not 0 <= trip <= 12: raise ValueError('loop not unrollable')
             out.append(s.init)
             body = s.stmt.block_items if isinstance(s.stmt, c_ast.Compound) else [s.stmt]
-            for _ in range(trip): out.append(c_ast.Compound(unroll(copy.deepcopy(list(body))))); out.append(copy.deepcopy(s.next))
+            for it in range(trip): out.append(c_ast.Compound(unroll(rename_locals(copy.deepcopy(list(body)), '__u%d_%d' % (id(s) % 100000, it))))); out.append(copy.deepcopy(s.next))
         elif isinstance(s, c_ast.Compound): out.append(c_ast.Compound(unroll(s.block_items or [])))
         elif isinstance(s, c_ast.If):
             for a in ('iftrue', 'iffalse'):
@@ -71,8 +91,44 @@ def unroll(stmts):
     return out
 
 
+def rewrite_arrays(body):
+    """Bounds-only array model: `int a[N]` declarations are dropped; every read a[e] becomes (0*(1/((e)>=0 && (e)<N)) + unknown_int()) and every write a[e] = v becomes
+    __sink = (0*(1/((e)>=0 && (e)<N))) + v. Division by zero <=> out-of-bounds access, so the existing definedness proof checks array bounds for ANY array contents."""
+    root = c_ast.Compound(body); sizes = {}
+    for comp in [n for n in walk(root) if isinstance(n, c_ast.Compound)]:
+        keep = []
+        for it in comp.block_items or []:
+            if isinstance(it, c_ast.Decl) and isinstance(it.type, c_ast.ArrayDecl):
+                dim = it.type.dim
+                if not isinstance(dim, c_ast.Constant): raise ValueError('non-constant array size')
+                sizes[it.name] = int(dim.value)
+            else: keep.append(it)
+        comp.block_items = keep
+    def guard(ref):
+        if not isinstance(ref.name, c_ast.ID) or ref.name.name not in sizes: raise ValueError('array not local/constant')
+        e = ref.subscript; N = sizes[ref.name.name]
+        cond = c_ast.BinaryOp('&&', c_ast.BinaryOp('>=', copy.deepcopy(e), c_ast.Constant('int', '0')), c_ast.BinaryOp('<', copy.deepcopy(e), c_ast.Constant('int', str(N))))
+        return c_ast.BinaryOp('*', c_ast.Constant('int', '0'), c_ast.BinaryOp('/', c_ast.Constant('int', '1'), cond))
+    for node in list(walk(root)):
+        for name, child in list(node.children()):
+            repl = None
+            if isinstance(node, c_ast.Assignment) and name == 'lvalue' and isinstance(child, c_ast.ArrayRef):
+                continue   # handled at the assignment level below
+            if isinstance(child, c_ast.ArrayRef): repl = c_ast.BinaryOp('+', guard(child), c_ast.FuncCall(c_ast.ID('unknown_int'), None))
+            if repl is not None:
+                m = re.match(r'(\w+)\[(\d+)\]$', name)
+                if m: getattr(node, m.group(1))[int(m.group(2))] = repl
+                else: setattr(node, name, repl)
+    for node in list(walk(root)):
+        if isinstance(node, c_ast.Assignment) and isinstance(node.lvalue, c_ast.ArrayRef):
+            g = guard(node.lvalue); node.rvalue = c_ast.BinaryOp('+', g, node.rvalue); node.lvalue = c_ast.ID('__sink'); node.op = '='
+    return root.block_items
+
+
 def to_param_function(fd, consts=()):
-    body = unroll(copy.deepcopy(fd.body.block_items or []))
+    body = copy.deepcopy(fd.body.block_items or [])
+    if ARRAYS: body = rewrite_arrays(body)
+    body = unroll(body)
     used = {x.name for s in body for x in walk(s) if isinstance(x, c_ast.ID)}
     body = [copy.deepcopy(c) for c in consts if c.name in used] + body
     wrapper = c_ast.Compound(body); k = [0]; params = []
@@ -111,5 +167,5 @@ if __name__ == '__main__':
                 r = analyze_request({'source': code, 'frontend': 'typed_c', 'abi': 'LP64'}); st = r['status']; why = str(r.get('reason') or r.get('error') or '')[:70]
             except Exception as e: st = 'ERROR:' + str(e)[:50]; why = ''
             rows.append({'file': f.name, 'function': nm, 'kind': kind, 'status': st, 'reason': why, 'variant': f.name[-5:-3]})
-    (ROOT / 'experiments/v075').mkdir(exist_ok=True); (ROOT / 'experiments/v077/juliet_all_variants.json' if VARIANTS is None else ROOT / 'experiments/v075/juliet.json').write_text(json.dumps({'rows': rows, 'skipped': dict(skipped)}, indent=1) + '\n')
+    (ROOT / 'experiments/v075').mkdir(exist_ok=True); (ROOT / ('experiments/v078/juliet_arrays_all.json' if ARRAYS and VARIANTS is None else ('experiments/v078/juliet_arrays.json' if ARRAYS else ('experiments/v077/juliet_all_variants.json' if VARIANTS is None else 'experiments/v075/juliet.json')))).write_text(json.dumps({'rows': rows, 'skipped': dict(skipped)}, indent=1) + '\n')
     print(len(rows), dict(skipped)); print(collections.Counter((r['kind'], r['status'][:40]) for r in rows).most_common(10))
