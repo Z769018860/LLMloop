@@ -83,7 +83,7 @@ def linear_equalities(rows, names, max_atoms=8):
     return out
 
 
-def atoms_from(states, program_consts=()):
+def atoms_from(states, program_consts=(), valsets=False):
     if not states: return []
     sn0 = list(states[0][1])
     pn = list(states[0][0]); sn = list(states[0][1]); names = pn + sn
@@ -92,6 +92,7 @@ def atoms_from(states, program_consts=()):
         vals = [r[v] for r in rows]; lo, hi = min(vals), max(vals)
         out += ['%s >= %d' % (v, lo), '%s <= %d' % (v, hi)]
         if lo == hi: out.append('%s == %d' % (v, lo))
+        elif valsets and len(set(vals)) <= 4: out.append('(' + ' or '.join('%s == %d' % (v, x) for x in sorted(set(vals))) + ')')   # small value set (disjunctive atom)
         for m in sorted({2, 3, 4} | {abs(c) for c in program_consts if 2 <= abs(c) <= 64}):
             rs = {x % m for x in vals}
             if len(rs) == 1: out.append('%s %% %d == %d' % (v, m, rs.pop()))
@@ -115,6 +116,17 @@ def atoms_from(states, program_consts=()):
     for v in sn:
         for p in pn:
             if all(r[v] == r[p] for r in rows): out.append('%s == %s' % (v, p))
+    if valsets:   # implication atoms from a small-valued variable: (v != a or w <= m), (v == a or w >= m') whenever the rows with v == a separate cleanly from the others on w
+        for v in sn:
+            vs = sorted({r[v] for r in rows})
+            if not 2 <= len(vs) <= 4: continue
+            for a in vs:
+                ra = [r for r in rows if r[v] == a]; ro = [r for r in rows if r[v] != a]
+                for w in names:
+                    if w == v: continue
+                    wa = [r[w] for r in ra]; wo = [r[w] for r in ro]
+                    if max(wa) < min(wo): out += ['(%s != %d or %s <= %d)' % (v, a, w, max(wa)), '(%s == %d or %s >= %d)' % (v, a, w, min(wo))]
+                    if min(wa) > max(wo): out += ['(%s != %d or %s >= %d)' % (v, a, w, min(wa)), '(%s == %d or %s <= %d)' % (v, a, w, max(wo))]
     seen = []; [seen.append(x) for x in out if x not in seen]
     return seen
 

@@ -18,6 +18,9 @@ FAKE = '''#define INT_MAX 2147483647
 #define printLine(x) (__sink = 0)
 #define OMIT_NOTHING
 #define NULL 0
+#define globalTrue 1
+#define globalFalse 0
+#define globalFive 5
 #define ALLOCA malloc
 typedef int wchar_t; typedef unsigned long size_t;
 #define printWLine(x) (__sink = 0)
@@ -44,7 +47,7 @@ def files():
     if PTR:
         for cwe in ('CWE124_Buffer_Underwrite', 'CWE126_Buffer_Overread', 'CWE127_Buffer_Underread'):
             for f in sorted((JT / cwe).glob('s*/*.c')):
-                m = re.search(r'__(?:malloc_)?(?:w?char(?:_t)?)(?:_alloca|_declare)?_(cpy|loop|memcpy|memmove|ncpy)_(\d\d)\.c$', f.name) or re.search(r'__CWE839_(negative|rand)_(\d\d)\.c$', f.name)
+                m = re.search(r'__(?:malloc_)?(?:w?char(?:_t)?)(?:_alloca|_declare)?_(cpy|loop|memcpy|memmove|ncpy)_(\d\d)a?\.c$', f.name) or re.search(r'__CWE839_(negative|rand)_(\d\d)a?\.c$', f.name)
                 if m and (not VARIANTS or m.group(2) in VARIANTS): out.append(f)
         return out
     if ARRAYS:
@@ -147,11 +150,13 @@ def rewrite_arrays(body):
     return root.block_items
 
 
-def to_param_function(fd, consts=()):
+def to_param_function(fd, consts=(), funcs=None, gptrs=()):
     body = copy.deepcopy(fd.body.block_items or [])
     if PTR:
         from scripts.juliet_ptr import ptr_rewrite
-        body = ptr_rewrite(unroll(body, keep_big=True))
+        ids = {x.name for s in list(body) + [fn.body for fn in (funcs or {}).values()] for x in walk(s) if isinstance(x, c_ast.ID)}
+        body = [copy.deepcopy(c) for c in consts if c.name in ids] + body; consts = ()
+        body = ptr_rewrite(unroll(body, keep_big=True), funcs, gptrs)
     if ARRAYS: body = rewrite_arrays(body)
     body = unroll(body)
     used = {x.name for s in body for x in walk(s) if isinstance(x, c_ast.ID)}
@@ -181,12 +186,22 @@ if __name__ == '__main__':
         except Exception as e: skipped['parse_fail'] += 1; continue
         consts = [n for n in ast.ext if isinstance(n, c_ast.Decl) and isinstance(n.type, c_ast.TypeDecl) and isinstance(n.init, c_ast.Constant) and n.name]
         for c in consts: c.storage = []; c.quals = []
+        funcs = None; gptrs = []
+        if PTR:   # the whole testcase (51a + 51b + ...): user functions are inlined; global pointers are tracked
+            group = [f] + [g for g in sorted(f.parent.glob(re.sub(r'a\.c$', '[b-e].c', f.name))) if f.name.endswith('a.c')]
+            funcs = {}
+            for g in group:
+                try: gast = ast if g == f else preprocess(g)
+                except Exception: continue
+                for n in gast.ext:
+                    if isinstance(n, c_ast.FuncDef): funcs[n.decl.name] = n
+                    if isinstance(n, c_ast.Decl) and isinstance(n.type, c_ast.PtrDecl) and not isinstance(n.type.type, (c_ast.FuncDecl, c_ast.PtrDecl)) and n.name: gptrs.append((n.name, n.type.type.type if isinstance(n.type.type, c_ast.TypeDecl) else n.type.type))
         for fd in [n for n in ast.ext if isinstance(n, c_ast.FuncDef)]:
             nm = fd.decl.name
             if fd.decl.type.args is not None and fd.decl.type.args.params: continue
             kind = 'bad' if nm.endswith('_bad') else ('good' if re.search(r'good(G2B|B2G)', nm) else None)
             if kind is None: continue
-            try: code = to_param_function(fd, consts)
+            try: code = to_param_function(fd, consts, funcs, gptrs)
             except Exception as e: skipped[str(e)[:30]] += 1; continue
             try:
                 r = analyze_request({'source': code, 'frontend': 'typed_c', 'abi': 'LP64'}); st = r['status']; why = str(r.get('reason') or r.get('error') or '')[:70]

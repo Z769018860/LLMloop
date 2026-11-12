@@ -33,4 +33,13 @@ def test_houdini_loops_eval_no_unsafe_certified():
     d = json.load(open(E / 'houdini_loops_eval.json'))
     assert d['unsafe_certified'] == []
     ml = [r for r in d['rows'] if r['stage'] == 'in_loops_fragment']
-    assert len(ml) == 6 and sum(r['status'] == 'PROVED' for r in ml) == 5
+    assert len(ml) == 6 and sum(r['status'] == 'PROVED' for r in ml) == 6
+
+
+def test_ptr_all_variants_counts_and_dynamic_bench():
+    rows = json.load(open(E / 'juliet_ptr_all.json'))['rows']
+    assert len(rows) == 6828
+    assert sum(r['kind'] == 'bad' and r['status'].startswith('POSSIBLE') for r in rows) == 2792
+    assert sum(r['kind'] == 'good' and r['status'].startswith('PROVED') for r in rows) == 3999
+    d = json.load(open(E.parent / 'v080/ptr_dynamic_bench.json'))
+    assert d['correct_pairs'] == d['pairs'] == 10 and d['wrong'] == []
