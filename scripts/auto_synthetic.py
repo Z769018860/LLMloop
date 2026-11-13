@@ -17,6 +17,20 @@ CASES = {
  'lib_ctype_bool': 'int f(int n){ int c = 48; int k = 0; while (isdigit(c) && k < n) { c++; k++; } return k; }',
  'lib_rand_range': 'int f(int n){ int k = 0; while (k < n) { k += (rand() % 3) + 1; } return k; }',
  'nested_shadowing': 'int f(int n){ int x = 0; int i = 0; while (i < n) { int x2 = i; { int x = x2 + 1; x2 = x; } x2 = x2 + 1; i++; } return i + x; }',
+ 'switch_simple': 'unsigned f(unsigned n){ unsigned s = 0; unsigned i = 0; while (i < n % 20) { switch (i % 3) { case 0: s += 1; break; case 1: s += 2; break; default: s += 3; break; } i++; } return s; }',
+ 'switch_fallthrough': 'unsigned f(unsigned n){ unsigned s = 0; unsigned i = 0; while (i < n % 20) { switch (i % 4) { case 0: s += 1; case 1: s += 2; break; case 2: case 3: s += 4; } i++; } return s; }',
+ 'for_continue_step': 'unsigned f(unsigned n){ unsigned s = 0; unsigned i; for (i = 0; i < n % 50; i++) { if (i % 2) continue; s += i; } return s; }',
+ 'do_while_continue': 'unsigned f(unsigned n){ unsigned s = 0; unsigned i = 0; do { i++; if (i % 3 == 0) continue; s += i; } while (i < n % 30); return s; }',
+ 'effects_postdec_cond': 'unsigned f(unsigned n){ unsigned s = 0; n = n % 40; while (n-- > 0) { s += n; } return s; }',
+ 'effects_predec_cond': 'unsigned f(unsigned n){ unsigned s = 0; unsigned m = n % 40; while (--m > 0 && m < 100) { s += m; } return s; }',
+ 'effects_assign_cond': 'unsigned f(unsigned n){ unsigned s = 0; unsigned c = 0; unsigned i = 0; while ((c = i * 3) < n % 90) { s += c; i++; } return s; }',
+ 'mem_sum_unsigned': 'unsigned f(unsigned char *p, unsigned n){ unsigned s = 0; unsigned i; for (i = 0; i < n; i++) s += p[i]; return s; }',
+ 'mem_struct_field': 'struct S { unsigned n; unsigned char *buf; };\nunsigned f(struct S *p){ unsigned t = 0; unsigned i = 0; while (i < p->n) { t += p->buf[i]; i++; } return t; }',
+ 'mem_ptr_walk': 'unsigned f(const char *s){ unsigned n = 0; while (*s) { s++; n++; } return n; }',
+ 'mem_write_dropped': 'void f(unsigned char *d, unsigned n){ unsigned i; for (i = 0; i < n; i++) d[i] = (unsigned char)(i * 3); }',
+ 'mem_UNSAFE_div_by_content': 'int f(int *a, int n){ int s = 0; int i = 0; while (i < n) { s += 100 / a[i]; i++; } return s; }',
+ 'mem_UNSAFE_signed_sum': 'int f(int *a, int n){ int s = 0; int i = 0; while (i < n) { s += a[i]; i++; } return s; }',
+ 'mem_UNSAFE_compound_assign': 'int f(int *a, int n){ int i = 0; while (i < n) { a[i] += 1; i++; } return i; }',
 }
 BOUNDS = {'early_return_two_loops': {'u_in': [0, 1000], 'v_in': [0, 1000]}, 'lib_abs': {'x': [-1000, 1000]}, 'loop_header_call_simple': {'n': [0, 1000]}, 'loop_header_call_nonlinear_timeout': {'n': [0, 1000]}, 'lib_ctype_bool': {'n': [0, 1000]}, 'lib_rand_range': {'n': [0, 100000]}, 'nested_shadowing': {'n': [0, 1000]}}
 if __name__ == '__main__':

@@ -3,7 +3,8 @@
   "case": "early_return_two_loops",
   "notes": [
    "copied mutated parameter u",
-   "copied mutated parameter v"
+   "copied mutated parameter v",
+   "memory abstraction (memory safety assumed)"
   ],
   "transcription": "unsigned int f(unsigned int u_in, unsigned int v_in)\n{\n  unsigned int u = u_in;\n  unsigned int v = v_in;\n  unsigned int s = 0;\n  if (u == 0)\n  {\n    return v;\n  }\n  else\n  {\n    if (v == 0)\n    {\n      return u;\n    }\n  }\n  while (u != v)\n  {\n    if (u > v)\n    {\n      u -= v;\n    }\n    else\n    {\n      v -= u;\n    }\n    s++;\n  }\n\n  while (((s & 1) == 0) && (s != 0))\n  {\n    s >>= 1;\n  }\n\n  return u + s;\n}\n\n",
   "bounds": {
@@ -20,7 +21,8 @@
    "equivalent": true,
    "cases": 24,
    "agree": 24,
-   "both_timeout": 1
+   "both_timeout": 1,
+   "one_sided_timeout": 0
   },
   "certification": {
    "status": "PROVED",
@@ -36,9 +38,11 @@
  {
   "case": "do_while_then_while",
   "notes": [
-   "do-while peeled"
+   "do-while peeled",
+   "flattened blocks",
+   "memory abstraction (memory safety assumed)"
   ],
-  "transcription": "unsigned int f(unsigned int n)\n{\n  unsigned int x = 1;\n  unsigned int i = 0;\n  {\n    x = (x * 3) + 1;\n    i++;\n  }\n  while (i < (n % 20))\n  {\n    x = (x * 3) + 1;\n    i++;\n  }\n\n  while (x > 100)\n  {\n    x = x / 2;\n  }\n\n  return x;\n}\n\n",
+  "transcription": "unsigned int f(unsigned int n)\n{\n  unsigned int x = 1;\n  unsigned int i = 0;\n  x = (x * 3) + 1;\n  i++;\n  while (i < (n % 20))\n  {\n    x = (x * 3) + 1;\n    i++;\n  }\n\n  while (x > 100)\n  {\n    x = x / 2;\n  }\n\n  return x;\n}\n\n",
   "bounds": {
    "n": [
     0,
@@ -49,7 +53,8 @@
    "equivalent": true,
    "cases": 24,
    "agree": 24,
-   "both_timeout": 0
+   "both_timeout": 0,
+   "one_sided_timeout": 0
   },
   "certification": {
    "status": "PROVED",
@@ -66,10 +71,12 @@
   "case": "nested_do_while",
   "notes": [
    "do-while peeled",
+   "flattened blocks",
    "hoisted loop-body declaration",
+   "memory abstraction (memory safety assumed)",
    "zero-initialized locals"
   ],
-  "transcription": "unsigned int f(unsigned int n, unsigned int m)\n{\n  unsigned int j = 0;\n  unsigned int t = 0;\n  unsigned int i = 0;\n  while (i < (n % 10))\n  {\n    j = 0;\n    {\n      t += i ^ j;\n      j++;\n    }\n    while (j < (m % 7))\n    {\n      t += i ^ j;\n      j++;\n    }\n\n    i++;\n  }\n\n  return t;\n}\n\n",
+  "transcription": "unsigned int f(unsigned int n, unsigned int m)\n{\n  unsigned int j = 0;\n  unsigned int t = 0;\n  unsigned int i = 0;\n  while (i < (n % 10))\n  {\n    j = 0;\n    t += i ^ j;\n    j++;\n    while (j < (m % 7))\n    {\n      t += i ^ j;\n      j++;\n    }\n\n    i++;\n  }\n\n  return t;\n}\n\n",
   "bounds": {
    "n": [
     0,
@@ -84,7 +91,8 @@
    "equivalent": true,
    "cases": 24,
    "agree": 24,
-   "both_timeout": 0
+   "both_timeout": 0,
+   "one_sided_timeout": 0
   },
   "certification": {
    "status": "PROVED",
@@ -102,6 +110,7 @@
   "notes": [
    "hoisted loop-body declaration",
    "inlined popc (with loops)",
+   "memory abstraction (memory safety assumed)",
    "zero-initialized locals"
   ],
   "transcription": "unsigned int f(unsigned int n)\n{\n  unsigned int x__c0_1 = 0;\n  unsigned int vrv__c0_1 = 0;\n  unsigned int c__c0_1 = 0;\n  unsigned int s = 0;\n  unsigned int i = 0;\n  while (i < (n % 50))\n  {\n    x__c0_1 = i;\n    vrv__c0_1 = 0;\n    c__c0_1 = 0;\n    while (x__c0_1)\n    {\n      c__c0_1 += x__c0_1 & 1;\n      x__c0_1 >>= 1;\n    }\n\n    vrv__c0_1 = c__c0_1;\n    s += vrv__c0_1;\n    i++;\n  }\n\n  return s;\n}\n\n",
@@ -115,7 +124,8 @@
    "equivalent": true,
    "cases": 24,
    "agree": 24,
-   "both_timeout": 0
+   "both_timeout": 0,
+   "one_sided_timeout": 0
   },
   "certification": {
    "status": "PROVED",
@@ -135,6 +145,7 @@
    "hoisted loop-body declaration",
    "inlined is_p (with loops)",
    "loop-header call hoisted",
+   "memory abstraction (memory safety assumed)",
    "zero-initialized locals"
   ],
   "transcription": "unsigned int f(unsigned int c0)\n{\n  unsigned int c__c0_1 = 0;\n  int vrv__c0_1 = 0;\n  unsigned int d__c0_1 = 0;\n  int v__brk1__c0_1 = 0;\n  int v__done__c0_1 = 0;\n  int v__rv__c0_1 = 0;\n  unsigned int c = (c0 % 1000) | 1;\n  while (1)\n  {\n    c__c0_1 = c;\n    vrv__c0_1 = 0;\n    d__c0_1 = 3;\n    v__brk1__c0_1 = 0;\n    v__done__c0_1 = 0;\n    v__rv__c0_1 = 0;\n    v__brk1__c0_1 = 0;\n    while (1 && ((!v__brk1__c0_1) && (!v__done__c0_1)))\n    {\n      if ((d__c0_1 * d__c0_1) > c__c0_1)\n      {\n        v__rv__c0_1 = 1;\n        v__done__c0_1 = 1;\n      }\n      if ((!v__brk1__c0_1) && (!v__done__c0_1))\n      {\n        if ((c__c0_1 % d__c0_1) == 0)\n        {\n          v__rv__c0_1 = 0;\n          v__done__c0_1 = 1;\n        }\n        if ((!v__brk1__c0_1) && (!v__done__c0_1))\n        {\n          d__c0_1 += 2;\n        }\n      }\n    }\n\n    vrv__c0_1 = (v__done__c0_1) ? (v__rv__c0_1) : (0);\n    if (!(!vrv__c0_1))\n    {\n      break;\n    }\n    c += 2;\n  }\n\n  return c;\n}\n\n",
@@ -148,7 +159,8 @@
    "equivalent": true,
    "cases": 24,
    "agree": 24,
-   "both_timeout": 0
+   "both_timeout": 0,
+   "one_sided_timeout": 0
   },
   "certification": {
    "status": "PROVED",
@@ -613,6 +625,7 @@
    "hoisted loop-body declaration",
    "inlined dbl",
    "loop-header call hoisted",
+   "memory abstraction (memory safety assumed)",
    "zero-initialized locals"
   ],
   "transcription": "int f(int n)\n{\n  int v__c0_1 = 0;\n  int vrv__c0_1 = 0;\n  int v__done__c0_1 = 0;\n  int v__rv__c0_1 = 0;\n  int i = 0;\n  while (1)\n  {\n    v__c0_1 = i;\n    vrv__c0_1 = 0;\n    v__done__c0_1 = 0;\n    v__rv__c0_1 = 0;\n    if (v__c0_1 < 0)\n    {\n      v__rv__c0_1 = 0;\n      v__done__c0_1 = 1;\n    }\n    vrv__c0_1 = (v__done__c0_1) ? (v__rv__c0_1) : ((v__c0_1 * 2) + 1);\n    if (!(vrv__c0_1 < n))\n    {\n      break;\n    }\n    i++;\n  }\n\n  return i;\n}\n\n",
@@ -626,7 +639,8 @@
    "equivalent": true,
    "cases": 24,
    "agree": 24,
-   "both_timeout": 0
+   "both_timeout": 0,
+   "one_sided_timeout": 0
   },
   "certification": {
    "status": "PROVED",
@@ -755,6 +769,7 @@
    "hoisted loop-body declaration",
    "inlined sq",
    "loop-header call hoisted",
+   "memory abstraction (memory safety assumed)",
    "zero-initialized locals"
   ],
   "transcription": "int f(int n)\n{\n  int v__c0_1 = 0;\n  int vrv__c0_1 = 0;\n  int i = 0;\n  while (1)\n  {\n    v__c0_1 = i;\n    vrv__c0_1 = 0;\n    vrv__c0_1 = v__c0_1 * v__c0_1;\n    if (!(vrv__c0_1 < n))\n    {\n      break;\n    }\n    i++;\n  }\n\n  return i;\n}\n\n",
@@ -768,7 +783,8 @@
    "equivalent": true,
    "cases": 24,
    "agree": 24,
-   "both_timeout": 1
+   "both_timeout": 1,
+   "one_sided_timeout": 0
   },
   "certification": {
    "status": "STUCK:top/loop0: invariant preserved (body path 1)",
@@ -784,6 +800,7 @@
    "hoisted loop-body declaration",
    "library spec: abs",
    "loop-header call hoisted",
+   "memory abstraction (memory safety assumed)",
    "zero-initialized locals"
   ],
   "transcription": "int f(int x)\n{\n  int v__c0_1 = 0;\n  int v__c0_1r = 0;\n  int s = 0;\n  int i = 0;\n  while (1)\n  {\n    v__c0_1 = x;\n    v__c0_1r = (v__c0_1 < 0) ? (-v__c0_1) : (v__c0_1);\n    if (!(i < v__c0_1r))\n    {\n      break;\n    }\n    s += 2;\n    i++;\n  }\n\n  return s;\n}\n\n",
@@ -797,7 +814,8 @@
    "equivalent": true,
    "cases": 24,
    "agree": 24,
-   "both_timeout": 0
+   "both_timeout": 0,
+   "one_sided_timeout": 0
   },
   "certification": {
    "status": "PROVED",
@@ -873,6 +891,7 @@
    "hoisted loop-body declaration",
    "library spec: isdigit",
    "loop-header call hoisted",
+   "memory abstraction (memory safety assumed)",
    "zero-initialized locals"
   ],
   "transcription": "int f(int n)\n{\n  int v__c0_1 = 0;\n  int v__c0_1r = 0;\n  int c = 48;\n  int k = 0;\n  while (1)\n  {\n    v__c0_1 = c;\n    v__c0_1r = ((v__c0_1 >= 48) && (v__c0_1 <= 57)) ? (1) : (0);\n    if (!(v__c0_1r && (k < n)))\n    {\n      break;\n    }\n    c++;\n    k++;\n  }\n\n  return k;\n}\n\n",
@@ -886,7 +905,8 @@
    "equivalent": true,
    "cases": 24,
    "agree": 24,
-   "both_timeout": 0
+   "both_timeout": 0,
+   "one_sided_timeout": 0
   },
   "certification": {
    "status": "PROVED",
@@ -903,6 +923,7 @@
   "notes": [
    "hoisted loop-body declaration",
    "library range: rand in [0,2147483647]",
+   "memory abstraction (memory safety assumed)",
    "zero-initialized locals"
   ],
   "transcription": "int f(int n)\n{\n  int v__c0_1 = 0;\n  int k = 0;\n  while (k < n)\n  {\n    v__c0_1 = unknown();\n    if (v__c0_1 < 0)\n    {\n      v__c0_1 = 0;\n    }\n    if (v__c0_1 > 2147483647)\n    {\n      v__c0_1 = 2147483647;\n    }\n    k += (v__c0_1 % 3) + 1;\n  }\n\n  return k;\n}\n\n",
@@ -929,10 +950,12 @@
  {
   "case": "nested_shadowing",
   "notes": [
+   "flattened blocks",
    "hoisted loop-body declaration",
+   "memory abstraction (memory safety assumed)",
    "zero-initialized locals"
   ],
-  "transcription": "int f(int n)\n{\n  int x2 = 0;\n  int x__u1 = 0;\n  int x = 0;\n  int i = 0;\n  while (i < n)\n  {\n    x2 = i;\n    {\n      x__u1 = x2 + 1;\n      x2 = x__u1;\n    }\n    x2 = x2 + 1;\n    i++;\n  }\n\n  return i + x;\n}\n\n",
+  "transcription": "int f(int n)\n{\n  int x2 = 0;\n  int x__u1 = 0;\n  int x = 0;\n  int i = 0;\n  while (i < n)\n  {\n    x2 = i;\n    x__u1 = x2 + 1;\n    x2 = x__u1;\n    x2 = x2 + 1;\n    i++;\n  }\n\n  return i + x;\n}\n\n",
   "bounds": {
    "n": [
     0,
@@ -943,7 +966,8 @@
    "equivalent": true,
    "cases": 24,
    "agree": 24,
-   "both_timeout": 0
+   "both_timeout": 0,
+   "one_sided_timeout": 0
   },
   "certification": {
    "status": "PROVED",
@@ -1010,5 +1034,417 @@
    "rounds": 7
   },
   "stage": "certified"
+ },
+ {
+  "case": "switch_simple",
+  "notes": [
+   "hoisted loop-body declaration",
+   "memory abstraction (memory safety assumed)",
+   "switch -> if chain",
+   "zero-initialized locals"
+  ],
+  "transcription": "unsigned int f(unsigned int n)\n{\n  long long v__sw1 = 0;\n  unsigned int s = 0;\n  unsigned int i = 0;\n  while (i < (n % 20))\n  {\n    v__sw1 = i % 3;\n    if (v__sw1 == 0)\n    {\n      s += 1;\n    }\n    else\n    {\n      if (v__sw1 == 1)\n      {\n        s += 2;\n      }\n      else\n      {\n        s += 3;\n      }\n    }\n    i++;\n  }\n\n  return s;\n}\n\n",
+  "bounds": {
+   "n": [
+    0,
+    4294967295
+   ]
+  },
+  "native": {
+   "equivalent": true,
+   "cases": 24,
+   "agree": 24,
+   "both_timeout": 0,
+   "one_sided_timeout": 0
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "trivial_invariants",
+   "invariant": [
+    "True"
+   ],
+   "rounds": 1
+  },
+  "stage": "certified"
+ },
+ {
+  "case": "switch_fallthrough",
+  "notes": [
+   "hoisted loop-body declaration",
+   "memory abstraction (memory safety assumed)",
+   "switch -> while(1) with fallthrough flag",
+   "zero-initialized locals"
+  ],
+  "transcription": "unsigned int f(unsigned int n)\n{\n  long long v__sw1 = 0;\n  int v__sw1m = 0;\n  unsigned int s = 0;\n  unsigned int i = 0;\n  while (i < (n % 20))\n  {\n    v__sw1 = i % 4;\n    v__sw1m = 0;\n    while (1)\n    {\n      if (v__sw1m || (v__sw1 == 0))\n      {\n        v__sw1m = 1;\n        s += 1;\n      }\n      if (v__sw1m || (v__sw1 == 1))\n      {\n        v__sw1m = 1;\n        s += 2;\n        break;\n      }\n      if ((v__sw1m || (v__sw1 == 2)) || (v__sw1 == 3))\n      {\n        v__sw1m = 1;\n        s += 4;\n      }\n      break;\n    }\n\n    i++;\n  }\n\n  return s;\n}\n\n",
+  "bounds": {
+   "n": [
+    0,
+    4294967295
+   ]
+  },
+  "native": {
+   "equivalent": true,
+   "cases": 24,
+   "agree": 24,
+   "both_timeout": 0,
+   "one_sided_timeout": 0
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "trivial_invariants",
+   "invariant": [
+    "True",
+    "True"
+   ],
+   "rounds": 1
+  },
+  "stage": "certified"
+ },
+ {
+  "case": "for_continue_step",
+  "notes": [
+   "flattened blocks",
+   "for -> while",
+   "memory abstraction (memory safety assumed)",
+   "zero-initialized locals"
+  ],
+  "transcription": "unsigned int f(unsigned int n)\n{\n  unsigned int s = 0;\n  unsigned int i = 0;\n  i = 0;\n  while (i < (n % 50))\n  {\n    if (i % 2)\n    {\n      i++;\n      continue;\n    }\n    s += i;\n    i++;\n  }\n\n  return s;\n}\n\n",
+  "bounds": {
+   "n": [
+    0,
+    4294967295
+   ]
+  },
+  "native": {
+   "equivalent": true,
+   "cases": 24,
+   "agree": 24,
+   "both_timeout": 0,
+   "one_sided_timeout": 0
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "trivial_invariants",
+   "invariant": [
+    "True"
+   ],
+   "rounds": 1
+  },
+  "stage": "certified"
+ },
+ {
+  "case": "do_while_continue",
+  "notes": [
+   "do-while with jumps -> while(1)",
+   "flattened blocks",
+   "memory abstraction (memory safety assumed)"
+  ],
+  "transcription": "unsigned int f(unsigned int n)\n{\n  unsigned int s = 0;\n  unsigned int i = 0;\n  while (1)\n  {\n    i++;\n    if ((i % 3) == 0)\n    {\n      if (!(i < (n % 30)))\n      {\n        break;\n      }\n      continue;\n    }\n    s += i;\n    if (!(i < (n % 30)))\n    {\n      break;\n    }\n  }\n\n  return s;\n}\n\n",
+  "bounds": {
+   "n": [
+    0,
+    4294967295
+   ]
+  },
+  "native": {
+   "equivalent": true,
+   "cases": 24,
+   "agree": 24,
+   "both_timeout": 0,
+   "one_sided_timeout": 0
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "trivial_invariants",
+   "invariant": [
+    "True"
+   ],
+   "rounds": 1
+  },
+  "stage": "certified"
+ },
+ {
+  "case": "effects_postdec_cond",
+  "notes": [
+   "copied mutated parameter n",
+   "hoisted loop-body declaration",
+   "memory abstraction (memory safety assumed)",
+   "side effect hoisted out of an expression",
+   "zero-initialized locals"
+  ],
+  "transcription": "unsigned int f(unsigned int n_in)\n{\n  unsigned int n = n_in;\n  unsigned int v__he1 = 0;\n  unsigned int s = 0;\n  n = n % 40;\n  while (1)\n  {\n    v__he1 = n;\n    n = n - 1;\n    if (!(v__he1 > 0))\n    {\n      break;\n    }\n    s += n;\n  }\n\n  return s;\n}\n\n",
+  "bounds": {
+   "n_in": [
+    0,
+    4294967295
+   ]
+  },
+  "native": {
+   "equivalent": true,
+   "cases": 24,
+   "agree": 24,
+   "both_timeout": 0,
+   "one_sided_timeout": 0
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "trivial_invariants",
+   "invariant": [
+    "True"
+   ],
+   "rounds": 1
+  },
+  "stage": "certified"
+ },
+ {
+  "case": "effects_predec_cond",
+  "notes": [
+   "memory abstraction (memory safety assumed)",
+   "side effect hoisted out of an expression"
+  ],
+  "transcription": "unsigned int f(unsigned int n)\n{\n  unsigned int s = 0;\n  unsigned int m = n % 40;\n  while (1)\n  {\n    m = m - 1;\n    if (!((m > 0) && (m < 100)))\n    {\n      break;\n    }\n    s += m;\n  }\n\n  return s;\n}\n\n",
+  "bounds": {
+   "n": [
+    0,
+    4294967295
+   ]
+  },
+  "native": {
+   "equivalent": true,
+   "cases": 24,
+   "agree": 24,
+   "both_timeout": 0,
+   "one_sided_timeout": 0
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "trivial_invariants",
+   "invariant": [
+    "True"
+   ],
+   "rounds": 1
+  },
+  "stage": "certified"
+ },
+ {
+  "case": "effects_assign_cond",
+  "notes": [
+   "memory abstraction (memory safety assumed)",
+   "side effect hoisted out of an expression"
+  ],
+  "transcription": "unsigned int f(unsigned int n)\n{\n  unsigned int s = 0;\n  unsigned int c = 0;\n  unsigned int i = 0;\n  while (1)\n  {\n    c = i * 3;\n    if (!(c < (n % 90)))\n    {\n      break;\n    }\n    s += c;\n    i++;\n  }\n\n  return s;\n}\n\n",
+  "bounds": {
+   "n": [
+    0,
+    4294967295
+   ]
+  },
+  "native": {
+   "equivalent": true,
+   "cases": 24,
+   "agree": 24,
+   "both_timeout": 0,
+   "one_sided_timeout": 0
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "trivial_invariants",
+   "invariant": [
+    "True"
+   ],
+   "rounds": 1
+  },
+  "stage": "certified"
+ },
+ {
+  "case": "mem_sum_unsigned",
+  "notes": [
+   "for -> while",
+   "memory abstraction (memory safety assumed)",
+   "pointer parameter abstracted: p",
+   "zero-initialized locals"
+  ],
+  "transcription": "unsigned int f(unsigned int n)\n{\n  unsigned int s = 0;\n  unsigned int i = 0;\n  i = 0;\n  while (i < n)\n  {\n    s += nondet_uchar() + (0 * i);\n    i++;\n  }\n\n  return s;\n}\n\n",
+  "bounds": {
+   "n": [
+    0,
+    4294967295
+   ]
+  },
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmp4z5m6zy0/h.c: In function \u2018main\u2019:\n/tmp/tmp4z5m6zy0/h.c:29:79: error: too"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "trivial_invariants",
+   "invariant": [
+    "True"
+   ],
+   "rounds": 1
+  },
+  "stage": "certified"
+ },
+ {
+  "case": "mem_struct_field",
+  "notes": [
+   "loop-header call hoisted",
+   "memory abstraction (memory safety assumed)",
+   "pointer parameter abstracted: p"
+  ],
+  "transcription": "unsigned int f(int __z)\n{\n  unsigned int t = 0;\n  unsigned int i = 0;\n  while (1)\n  {\n    if (!(i < nondet_uint()))\n    {\n      break;\n    }\n    t += nondet_uchar() + (0 * i);\n    i++;\n  }\n\n  return t;\n}\n\n",
+  "bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmp4iavb8c7/h.c: In function \u2018f\u2019:\n/tmp/tmp4iavb8c7/h.c:10:17: error: invali"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "trivial_invariants",
+   "invariant": [
+    "True"
+   ],
+   "rounds": 1
+  },
+  "stage": "certified"
+ },
+ {
+  "case": "mem_ptr_walk",
+  "notes": [
+   "loop-header call hoisted",
+   "memory abstraction (memory safety assumed)",
+   "pointer parameter abstracted: s"
+  ],
+  "transcription": "unsigned int f(int __z)\n{\n  unsigned int n = 0;\n  while (1)\n  {\n    if (!nondet_char())\n    {\n      break;\n    }\n    n++;\n  }\n\n  return n;\n}\n\n",
+  "bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmpi5i6k1xc/h.c: In function \u2018main\u2019:\n/tmp/tmpi5i6k1xc/h.c:32:79: error: too"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "trivial_invariants",
+   "invariant": [
+    "True"
+   ],
+   "rounds": 1
+  },
+  "stage": "certified"
+ },
+ {
+  "case": "mem_write_dropped",
+  "notes": [
+   "dead trailing return",
+   "for -> while",
+   "memory abstraction (memory safety assumed)",
+   "pointer parameter abstracted: d",
+   "void -> int",
+   "zero-initialized locals"
+  ],
+  "transcription": "int f(unsigned int n)\n{\n  long long v__w = 0;\n  unsigned int i = 0;\n  i = 0;\n  while (i < n)\n  {\n    v__w = i;\n    v__w = (unsigned char) (i * 3);\n    i++;\n  }\n\n  return 0;\n}\n\n",
+  "bounds": {
+   "n": [
+    0,
+    4294967295
+   ]
+  },
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmpucvef4ps/h.c: In function \u2018main\u2019:\n/tmp/tmpucvef4ps/h.c:28:79: error: too"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "trivial_invariants",
+   "invariant": [
+    "True"
+   ],
+   "rounds": 1
+  },
+  "stage": "certified"
+ },
+ {
+  "case": "mem_UNSAFE_div_by_content",
+  "notes": [
+   "memory abstraction (memory safety assumed)",
+   "pointer parameter abstracted: a"
+  ],
+  "transcription": "int f(int n)\n{\n  int s = 0;\n  int i = 0;\n  while (i < n)\n  {\n    s += 100 / (nondet_int() + (0 * i));\n    i++;\n  }\n\n  return s;\n}\n\n",
+  "bounds": {
+   "n": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmphkou_ett/h.c: In function \u2018main\u2019:\n/tmp/tmphkou_ett/h.c:31:79: error: too"
+  },
+  "certification": {
+   "status": "STUCK:top/loop0/body operations defined",
+   "method": "houdini_loops",
+   "invariant": null,
+   "rounds": 2
+  },
+  "stage": "not_certified"
+ },
+ {
+  "case": "mem_UNSAFE_signed_sum",
+  "notes": [
+   "memory abstraction (memory safety assumed)",
+   "pointer parameter abstracted: a"
+  ],
+  "transcription": "int f(int n)\n{\n  int s = 0;\n  int i = 0;\n  while (i < n)\n  {\n    s += nondet_int() + (0 * i);\n    i++;\n  }\n\n  return s;\n}\n\n",
+  "bounds": {
+   "n": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmppome8l61/h.c: In function \u2018main\u2019:\n/tmp/tmppome8l61/h.c:31:79: error: too"
+  },
+  "certification": {
+   "status": "STUCK:top/loop0/body operations defined",
+   "method": "houdini_loops",
+   "invariant": null,
+   "rounds": 4
+  },
+  "stage": "not_certified"
+ },
+ {
+  "case": "mem_UNSAFE_compound_assign",
+  "notes": [
+   "memory abstraction (memory safety assumed)",
+   "pointer parameter abstracted: a"
+  ],
+  "transcription": "int f(int n)\n{\n  long long v__w = 0;\n  int i = 0;\n  while (i < n)\n  {\n    v__w = i;\n    v__w = nondet_int() + 1;\n    i++;\n  }\n\n  return i;\n}\n\n",
+  "bounds": {
+   "n": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmp1qfpyw7y/h.c: In function \u2018main\u2019:\n/tmp/tmp1qfpyw7y/h.c:31:79: error: too"
+  },
+  "certification": {
+   "status": "STUCK:top/loop0/body operations defined",
+   "method": "houdini_loops",
+   "invariant": null,
+   "rounds": 2
+  },
+  "stage": "not_certified"
  }
 ]

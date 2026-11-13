@@ -215,3 +215,4 @@ Ultimate Automizer 是最强工具（Code2Inv 110/118 TRUE，无超时），ESBM
 - v0.81：Juliet CWE124/126/127 全入口函数 7146 个（bad 2898 标出、good 4219 证明、0 错判）；符号边界指针/整数循环首尾迭代检查（18/18，对抗性 4 个被拒绝）；自动转写+内联 gnulib/coreutils 122 个候选（7 个带循环函数被认证，67 个桩化后无循环，41 拒绝，7 未认证）。报告 paper/report_v081_bilingual.md。
 - 全量测试（v0.81）：3461 passed
 - v0.82：jump_eliminate 支持任意位置 return 与 do-while；自动转写支持带循环的被调用函数内联、循环头调用提升、库函数规格（abs/ctype/ranges，对真实 libc 差分）；合成集 10/11 认证且全部本机差分一致；真实候选带循环可转写 17、认证 8、差分一致 9。报告 paper/report_v082_bilingual.md。
+- v0.82b：内存抽象（标量算术 UB，假设内存安全）+ switch/continue/副作用/字符常量等扩展；gnulib+coreutils 全部含循环函数 2759 行：被拒绝 2496→1223（44.3%），认证 105→1107，按源码去重 1783 个：拒绝 983、认证 520；候选模式 122 个：拒绝 41→7、认证 106；25 个合成函数（3 个故意不安全的内存抽象对照均未认证）；memabs 单元测试。

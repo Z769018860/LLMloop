@@ -4,19 +4,52 @@
   "file": "argp-help.c",
   "function": "indent_to",
   "class": "calls_to_other_functions",
-  "stage": "rejected",
-  "reason": "parse failure"
+  "src_sha1": "4ffa3c748d3a",
+  "stage": "not_certified",
+  "notes": [
+   "callee argp_fmtstream_point not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "callee argp_fmtstream_putc not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "character constants converted",
+   "dead trailing return",
+   "hoisted loop-body declaration",
+   "memory abstraction (memory safety assumed)",
+   "nondeterministic result for argp_fmtstream_point",
+   "nondeterministic result for argp_fmtstream_putc",
+   "pointer parameter abstracted: stream",
+   "side effect hoisted out of an expression",
+   "void -> int",
+   "zero-initialized locals"
+  ],
+  "bounds": {
+   "col": [
+    0,
+    4294967295
+   ]
+  },
+  "transcription": "int f(unsigned int col)\n{\n  int v__he1 = 0;\n  int needed = col - unknown();\n  while (1)\n  {\n    v__he1 = needed;\n    needed = needed - 1;\n    if (!(v__he1 > 0))\n    {\n      break;\n    }\n  }\n\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "not applicable (globals or nondeterministic stubs)"
+  },
+  "certification": {
+   "status": "STUCK:top/loop0/body operations defined",
+   "method": "houdini_loops",
+   "invariant": null,
+   "rounds": 10
+  }
  },
  {
   "suite": "gnulib:lib",
   "file": "gettime-res.c",
   "function": "gcd",
   "class": "scalar_loop_candidate",
+  "src_sha1": "0047d22bc1eb",
   "stage": "certified",
   "notes": [
    "copied mutated parameter a",
    "copied mutated parameter b",
    "hoisted loop-body declaration",
+   "memory abstraction (memory safety assumed)",
    "zero-initialized locals"
   ],
   "bounds": {
@@ -34,7 +67,8 @@
    "equivalent": true,
    "cases": 24,
    "agree": 24,
-   "both_timeout": 0
+   "both_timeout": 0,
+   "one_sided_timeout": 0
   },
   "certification": {
    "status": "PROVED",
@@ -104,13 +138,17 @@
   "file": "login_tty.c",
   "function": "login_tty",
   "class": "calls_to_other_functions",
-  "stage": "not_certified",
+  "src_sha1": "6a5444bd795e",
+  "stage": "certified",
   "notes": [
    "for -> while",
+   "hoisted late declaration",
+   "memory abstraction (memory safety assumed)",
    "nondeterministic result for close",
    "nondeterministic result for dup2",
    "nondeterministic result for ioctl",
-   "nondeterministic result for setsid"
+   "nondeterministic result for setsid",
+   "zero-initialized locals"
   ],
   "bounds": {
    "slave_fd": [
@@ -118,15 +156,18 @@
     2147483647
    ]
   },
-  "transcription": "int f(int slave_fd)\n{\n  int i = 0;\n  while (i < 3)\n  {\n    if (i != slave_fd)\n    {\n    }\n    i++;\n  }\n\n  if (unknown() < 0)\n  {\n    return -1;\n  }\n  int i = 0;\n  while (i < 3)\n  {\n    if (slave_fd != i)\n    {\n      if (unknown() < 0)\n      {\n        return -1;\n      }\n    }\n    i++;\n  }\n\n  if (slave_fd >= 3)\n  {\n  }\n  return 0;\n}\n\n",
+  "transcription": "int f(int slave_fd)\n{\n  int i = 0;\n  int i__u1 = 0;\n  while (i < 3)\n  {\n    if (i != slave_fd)\n    {\n    }\n    i++;\n  }\n\n  if (unknown() < 0)\n  {\n    return -1;\n  }\n  i__u1 = 0;\n  while (i__u1 < 3)\n  {\n    if (slave_fd != i__u1)\n    {\n      if (unknown() < 0)\n      {\n        return -1;\n      }\n    }\n    i__u1++;\n  }\n\n  if (slave_fd >= 3)\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
    "detail": "not applicable (globals or nondeterministic stubs)"
   },
   "certification": {
-   "status": "STUCK:Unsupported control flow",
-   "method": "houdini_loops",
-   "invariant": null,
+   "status": "PROVED",
+   "method": "trivial_invariants",
+   "invariant": [
+    "True",
+    "True"
+   ],
    "rounds": 1
   }
  },
@@ -135,11 +176,13 @@
   "file": "mini-gmp.c",
   "function": "mpn_invert_3by2",
   "class": "scalar_loop_candidate",
+  "src_sha1": "ff53bec60df3",
   "stage": "not_certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
    "hoisted loop-body declaration",
+   "memory abstraction (memory safety assumed)",
    "zero-initialized locals"
   ],
   "bounds": {
@@ -157,7 +200,8 @@
    "equivalent": true,
    "cases": 24,
    "agree": 24,
-   "both_timeout": 0
+   "both_timeout": 0,
+   "one_sided_timeout": 0
   },
   "certification": {
    "status": "UNKNOWN",
@@ -170,12 +214,14 @@
   "file": "mini-gmp.c",
   "function": "mpn_limb_size_in_base_2",
   "class": "scalar_loop_candidate",
-  "stage": "certified",
+  "src_sha1": "d9df06f175cb",
+  "stage": "not_certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
    "for -> while",
    "hoisted loop-body declaration",
+   "memory abstraction (memory safety assumed)",
    "zero-initialized locals"
   ],
   "bounds": {
@@ -189,203 +235,13 @@
    "equivalent": true,
    "cases": 24,
    "agree": 24,
-   "both_timeout": 9
+   "both_timeout": 9,
+   "one_sided_timeout": 0
   },
   "certification": {
-   "status": "PROVED",
+   "status": "STUCK:top/loop1: invariant preserved (body path 0)",
    "method": "houdini_loops",
-   "invariant": [
-    [
-     "v__clz_x >= 0",
-     "v__clz_x <= 18446744073709551615",
-     "v__clz_c >= 0",
-     "v__clz_c % 2 == 0",
-     "v__clz_c % 4 == 0",
-     "v__clz_c % 8 == 0",
-     "LOCAL_SHIFT_BITS >= 8",
-     "LOCAL_SHIFT_BITS <= 8",
-     "LOCAL_SHIFT_BITS == 8",
-     "LOCAL_SHIFT_BITS % 2 == 0",
-     "LOCAL_SHIFT_BITS % 3 == 2",
-     "LOCAL_SHIFT_BITS % 4 == 0",
-     "LOCAL_SHIFT_BITS % 7 == 1",
-     "LOCAL_SHIFT_BITS % 8 == 0",
-     "LOCAL_SHIFT_BITS % 9 == 8",
-     "shift >= 0",
-     "shift <= 0",
-     "shift == 0",
-     "shift % 2 == 0",
-     "shift % 3 == 0",
-     "shift % 4 == 0",
-     "shift % 7 == 0",
-     "shift % 8 == 0",
-     "shift % 9 == 0",
-     "u - v__clz_x <= 0",
-     "(u - v__clz_x) % 3 == 0",
-     "u + v__clz_x >= 0",
-     "u + v__clz_x <= 36893488147419103230",
-     "u <= v__clz_x",
-     "u - v__clz_c <= 18446744073709551615",
-     "u + v__clz_c >= 0",
-     "u + v__clz_c <= 18446744073709551615",
-     "u - LOCAL_SHIFT_BITS >= -8",
-     "u - LOCAL_SHIFT_BITS <= 18446744073709551607",
-     "u + LOCAL_SHIFT_BITS >= 8",
-     "u + LOCAL_SHIFT_BITS <= 18446744073709551623",
-     "u - shift >= 0",
-     "u - shift <= 18446744073709551615",
-     "u + shift >= 0",
-     "u + shift <= 18446744073709551615",
-     "u >= shift",
-     "v__clz_x - v__clz_c <= 18446744073709551615",
-     "v__clz_x + v__clz_c >= 0",
-     "v__clz_x - LOCAL_SHIFT_BITS >= -8",
-     "v__clz_x - LOCAL_SHIFT_BITS <= 18446744073709551607",
-     "v__clz_x + LOCAL_SHIFT_BITS >= 8",
-     "v__clz_x + LOCAL_SHIFT_BITS <= 18446744073709551623",
-     "v__clz_x - shift >= 0",
-     "v__clz_x - shift <= 18446744073709551615",
-     "v__clz_x + shift >= 0",
-     "v__clz_x + shift <= 18446744073709551615",
-     "v__clz_x >= shift",
-     "v__clz_c - LOCAL_SHIFT_BITS >= -8",
-     "(v__clz_c - LOCAL_SHIFT_BITS) % 2 == 0",
-     "(v__clz_c - LOCAL_SHIFT_BITS) % 4 == 0",
-     "(v__clz_c - LOCAL_SHIFT_BITS) % 8 == 0",
-     "v__clz_c + LOCAL_SHIFT_BITS >= 8",
-     "v__clz_c - shift >= 0",
-     "(v__clz_c - shift) % 2 == 0",
-     "(v__clz_c - shift) % 4 == 0",
-     "(v__clz_c - shift) % 8 == 0",
-     "v__clz_c + shift >= 0",
-     "v__clz_c >= shift",
-     "LOCAL_SHIFT_BITS - shift == 8",
-     "(LOCAL_SHIFT_BITS - shift) % 2 == 0",
-     "(LOCAL_SHIFT_BITS - shift) % 3 == 2",
-     "(LOCAL_SHIFT_BITS - shift) % 4 == 0",
-     "(LOCAL_SHIFT_BITS - shift) % 7 == 1",
-     "(LOCAL_SHIFT_BITS - shift) % 8 == 0",
-     "(LOCAL_SHIFT_BITS - shift) % 9 == 8",
-     "LOCAL_SHIFT_BITS + shift == 8",
-     "LOCAL_SHIFT_BITS >= shift",
-     "1*shift == 0",
-     "-1*LOCAL_SHIFT_BITS + 8 == 0",
-     "v__clz_x >= -1",
-     "v__clz_c >= -1",
-     "LOCAL_SHIFT_BITS >= -1",
-     "LOCAL_SHIFT_BITS >= 0",
-     "LOCAL_SHIFT_BITS >= 1",
-     "LOCAL_SHIFT_BITS >= 2",
-     "LOCAL_SHIFT_BITS >= 7",
-     "LOCAL_SHIFT_BITS <= 9",
-     "LOCAL_SHIFT_BITS <= 254",
-     "LOCAL_SHIFT_BITS <= 255",
-     "LOCAL_SHIFT_BITS <= 256",
-     "shift >= -1",
-     "shift <= 1",
-     "shift <= 2",
-     "shift <= 7",
-     "shift <= 8",
-     "shift <= 9",
-     "shift <= 254",
-     "shift <= 255",
-     "shift <= 256"
-    ],
-    [
-     "v__clz_x >= 0",
-     "v__clz_x <= 18446744073709551615",
-     "v__clz_c >= 0",
-     "LOCAL_SHIFT_BITS >= 8",
-     "LOCAL_SHIFT_BITS <= 8",
-     "LOCAL_SHIFT_BITS == 8",
-     "LOCAL_SHIFT_BITS % 2 == 0",
-     "LOCAL_SHIFT_BITS % 3 == 2",
-     "LOCAL_SHIFT_BITS % 4 == 0",
-     "LOCAL_SHIFT_BITS % 7 == 1",
-     "LOCAL_SHIFT_BITS % 8 == 0",
-     "LOCAL_SHIFT_BITS % 9 == 8",
-     "shift >= 0",
-     "shift <= 0",
-     "shift == 0",
-     "shift % 2 == 0",
-     "shift % 3 == 0",
-     "shift % 4 == 0",
-     "shift % 7 == 0",
-     "shift % 8 == 0",
-     "shift % 9 == 0",
-     "u - v__clz_x <= 0",
-     "u + v__clz_x >= 0",
-     "u + v__clz_x <= 36893488147419103230",
-     "u <= v__clz_x",
-     "u - v__clz_c <= 18446744073709551615",
-     "u + v__clz_c <= 18446744073709551615",
-     "u - LOCAL_SHIFT_BITS >= -8",
-     "u - LOCAL_SHIFT_BITS <= 18446744073709551607",
-     "u + LOCAL_SHIFT_BITS >= 8",
-     "u + LOCAL_SHIFT_BITS <= 18446744073709551623",
-     "u - shift >= 0",
-     "u - shift <= 18446744073709551615",
-     "u + shift >= 0",
-     "u + shift <= 18446744073709551615",
-     "u >= shift",
-     "v__clz_x - v__clz_c >= -540",
-     "v__clz_x - v__clz_c <= 18446744073709551615",
-     "v__clz_x + v__clz_c >= 480",
-     "v__clz_x - LOCAL_SHIFT_BITS >= -8",
-     "v__clz_x - LOCAL_SHIFT_BITS <= 18446744073709551607",
-     "v__clz_x + LOCAL_SHIFT_BITS >= 8",
-     "v__clz_x + LOCAL_SHIFT_BITS <= 18446744073709551623",
-     "v__clz_x - shift >= 0",
-     "v__clz_x - shift <= 18446744073709551615",
-     "v__clz_x + shift >= 0",
-     "v__clz_x + shift <= 18446744073709551615",
-     "v__clz_x >= shift",
-     "v__clz_c - LOCAL_SHIFT_BITS >= -8",
-     "v__clz_c + LOCAL_SHIFT_BITS >= 8",
-     "v__clz_c - shift >= 0",
-     "v__clz_c + shift >= 0",
-     "v__clz_c >= shift",
-     "LOCAL_SHIFT_BITS - shift == 8",
-     "(LOCAL_SHIFT_BITS - shift) % 2 == 0",
-     "(LOCAL_SHIFT_BITS - shift) % 3 == 2",
-     "(LOCAL_SHIFT_BITS - shift) % 4 == 0",
-     "(LOCAL_SHIFT_BITS - shift) % 7 == 1",
-     "(LOCAL_SHIFT_BITS - shift) % 8 == 0",
-     "(LOCAL_SHIFT_BITS - shift) % 9 == 8",
-     "LOCAL_SHIFT_BITS + shift == 8",
-     "LOCAL_SHIFT_BITS >= shift",
-     "1*shift == 0",
-     "-1*LOCAL_SHIFT_BITS + 8 == 0",
-     "v__clz_x >= -1",
-     "v__clz_x >= 1",
-     "v__clz_x >= 2",
-     "v__clz_x >= 7",
-     "v__clz_x >= 8",
-     "v__clz_x >= 9",
-     "v__clz_x >= 254",
-     "v__clz_x >= 255",
-     "v__clz_x >= 256",
-     "v__clz_c >= -1",
-     "LOCAL_SHIFT_BITS >= -1",
-     "LOCAL_SHIFT_BITS >= 0",
-     "LOCAL_SHIFT_BITS >= 1",
-     "LOCAL_SHIFT_BITS >= 2",
-     "LOCAL_SHIFT_BITS >= 7",
-     "LOCAL_SHIFT_BITS <= 9",
-     "LOCAL_SHIFT_BITS <= 254",
-     "LOCAL_SHIFT_BITS <= 255",
-     "LOCAL_SHIFT_BITS <= 256",
-     "shift >= -1",
-     "shift <= 1",
-     "shift <= 2",
-     "shift <= 7",
-     "shift <= 8",
-     "shift <= 9",
-     "shift <= 254",
-     "shift <= 255",
-     "shift <= 256"
-    ]
-   ],
+   "invariant": null,
    "rounds": 16
   }
  },
@@ -394,6 +250,7 @@
   "file": "mini-gmp.c",
   "function": "mpn_gcd_11",
   "class": "scalar_loop_candidate",
+  "src_sha1": "1a2fcac13dd4",
   "stage": "not_certified",
   "notes": [
    "copied mutated parameter u",
@@ -403,6 +260,7 @@
    "flattened blocks",
    "for -> while",
    "hoisted loop-body declaration",
+   "memory abstraction (memory safety assumed)",
    "zero-initialized locals"
   ],
   "bounds": {
@@ -420,13 +278,14 @@
    "equivalent": true,
    "cases": 24,
    "agree": 24,
-   "both_timeout": 0
+   "both_timeout": 0,
+   "one_sided_timeout": 0
   },
   "certification": {
-   "status": "STUCK:top/then operations defined",
+   "status": "STUCK:top/then/then/loop0: invariant preserved (body path 0)",
    "method": "houdini_loops",
    "invariant": null,
-   "rounds": 10
+   "rounds": 7
   }
  },
  {
@@ -434,6 +293,7 @@
   "file": "mini-gmp.c",
   "function": "gmp_jacobi_coprime",
   "class": "scalar_loop_candidate",
+  "src_sha1": "3c94ed8a1649",
   "stage": "not_certified",
   "notes": [
    "copied mutated parameter a",
@@ -443,6 +303,7 @@
    "flattened blocks",
    "for -> while",
    "hoisted loop-body declaration",
+   "memory abstraction (memory safety assumed)",
    "zero-initialized locals"
   ],
   "bounds": {
@@ -460,7 +321,8 @@
    "equivalent": true,
    "cases": 24,
    "agree": 24,
-   "both_timeout": 19
+   "both_timeout": 19,
+   "one_sided_timeout": 0
   },
   "certification": {
    "status": "STUCK:top/then/loop0: invariant at entry (path 0)",
@@ -474,11 +336,13 @@
   "file": "mini-gmp.c",
   "function": "gmp_popcount_limb",
   "class": "scalar_loop_candidate",
+  "src_sha1": "3dd7a0f05e9a",
   "stage": "not_certified",
   "notes": [
    "copied mutated parameter x",
    "for -> while",
    "hoisted loop-body declaration",
+   "memory abstraction (memory safety assumed)",
    "zero-initialized locals"
   ],
   "bounds": {
@@ -492,7 +356,8 @@
    "equivalent": true,
    "cases": 24,
    "agree": 24,
-   "both_timeout": 0
+   "both_timeout": 0,
+   "one_sided_timeout": 0
   },
   "certification": {
    "status": "STUCK:top/loop0: invariant preserved (body path 0)",
@@ -506,10 +371,12 @@
   "file": "next-prime.c",
   "function": "is_prime",
   "class": "scalar_loop_candidate",
+  "src_sha1": "71045f5c722f",
   "stage": "certified",
   "notes": [
    "dead trailing return",
-   "for -> while"
+   "for -> while",
+   "memory abstraction (memory safety assumed)"
   ],
   "bounds": {
    "candidate": [
@@ -522,7 +389,8 @@
    "equivalent": true,
    "cases": 24,
    "agree": 24,
-   "both_timeout": 0
+   "both_timeout": 0,
+   "one_sided_timeout": 0
   },
   "certification": {
    "status": "PROVED",
@@ -541,7 +409,7 @@
     "square >= 0",
     "square >= 1"
    ],
-   "rounds": 12
+   "rounds": 13
   }
  },
  {
@@ -549,6 +417,7 @@
   "file": "next-prime.c",
   "function": "next_prime",
   "class": "calls_to_other_functions",
+  "src_sha1": "f08277dae0e5",
   "stage": "not_certified",
   "notes": [
    "copied mutated parameter candidate",
@@ -556,6 +425,7 @@
    "hoisted loop-body declaration",
    "inlined is_prime (with loops)",
    "loop-header call hoisted",
+   "memory abstraction (memory safety assumed)",
    "zero-initialized locals"
   ],
   "bounds": {
@@ -569,7 +439,8 @@
    "equivalent": true,
    "cases": 24,
    "agree": 24,
-   "both_timeout": 7
+   "both_timeout": 0,
+   "one_sided_timeout": 0
   },
   "certification": {
    "status": "STUCK:top/loop0: invariant at entry (path 1)",
@@ -583,14 +454,19 @@
   "file": "stackvma.c",
   "function": "is_unmapped",
   "class": "calls_to_other_functions",
+  "src_sha1": "6aaea8cf4a64",
   "stage": "not_certified",
   "notes": [
+   "callee is_mapped not inlinable (pointers/arrays/structs): treated as an opaque call",
    "copied mutated parameter addr1",
    "copied mutated parameter addr2",
    "for -> while",
    "global as parameter: pagesize",
+   "hoisted late declaration",
    "hoisted loop-body declaration",
+   "memory abstraction (memory safety assumed)",
    "nondeterministic result for is_mapped",
+   "nondeterministic result for mincore",
    "zero-initialized locals"
   ],
   "bounds": {
@@ -607,7 +483,7 @@
     18446744073709551615
    ]
   },
-  "transcription": "int f(unsigned long addr1_in, unsigned long addr2_in, unsigned long pagesize)\n{\n  unsigned long addr1 = addr1_in;\n  unsigned long addr2 = addr2_in;\n  unsigned long addr_stepsize = 0;\n  unsigned long i = 0;\n  unsigned long addr = 0;\n  addr1 = (addr1 / pagesize) * pagesize;\n  addr2 = ((addr2 / pagesize) + 1) * pagesize;\n  unsigned long count = (addr2 - addr1) / pagesize;\n  unsigned long stepsize = 0;\n  stepsize = 1;\n  while (stepsize < count)\n  {\n    stepsize = 2 * stepsize;\n  }\n\n  while (1)\n  {\n    stepsize = stepsize / 2;\n    if (stepsize == 0)\n    {\n      break;\n    }\n    addr_stepsize = stepsize * pagesize;\n    i = stepsize, addr = addr1 + addr_stepsize;\n    while (i < count)\n    {\n      if (unknown())\n      {\n        return 0;\n      }\n      i += 2 * stepsize, addr += 2 * addr_stepsize;\n    }\n\n  }\n\n  return 1;\n}\n\n",
+  "transcription": "int f(unsigned long addr1_in, unsigned long addr2_in, unsigned long pagesize)\n{\n  unsigned long addr1 = addr1_in;\n  unsigned long addr2 = addr2_in;\n  unsigned long addr_stepsize = 0;\n  unsigned long i = 0;\n  unsigned long addr = 0;\n  unsigned long count = 0;\n  unsigned long stepsize = 0;\n  addr1 = (addr1 / pagesize) * pagesize;\n  addr2 = ((addr2 / pagesize) + 1) * pagesize;\n  count = (addr2 - addr1) / pagesize;\n  stepsize = 1;\n  while (stepsize < count)\n  {\n    stepsize = 2 * stepsize;\n  }\n\n  while (1)\n  {\n    stepsize = stepsize / 2;\n    if (stepsize == 0)\n    {\n      break;\n    }\n    addr_stepsize = stepsize * pagesize;\n    i = stepsize, addr = addr1 + addr_stepsize;\n    while (i < count)\n    {\n      if (unknown())\n      {\n        return 0;\n      }\n      i += 2 * stepsize, addr += 2 * addr_stepsize;\n    }\n\n  }\n\n  return 1;\n}\n\n",
   "native": {
    "equivalent": null,
    "detail": "not applicable (globals or nondeterministic stubs)"
@@ -624,26 +500,56 @@
   "file": "time_rz.c",
   "function": "tzfree",
   "class": "calls_to_other_functions",
+  "src_sha1": "33df31ff562d",
   "stage": "rejected",
-  "reason": "parse failure"
+  "reason": "translation-unit errors (missing project macros/headers)"
  },
  {
   "suite": "gnulib:lib",
   "file": "yesno.c",
   "function": "yesno",
   "class": "calls_to_other_functions",
-  "stage": "rejected",
-  "reason": "non-scalar parameter"
+  "src_sha1": "5fb102894cb6",
+  "stage": "certified",
+  "notes": [
+   "character constants converted",
+   "hoisted late declaration",
+   "hoisted loop-body declaration",
+   "library range: getchar in [-1,255]",
+   "memory abstraction (memory safety assumed)",
+   "zero-initialized locals"
+  ],
+  "bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "transcription": "int f(int __z)\n{\n  int v__c0_2 = 0;\n  int yes = 0;\n  int v__c0_1 = unknown();\n  int c = 0;\n  if (v__c0_1 < -1)\n  {\n    v__c0_1 = -1;\n  }\n  if (v__c0_1 > 255)\n  {\n    v__c0_1 = 255;\n  }\n  c = v__c0_1;\n  yes = (c == 121) || (c == 89);\n  while ((c != 10) && (c != (-1)))\n  {\n    v__c0_2 = unknown();\n    if (v__c0_2 < -1)\n    {\n      v__c0_2 = -1;\n    }\n    if (v__c0_2 > 255)\n    {\n      v__c0_2 = 255;\n    }\n    c = v__c0_2;\n  }\n\n  return yes;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "not applicable (globals or nondeterministic stubs)"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "trivial_invariants",
+   "invariant": [
+    "True"
+   ],
+   "rounds": 1
+  }
  },
  {
   "suite": "coreutils:src",
   "file": "basename.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "9ee3019b79d4",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -655,7 +561,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpevvco3b2/h.c: In function \u2018usage\u2019:\n/tmp/tmpevvco3b2/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpiw2g921n/h.c: In function \u2018usage\u2019:\n/tmp/tmpiw2g921n/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -668,10 +574,12 @@
   "file": "basenc.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "fd269e96947b",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -683,7 +591,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpnnm92_wf/h.c: In function \u2018usage\u2019:\n/tmp/tmpnnm92_wf/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpr11ax_gj/h.c: In function \u2018usage\u2019:\n/tmp/tmpr11ax_gj/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -696,10 +604,12 @@
   "file": "cat.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "e123b9488198",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -711,7 +621,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpyrmuk1cp/h.c: In function \u2018usage\u2019:\n/tmp/tmpyrmuk1cp/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpqr53x6vx/h.c: In function \u2018usage\u2019:\n/tmp/tmpqr53x6vx/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -724,42 +634,14 @@
   "file": "chcon.c",
   "function": "usage",
   "class": "calls_to_other_functions",
-  "stage": "rejected",
-  "reason": "callee with non-scalar parameter"
- },
- {
-  "suite": "coreutils:src",
-  "file": "chmod.c",
-  "function": "usage",
-  "class": "calls_to_other_functions",
-  "stage": "rejected",
-  "reason": "callee with non-scalar parameter"
- },
- {
-  "suite": "coreutils:src",
-  "file": "chown.c",
-  "function": "usage",
-  "class": "calls_to_other_functions",
-  "stage": "rejected",
-  "reason": "callee with non-scalar parameter"
- },
- {
-  "suite": "coreutils:src",
-  "file": "chroot.c",
-  "function": "usage",
-  "class": "calls_to_other_functions",
-  "stage": "rejected",
-  "reason": "call with non-scalar argument: oprintf_"
- },
- {
-  "suite": "coreutils:src",
-  "file": "cksum.c",
-  "function": "usage",
-  "class": "calls_to_other_functions",
+  "src_sha1": "2be2827717b9",
   "stage": "certified",
   "notes": [
+   "callee emit_symlink_recurse_options_ not inlinable (callee with non-scalar parameter): treated as an opaque call",
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "opaque void call dropped: emit_symlink_recurse_options_",
    "void -> int"
   ],
   "bounds": {
@@ -771,7 +653,140 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmp33cs3hgo/h.c: In function \u2018usage\u2019:\n/tmp/tmp33cs3hgo/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmphfopk4y8/h.c: In function \u2018usage\u2019:\n/tmp/tmphfopk4y8/h.c:10:81: error: \u2018p"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "typed_c_no_loops_after_stubbing",
+   "rounds": 0
+  }
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "chmod.c",
+  "function": "usage",
+  "class": "calls_to_other_functions",
+  "src_sha1": "884de4238610",
+  "stage": "certified",
+  "notes": [
+   "callee emit_symlink_recurse_options_ not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "do-while(0) flattened",
+   "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "opaque void call dropped: emit_symlink_recurse_options_",
+   "void -> int"
+  ],
+  "bounds": {
+   "status": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmp3o7a50si/h.c: In function \u2018usage\u2019:\n/tmp/tmp3o7a50si/h.c:10:81: error: \u2018p"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "typed_c_no_loops_after_stubbing",
+   "rounds": 0
+  }
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "chown.c",
+  "function": "usage",
+  "class": "calls_to_other_functions",
+  "src_sha1": "e37f0f2258ae",
+  "stage": "certified",
+  "notes": [
+   "callee emit_symlink_recurse_options_ not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "do-while(0) flattened",
+   "enumerator constant CHOWN_CHOWN",
+   "flattened blocks",
+   "global as parameter: chown_mode",
+   "memory abstraction (memory safety assumed)",
+   "opaque void call dropped: emit_symlink_recurse_options_",
+   "void -> int"
+  ],
+  "bounds": {
+   "status": [
+    -2147483648,
+    2147483647
+   ],
+   "chown_mode": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "transcription": "int f(int status, int chown_mode)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n    if (chown_mode == 0)\n    {\n    }\n    else\n    {\n    }\n    if (chown_mode == 0)\n    {\n    }\n    if (chown_mode == 0)\n    {\n    }\n    else\n    {\n    }\n  }\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "not applicable (globals or nondeterministic stubs)"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "typed_c_no_loops_after_stubbing",
+   "rounds": 0
+  }
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "chroot.c",
+  "function": "usage",
+  "class": "calls_to_other_functions",
+  "src_sha1": "3827c934b59f",
+  "stage": "certified",
+  "notes": [
+   "callee emit_exec_status not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "do-while(0) flattened",
+   "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "opaque void call dropped: emit_exec_status",
+   "opaque void call dropped: oprintf_",
+   "void -> int"
+  ],
+  "bounds": {
+   "status": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmpe3flt90z/h.c: In function \u2018usage\u2019:\n/tmp/tmpe3flt90z/h.c:10:81: error: \u2018p"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "typed_c_no_loops_after_stubbing",
+   "rounds": 0
+  }
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "cksum.c",
+  "function": "usage",
+  "class": "calls_to_other_functions",
+  "src_sha1": "4e26ac93dbbe",
+  "stage": "certified",
+  "notes": [
+   "do-while(0) flattened",
+   "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "void -> int"
+  ],
+  "bounds": {
+   "status": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmpx30mx2_w/h.c: In function \u2018usage\u2019:\n/tmp/tmpx30mx2_w/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -784,10 +799,12 @@
   "file": "comm.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "8b0d2e444ec8",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -799,7 +816,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpb8idlyit/h.c: In function \u2018usage\u2019:\n/tmp/tmpb8idlyit/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpfsxkmby2/h.c: In function \u2018usage\u2019:\n/tmp/tmpfsxkmby2/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -812,10 +829,12 @@
   "file": "coreutils.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "81633255e25a",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -827,7 +846,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmp3u4884ag/h.c: In function \u2018usage\u2019:\n/tmp/tmp3u4884ag/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmps3emmkeg/h.c: In function \u2018usage\u2019:\n/tmp/tmps3emmkeg/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -840,18 +859,46 @@
   "file": "cp.c",
   "function": "usage",
   "class": "calls_to_other_functions",
-  "stage": "rejected",
-  "reason": "callee with non-scalar parameter"
+  "src_sha1": "7294a5634f0d",
+  "stage": "certified",
+  "notes": [
+   "do-while(0) flattened",
+   "flattened blocks",
+   "hoisted loop-body declaration",
+   "inlined emit_backup_suffix_note",
+   "inlined emit_update_parameters_note",
+   "memory abstraction (memory safety assumed)",
+   "void -> int",
+   "zero-initialized locals"
+  ],
+  "bounds": {
+   "status": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "transcription": "int f(int status)\n{\n  int vrv__c0_1 = 0;\n  int vrv__c0_2 = 0;\n  if (status != 0)\n  {\n  }\n  else\n  {\n    vrv__c0_1 = 0;\n    vrv__c0_1 = 0;\n    vrv__c0_2 = 0;\n    vrv__c0_2 = 0;\n  }\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmp6aewegft/h.c: In function \u2018usage\u2019:\n/tmp/tmp6aewegft/h.c:16:81: error: \u2018p"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "typed_c_no_loops_after_stubbing",
+   "rounds": 0
+  }
  },
  {
   "suite": "coreutils:src",
   "file": "csplit.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "13bbc2ab1991",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -863,7 +910,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpmln516hs/h.c: In function \u2018usage\u2019:\n/tmp/tmpmln516hs/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpj274l183/h.c: In function \u2018usage\u2019:\n/tmp/tmpj274l183/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -876,10 +923,12 @@
   "file": "cut.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "5c9b87cd215f",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -891,7 +940,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpxd4d_ovq/h.c: In function \u2018usage\u2019:\n/tmp/tmpxd4d_ovq/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpa0oub86f/h.c: In function \u2018usage\u2019:\n/tmp/tmpa0oub86f/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -904,10 +953,12 @@
   "file": "date.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "030207421227",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -919,7 +970,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpu16pzk68/h.c: In function \u2018usage\u2019:\n/tmp/tmpu16pzk68/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmp5ttln7tp/h.c: In function \u2018usage\u2019:\n/tmp/tmp5ttln7tp/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -932,9 +983,12 @@
   "file": "date.c",
   "function": "res_width",
   "class": "scalar_loop_candidate",
+  "src_sha1": "ffdb8f957052",
   "stage": "not_certified",
   "notes": [
-   "for -> while"
+   "for -> while",
+   "memory abstraction (memory safety assumed)",
+   "side effect hoisted out of an expression"
   ],
   "bounds": {
    "res": [
@@ -942,18 +996,19 @@
     9223372036854775807
    ]
   },
-  "transcription": "int f(long res)\n{\n  int i = 9;\n  long long r = 1;\n  while ((r *= 10) <= res)\n  {\n    i--;\n  }\n\n  return i;\n}\n\n",
+  "transcription": "int f(long res)\n{\n  int i = 9;\n  long long r = 1;\n  while (1)\n  {\n    r *= 10;\n    if (!(r <= res))\n    {\n      break;\n    }\n    i--;\n  }\n\n  return i;\n}\n\n",
   "native": {
    "equivalent": true,
    "cases": 24,
    "agree": 24,
-   "both_timeout": 4
+   "both_timeout": 4,
+   "one_sided_timeout": 0
   },
   "certification": {
-   "status": "STUCK:Unsupported typed C expression or side effect: Assignm",
+   "status": "STUCK:top/loop0/body operations defined",
    "method": "houdini_loops",
    "invariant": null,
-   "rounds": 2
+   "rounds": 4
   }
  },
  {
@@ -961,26 +1016,23 @@
   "file": "dd.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "038579d5577c",
   "stage": "rejected",
-  "reason": "parse failure"
+  "reason": "translation-unit errors (missing project macros/headers)"
  },
  {
   "suite": "coreutils:src",
   "file": "df.c",
   "function": "usage",
   "class": "calls_to_other_functions",
-  "stage": "rejected",
-  "reason": "callee with non-scalar parameter"
- },
- {
-  "suite": "coreutils:src",
-  "file": "dircolors.c",
-  "function": "usage",
-  "class": "calls_to_other_functions",
+  "src_sha1": "9117a0610b35",
   "stage": "certified",
   "notes": [
+   "callee emit_blocksize_note not inlinable (callee with non-scalar parameter): treated as an opaque call",
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "opaque void call dropped: emit_blocksize_note",
    "void -> int"
   ],
   "bounds": {
@@ -992,7 +1044,37 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpl2l9y5fu/h.c: In function \u2018usage\u2019:\n/tmp/tmpl2l9y5fu/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmp7lujik96/h.c: In function \u2018usage\u2019:\n/tmp/tmp7lujik96/h.c:10:81: error: \u2018p"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "typed_c_no_loops_after_stubbing",
+   "rounds": 0
+  }
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "dircolors.c",
+  "function": "usage",
+  "class": "calls_to_other_functions",
+  "src_sha1": "53435803c118",
+  "stage": "certified",
+  "notes": [
+   "do-while(0) flattened",
+   "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "void -> int"
+  ],
+  "bounds": {
+   "status": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmpxe_7s31j/h.c: In function \u2018usage\u2019:\n/tmp/tmpxe_7s31j/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -1005,10 +1087,12 @@
   "file": "dirname.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "1249f685a975",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -1020,7 +1104,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpm2zlsomm/h.c: In function \u2018usage\u2019:\n/tmp/tmpm2zlsomm/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmplivz96g8/h.c: In function \u2018usage\u2019:\n/tmp/tmplivz96g8/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -1033,34 +1117,14 @@
   "file": "du.c",
   "function": "usage",
   "class": "calls_to_other_functions",
-  "stage": "rejected",
-  "reason": "callee with non-scalar parameter"
- },
- {
-  "suite": "coreutils:src",
-  "file": "env.c",
-  "function": "usage",
-  "class": "calls_to_other_functions",
-  "stage": "rejected",
-  "reason": "callee with non-scalar parameter"
- },
- {
-  "suite": "coreutils:src",
-  "file": "expand.c",
-  "function": "usage",
-  "class": "calls_to_other_functions",
-  "stage": "rejected",
-  "reason": "call with non-scalar argument: emit_tab_list_info"
- },
- {
-  "suite": "coreutils:src",
-  "file": "expr.c",
-  "function": "usage",
-  "class": "calls_to_other_functions",
+  "src_sha1": "6a33435ac87e",
   "stage": "certified",
   "notes": [
+   "callee emit_blocksize_note not inlinable (callee with non-scalar parameter): treated as an opaque call",
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "opaque void call dropped: emit_blocksize_note",
    "void -> int"
   ],
   "bounds": {
@@ -1072,7 +1136,101 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpy0mbbsgp/h.c: In function \u2018usage\u2019:\n/tmp/tmpy0mbbsgp/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmp42ns8g_f/h.c: In function \u2018usage\u2019:\n/tmp/tmp42ns8g_f/h.c:10:81: error: \u2018p"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "typed_c_no_loops_after_stubbing",
+   "rounds": 0
+  }
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "env.c",
+  "function": "usage",
+  "class": "calls_to_other_functions",
+  "src_sha1": "19f0ec7637de",
+  "stage": "certified",
+  "notes": [
+   "callee emit_exec_status not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "do-while(0) flattened",
+   "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "opaque void call dropped: emit_exec_status",
+   "void -> int"
+  ],
+  "bounds": {
+   "status": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmpapead_g7/h.c: In function \u2018usage\u2019:\n/tmp/tmpapead_g7/h.c:10:81: error: \u2018p"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "typed_c_no_loops_after_stubbing",
+   "rounds": 0
+  }
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "expand.c",
+  "function": "usage",
+  "class": "calls_to_other_functions",
+  "src_sha1": "fc07bcbc9341",
+  "stage": "certified",
+  "notes": [
+   "do-while(0) flattened",
+   "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "opaque void call dropped: emit_tab_list_info",
+   "void -> int"
+  ],
+  "bounds": {
+   "status": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmpttfk6ih5/h.c: In function \u2018usage\u2019:\n/tmp/tmpttfk6ih5/h.c:10:81: error: \u2018p"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "typed_c_no_loops_after_stubbing",
+   "rounds": 0
+  }
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "expr.c",
+  "function": "usage",
+  "class": "calls_to_other_functions",
+  "src_sha1": "ee4493919244",
+  "stage": "certified",
+  "notes": [
+   "character constants converted",
+   "do-while(0) flattened",
+   "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "void -> int"
+  ],
+  "bounds": {
+   "status": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmprwq0mlu4/h.c: In function \u2018usage\u2019:\n/tmp/tmprwq0mlu4/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -1085,26 +1243,30 @@
   "file": "factor.c",
   "function": "mod2",
   "class": "calls_to_other_functions",
+  "src_sha1": "553fa1c39411",
   "stage": "rejected",
-  "reason": "parse failure"
+  "reason": "translation-unit errors (missing project macros/headers)"
  },
  {
   "suite": "coreutils:src",
   "file": "factor.c",
   "function": "gcd_odd",
   "class": "calls_to_other_functions",
+  "src_sha1": "496e229a6bde",
   "stage": "rejected",
-  "reason": "parse failure"
+  "reason": "translation-unit errors (missing project macros/headers)"
  },
  {
   "suite": "coreutils:src",
   "file": "factor.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "5e94469c68b4",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -1116,7 +1278,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpauyh8_rf/h.c: In function \u2018usage\u2019:\n/tmp/tmpauyh8_rf/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmp0m0xao1f/h.c: In function \u2018usage\u2019:\n/tmp/tmp0m0xao1f/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -1129,10 +1291,12 @@
   "file": "fmt.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "26e69223428e",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -1144,7 +1308,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpi3tvvy8f/h.c: In function \u2018usage\u2019:\n/tmp/tmpi3tvvy8f/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmp5g8mrlk8/h.c: In function \u2018usage\u2019:\n/tmp/tmp5g8mrlk8/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -1157,12 +1321,15 @@
   "file": "fmt.c",
   "function": "put_space",
   "class": "calls_to_other_functions",
+  "src_sha1": "9c7677bab4f1",
   "stage": "certified",
   "notes": [
+   "character constants converted",
    "copied mutated parameter out_column",
    "dead trailing return",
    "global as parameter: out_column",
    "global as parameter: tabs",
+   "memory abstraction (memory safety assumed)",
    "void -> int",
    "zero-initialized locals"
   ],
@@ -1283,7 +1450,7 @@
      "tab_target >= -1"
     ]
    ],
-   "rounds": 16,
+   "rounds": 15,
    "precondition": {
     "space": [
      0,
@@ -1305,10 +1472,12 @@
   "file": "fold.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "168e4793b0ca",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -1320,7 +1489,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmp9iktqnl4/h.c: In function \u2018usage\u2019:\n/tmp/tmp9iktqnl4/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpsgp7i7m4/h.c: In function \u2018usage\u2019:\n/tmp/tmpsgp7i7m4/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -1333,10 +1502,12 @@
   "file": "getlimits.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "2563bbc1529c",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -1348,7 +1519,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpfy0xwg0o/h.c: In function \u2018usage\u2019:\n/tmp/tmpfy0xwg0o/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpfzut33d6/h.c: In function \u2018usage\u2019:\n/tmp/tmpfzut33d6/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -1361,10 +1532,12 @@
   "file": "groups.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "6bac5e8705fb",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -1376,7 +1549,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpzyxbvoa0/h.c: In function \u2018usage\u2019:\n/tmp/tmpzyxbvoa0/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpd1ma4l2m/h.c: In function \u2018usage\u2019:\n/tmp/tmpd1ma4l2m/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -1389,18 +1562,13 @@
   "file": "head.c",
   "function": "usage",
   "class": "calls_to_other_functions",
-  "stage": "rejected",
-  "reason": "call with non-scalar argument: oprintf_"
- },
- {
-  "suite": "coreutils:src",
-  "file": "hostid.c",
-  "function": "usage",
-  "class": "calls_to_other_functions",
+  "src_sha1": "7641be023f9c",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "opaque void call dropped: oprintf_",
    "void -> int"
   ],
   "bounds": {
@@ -1412,7 +1580,37 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpa1rfyxmx/h.c: In function \u2018usage\u2019:\n/tmp/tmpa1rfyxmx/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpa8m8l_ld/h.c: In function \u2018usage\u2019:\n/tmp/tmpa8m8l_ld/h.c:10:81: error: \u2018p"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "typed_c_no_loops_after_stubbing",
+   "rounds": 0
+  }
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "hostid.c",
+  "function": "usage",
+  "class": "calls_to_other_functions",
+  "src_sha1": "9fc9bc297f33",
+  "stage": "certified",
+  "notes": [
+   "do-while(0) flattened",
+   "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "void -> int"
+  ],
+  "bounds": {
+   "status": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmpplmosj1x/h.c: In function \u2018usage\u2019:\n/tmp/tmpplmosj1x/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -1425,10 +1623,12 @@
   "file": "hostname.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "4f827193b13c",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -1440,7 +1640,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmp1nj5qmwr/h.c: In function \u2018usage\u2019:\n/tmp/tmp1nj5qmwr/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpv8pb3wbz/h.c: In function \u2018usage\u2019:\n/tmp/tmpv8pb3wbz/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -1453,10 +1653,12 @@
   "file": "id.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "2d56a34a1b8c",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -1468,7 +1670,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmp2ghh2oob/h.c: In function \u2018usage\u2019:\n/tmp/tmp2ghh2oob/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpojxfi_s6/h.c: In function \u2018usage\u2019:\n/tmp/tmpojxfi_s6/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -1481,18 +1683,45 @@
   "file": "install.c",
   "function": "usage",
   "class": "calls_to_other_functions",
-  "stage": "rejected",
-  "reason": "callee with non-scalar parameter"
+  "src_sha1": "5fdaccd13085",
+  "stage": "certified",
+  "notes": [
+   "do-while(0) flattened",
+   "flattened blocks",
+   "hoisted loop-body declaration",
+   "inlined emit_backup_suffix_note",
+   "memory abstraction (memory safety assumed)",
+   "void -> int",
+   "zero-initialized locals"
+  ],
+  "bounds": {
+   "status": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "transcription": "int f(int status)\n{\n  int vrv__c0_1 = 0;\n  if (status != 0)\n  {\n  }\n  else\n  {\n    vrv__c0_1 = 0;\n    vrv__c0_1 = 0;\n  }\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmpv0vxnw56/h.c: In function \u2018usage\u2019:\n/tmp/tmpv0vxnw56/h.c:13:81: error: \u2018p"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "typed_c_no_loops_after_stubbing",
+   "rounds": 0
+  }
  },
  {
   "suite": "coreutils:src",
   "file": "join.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "a58eb2e1d09f",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -1504,7 +1733,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmprrtsy70a/h.c: In function \u2018usage\u2019:\n/tmp/tmprrtsy70a/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpo43b9kvs/h.c: In function \u2018usage\u2019:\n/tmp/tmpo43b9kvs/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -1517,10 +1746,12 @@
   "file": "kill.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "ae78552f7e53",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -1532,7 +1763,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpgr6xkm_o/h.c: In function \u2018usage\u2019:\n/tmp/tmpgr6xkm_o/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpuaums906/h.c: In function \u2018usage\u2019:\n/tmp/tmpuaums906/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -1545,10 +1776,12 @@
   "file": "link.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "4ef98fa41e00",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -1560,7 +1793,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpexh3wwgs/h.c: In function \u2018usage\u2019:\n/tmp/tmpexh3wwgs/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpe7zi7eb2/h.c: In function \u2018usage\u2019:\n/tmp/tmpe7zi7eb2/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -1573,18 +1806,21 @@
   "file": "ln.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "f69aed71a883",
   "stage": "rejected",
-  "reason": "callee with non-scalar parameter"
+  "reason": "translation-unit errors (missing project macros/headers)"
  },
  {
   "suite": "coreutils:src",
   "file": "logname.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "18fa6248bea9",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -1596,7 +1832,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmp0_bw0qhb/h.c: In function \u2018usage\u2019:\n/tmp/tmp0_bw0qhb/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmp3luugf1j/h.c: In function \u2018usage\u2019:\n/tmp/tmp3luugf1j/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -1609,11 +1845,14 @@
   "file": "ls.c",
   "function": "indent",
   "class": "calls_to_other_functions",
+  "src_sha1": "a993fd7aa02b",
   "stage": "certified",
   "notes": [
+   "character constants converted",
    "copied mutated parameter from",
    "dead trailing return",
    "global as parameter: tabsize",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -1649,26 +1888,87 @@
   "file": "ls.c",
   "function": "usage",
   "class": "calls_to_other_functions",
-  "stage": "rejected",
-  "reason": "unresolved free identifier ls_mode"
+  "src_sha1": "3934f9399236",
+  "stage": "certified",
+  "notes": [
+   "do-while(0) flattened",
+   "enumerator constant LS_LONG_FORMAT",
+   "enumerator constant LS_LS",
+   "enumerator constant LS_MULTI_COL",
+   "flattened blocks",
+   "global as parameter: ls_mode",
+   "memory abstraction (memory safety assumed)",
+   "void -> int"
+  ],
+  "bounds": {
+   "status": [
+    -2147483648,
+    2147483647
+   ],
+   "ls_mode": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "transcription": "int f(int status, int ls_mode)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n    if (ls_mode == 0)\n    {\n    }\n    else\n    {\n      if (ls_mode == 1)\n      {\n      }\n      else\n      {\n      }\n    }\n    if (ls_mode == 2)\n    {\n    }\n    else\n    {\n    }\n    if (ls_mode == 0)\n    {\n    }\n    else\n    {\n    }\n  }\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "not applicable (globals or nondeterministic stubs)"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "typed_c_no_loops_after_stubbing",
+   "rounds": 0
+  }
  },
  {
   "suite": "coreutils:src",
   "file": "make-prime-list.c",
   "function": "binvert",
   "class": "scalar_loop_candidate",
-  "stage": "rejected",
-  "reason": "definition not found"
+  "src_sha1": "d23214efab26",
+  "stage": "certified",
+  "notes": [
+   "dead trailing return",
+   "for -> while",
+   "hoisted loop-body declaration",
+   "memory abstraction (memory safety assumed)",
+   "zero-initialized locals"
+  ],
+  "bounds": {
+   "a": [
+    0,
+    18446744073709551615
+   ]
+  },
+  "transcription": "unsigned long f(unsigned long a)\n{\n  unsigned long y = 0;\n  unsigned long x = 4114185649U >> (4 * ((a / 2) & 7));\n  while (1)\n  {\n    y = (2 * x) - ((x * x) * a);\n    if (y == x)\n    {\n      return x;\n    }\n    x = y;\n  }\n\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": true,
+   "cases": 24,
+   "agree": 24,
+   "both_timeout": 0,
+   "one_sided_timeout": 0
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "trivial_invariants",
+   "invariant": [
+    "True"
+   ],
+   "rounds": 1
+  }
  },
  {
   "suite": "coreutils:src",
   "file": "mkdir.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "f1cd12908303",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -1680,7 +1980,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpkm0zd5t6/h.c: In function \u2018usage\u2019:\n/tmp/tmpkm0zd5t6/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmp5id8cy3b/h.c: In function \u2018usage\u2019:\n/tmp/tmp5id8cy3b/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -1693,10 +1993,12 @@
   "file": "mkfifo.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "923bd02b96b3",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -1708,7 +2010,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmp8rjcdqhj/h.c: In function \u2018usage\u2019:\n/tmp/tmp8rjcdqhj/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpailxzuta/h.c: In function \u2018usage\u2019:\n/tmp/tmpailxzuta/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -1721,10 +2023,12 @@
   "file": "mknod.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "32161f8f8b14",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -1736,7 +2040,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmp9ugqr07j/h.c: In function \u2018usage\u2019:\n/tmp/tmp9ugqr07j/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpz4rtsqxr/h.c: In function \u2018usage\u2019:\n/tmp/tmpz4rtsqxr/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -1749,10 +2053,12 @@
   "file": "mktemp.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "f927c78193ca",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -1764,7 +2070,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmp0wwk3wof/h.c: In function \u2018usage\u2019:\n/tmp/tmp0wwk3wof/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmplob7kq04/h.c: In function \u2018usage\u2019:\n/tmp/tmplob7kq04/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -1777,26 +2083,48 @@
   "file": "mv.c",
   "function": "usage",
   "class": "calls_to_other_functions",
-  "stage": "rejected",
-  "reason": "callee with non-scalar parameter"
+  "src_sha1": "ed39877fe093",
+  "stage": "certified",
+  "notes": [
+   "do-while(0) flattened",
+   "flattened blocks",
+   "hoisted loop-body declaration",
+   "inlined emit_backup_suffix_note",
+   "inlined emit_update_parameters_note",
+   "memory abstraction (memory safety assumed)",
+   "void -> int",
+   "zero-initialized locals"
+  ],
+  "bounds": {
+   "status": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "transcription": "int f(int status)\n{\n  int vrv__c0_1 = 0;\n  int vrv__c0_2 = 0;\n  if (status != 0)\n  {\n  }\n  else\n  {\n    vrv__c0_1 = 0;\n    vrv__c0_1 = 0;\n    vrv__c0_2 = 0;\n    vrv__c0_2 = 0;\n  }\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmp87dpfeqo/h.c: In function \u2018usage\u2019:\n/tmp/tmp87dpfeqo/h.c:16:81: error: \u2018p"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "typed_c_no_loops_after_stubbing",
+   "rounds": 0
+  }
  },
  {
   "suite": "coreutils:src",
   "file": "nice.c",
   "function": "usage",
   "class": "calls_to_other_functions",
-  "stage": "rejected",
-  "reason": "callee with non-scalar parameter"
- },
- {
-  "suite": "coreutils:src",
-  "file": "nl.c",
-  "function": "usage",
-  "class": "calls_to_other_functions",
+  "src_sha1": "ce7d6f104189",
   "stage": "certified",
   "notes": [
+   "callee emit_exec_status not inlinable (callee with non-scalar parameter): treated as an opaque call",
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "opaque void call dropped: emit_exec_status",
    "void -> int"
   ],
   "bounds": {
@@ -1808,7 +2136,37 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpie_lefd1/h.c: In function \u2018usage\u2019:\n/tmp/tmpie_lefd1/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmp7gfy1wg7/h.c: In function \u2018usage\u2019:\n/tmp/tmp7gfy1wg7/h.c:10:81: error: \u2018p"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "typed_c_no_loops_after_stubbing",
+   "rounds": 0
+  }
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "nl.c",
+  "function": "usage",
+  "class": "calls_to_other_functions",
+  "src_sha1": "15a0845a1fc8",
+  "stage": "certified",
+  "notes": [
+   "do-while(0) flattened",
+   "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "void -> int"
+  ],
+  "bounds": {
+   "status": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmp6i4vehmx/h.c: In function \u2018usage\u2019:\n/tmp/tmp6i4vehmx/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -1821,18 +2179,14 @@
   "file": "nohup.c",
   "function": "usage",
   "class": "calls_to_other_functions",
-  "stage": "rejected",
-  "reason": "callee with non-scalar parameter"
- },
- {
-  "suite": "coreutils:src",
-  "file": "nproc.c",
-  "function": "usage",
-  "class": "calls_to_other_functions",
+  "src_sha1": "075493947398",
   "stage": "certified",
   "notes": [
+   "callee emit_exec_status not inlinable (callee with non-scalar parameter): treated as an opaque call",
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "opaque void call dropped: emit_exec_status",
    "void -> int"
   ],
   "bounds": {
@@ -1844,7 +2198,37 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmp2ecz9hh2/h.c: In function \u2018usage\u2019:\n/tmp/tmp2ecz9hh2/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpo71yej6r/h.c: In function \u2018usage\u2019:\n/tmp/tmpo71yej6r/h.c:10:81: error: \u2018p"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "typed_c_no_loops_after_stubbing",
+   "rounds": 0
+  }
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "nproc.c",
+  "function": "usage",
+  "class": "calls_to_other_functions",
+  "src_sha1": "9ed913ceef15",
+  "stage": "certified",
+  "notes": [
+   "do-while(0) flattened",
+   "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "void -> int"
+  ],
+  "bounds": {
+   "status": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmpmbstx5a0/h.c: In function \u2018usage\u2019:\n/tmp/tmpmbstx5a0/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -1857,10 +2241,12 @@
   "file": "numfmt.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "85fb52d389c2",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -1872,7 +2258,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpfnwkb3hi/h.c: In function \u2018usage\u2019:\n/tmp/tmpfnwkb3hi/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmp01w5bhe8/h.c: In function \u2018usage\u2019:\n/tmp/tmp01w5bhe8/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -1885,6 +2271,7 @@
   "file": "numfmt.c",
   "function": "print_padded_number",
   "class": "calls_to_other_functions",
+  "src_sha1": "03bb36ac2ec1",
   "stage": "rejected",
   "reason": "unresolved free identifier format_str_prefix"
  },
@@ -1893,10 +2280,12 @@
   "file": "od.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "cd7bc9d51b77",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -1908,7 +2297,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpjhbcaffb/h.c: In function \u2018usage\u2019:\n/tmp/tmpjhbcaffb/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmprehhj_pv/h.c: In function \u2018usage\u2019:\n/tmp/tmprehhj_pv/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -1921,11 +2310,14 @@
   "file": "od.c",
   "function": "print_n_spaces",
   "class": "calls_to_other_functions",
+  "src_sha1": "56135942837f",
   "stage": "certified",
   "notes": [
+   "character constants converted",
    "copied mutated parameter n",
    "dead trailing return",
    "for -> while",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -1937,7 +2329,7 @@
   "transcription": "int f(long n_in)\n{\n  long n = n_in;\n  while (0 < n)\n  {\n    n--;\n  }\n\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpekekjlxn/h.c: In function \u2018main\u2019:\n/tmp/tmpekekjlxn/h.c:23:68: error: inv"
+   "detail": "compile error: /tmp/tmp3vbe_5hi/h.c: In function \u2018main\u2019:\n/tmp/tmp3vbe_5hi/h.c:23:68: error: inv"
   },
   "certification": {
    "status": "PROVED",
@@ -1953,10 +2345,12 @@
   "file": "paste.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "11523da9570e",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -1968,7 +2362,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmppi2ykj63/h.c: In function \u2018usage\u2019:\n/tmp/tmppi2ykj63/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpd3m_29cl/h.c: In function \u2018usage\u2019:\n/tmp/tmpd3m_29cl/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -1981,10 +2375,12 @@
   "file": "pathchk.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "7ba37d1154bb",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -1996,7 +2392,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpca6042vi/h.c: In function \u2018usage\u2019:\n/tmp/tmpca6042vi/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpg3pu16sl/h.c: In function \u2018usage\u2019:\n/tmp/tmpg3pu16sl/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -2009,10 +2405,12 @@
   "file": "pinky.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "b8a77d6273bc",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -2024,7 +2422,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmp9obx4ilt/h.c: In function \u2018usage\u2019:\n/tmp/tmp9obx4ilt/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmprhemqgpq/h.c: In function \u2018usage\u2019:\n/tmp/tmprhemqgpq/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -2037,14 +2435,18 @@
   "file": "pr.c",
   "function": "pad_across_to",
   "class": "calls_to_other_functions",
-  "stage": "not_certified",
+  "src_sha1": "80cf334f89a7",
+  "stage": "certified",
   "notes": [
+   "character constants converted",
    "copied mutated parameter output_position",
    "copied mutated parameter spaces_not_printed",
    "dead trailing return",
    "global as parameter: output_position",
    "global as parameter: spaces_not_printed",
    "global as parameter: tabify_output",
+   "memory abstraction (memory safety assumed)",
+   "side effect hoisted out of an expression",
    "void -> int"
   ],
   "bounds": {
@@ -2065,16 +2467,140 @@
     2147483647
    ]
   },
-  "transcription": "int f(int position, int output_position_in, int tabify_output, int spaces_not_printed_in)\n{\n  int output_position = output_position_in;\n  int spaces_not_printed = spaces_not_printed_in;\n  int h = output_position;\n  if (tabify_output)\n  {\n    spaces_not_printed = position - output_position;\n  }\n  else\n  {\n    while ((++h) <= position)\n    {\n    }\n\n    output_position = position;\n  }\n  return 0;\n}\n\n",
+  "transcription": "int f(int position, int output_position_in, int tabify_output, int spaces_not_printed_in)\n{\n  int output_position = output_position_in;\n  int spaces_not_printed = spaces_not_printed_in;\n  int h = output_position;\n  if (tabify_output)\n  {\n    spaces_not_printed = position - output_position;\n  }\n  else\n  {\n    while (1)\n    {\n      h = h + 1;\n      if (!(h <= position))\n      {\n        break;\n      }\n    }\n\n    output_position = position;\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
    "detail": "not applicable (globals or nondeterministic stubs)"
   },
   "certification": {
-   "status": "STUCK:top/then operations defined",
+   "status": "PROVED",
    "method": "houdini_loops",
-   "invariant": null,
-   "rounds": 1
+   "invariant": [
+    [
+     "output_position >= 0",
+     "output_position <= 1073741823",
+     "spaces_not_printed >= 0",
+     "spaces_not_printed <= 1073741823",
+     "h >= 0",
+     "h <= 1073741824",
+     "__brk1 >= 0",
+     "__brk1 <= 1",
+     "(__brk1 == 0 or __brk1 == 1)",
+     "position + output_position <= 2147483646",
+     "position - spaces_not_printed <= 1073741823",
+     "position + spaces_not_printed >= 0",
+     "position + spaces_not_printed <= 2147483646",
+     "position + h <= 2147483647",
+     "position - __brk1 >= -1",
+     "position - __brk1 <= 1073741823",
+     "position + __brk1 >= 0",
+     "position + __brk1 <= 1073741824",
+     "output_position_in - output_position == 0",
+     "(output_position_in - output_position) % 2 == 0",
+     "(output_position_in - output_position) % 3 == 0",
+     "(output_position_in - output_position) % 4 == 0",
+     "output_position_in + output_position >= 0",
+     "output_position_in + output_position <= 2147483646",
+     "output_position_in <= output_position",
+     "output_position_in >= output_position",
+     "output_position_in - spaces_not_printed <= 1073741823",
+     "output_position_in + spaces_not_printed <= 2147483646",
+     "output_position_in - h <= 0",
+     "output_position_in + h >= 0",
+     "output_position_in + h <= 2147483647",
+     "output_position_in <= h",
+     "output_position_in - __brk1 >= -1",
+     "output_position_in - __brk1 <= 1073741823",
+     "output_position_in + __brk1 >= 0",
+     "output_position_in + __brk1 <= 1073741824",
+     "tabify_output - output_position >= -1073741823",
+     "tabify_output - output_position <= 0",
+     "tabify_output + output_position >= 0",
+     "tabify_output + output_position <= 1073741823",
+     "tabify_output <= output_position",
+     "tabify_output - spaces_not_printed >= -1073741823",
+     "tabify_output - spaces_not_printed <= 0",
+     "tabify_output + spaces_not_printed >= 0",
+     "tabify_output + spaces_not_printed <= 1073741823",
+     "tabify_output <= spaces_not_printed",
+     "tabify_output - h >= -1073741824",
+     "tabify_output - h <= 0",
+     "tabify_output + h >= 0",
+     "tabify_output + h <= 1073741824",
+     "tabify_output <= h",
+     "tabify_output - __brk1 >= -1",
+     "tabify_output - __brk1 <= 0",
+     "tabify_output + __brk1 >= 0",
+     "tabify_output + __brk1 <= 1",
+     "tabify_output <= __brk1",
+     "spaces_not_printed_in - output_position >= -1073741823",
+     "spaces_not_printed_in + output_position <= 2147483646",
+     "spaces_not_printed_in - spaces_not_printed == 0",
+     "(spaces_not_printed_in - spaces_not_printed) % 2 == 0",
+     "(spaces_not_printed_in - spaces_not_printed) % 3 == 0",
+     "(spaces_not_printed_in - spaces_not_printed) % 4 == 0",
+     "spaces_not_printed_in + spaces_not_printed >= 0",
+     "spaces_not_printed_in + spaces_not_printed <= 2147483646",
+     "spaces_not_printed_in <= spaces_not_printed",
+     "spaces_not_printed_in >= spaces_not_printed",
+     "spaces_not_printed_in - h >= -1073741824",
+     "spaces_not_printed_in + h <= 2147483647",
+     "spaces_not_printed_in - __brk1 >= -1",
+     "spaces_not_printed_in - __brk1 <= 1073741823",
+     "spaces_not_printed_in + __brk1 >= 0",
+     "spaces_not_printed_in + __brk1 <= 1073741824",
+     "output_position - spaces_not_printed <= 1073741823",
+     "output_position + spaces_not_printed <= 2147483646",
+     "output_position - h <= 0",
+     "output_position + h >= 0",
+     "output_position + h <= 2147483647",
+     "output_position <= h",
+     "output_position - __brk1 >= -1",
+     "output_position - __brk1 <= 1073741823",
+     "output_position + __brk1 >= 0",
+     "output_position + __brk1 <= 1073741824",
+     "spaces_not_printed - h >= -1073741824",
+     "spaces_not_printed + h <= 2147483647",
+     "spaces_not_printed - __brk1 >= -1",
+     "spaces_not_printed - __brk1 <= 1073741823",
+     "spaces_not_printed + __brk1 >= 0",
+     "spaces_not_printed + __brk1 <= 1073741824",
+     "h - __brk1 >= 0",
+     "h - __brk1 <= 1073741823",
+     "h + __brk1 >= 0",
+     "h + __brk1 <= 1073741825",
+     "h >= __brk1",
+     "1*tabify_output == 0",
+     "-1*output_position_in + 1*output_position == 0",
+     "-1*spaces_not_printed_in + 1*spaces_not_printed == 0",
+     "output_position >= -1",
+     "spaces_not_printed >= -1",
+     "h >= -1",
+     "__brk1 >= -1",
+     "__brk1 <= 2",
+     "output_position == output_position_in",
+     "spaces_not_printed == spaces_not_printed_in"
+    ]
+   ],
+   "rounds": 8,
+   "precondition": {
+    "position": [
+     0,
+     1073741823
+    ],
+    "output_position_in": [
+     0,
+     1073741823
+    ],
+    "tabify_output": [
+     0,
+     1
+    ],
+    "spaces_not_printed_in": [
+     0,
+     1073741823
+    ]
+   }
   }
  },
  {
@@ -2082,12 +2608,15 @@
   "file": "pr.c",
   "function": "pad_down",
   "class": "calls_to_other_functions",
+  "src_sha1": "b9fffdece63d",
   "stage": "certified",
   "notes": [
+   "character constants converted",
    "dead trailing return",
    "for -> while",
    "global as parameter: use_form_feed",
    "hoisted loop-body declaration",
+   "memory abstraction (memory safety assumed)",
    "void -> int",
    "zero-initialized locals"
   ],
@@ -2134,18 +2663,21 @@
   "file": "pr.c",
   "function": "print_white_space",
   "class": "calls_to_other_functions",
+  "src_sha1": "d502f9ae8877",
   "stage": "rejected",
-  "reason": "non-scalar parameter"
+  "reason": "side effect under a short-circuit operand"
  },
  {
   "suite": "coreutils:src",
   "file": "pr.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "ca7fe11f3797",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -2157,7 +2689,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpyis27avb/h.c: In function \u2018usage\u2019:\n/tmp/tmpyis27avb/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpve8tgdgw/h.c: In function \u2018usage\u2019:\n/tmp/tmpve8tgdgw/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -2170,10 +2702,12 @@
   "file": "printenv.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "7f08b46f19ac",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -2185,7 +2719,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpfjepja8t/h.c: In function \u2018usage\u2019:\n/tmp/tmpfjepja8t/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpr72vcvm6/h.c: In function \u2018usage\u2019:\n/tmp/tmpr72vcvm6/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -2198,10 +2732,12 @@
   "file": "printf.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "7ca3c923ad03",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -2213,7 +2749,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpoqgjzq3k/h.c: In function \u2018usage\u2019:\n/tmp/tmpoqgjzq3k/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpvbynrcjq/h.c: In function \u2018usage\u2019:\n/tmp/tmpvbynrcjq/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -2226,10 +2762,13 @@
   "file": "ptx.c",
   "function": "print_spaces",
   "class": "calls_to_other_functions",
+  "src_sha1": "9e9b5bd066e0",
   "stage": "certified",
   "notes": [
+   "character constants converted",
    "dead trailing return",
    "for -> while",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -2241,7 +2780,7 @@
   "transcription": "int f(long number)\n{\n  long counter = number;\n  while (counter > 0)\n  {\n    counter--;\n  }\n\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpsymraswz/h.c: In function \u2018main\u2019:\n/tmp/tmpsymraswz/h.c:23:68: error: inv"
+   "detail": "compile error: /tmp/tmp_u5b9r5a/h.c: In function \u2018main\u2019:\n/tmp/tmp_u5b9r5a/h.c:23:68: error: inv"
   },
   "certification": {
    "status": "PROVED",
@@ -2257,10 +2796,12 @@
   "file": "ptx.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "8411d11ca4b9",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -2272,7 +2813,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpt6skuue5/h.c: In function \u2018usage\u2019:\n/tmp/tmpt6skuue5/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpavz_da22/h.c: In function \u2018usage\u2019:\n/tmp/tmpavz_da22/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -2285,10 +2826,12 @@
   "file": "pwd.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "f062211629fc",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -2300,7 +2843,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpi7_mw9yp/h.c: In function \u2018usage\u2019:\n/tmp/tmpi7_mw9yp/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmp5fynbz8w/h.c: In function \u2018usage\u2019:\n/tmp/tmp5fynbz8w/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -2313,10 +2856,12 @@
   "file": "readlink.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "9799749a21df",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -2328,7 +2873,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmppaw6hciv/h.c: In function \u2018usage\u2019:\n/tmp/tmppaw6hciv/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpzvtcmik_/h.c: In function \u2018usage\u2019:\n/tmp/tmpzvtcmik_/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -2341,10 +2886,12 @@
   "file": "realpath.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "61c219526942",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -2356,7 +2903,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmprc8olslh/h.c: In function \u2018usage\u2019:\n/tmp/tmprc8olslh/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpeocvt115/h.c: In function \u2018usage\u2019:\n/tmp/tmpeocvt115/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -2369,10 +2916,12 @@
   "file": "rm.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "d1a4f3846339",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -2384,7 +2933,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmprrxqfp5l/h.c: In function \u2018usage\u2019:\n/tmp/tmprrxqfp5l/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpbzj23sca/h.c: In function \u2018usage\u2019:\n/tmp/tmpbzj23sca/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -2397,10 +2946,12 @@
   "file": "rmdir.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "cf9daf4252b1",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -2412,7 +2963,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpxhqmmega/h.c: In function \u2018usage\u2019:\n/tmp/tmpxhqmmega/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmp8sidv5np/h.c: In function \u2018usage\u2019:\n/tmp/tmp8sidv5np/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -2425,18 +2976,14 @@
   "file": "runcon.c",
   "function": "usage",
   "class": "calls_to_other_functions",
-  "stage": "rejected",
-  "reason": "callee with non-scalar parameter"
- },
- {
-  "suite": "coreutils:src",
-  "file": "seq.c",
-  "function": "usage",
-  "class": "calls_to_other_functions",
+  "src_sha1": "0644d908cc3f",
   "stage": "certified",
   "notes": [
+   "callee emit_exec_status not inlinable (callee with non-scalar parameter): treated as an opaque call",
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "opaque void call dropped: emit_exec_status",
    "void -> int"
   ],
   "bounds": {
@@ -2448,7 +2995,37 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpli6zi6lj/h.c: In function \u2018usage\u2019:\n/tmp/tmpli6zi6lj/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmp6qsuoi7u/h.c: In function \u2018usage\u2019:\n/tmp/tmp6qsuoi7u/h.c:10:81: error: \u2018p"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "typed_c_no_loops_after_stubbing",
+   "rounds": 0
+  }
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "seq.c",
+  "function": "usage",
+  "class": "calls_to_other_functions",
+  "src_sha1": "8f424c31c7e4",
+  "stage": "certified",
+  "notes": [
+   "do-while(0) flattened",
+   "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "void -> int"
+  ],
+  "bounds": {
+   "status": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmpvzykrvdf/h.c: In function \u2018usage\u2019:\n/tmp/tmpvzykrvdf/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -2461,18 +3038,13 @@
   "file": "shred.c",
   "function": "usage",
   "class": "calls_to_other_functions",
-  "stage": "rejected",
-  "reason": "call with non-scalar argument: oprintf_"
- },
- {
-  "suite": "coreutils:src",
-  "file": "shuf.c",
-  "function": "usage",
-  "class": "calls_to_other_functions",
+  "src_sha1": "805940d1d8bb",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "opaque void call dropped: oprintf_",
    "void -> int"
   ],
   "bounds": {
@@ -2484,7 +3056,37 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpopkkoikf/h.c: In function \u2018usage\u2019:\n/tmp/tmpopkkoikf/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpxfqtwc2v/h.c: In function \u2018usage\u2019:\n/tmp/tmpxfqtwc2v/h.c:10:81: error: \u2018p"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "typed_c_no_loops_after_stubbing",
+   "rounds": 0
+  }
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "shuf.c",
+  "function": "usage",
+  "class": "calls_to_other_functions",
+  "src_sha1": "e6da75e90723",
+  "stage": "certified",
+  "notes": [
+   "do-while(0) flattened",
+   "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "void -> int"
+  ],
+  "bounds": {
+   "status": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmp55uidlfq/h.c: In function \u2018usage\u2019:\n/tmp/tmp55uidlfq/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -2497,10 +3099,12 @@
   "file": "sleep.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "9618287517d2",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -2512,7 +3116,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmp7uvgcl9m/h.c: In function \u2018usage\u2019:\n/tmp/tmp7uvgcl9m/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmp_fxoppsb/h.c: In function \u2018usage\u2019:\n/tmp/tmp_fxoppsb/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -2525,78 +3129,13 @@
   "file": "sort.c",
   "function": "usage",
   "class": "calls_to_other_functions",
-  "stage": "rejected",
-  "reason": "call with non-scalar argument: oprintf_"
- },
- {
-  "suite": "coreutils:src",
-  "file": "sort.c",
-  "function": "reap_exited",
-  "class": "calls_to_other_functions",
-  "stage": "rejected",
-  "reason": "non-scalar parameter"
- },
- {
-  "suite": "coreutils:src",
-  "file": "sort.c",
-  "function": "reap_all",
-  "class": "calls_to_other_functions",
-  "stage": "rejected",
-  "reason": "non-scalar parameter"
- },
- {
-  "suite": "coreutils:src",
-  "file": "sort.c",
-  "function": "mark_key",
-  "class": "calls_to_other_functions",
-  "stage": "not_certified",
-  "notes": [
-   "copied mutated parameter offset",
-   "copied mutated parameter width",
-   "dead trailing return",
-   "do-while peeled",
-   "flattened blocks",
-   "void -> int"
-  ],
-  "bounds": {
-   "offset_in": [
-    0,
-    18446744073709551615
-   ],
-   "width_in": [
-    0,
-    18446744073709551615
-   ]
-  },
-  "transcription": "int f(unsigned long offset_in, unsigned long width_in)\n{\n  unsigned long offset = offset_in;\n  unsigned long width = width_in;\n  while (offset--)\n  {\n  }\n\n  if (!width)\n  {\n  }\n  else\n  {\n    while (--width)\n    {\n    }\n\n  }\n  return 0;\n}\n\n",
-  "native": {
-   "equivalent": null,
-   "detail": "compile error: /tmp/tmp6sbd9pmf/h.c: In function \u2018main\u2019:\n/tmp/tmp6sbd9pmf/h.c:41:68: error: inv"
-  },
-  "certification": {
-   "status": "STUCK:Unsupported typed C expression or side effect: UnaryOp",
-   "method": "houdini_loops",
-   "invariant": null,
-   "rounds": 6
-  }
- },
- {
-  "suite": "coreutils:src",
-  "file": "split.c",
-  "function": "usage",
-  "class": "calls_to_other_functions",
-  "stage": "rejected",
-  "reason": "call with non-scalar argument: oprintf_"
- },
- {
-  "suite": "coreutils:src",
-  "file": "stat.c",
-  "function": "usage",
-  "class": "calls_to_other_functions",
+  "src_sha1": "eb33b9a1a857",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "opaque void call dropped: oprintf_",
    "void -> int"
   ],
   "bounds": {
@@ -2608,7 +3147,309 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmp1x9wxiqr/h.c: In function \u2018usage\u2019:\n/tmp/tmp1x9wxiqr/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpf8l_3hrq/h.c: In function \u2018usage\u2019:\n/tmp/tmpf8l_3hrq/h.c:10:81: error: \u2018p"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "typed_c_no_loops_after_stubbing",
+   "rounds": 0
+  }
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "sort.c",
+  "function": "reap_exited",
+  "class": "calls_to_other_functions",
+  "src_sha1": "cf2ec561defe",
+  "stage": "certified",
+  "notes": [
+   "callee delete_proc not inlinable (call with the address of a local: hash_remove): treated as an opaque call",
+   "copied mutated parameter nprocs",
+   "dead trailing return",
+   "global as parameter: nprocs",
+   "hoisted loop-body declaration",
+   "inlined reap",
+   "loop-header call hoisted",
+   "memory abstraction (memory safety assumed)",
+   "nondeterministic result for delete_proc",
+   "nondeterministic result for waitpid",
+   "opaque void call dropped: error",
+   "void -> int",
+   "zero-initialized locals"
+  ],
+  "bounds": {
+   "nprocs_in": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "transcription": "int f(int nprocs_in)\n{\n  int nprocs = nprocs_in;\n  int pid__c0_1 = 0;\n  int vrv__c0_1 = 0;\n  int status__c0_1 = 0;\n  int cpid__c0_1 = 0;\n  while (1)\n  {\n    pid__c0_1 = 0;\n    vrv__c0_1 = 0;\n    status__c0_1 = nondet_int();\n    cpid__c0_1 = unknown();\n    if (cpid__c0_1 < 0)\n    {\n    }\n    else\n    {\n      if ((0 < cpid__c0_1) && ((0 < pid__c0_1) || unknown()))\n      {\n        if ((!((status__c0_1 & 127) == 0)) || ((status__c0_1 & 65280) >> 8))\n        {\n        }\n        --nprocs;\n      }\n    }\n    vrv__c0_1 = cpid__c0_1;\n    if (!((0 < nprocs) && vrv__c0_1))\n    {\n      break;\n    }\n    continue;\n  }\n\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "not applicable (globals or nondeterministic stubs)"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "houdini_loops",
+   "invariant": [
+    [
+     "nprocs >= -1",
+     "nprocs <= 1073741823",
+     "pid__c0_1 >= 0",
+     "pid__c0_1 <= 0",
+     "pid__c0_1 == 0",
+     "pid__c0_1 % 2 == 0",
+     "pid__c0_1 % 3 == 0",
+     "pid__c0_1 % 4 == 0",
+     "pid__c0_1 % 7 == 0",
+     "pid__c0_1 % 8 == 0",
+     "pid__c0_1 % 9 == 0",
+     "__brk1 >= 0",
+     "__brk1 <= 1",
+     "(__brk1 == 0 or __brk1 == 1)",
+     "__cnt2 >= 0",
+     "__cnt2 <= 1",
+     "(__cnt2 == 0 or __cnt2 == 1)",
+     "nprocs_in - nprocs >= 0",
+     "nprocs_in + nprocs >= -1",
+     "nprocs_in + nprocs <= 2147483646",
+     "nprocs_in >= nprocs",
+     "nprocs_in - pid__c0_1 >= 0",
+     "nprocs_in - pid__c0_1 <= 1073741823",
+     "nprocs_in + pid__c0_1 >= 0",
+     "nprocs_in + pid__c0_1 <= 1073741823",
+     "nprocs_in >= pid__c0_1",
+     "nprocs_in - __brk1 >= -1",
+     "nprocs_in - __brk1 <= 1073741823",
+     "nprocs_in + __brk1 >= 0",
+     "nprocs_in + __brk1 <= 1073741824",
+     "nprocs_in - __cnt2 >= 0",
+     "nprocs_in - __cnt2 <= 1073741823",
+     "nprocs_in + __cnt2 >= 0",
+     "nprocs_in + __cnt2 <= 1073741824",
+     "nprocs_in >= __cnt2",
+     "nprocs - pid__c0_1 >= -1",
+     "nprocs - pid__c0_1 <= 1073741823",
+     "nprocs + pid__c0_1 >= -1",
+     "nprocs + pid__c0_1 <= 1073741823",
+     "nprocs - __brk1 >= -2",
+     "nprocs - __brk1 <= 1073741823",
+     "nprocs + __brk1 >= 0",
+     "nprocs + __brk1 <= 1073741824",
+     "nprocs - __cnt2 >= -1",
+     "nprocs - __cnt2 <= 1073741823",
+     "nprocs + __cnt2 >= -1",
+     "nprocs + __cnt2 <= 1073741824",
+     "pid__c0_1 - __brk1 >= -1",
+     "pid__c0_1 - __brk1 <= 0",
+     "pid__c0_1 + __brk1 >= 0",
+     "pid__c0_1 + __brk1 <= 1",
+     "pid__c0_1 <= __brk1",
+     "pid__c0_1 - __cnt2 >= -1",
+     "pid__c0_1 - __cnt2 <= 0",
+     "pid__c0_1 + __cnt2 >= 0",
+     "pid__c0_1 + __cnt2 <= 1",
+     "pid__c0_1 <= __cnt2",
+     "vrv__c0_1 - cpid__c0_1 == 0",
+     "(vrv__c0_1 - cpid__c0_1) % 2 == 0",
+     "(vrv__c0_1 - cpid__c0_1) % 3 == 0",
+     "(vrv__c0_1 - cpid__c0_1) % 4 == 0",
+     "(vrv__c0_1 - cpid__c0_1) % 7 == 0",
+     "(vrv__c0_1 - cpid__c0_1) % 8 == 0",
+     "(vrv__c0_1 - cpid__c0_1) % 9 == 0",
+     "vrv__c0_1 <= cpid__c0_1",
+     "vrv__c0_1 >= cpid__c0_1",
+     "__brk1 - __cnt2 >= -1",
+     "__brk1 - __cnt2 <= 1",
+     "__brk1 + __cnt2 >= 0",
+     "__brk1 + __cnt2 <= 1",
+     "1*pid__c0_1 == 0",
+     "-1*vrv__c0_1 + 1*cpid__c0_1 == 0",
+     "pid__c0_1 >= -1",
+     "pid__c0_1 <= 1",
+     "pid__c0_1 <= 2",
+     "pid__c0_1 <= 7",
+     "pid__c0_1 <= 8",
+     "pid__c0_1 <= 9",
+     "pid__c0_1 <= 126",
+     "pid__c0_1 <= 127",
+     "pid__c0_1 <= 128",
+     "pid__c0_1 <= 65279",
+     "pid__c0_1 <= 65280",
+     "pid__c0_1 <= 65281",
+     "__brk1 >= -1",
+     "__brk1 <= 2",
+     "__brk1 <= 7",
+     "__brk1 <= 8",
+     "__brk1 <= 9",
+     "__brk1 <= 126",
+     "__brk1 <= 127",
+     "__brk1 <= 128",
+     "__brk1 <= 65279",
+     "__brk1 <= 65280",
+     "__brk1 <= 65281",
+     "__cnt2 >= -1",
+     "__cnt2 <= 2",
+     "__cnt2 <= 7",
+     "__cnt2 <= 8",
+     "__cnt2 <= 9",
+     "__cnt2 <= 126",
+     "__cnt2 <= 127",
+     "__cnt2 <= 128",
+     "__cnt2 <= 65279",
+     "__cnt2 <= 65280",
+     "__cnt2 <= 65281"
+    ]
+   ],
+   "rounds": 10,
+   "precondition": {
+    "nprocs_in": [
+     0,
+     1073741823
+    ]
+   }
+  }
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "sort.c",
+  "function": "reap_all",
+  "class": "calls_to_other_functions",
+  "src_sha1": "861c8470132a",
+  "stage": "certified",
+  "notes": [
+   "callee delete_proc not inlinable (call with the address of a local: hash_remove): treated as an opaque call",
+   "copied mutated parameter nprocs",
+   "dead trailing return",
+   "global as parameter: nprocs",
+   "hoisted loop-body declaration",
+   "inlined reap",
+   "memory abstraction (memory safety assumed)",
+   "nondeterministic result for delete_proc",
+   "nondeterministic result for waitpid",
+   "opaque void call dropped: error",
+   "void -> int",
+   "zero-initialized locals"
+  ],
+  "bounds": {
+   "nprocs_in": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "transcription": "int f(int nprocs_in)\n{\n  int nprocs = nprocs_in;\n  int pid__c0_1 = 0;\n  int vrv__c0_1 = 0;\n  int status__c0_1 = 0;\n  int cpid__c0_1 = 0;\n  while (0 < nprocs)\n  {\n    pid__c0_1 = -1;\n    vrv__c0_1 = 0;\n    status__c0_1 = nondet_int();\n    cpid__c0_1 = unknown();\n    if (cpid__c0_1 < 0)\n    {\n    }\n    else\n    {\n      if ((0 < cpid__c0_1) && ((0 < pid__c0_1) || unknown()))\n      {\n        if ((!((status__c0_1 & 127) == 0)) || ((status__c0_1 & 65280) >> 8))\n        {\n        }\n        --nprocs;\n      }\n    }\n    vrv__c0_1 = cpid__c0_1;\n  }\n\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "not applicable (globals or nondeterministic stubs)"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "trivial_invariants",
+   "invariant": [
+    "True"
+   ],
+   "rounds": 1
+  }
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "sort.c",
+  "function": "mark_key",
+  "class": "calls_to_other_functions",
+  "src_sha1": "2ffab53fff1e",
+  "stage": "certified",
+  "notes": [
+   "character constants converted",
+   "copied mutated parameter offset",
+   "copied mutated parameter width",
+   "dead trailing return",
+   "do-while peeled",
+   "flattened blocks",
+   "hoisted loop-body declaration",
+   "memory abstraction (memory safety assumed)",
+   "side effect hoisted out of an expression",
+   "void -> int",
+   "zero-initialized locals"
+  ],
+  "bounds": {
+   "offset_in": [
+    0,
+    18446744073709551615
+   ],
+   "width_in": [
+    0,
+    18446744073709551615
+   ]
+  },
+  "transcription": "int f(unsigned long offset_in, unsigned long width_in)\n{\n  unsigned long offset = offset_in;\n  unsigned long width = width_in;\n  unsigned long v__he1 = 0;\n  while (1)\n  {\n    v__he1 = offset;\n    offset = offset - 1;\n    if (!v__he1)\n    {\n      break;\n    }\n  }\n\n  if (!width)\n  {\n  }\n  else\n  {\n    while (1)\n    {\n      width = width - 1;\n      if (!width)\n      {\n        break;\n      }\n    }\n\n  }\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmpudsqt37n/h.c: In function \u2018main\u2019:\n/tmp/tmpudsqt37n/h.c:53:68: error: inv"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "trivial_invariants",
+   "invariant": [
+    "True",
+    "True"
+   ],
+   "rounds": 1
+  }
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "split.c",
+  "function": "usage",
+  "class": "calls_to_other_functions",
+  "src_sha1": "be482192aec6",
+  "stage": "certified",
+  "notes": [
+   "do-while(0) flattened",
+   "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "opaque void call dropped: oprintf_",
+   "void -> int"
+  ],
+  "bounds": {
+   "status": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmpa9hqbhxw/h.c: In function \u2018usage\u2019:\n/tmp/tmpa9hqbhxw/h.c:10:81: error: \u2018p"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "typed_c_no_loops_after_stubbing",
+   "rounds": 0
+  }
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "stat.c",
+  "function": "usage",
+  "class": "calls_to_other_functions",
+  "src_sha1": "34937049559b",
+  "stage": "certified",
+  "notes": [
+   "do-while(0) flattened",
+   "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "void -> int"
+  ],
+  "bounds": {
+   "status": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmpc0omq196/h.c: In function \u2018usage\u2019:\n/tmp/tmpc0omq196/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -2621,18 +3462,14 @@
   "file": "stdbuf.c",
   "function": "usage",
   "class": "calls_to_other_functions",
-  "stage": "rejected",
-  "reason": "callee with non-scalar parameter"
- },
- {
-  "suite": "coreutils:src",
-  "file": "stty.c",
-  "function": "usage",
-  "class": "calls_to_other_functions",
+  "src_sha1": "f45b89beb4fe",
   "stage": "certified",
   "notes": [
+   "callee emit_exec_status not inlinable (callee with non-scalar parameter): treated as an opaque call",
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "opaque void call dropped: emit_exec_status",
    "void -> int"
   ],
   "bounds": {
@@ -2644,7 +3481,37 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpw6v339k2/h.c: In function \u2018usage\u2019:\n/tmp/tmpw6v339k2/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpnk2m5cmg/h.c: In function \u2018usage\u2019:\n/tmp/tmpnk2m5cmg/h.c:10:81: error: \u2018p"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "typed_c_no_loops_after_stubbing",
+   "rounds": 0
+  }
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "stty.c",
+  "function": "usage",
+  "class": "calls_to_other_functions",
+  "src_sha1": "4fe03c0360fb",
+  "stage": "certified",
+  "notes": [
+   "do-while(0) flattened",
+   "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "void -> int"
+  ],
+  "bounds": {
+   "status": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmpmq8pa0ko/h.c: In function \u2018usage\u2019:\n/tmp/tmpmq8pa0ko/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -2657,10 +3524,12 @@
   "file": "sync.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "1a48ccc85e43",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -2672,7 +3541,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmp2qske6h8/h.c: In function \u2018usage\u2019:\n/tmp/tmp2qske6h8/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpq5bq5v06/h.c: In function \u2018usage\u2019:\n/tmp/tmpq5bq5v06/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -2685,10 +3554,12 @@
   "file": "tac.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "291c2c3a53b9",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -2700,7 +3571,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpptc_j9ux/h.c: In function \u2018usage\u2019:\n/tmp/tmpptc_j9ux/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpjg1r6u2b/h.c: In function \u2018usage\u2019:\n/tmp/tmpjg1r6u2b/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -2713,18 +3584,13 @@
   "file": "tail.c",
   "function": "usage",
   "class": "calls_to_other_functions",
-  "stage": "rejected",
-  "reason": "call with non-scalar argument: oprintf_"
- },
- {
-  "suite": "coreutils:src",
-  "file": "tee.c",
-  "function": "usage",
-  "class": "calls_to_other_functions",
+  "src_sha1": "e185a19b1dd6",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "opaque void call dropped: oprintf_",
    "void -> int"
   ],
   "bounds": {
@@ -2736,7 +3602,37 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpn0ea_mr8/h.c: In function \u2018usage\u2019:\n/tmp/tmpn0ea_mr8/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmp7o784spy/h.c: In function \u2018usage\u2019:\n/tmp/tmp7o784spy/h.c:10:81: error: \u2018p"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "typed_c_no_loops_after_stubbing",
+   "rounds": 0
+  }
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "tee.c",
+  "function": "usage",
+  "class": "calls_to_other_functions",
+  "src_sha1": "21d12e2fae8e",
+  "stage": "certified",
+  "notes": [
+   "do-while(0) flattened",
+   "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "void -> int"
+  ],
+  "bounds": {
+   "status": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmpoh0o78et/h.c: In function \u2018usage\u2019:\n/tmp/tmpoh0o78et/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -2749,26 +3645,152 @@
   "file": "test.c",
   "function": "and",
   "class": "scalar_loop_candidate",
-  "stage": "rejected",
-  "reason": "non-scalar parameter"
+  "src_sha1": "2ddcae264a95",
+  "stage": "certified",
+  "notes": [
+   "callee binary_operator not inlinable (call without a scalar result used as a value): treated as an opaque call",
+   "callee binop not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "callee one_argument not inlinable (pointers/arrays/structs): treated as an opaque call",
+   "callee term not inlinable (pointers/arrays/structs): treated as an opaque call",
+   "callee two_arguments not inlinable (pointers/arrays/structs): treated as an opaque call",
+   "callee unary_operator not inlinable (call with the address of a local: stat): treated as an opaque call",
+   "copied mutated parameter pos",
+   "dead trailing return",
+   "for -> while",
+   "global as parameter: argc",
+   "global as parameter: pos",
+   "hoisted loop-body declaration",
+   "inlined advance",
+   "inlined beyond",
+   "inlined expr",
+   "inlined posixtest (with loops)",
+   "inlined three_arguments",
+   "inlined unary_advance",
+   "loop-header call hoisted",
+   "memory abstraction (memory safety assumed)",
+   "nondeterministic result for binary_operator",
+   "nondeterministic result for binop",
+   "nondeterministic result for expr",
+   "nondeterministic result for one_argument",
+   "nondeterministic result for or",
+   "nondeterministic result for streq",
+   "nondeterministic result for strlen",
+   "nondeterministic result for term",
+   "nondeterministic result for two_arguments",
+   "nondeterministic result for unary_operator",
+   "opaque pointer-returning call dropped: test_syntax_error",
+   "opaque pointer-returning call dropped: umaxtostr",
+   "opaque void call dropped: advance",
+   "opaque void call dropped: beyond",
+   "switch -> if chain",
+   "switch -> while(1) with fallthrough flag",
+   "void -> int",
+   "zero-initialized locals"
+  ],
+  "bounds": {
+   "pos_in": [
+    -2147483648,
+    2147483647
+   ],
+   "argc": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "transcription": "int f(int pos_in, int argc)\n{\n  int pos = pos_in;\n  int f__c0_1 = 0;\n  int vrv__c0_1 = 0;\n  int vrv__c1_1__c0_1 = 0;\n  int value = 1;\n  while (1)\n  {\n    value &= unknown();\n    if (!((pos < argc) && unknown()))\n    {\n      return value;\n    }\n    f__c0_1 = 0;\n    vrv__c0_1 = 0;\n    ++pos;\n    if (f__c0_1 && (pos >= argc))\n    {\n      vrv__c1_1__c0_1 = 0;\n      vrv__c1_1__c0_1 = 0;\n    }\n    vrv__c0_1 = 0;\n  }\n\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "not applicable (globals or nondeterministic stubs)"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "trivial_invariants",
+   "invariant": [
+    "True"
+   ],
+   "rounds": 1
+  }
  },
  {
   "suite": "coreutils:src",
   "file": "test.c",
   "function": "or",
   "class": "scalar_loop_candidate",
-  "stage": "rejected",
-  "reason": "non-scalar parameter"
+  "src_sha1": "b867d06a9404",
+  "stage": "certified",
+  "notes": [
+   "callee binary_operator not inlinable (call without a scalar result used as a value): treated as an opaque call",
+   "callee binop not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "callee term not inlinable (pointers/arrays/structs): treated as an opaque call",
+   "callee unary_operator not inlinable (call with the address of a local: stat): treated as an opaque call",
+   "copied mutated parameter pos",
+   "dead trailing return",
+   "for -> while",
+   "global as parameter: argc",
+   "global as parameter: pos",
+   "hoisted loop-body declaration",
+   "inlined advance",
+   "inlined and (with loops)",
+   "inlined beyond",
+   "inlined posixtest (with loops)",
+   "loop-header call hoisted",
+   "memory abstraction (memory safety assumed)",
+   "nondeterministic result for binary_operator",
+   "nondeterministic result for binop",
+   "nondeterministic result for expr",
+   "nondeterministic result for one_argument",
+   "nondeterministic result for streq",
+   "nondeterministic result for strlen",
+   "nondeterministic result for term",
+   "nondeterministic result for three_arguments",
+   "nondeterministic result for two_arguments",
+   "nondeterministic result for unary_operator",
+   "opaque pointer-returning call dropped: test_syntax_error",
+   "opaque pointer-returning call dropped: umaxtostr",
+   "opaque void call dropped: advance",
+   "opaque void call dropped: beyond",
+   "opaque void call dropped: unary_advance",
+   "switch -> if chain",
+   "switch -> while(1) with fallthrough flag",
+   "void -> int",
+   "zero-initialized locals"
+  ],
+  "bounds": {
+   "pos_in": [
+    -2147483648,
+    2147483647
+   ],
+   "argc": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "transcription": "int f(int pos_in, int argc)\n{\n  int pos = pos_in;\n  int vrv__c0_1 = 0;\n  int value__c0_1 = 0;\n  int v__brk1__c0_1 = 0;\n  int v__done__c0_1 = 0;\n  int v__rv__c0_1 = 0;\n  int f__c1_1__c0_1 = 0;\n  int vrv__c1_1__c0_1 = 0;\n  int vrv__c2_1__c1_1__c0_1 = 0;\n  int f__c0_2 = 0;\n  int vrv__c0_2 = 0;\n  int vrv__c1_1__c0_2 = 0;\n  int value = 0;\n  while (1)\n  {\n    vrv__c0_1 = 0;\n    value__c0_1 = 1;\n    v__brk1__c0_1 = 0;\n    v__done__c0_1 = 0;\n    v__rv__c0_1 = 0;\n    v__brk1__c0_1 = 0;\n    while (1 && ((!v__brk1__c0_1) && (!v__done__c0_1)))\n    {\n      value__c0_1 &= unknown();\n      if (!((pos < argc) && unknown()))\n      {\n        v__rv__c0_1 = value__c0_1;\n        v__done__c0_1 = 1;\n      }\n      if ((!v__brk1__c0_1) && (!v__done__c0_1))\n      {\n        f__c1_1__c0_1 = 0;\n        vrv__c1_1__c0_1 = 0;\n        ++pos;\n        if (f__c1_1__c0_1 && (pos >= argc))\n        {\n          vrv__c2_1__c1_1__c0_1 = 0;\n          vrv__c2_1__c1_1__c0_1 = 0;\n        }\n        vrv__c1_1__c0_1 = 0;\n      }\n    }\n\n    vrv__c0_1 = (v__done__c0_1) ? (v__rv__c0_1) : (0);\n    value |= vrv__c0_1;\n    if (!((pos < argc) && unknown()))\n    {\n      return value;\n    }\n    f__c0_2 = 0;\n    vrv__c0_2 = 0;\n    ++pos;\n    if (f__c0_2 && (pos >= argc))\n    {\n      vrv__c1_1__c0_2 = 0;\n      vrv__c1_1__c0_2 = 0;\n    }\n    vrv__c0_2 = 0;\n  }\n\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "not applicable (globals or nondeterministic stubs)"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "trivial_invariants",
+   "invariant": [
+    "True",
+    "True"
+   ],
+   "rounds": 1
+  }
  },
  {
   "suite": "coreutils:src",
   "file": "test.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "7620167bba3f",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -2780,7 +3802,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmp_owbp_5j/h.c: In function \u2018usage\u2019:\n/tmp/tmp_owbp_5j/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpplkvrlui/h.c: In function \u2018usage\u2019:\n/tmp/tmpplkvrlui/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -2793,10 +3815,12 @@
   "file": "timeout.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "f74636872d0b",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -2808,7 +3832,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpwlr7x_0u/h.c: In function \u2018usage\u2019:\n/tmp/tmpwlr7x_0u/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpbu4i9a7o/h.c: In function \u2018usage\u2019:\n/tmp/tmpbu4i9a7o/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -2821,10 +3845,12 @@
   "file": "touch.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "0a43b6601460",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -2836,7 +3862,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmp5u3pjjp1/h.c: In function \u2018usage\u2019:\n/tmp/tmp5u3pjjp1/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmphkyt1wtb/h.c: In function \u2018usage\u2019:\n/tmp/tmphkyt1wtb/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -2849,10 +3875,12 @@
   "file": "tr.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "d52a1615ab9b",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -2864,7 +3892,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpcvlidzes/h.c: In function \u2018usage\u2019:\n/tmp/tmpcvlidzes/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmp1eiefrov/h.c: In function \u2018usage\u2019:\n/tmp/tmp1eiefrov/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -2877,10 +3905,12 @@
   "file": "truncate.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "544b3fd70fc1",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -2892,7 +3922,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpl2i0mjxm/h.c: In function \u2018usage\u2019:\n/tmp/tmpl2i0mjxm/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmp4jrz49nv/h.c: In function \u2018usage\u2019:\n/tmp/tmp4jrz49nv/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -2905,10 +3935,12 @@
   "file": "tsort.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "e0ec338d9d58",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -2920,7 +3952,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpjv8c2rz2/h.c: In function \u2018usage\u2019:\n/tmp/tmpjv8c2rz2/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpxd4i9chj/h.c: In function \u2018usage\u2019:\n/tmp/tmpxd4i9chj/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -2933,10 +3965,12 @@
   "file": "tty.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "e1d31ed0bc97",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -2948,7 +3982,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmplru4jxss/h.c: In function \u2018usage\u2019:\n/tmp/tmplru4jxss/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmp6xjcl_kr/h.c: In function \u2018usage\u2019:\n/tmp/tmp6xjcl_kr/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -2961,26 +3995,49 @@
   "file": "uname.c",
   "function": "usage",
   "class": "calls_to_other_functions",
-  "stage": "rejected",
-  "reason": "unresolved free identifier uname_mode"
+  "src_sha1": "4f72fc4acc81",
+  "stage": "certified",
+  "notes": [
+   "do-while(0) flattened",
+   "enumerator constant UNAME_UNAME",
+   "flattened blocks",
+   "global as parameter: uname_mode",
+   "memory abstraction (memory safety assumed)",
+   "void -> int"
+  ],
+  "bounds": {
+   "status": [
+    -2147483648,
+    2147483647
+   ],
+   "uname_mode": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "transcription": "int f(int status, int uname_mode)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n    if (uname_mode == 0)\n    {\n    }\n    else\n    {\n    }\n  }\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "not applicable (globals or nondeterministic stubs)"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "typed_c_no_loops_after_stubbing",
+   "rounds": 0
+  }
  },
  {
   "suite": "coreutils:src",
   "file": "unexpand.c",
   "function": "usage",
   "class": "calls_to_other_functions",
-  "stage": "rejected",
-  "reason": "call with non-scalar argument: emit_tab_list_info"
- },
- {
-  "suite": "coreutils:src",
-  "file": "uniq.c",
-  "function": "usage",
-  "class": "calls_to_other_functions",
+  "src_sha1": "9f5b0b734d8a",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "opaque void call dropped: emit_tab_list_info",
    "void -> int"
   ],
   "bounds": {
@@ -2992,7 +4049,37 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpofu0fgmu/h.c: In function \u2018usage\u2019:\n/tmp/tmpofu0fgmu/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpcu3weahy/h.c: In function \u2018usage\u2019:\n/tmp/tmpcu3weahy/h.c:10:81: error: \u2018p"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "typed_c_no_loops_after_stubbing",
+   "rounds": 0
+  }
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "uniq.c",
+  "function": "usage",
+  "class": "calls_to_other_functions",
+  "src_sha1": "0296a4fadeee",
+  "stage": "certified",
+  "notes": [
+   "do-while(0) flattened",
+   "flattened blocks",
+   "memory abstraction (memory safety assumed)",
+   "void -> int"
+  ],
+  "bounds": {
+   "status": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmp4r3vmd7d/h.c: In function \u2018usage\u2019:\n/tmp/tmp4r3vmd7d/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -3005,10 +4092,12 @@
   "file": "unlink.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "3ba8d078c7dd",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -3020,7 +4109,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpwn1prsfx/h.c: In function \u2018usage\u2019:\n/tmp/tmpwn1prsfx/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmp0pjboxvd/h.c: In function \u2018usage\u2019:\n/tmp/tmp0pjboxvd/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -3033,10 +4122,12 @@
   "file": "uptime.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "1ab53aa27be8",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -3048,7 +4139,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpo87qos0w/h.c: In function \u2018usage\u2019:\n/tmp/tmpo87qos0w/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmp5dsv5h78/h.c: In function \u2018usage\u2019:\n/tmp/tmp5dsv5h78/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -3061,10 +4152,12 @@
   "file": "users.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "dc95aa1f2858",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -3076,7 +4169,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpljc9u8ne/h.c: In function \u2018usage\u2019:\n/tmp/tmpljc9u8ne/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpq97zuvic/h.c: In function \u2018usage\u2019:\n/tmp/tmpq97zuvic/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -3089,10 +4182,12 @@
   "file": "wc.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "bbee6338dc99",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -3104,7 +4199,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpq6kpt4qw/h.c: In function \u2018usage\u2019:\n/tmp/tmpq6kpt4qw/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpotu16nf7/h.c: In function \u2018usage\u2019:\n/tmp/tmpotu16nf7/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -3117,10 +4212,12 @@
   "file": "who.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "9993b636a1b0",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -3132,7 +4229,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmp_v6qq8ao/h.c: In function \u2018usage\u2019:\n/tmp/tmp_v6qq8ao/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmplex81239/h.c: In function \u2018usage\u2019:\n/tmp/tmplex81239/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -3145,10 +4242,12 @@
   "file": "whoami.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "b6a9c1814f32",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -3160,7 +4259,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmplnvnrblk/h.c: In function \u2018usage\u2019:\n/tmp/tmplnvnrblk/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpj43bx49q/h.c: In function \u2018usage\u2019:\n/tmp/tmpj43bx49q/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
@@ -3173,10 +4272,12 @@
   "file": "yes.c",
   "function": "usage",
   "class": "calls_to_other_functions",
+  "src_sha1": "09f333c73190",
   "stage": "certified",
   "notes": [
    "do-while(0) flattened",
    "flattened blocks",
+   "memory abstraction (memory safety assumed)",
    "void -> int"
   ],
   "bounds": {
@@ -3188,7 +4289,7 @@
   "transcription": "int f(int status)\n{\n  if (status != 0)\n  {\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmp12wfumui/h.c: In function \u2018usage\u2019:\n/tmp/tmp12wfumui/h.c:10:81: error: \u2018p"
+   "detail": "compile error: /tmp/tmpaf8qmu0g/h.c: In function \u2018usage\u2019:\n/tmp/tmpaf8qmu0g/h.c:10:81: error: \u2018p"
   },
   "certification": {
    "status": "PROVED",
