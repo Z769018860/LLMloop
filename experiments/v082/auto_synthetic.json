@@ -1257,6 +1257,220 @@
   "stage": "certified"
  },
  {
+  "case": "goto_forward_exits",
+  "notes": [
+   "dead trailing return",
+   "forward gotos eliminated (2)",
+   "memory abstraction (memory safety assumed)"
+  ],
+  "transcription": "unsigned int f(unsigned int n)\n{\n  unsigned int s = 0;\n  unsigned int i = 0;\n  int v__gt = 0;\n  if (n > 100)\n  {\n    v__gt = 2;\n  }\n  if (v__gt == 0)\n  {\n    while ((i < (n % 20)) && (v__gt == 0))\n    {\n      if (i == 7)\n      {\n        v__gt = 1;\n      }\n      if (v__gt == 0)\n      {\n        s += i;\n        i++;\n      }\n    }\n\n    if (v__gt == 0)\n    {\n      s += 1000;\n    }\n  }\n  if ((v__gt == 0) || (v__gt == 1))\n  {\n    v__gt = 0;\n    s += 1;\n    return s;\n  }\n  if ((v__gt == 0) || (v__gt == 2))\n  {\n    v__gt = 0;\n    return 99;\n  }\n  return 0;\n}\n\n",
+  "bounds": {
+   "n": [
+    0,
+    4294967295
+   ]
+  },
+  "native": {
+   "equivalent": true,
+   "cases": 24,
+   "agree": 24,
+   "both_timeout": 0,
+   "one_sided_timeout": 0
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "houdini_loops",
+   "invariant": [
+    [
+     "s >= 0",
+     "i >= 0",
+     "i <= 7",
+     "v__gt >= 0",
+     "v__gt <= 1",
+     "(v__gt == 0 or v__gt == 1)",
+     "__done >= 0",
+     "__done <= 0",
+     "__done == 0",
+     "__done % 2 == 0",
+     "__done % 3 == 0",
+     "__done % 4 == 0",
+     "__done % 6 == 0",
+     "__done % 7 == 0",
+     "__done % 8 == 0",
+     "__done % 19 == 0",
+     "__done % 20 == 0",
+     "__done % 21 == 0",
+     "__rv >= 0",
+     "__rv <= 0",
+     "__rv == 0",
+     "__rv % 2 == 0",
+     "__rv % 3 == 0",
+     "__rv % 4 == 0",
+     "__rv % 6 == 0",
+     "__rv % 7 == 0",
+     "__rv % 8 == 0",
+     "__rv % 19 == 0",
+     "__rv % 20 == 0",
+     "__rv % 21 == 0",
+     "n + s >= 0",
+     "n - i >= 0",
+     "n + i >= 0",
+     "n >= i",
+     "n - v__gt >= 0",
+     "n + v__gt >= 0",
+     "n >= v__gt",
+     "n - __done >= 0",
+     "n + __done >= 0",
+     "n >= __done",
+     "n - __rv >= 0",
+     "n + __rv >= 0",
+     "n >= __rv",
+     "s + i >= 0",
+     "s + v__gt >= 0",
+     "s - __done >= 0",
+     "s + __done >= 0",
+     "s >= __done",
+     "s - __rv >= 0",
+     "s + __rv >= 0",
+     "s >= __rv",
+     "i - v__gt >= 0",
+     "i - v__gt <= 7",
+     "i + v__gt >= 0",
+     "i + v__gt <= 8",
+     "i >= v__gt",
+     "i - __done >= 0",
+     "i - __done <= 7",
+     "i + __done >= 0",
+     "i + __done <= 7",
+     "i >= __done",
+     "i - __rv >= 0",
+     "i - __rv <= 7",
+     "i + __rv >= 0",
+     "i + __rv <= 7",
+     "i >= __rv",
+     "v__gt - __done >= 0",
+     "v__gt - __done <= 1",
+     "v__gt + __done >= 0",
+     "v__gt + __done <= 1",
+     "v__gt >= __done",
+     "v__gt - __rv >= 0",
+     "v__gt - __rv <= 1",
+     "v__gt + __rv >= 0",
+     "v__gt + __rv <= 1",
+     "v__gt >= __rv",
+     "__done - __rv == 0",
+     "(__done - __rv) % 2 == 0",
+     "(__done - __rv) % 3 == 0",
+     "(__done - __rv) % 4 == 0",
+     "(__done - __rv) % 6 == 0",
+     "(__done - __rv) % 7 == 0",
+     "(__done - __rv) % 8 == 0",
+     "(__done - __rv) % 19 == 0",
+     "(__done - __rv) % 20 == 0",
+     "(__done - __rv) % 21 == 0",
+     "__done + __rv == 0",
+     "__done <= __rv",
+     "__done >= __rv",
+     "1*__done == 0",
+     "1*__rv == 0",
+     "s >= -1",
+     "i >= -1",
+     "i <= 8",
+     "i <= 19",
+     "i <= 20",
+     "i <= 21",
+     "i <= 98",
+     "i <= 99",
+     "i <= 100",
+     "i <= 101",
+     "i <= 999",
+     "i <= 1000",
+     "i <= 1001",
+     "v__gt >= -1",
+     "v__gt <= 2",
+     "v__gt <= 3",
+     "v__gt <= 6",
+     "v__gt <= 7",
+     "v__gt <= 8",
+     "v__gt <= 19",
+     "v__gt <= 20",
+     "v__gt <= 21",
+     "v__gt <= 98",
+     "v__gt <= 99",
+     "v__gt <= 100",
+     "v__gt <= 101",
+     "v__gt <= 999",
+     "v__gt <= 1000",
+     "v__gt <= 1001",
+     "__done >= -1",
+     "__done <= 1",
+     "__done <= 2",
+     "__done <= 3",
+     "__done <= 6",
+     "__done <= 7",
+     "__done <= 8",
+     "__done <= 19",
+     "__done <= 20",
+     "__done <= 21",
+     "__done <= 98",
+     "__done <= 99",
+     "__done <= 100",
+     "__done <= 101",
+     "__done <= 999",
+     "__done <= 1000",
+     "__done <= 1001",
+     "__rv >= -1",
+     "__rv <= 1",
+     "__rv <= 2",
+     "__rv <= 3",
+     "__rv <= 6",
+     "__rv <= 7",
+     "__rv <= 8",
+     "__rv <= 19",
+     "__rv <= 20",
+     "__rv <= 21",
+     "__rv <= 98",
+     "__rv <= 99",
+     "__rv <= 100",
+     "__rv <= 101",
+     "__rv <= 999",
+     "__rv <= 1000",
+     "__rv <= 1001"
+    ]
+   ],
+   "rounds": 24
+  },
+  "stage": "certified"
+ },
+ {
+  "case": "goto_cleanup_chain",
+  "notes": [
+   "dead trailing return",
+   "forward gotos eliminated (2)",
+   "memory abstraction (memory safety assumed)"
+  ],
+  "transcription": "unsigned int f(unsigned int n)\n{\n  unsigned int s = 0;\n  unsigned int r = 0;\n  int v__gt = 0;\n  if ((n % 3) == 0)\n  {\n    v__gt = 2;\n  }\n  if (v__gt == 0)\n  {\n    s = n * 2;\n    if ((n % 5) == 0)\n    {\n      v__gt = 1;\n    }\n    if (v__gt == 0)\n    {\n      s += 7;\n      r = 1;\n    }\n  }\n  if ((v__gt == 0) || (v__gt == 1))\n  {\n    v__gt = 0;\n    s += 100;\n  }\n  if ((v__gt == 0) || (v__gt == 2))\n  {\n    v__gt = 0;\n    s += 1;\n    return s + r;\n  }\n  return 0;\n}\n\n",
+  "bounds": {
+   "n": [
+    0,
+    4294967295
+   ]
+  },
+  "native": {
+   "equivalent": true,
+   "cases": 24,
+   "agree": 24,
+   "both_timeout": 0,
+   "one_sided_timeout": 0
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "typed_c_no_loops_after_stubbing",
+   "rounds": 0
+  },
+  "stage": "certified"
+ },
+ {
   "case": "mem_sum_unsigned",
   "notes": [
    "for -> while",
@@ -1273,7 +1487,7 @@
   },
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmp4z5m6zy0/h.c: In function \u2018main\u2019:\n/tmp/tmp4z5m6zy0/h.c:29:79: error: too"
+   "detail": "compile error: /tmp/tmpfpnsa4he/h.c: In function \u2018main\u2019:\n/tmp/tmpfpnsa4he/h.c:29:79: error: too"
   },
   "certification": {
    "status": "PROVED",
@@ -1301,7 +1515,7 @@
   },
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmp4iavb8c7/h.c: In function \u2018f\u2019:\n/tmp/tmp4iavb8c7/h.c:10:17: error: invali"
+   "detail": "compile error: /tmp/tmpzjohvegs/h.c: In function \u2018f\u2019:\n/tmp/tmpzjohvegs/h.c:10:17: error: invali"
   },
   "certification": {
    "status": "PROVED",
@@ -1329,7 +1543,7 @@
   },
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpi5i6k1xc/h.c: In function \u2018main\u2019:\n/tmp/tmpi5i6k1xc/h.c:32:79: error: too"
+   "detail": "compile error: /tmp/tmpyl_xzyqv/h.c: In function \u2018main\u2019:\n/tmp/tmpyl_xzyqv/h.c:32:79: error: too"
   },
   "certification": {
    "status": "PROVED",
@@ -1360,7 +1574,7 @@
   },
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpucvef4ps/h.c: In function \u2018main\u2019:\n/tmp/tmpucvef4ps/h.c:28:79: error: too"
+   "detail": "compile error: /tmp/tmphh7r7ia_/h.c: In function \u2018main\u2019:\n/tmp/tmphh7r7ia_/h.c:28:79: error: too"
   },
   "certification": {
    "status": "PROVED",
@@ -1387,7 +1601,7 @@
   },
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmphkou_ett/h.c: In function \u2018main\u2019:\n/tmp/tmphkou_ett/h.c:31:79: error: too"
+   "detail": "compile error: /tmp/tmp5jc34kc5/h.c: In function \u2018main\u2019:\n/tmp/tmp5jc34kc5/h.c:31:79: error: too"
   },
   "certification": {
    "status": "STUCK:top/loop0/body operations defined",
@@ -1412,13 +1626,13 @@
   },
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmppome8l61/h.c: In function \u2018main\u2019:\n/tmp/tmppome8l61/h.c:31:79: error: too"
+   "detail": "compile error: /tmp/tmpq50fzdbh/h.c: In function \u2018main\u2019:\n/tmp/tmpq50fzdbh/h.c:31:79: error: too"
   },
   "certification": {
    "status": "STUCK:top/loop0/body operations defined",
    "method": "houdini_loops",
    "invariant": null,
-   "rounds": 4
+   "rounds": 3
   },
   "stage": "not_certified"
  },
@@ -1437,7 +1651,7 @@
   },
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmp1qfpyw7y/h.c: In function \u2018main\u2019:\n/tmp/tmp1qfpyw7y/h.c:31:79: error: too"
+   "detail": "compile error: /tmp/tmpyb8300x_/h.c: In function \u2018main\u2019:\n/tmp/tmpyb8300x_/h.c:31:79: error: too"
   },
   "certification": {
    "status": "STUCK:top/loop0/body operations defined",

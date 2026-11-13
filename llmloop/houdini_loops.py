@@ -21,14 +21,19 @@ def _prepare(source):
     return func, nds, loops
 
 
-def sample_heads(source, bounds, runs=60, seed=1, math=False):
+def sample_heads(source, bounds, runs=60, seed=1, math=False, typed=True):
     func, nds, loops = _prepare(source); params = {p.name: tkey(p.type.type.names) for p in func.decl.type.args.params}; rng = random.Random(seed); heads = collections.defaultdict(list)
     for _ in range(runs):
         it = Interp(func, 60000); it.math = math; it.types.update(params); it.lid = {id(l): k for k, l in enumerate(loops)}; it.heads = collections.defaultdict(list)
         env = {n: _sample_param(*bounds[n], rng) for n in params}
-        for nm, ty in nds: it.types[nm] = 'int'; env[nm] = 0
+        for nm, ty in nds: it.types[nm] = tkey(ty.split()) if typed else 'int'; env[nm] = 0
+        from .traj_fit import trange
         def rs(e):
-            for nm, _ in nds: e[nm] = rng.choice([0, 1, 0, 1, rng.randint(-3, 3)])
+            for nm, ty in nds:
+                if typed:                 # type-aware nondeterministic values: small values, the extremes and a uniform draw of the TYPE's range
+                    lo, hi = trange(tkey(ty.split()))
+                    e[nm] = rng.choice([0, 1, 0, 1, lo, hi, rng.randint(max(lo, -3), min(hi, 3)), rng.randint(lo, hi)])
+                else: e[nm] = rng.choice([0, 1, 0, 1, rng.randint(-3, 3)])
         it.resample = rs
         try: it.run_stmts(func.body.block_items, env)
         except Exception: pass
@@ -44,6 +49,9 @@ def houdini_loops(source, bounds, abi='LP64', runs=60, max_rounds=60, solver_tim
     consts = {int(x) for x in re.findall(r'(?<![\w.])\d+', source)}; consts |= {c + d for c in list(consts) for d in (-1, 1)} | {0, 1, -1}
     cands = [atoms_from(heads[k], tuple(sorted(c for c in consts if abs(c) <= 10 ** 7)), valsets=True) for k in range(nl)]; log = []
     for rnd in range(max_rounds):
+        from . import houdini_while as _hw
+        import time as _t
+        if _hw.DEADLINE is not None and _t.time() > _hw.DEADLINE: return 'TIMEOUT', cands, rnd, log
         if any(not c for c in cands): return 'EMPTY', [], rnd, log
         r = analyze_request({'source': source, 'frontend': 'typed_invariant_loops', 'range_invariants': {'invariants': [c[:256] for c in cands]}, 'parameter_bounds': bounds, 'abi': abi, 'solver_timeout_ms': solver_timeout_ms, 'integer_model': integer_model})
         if r['status'].startswith('PROVED'): return 'PROVED', cands, rnd + 1, log

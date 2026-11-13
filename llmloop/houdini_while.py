@@ -83,11 +83,20 @@ def linear_equalities(rows, names, max_atoms=8):
     return out
 
 
-def atoms_from(states, program_consts=(), valsets=False):
+DEADLINE = None        # wall-clock deadline (time.time() value) honoured by the enumeration and by the weakening rounds of houdini / houdini_loops
+MAX_ATOM_VARS = 24      # pairwise/linear atoms only over the most informative variables (inlined 60 KB functions have thousands; the enumeration used to run for hours)
+
+
+def atoms_from(states, program_consts=(), valsets=False, deadline=None):
+    import time
     if not states: return []
     sn0 = list(states[0][1])
     pn = list(states[0][0]); sn = list(states[0][1]); names = pn + sn
     rows = [{**p, **s} for p, s in states]; out = []
+    if len(names) > MAX_ATOM_VARS:
+        varying = [n for n in names if len({r[n] for r in rows}) > 1]
+        pair_names = varying[:MAX_ATOM_VARS]
+    else: pair_names = names
     for v in sn:
         vals = [r[v] for r in rows]; lo, hi = min(vals), max(vals)
         out += ['%s >= %d' % (v, lo), '%s <= %d' % (v, hi)]
@@ -96,8 +105,10 @@ def atoms_from(states, program_consts=(), valsets=False):
         for m in sorted({2, 3, 4} | {abs(c) for c in program_consts if 2 <= abs(c) <= 64}):
             rs = {x % m for x in vals}
             if len(rs) == 1: out.append('%s %% %d == %d' % (v, m, rs.pop()))
-    for a, b in itertools.combinations(names, 2):
-        if a in pn and b in pn: continue
+    for a, b in itertools.combinations(pair_names, 2):
+        dl = deadline if deadline is not None else DEADLINE
+        if dl is not None and time.time() > dl: raise TimeoutError('atom enumeration deadline')
+        if a in pn and b in pn and not valsets: continue          # (param, param) relations only in the multi-loop generator (length contracts need them)
         d = [r[a] - r[b] for r in rows]; s = [r[a] + r[b] for r in rows]
         if min(d) == max(d): out.append('%s - %s == %d' % (a, b, d[0]))
         else: out += ['%s - %s >= %d' % (a, b, min(d)), '%s - %s <= %d' % (a, b, max(d))]
@@ -108,7 +119,7 @@ def atoms_from(states, program_consts=(), valsets=False):
         else: out += ['%s + %s >= %d' % (a, b, min(s)), '%s + %s <= %d' % (a, b, max(s))]
         if all(r[a] <= r[b] for r in rows): out.append('%s <= %s' % (a, b))
         if all(r[a] >= r[b] for r in rows): out.append('%s >= %s' % (a, b))
-    out += linear_equalities(rows, names)
+    out += linear_equalities(rows, pair_names if len(pair_names) <= 12 else pair_names[:12])
     for v in sn:  # bounds from program constants (Houdini needs them when sampling never reaches the extreme values)
         for k in sorted(set(program_consts)):
             out += ['%s <= %d' % (v, k), '%s >= %d' % (v, k)]
@@ -158,6 +169,7 @@ def houdini(source, bounds, abi='LP64', runs=60, max_rounds=40, solver_timeout_m
         cand = [a for a in cand if len(set(_re.findall(r'[A-Za-z_]\w*', a)) & names) <= 1]
     ast2 = c_parser.CParser().parse(source); f2 = [n for n in ast2.ext if isinstance(n, c_ast.FuncDef)][0]
     for rnd in range(max_rounds):
+        if DEADLINE is not None and __import__('time').time() > DEADLINE: return 'TIMEOUT', cand, rnd, log
         if not cand: return 'EMPTY', [], rnd, log
         r = analyze_request({'source': source, 'frontend': 'typed_invariant_while', 'range_invariants': {'invariant': cand[:1024]}, 'parameter_bounds': bounds, 'abi': abi, 'solver_timeout_ms': solver_timeout_ms, 'integer_model': integer_model})
         if r['status'].startswith('PROVED'): return 'PROVED', cand, rnd + 1, log

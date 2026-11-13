@@ -24,6 +24,8 @@ CASES = {
  'effects_postdec_cond': 'unsigned f(unsigned n){ unsigned s = 0; n = n % 40; while (n-- > 0) { s += n; } return s; }',
  'effects_predec_cond': 'unsigned f(unsigned n){ unsigned s = 0; unsigned m = n % 40; while (--m > 0 && m < 100) { s += m; } return s; }',
  'effects_assign_cond': 'unsigned f(unsigned n){ unsigned s = 0; unsigned c = 0; unsigned i = 0; while ((c = i * 3) < n % 90) { s += c; i++; } return s; }',
+ 'goto_forward_exits': 'unsigned f(unsigned n){ unsigned s = 0; unsigned i = 0; if (n > 100) goto fail; while (i < n % 20) { if (i == 7) goto done; s += i; i++; } s += 1000; done: s += 1; return s; fail: return 99; }',
+ 'goto_cleanup_chain': 'unsigned f(unsigned n){ unsigned s = 0; unsigned r = 0; if (n % 3 == 0) goto out1; s = n * 2; if (n % 5 == 0) goto out2; s += 7; r = 1; out2: s += 100; out1: s += 1; return s + r; }',
  'mem_sum_unsigned': 'unsigned f(unsigned char *p, unsigned n){ unsigned s = 0; unsigned i; for (i = 0; i < n; i++) s += p[i]; return s; }',
  'mem_struct_field': 'struct S { unsigned n; unsigned char *buf; };\nunsigned f(struct S *p){ unsigned t = 0; unsigned i = 0; while (i < p->n) { t += p->buf[i]; i++; } return t; }',
  'mem_ptr_walk': 'unsigned f(const char *s){ unsigned n = 0; while (*s) { s++; n++; } return n; }',

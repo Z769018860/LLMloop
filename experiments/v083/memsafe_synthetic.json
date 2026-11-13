@@ -1,0 +1,365 @@
+{
+ "rows": [
+  {
+   "case": "sum_ok",
+   "expected_safe": true,
+   "memsafe": {
+    "status": "PROVED_MEMSAFE",
+    "checked_accesses": 1,
+    "unchecked_call_args": 0,
+    "bases": [
+     "p"
+    ],
+    "strings": [],
+    "len_params": [
+     "p__n"
+    ],
+    "notes": [
+     "memory-safety pass: 1 checked accesses, 0 unchecked (calls)",
+     "tracked bases: p"
+    ],
+    "contract": "len >= each integer parameter",
+    "contract_strength": "length contract",
+    "contract_text": "(p__n >= n)",
+    "method": "houdini_loops",
+    "bounds": {
+     "n": [
+      0,
+      4294967295
+     ],
+     "p__n": [
+      0,
+      1099511627776
+     ]
+    }
+   },
+   "asan": {
+    "runs": 60,
+    "asan_errors": 0
+   }
+  },
+  {
+   "case": "sum_bug",
+   "expected_safe": false,
+   "memsafe": {
+    "status": "NOT_PROVED",
+    "checked_accesses": 1,
+    "unchecked_call_args": 0,
+    "bases": [
+     "p"
+    ],
+    "strings": [],
+    "len_params": [
+     "p__n"
+    ],
+    "notes": [
+     "memory-safety pass: 1 checked accesses, 0 unchecked (calls)",
+     "tracked bases: p"
+    ]
+   },
+   "asan": {
+    "runs": 60,
+    "asan_errors": 42
+   }
+  },
+  {
+   "case": "strlen_walk_ok",
+   "expected_safe": true,
+   "memsafe": {
+    "status": "PROVED_MEMSAFE",
+    "checked_accesses": 1,
+    "unchecked_call_args": 0,
+    "bases": [
+     "s"
+    ],
+    "strings": [
+     "s"
+    ],
+    "len_params": [
+     "s__n"
+    ],
+    "notes": [
+     "memory-safety pass: 1 checked accesses, 0 unchecked (calls)",
+     "tracked bases: s (string)"
+    ],
+    "contract": "none",
+    "contract_strength": "strong",
+    "contract_text": null,
+    "method": "houdini_loops",
+    "bounds": {
+     "s__n": [
+      0,
+      1099511627776
+     ]
+    }
+   },
+   "asan": {
+    "runs": 60,
+    "asan_errors": 0
+   }
+  },
+  {
+   "case": "strlen_walk_bug",
+   "expected_safe": false,
+   "memsafe": {
+    "status": "PROVED_MEMSAFE",
+    "checked_accesses": 1,
+    "unchecked_call_args": 0,
+    "bases": [
+     "s"
+    ],
+    "strings": [
+     "s"
+    ],
+    "len_params": [
+     "s__n"
+    ],
+    "notes": [
+     "memory-safety pass: 1 checked accesses, 0 unchecked (calls)",
+     "tracked bases: s (string)"
+    ],
+    "contract": "len >= 1",
+    "contract_strength": "weak (excludes empty buffers/strings)",
+    "contract_text": "(s__n >= 1)",
+    "method": "houdini_loops",
+    "bounds": {
+     "s__n": [
+      0,
+      1099511627776
+     ]
+    }
+   },
+   "asan": {
+    "runs": 60,
+    "asan_errors": 0
+   }
+  },
+  {
+   "case": "ptr_end_ok",
+   "expected_safe": true,
+   "memsafe": {
+    "status": "PROVED_MEMSAFE",
+    "checked_accesses": 1,
+    "unchecked_call_args": 0,
+    "bases": [
+     "b"
+    ],
+    "strings": [],
+    "len_params": [
+     "b__n"
+    ],
+    "notes": [
+     "memory-safety pass: 1 checked accesses, 0 unchecked (calls)",
+     "tracked bases: b"
+    ],
+    "contract": "len >= each integer parameter",
+    "contract_strength": "length contract",
+    "contract_text": "(b__n >= n)",
+    "method": "houdini_loops",
+    "bounds": {
+     "n": [
+      0,
+      4294967295
+     ],
+     "b__n": [
+      0,
+      1099511627776
+     ]
+    }
+   },
+   "asan": {
+    "runs": 60,
+    "asan_errors": 0
+   }
+  },
+  {
+   "case": "ptr_end_bug",
+   "expected_safe": false,
+   "memsafe": {
+    "status": "NOT_PROVED",
+    "checked_accesses": 1,
+    "unchecked_call_args": 0,
+    "bases": [
+     "b"
+    ],
+    "strings": [],
+    "len_params": [
+     "b__n"
+    ],
+    "notes": [
+     "memory-safety pass: 1 checked accesses, 0 unchecked (calls)",
+     "tracked bases: b"
+    ]
+   },
+   "asan": {
+    "runs": 60,
+    "asan_errors": 42
+   }
+  },
+  {
+   "case": "copy_ok",
+   "expected_safe": true,
+   "memsafe": {
+    "status": "PROVED_MEMSAFE",
+    "checked_accesses": 2,
+    "unchecked_call_args": 0,
+    "bases": [
+     "d",
+     "s"
+    ],
+    "strings": [],
+    "len_params": [
+     "d__n",
+     "s__n"
+    ],
+    "notes": [
+     "memory-safety pass: 2 checked accesses, 0 unchecked (calls)",
+     "tracked bases: d, s"
+    ],
+    "contract": "len >= each integer parameter",
+    "contract_strength": "length contract",
+    "contract_text": "(d__n >= n) && (s__n >= n)",
+    "method": "houdini_loops",
+    "bounds": {
+     "n": [
+      0,
+      4294967295
+     ],
+     "d__n": [
+      0,
+      1099511627776
+     ],
+     "s__n": [
+      0,
+      1099511627776
+     ]
+    }
+   },
+   "asan": {
+    "runs": 60,
+    "asan_errors": 0
+   }
+  },
+  {
+   "case": "copy_bug",
+   "expected_safe": false,
+   "memsafe": {
+    "status": "NOT_PROVED",
+    "checked_accesses": 2,
+    "unchecked_call_args": 0,
+    "bases": [
+     "d",
+     "s"
+    ],
+    "strings": [],
+    "len_params": [
+     "d__n",
+     "s__n"
+    ],
+    "notes": [
+     "memory-safety pass: 2 checked accesses, 0 unchecked (calls)",
+     "tracked bases: d, s"
+    ]
+   },
+   "asan": {
+    "runs": 60,
+    "asan_errors": 42
+   }
+  },
+  {
+   "case": "str_count_ok",
+   "expected_safe": true,
+   "memsafe": {
+    "status": "PROVED_MEMSAFE",
+    "checked_accesses": 2,
+    "unchecked_call_args": 0,
+    "bases": [
+     "s"
+    ],
+    "strings": [
+     "s"
+    ],
+    "len_params": [
+     "s__n"
+    ],
+    "notes": [
+     "memory-safety pass: 2 checked accesses, 0 unchecked (calls)",
+     "tracked bases: s (string)"
+    ],
+    "contract": "none",
+    "contract_strength": "strong",
+    "contract_text": null,
+    "method": "houdini_loops",
+    "bounds": {
+     "c": [
+      -2147483648,
+      2147483647
+     ],
+     "s__n": [
+      0,
+      1099511627776
+     ]
+    }
+   },
+   "asan": {
+    "runs": 60,
+    "asan_errors": 0
+   }
+  },
+  {
+   "case": "local_array_ok",
+   "expected_safe": true,
+   "memsafe": {
+    "status": "PROVED_MEMSAFE",
+    "checked_accesses": 2,
+    "unchecked_call_args": 0,
+    "bases": [
+     "a"
+    ],
+    "strings": [],
+    "len_params": [],
+    "notes": [
+     "memory-safety pass: 2 checked accesses, 0 unchecked (calls)",
+     "tracked bases: a"
+    ],
+    "contract": "none",
+    "contract_strength": "strong",
+    "contract_text": null,
+    "method": "trivial_invariants",
+    "bounds": {
+     "n": [
+      0,
+      4294967295
+     ]
+    }
+   },
+   "asan": {
+    "runs": 60,
+    "asan_errors": 0
+   }
+  },
+  {
+   "case": "local_array_bug",
+   "expected_safe": false,
+   "memsafe": {
+    "status": "NOT_PROVED",
+    "checked_accesses": 2,
+    "unchecked_call_args": 0,
+    "bases": [
+     "a"
+    ],
+    "strings": [],
+    "len_params": [],
+    "notes": [
+     "memory-safety pass: 2 checked accesses, 0 unchecked (calls)",
+     "tracked bases: a"
+    ]
+   },
+   "asan": {
+    "runs": 60,
+    "asan_errors": 5
+   }
+  }
+ ],
+ "unsound": []
+}

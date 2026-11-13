@@ -75,6 +75,13 @@ class Env:
                         for d in _P.parse('struct __t { %s };' % re.sub(r'\s*:\s*\d+;$', ';', clean(line, tmap))).ext[0].type.decls: f[d.name] = desc(d.type)
                     except Exception: pass
             self.fields[tag] = f
+        for body, nm, dims in re.findall(r'^(?:static |extern )*(?:const )?(?:struct|union) \{\n(.*?)\n\} (?:const )?(\w+)((?:\[[^\]]*\])*)(?: = .*)?;?$', text, re.M | re.S):
+            tag = '__anon_' + nm; f = {}
+            try:
+                for d in _P.parse('struct __t { %s };' % re.sub(r'\s*:\s*\d+;', ';', clean(body, tmap))).ext[0].type.decls or []:
+                    if d.name: f[d.name] = desc(d.type)
+            except Exception: pass
+            self.fields[tag] = f; self.gtypes[nm] = ('p', ('st', tag)) if dims else ('st', tag)
         for line in text.split('\n'):
             m = re.match(r'^(?:static |extern )*(.+?[\s\*])(\w+)((?:\[[^\]]*\])*)(?: = .*;| = \{.*)?;?$', line)
             if m and not line.startswith(('typedef', 'struct', 'union', 'enum')) and '(' not in line:
@@ -138,6 +145,7 @@ class MemAbs:
             nm = e.name.name
             return self.env.ret.get(nm) or self.defs_ret.get(nm) or ('s', ('int',))
         if isinstance(e, c_ast.ExprList): return self.ety(e.exprs[-1])
+        if isinstance(e, c_ast.CompoundLiteral): return desc(e.type)
         return None
 
     def is_ptr(self, e): d = self.ety(e); return bool(d and d[0] == 'p')
@@ -250,6 +258,7 @@ class MemAbs:
                     else: e.args.exprs[i] = self.ex(a)
             return e
         if isinstance(e, c_ast.ExprList): e.exprs = [self.ex(x) for x in e.exprs]; return e
+        if isinstance(e, c_ast.CompoundLiteral): raise ValueError('compound literal in scalar context')
         raise ValueError('unsupported expression ' + type(e).__name__)
 
     def cond(self, c):
