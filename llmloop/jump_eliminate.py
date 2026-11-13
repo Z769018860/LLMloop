@@ -36,13 +36,42 @@ def _own_jumps(loop):
     rec(loop.stmt, False); return br, cn, rt
 
 
+def _peel_do_while(stmts):
+    """do { B } while (c)  ->  B; while (c) { B }   (exact when B has no break/continue of its own; the verifier front ends only know while/for)"""
+    out = []
+    for s in stmts:
+        out.append(_peel_node(s))
+    return out
+
+
+def _peel_node(s):
+    if isinstance(s, c_ast.DoWhile):
+        body = s.stmt if isinstance(s.stmt, c_ast.Compound) else c_ast.Compound([s.stmt])
+        br, cn, _ = _own_jumps(s)
+        if br or cn: raise ValueError('break/continue in do-while')
+        body.block_items = _peel_do_while(list(body.block_items or []))
+        return c_ast.Compound([copy.deepcopy(body), c_ast.While(s.cond, body)])
+    if isinstance(s, c_ast.Compound): s.block_items = _peel_do_while(list(s.block_items or [])); return s
+    if isinstance(s, (c_ast.While, c_ast.For)):
+        s.stmt = _peel_node(s.stmt if isinstance(s.stmt, c_ast.Compound) else c_ast.Compound([s.stmt])); return s
+    if isinstance(s, c_ast.If):
+        s.iftrue = _peel_node(s.iftrue)
+        if s.iffalse is not None: s.iffalse = _peel_node(s.iffalse)
+    return s
+
+
 def eliminate_jumps(func):
     items = func.body.block_items or []
-    if not any(isinstance(l, (c_ast.While, c_ast.For)) and any(_own_jumps(l)) for s in items for l in _walk(s)): return []
-    if any(isinstance(l, c_ast.DoWhile) for s in items for l in _walk(s)): return []          # do-while is not handled here
-    ret_in_loop = any(isinstance(r, c_ast.Return) for s in items for l in _walk(s) if isinstance(l, (c_ast.While, c_ast.For)) for r in _walk(l.stmt))
+    if any(isinstance(l, c_ast.DoWhile) for s in items for l in _walk(s)):
+        try: func.body.block_items = _peel_do_while(list(items)); peeled = ['do-while peeled']
+        except ValueError: return []
+        items = func.body.block_items
+    else: peeled = []
+    nonfinal_ret = any(isinstance(r, c_ast.Return) for k, s in enumerate(items) if not (k == len(items) - 1 and isinstance(s, c_ast.Return)) for r in _walk(s))
+    if not nonfinal_ret and not any(isinstance(l, (c_ast.While, c_ast.For)) and any(_own_jumps(l)) for s in items for l in _walk(s)): return peeled
+    ret_in_loop = nonfinal_ret
     state = {'n': 0, 'flags': [], 'ret': ret_in_loop}
-    notes = []
+    notes = list(peeled)
 
     def flag(prefix):
         state['n'] += 1; nm = '%s%d' % (prefix, state['n']); state['flags'].append(nm); return nm
@@ -54,7 +83,7 @@ def eliminate_jumps(func):
     def tr_stmt(s, ctx):
         if isinstance(s, c_ast.Break) and ctx.get('brk'): return [_expr('%s = 1' % ctx['brk'])], True
         if isinstance(s, c_ast.Continue) and ctx.get('cnt'): return [_expr('%s = 1' % ctx['cnt'])], True
-        if isinstance(s, c_ast.Return) and ctx.get('inloop'):
+        if isinstance(s, c_ast.Return):
             asg = c_ast.Assignment('=', c_ast.ID('__rv'), s.expr if s.expr is not None else c_ast.Constant('int', '0')); return [asg, _expr('__done = 1')], True
         if isinstance(s, c_ast.Compound):
             out, sets = tr_list(list(s.block_items or []), ctx); return [c_ast.Compound(out)], sets
@@ -109,6 +138,7 @@ def eliminate_jumps(func):
     if not isinstance(rest[-1], c_ast.Return): return []
     body, sets = tr_list(list(rest[:-1]), {'inloop': False, 'brk': None, 'cnt': None})
     final = rest[-1]
+    if state['ret'] and not any('return=True' in n for n in notes): notes.append('early return eliminated outside loops')
     if state['ret']: final = c_ast.Return(c_ast.TernaryOp(_expr('__done'), _expr('__rv'), final.expr))
     decls = [items[k] for k in range(pos)]
     for nm in state['flags']: decls.append(_P.parse('int %s = 0;' % nm).ext[0])

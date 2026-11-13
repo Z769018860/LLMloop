@@ -22,7 +22,7 @@ INTS = {('int',): (32, True), ('unsigned',): (32, False), ('unsigned', 'int'): (
 
 
 def tu_text(path, includes):
-    r = subprocess.run(['clang', '-fsyntax-only', '-w', '-ferror-limit=0', '-include', str(CU / 'fake/config.h'), '-include', 'stdbool.h', '-include', 'stdint.h', '-include', 'stddef.h', '-DNDEBUG', '-Xclang', '-ast-print'] + [x for i in includes for x in ('-I', str(i))] + [str(path)], capture_output=True, text=True, timeout=180)
+    r = subprocess.run(['clang', '-fsyntax-only', '-w', '-ferror-limit=0', '-include', str(CU / 'fake/config.h'), '-include', 'stdbool.h', '-include', 'stdint.h', '-include', 'stddef.h', '-DNDEBUG', '-D__NO_CTYPE', '-Xclang', '-ast-print'] + [x for i in includes for x in ('-I', str(i))] + [str(path)], capture_output=True, text=True, timeout=180)
     return r.stdout
 
 
@@ -207,16 +207,66 @@ def hoist_and_init(fd, notes):
         if isinstance(n, c_ast.Decl) and n.init is None and isinstance(n.type, c_ast.TypeDecl): n.init = c_ast.Constant('int', '0'); notes.add('zero-initialized locals')
 
 
+def flatten_blocks(fd, notes):
+    """redundant nested { } blocks (left by do{}while(0) flattening) are spliced into the parent list: all names are unique and declarations are hoisted by now"""
+    def fl(items):
+        out = []
+        for it in items:
+            if isinstance(it, c_ast.Compound): out += fl(it.block_items or []); notes.add('flattened blocks')
+            else:
+                for a in ('iftrue', 'iffalse', 'stmt'):
+                    s = getattr(it, a, None) if isinstance(it, (c_ast.If, c_ast.While)) else None
+                    if isinstance(s, c_ast.Compound): s.block_items = fl(s.block_items or [])
+                out.append(it)
+        return out
+    fd.body.block_items = fl(fd.body.block_items or [])
+
+
 def ensure_return(fd, notes):
     items = fd.body.block_items
     if not items or not isinstance(items[-1], c_ast.Return):
         items.append(c_ast.Return(c_ast.Constant('int', '0'))); notes.add('dead trailing return')
 
 
-def inline_calls(fd, defs_ast, notes, depth=0):
-    """calls: drop output-only calls, inline same-file loop-free scalar callees, nondeterministic result for other scalar calls"""
+LIB_RANGES = {'rand': (0, 2147483647), 'getchar': (-1, 255), 'fgetc': (-1, 255), 'getc': (-1, 255), 'random': (0, 2147483647)}
+LIB_BOOL = {  # ASCII/C-locale ctype predicates, used only where the result is consumed as a truth value (glibc returns any non-zero value, we return 1)
+    'isdigit': '(c >= 48 && c <= 57)', 'isalpha': '((c >= 65 && c <= 90) || (c >= 97 && c <= 122))', 'isupper': '(c >= 65 && c <= 90)', 'islower': '(c >= 97 && c <= 122)',
+    'isalnum': '((c >= 48 && c <= 57) || (c >= 65 && c <= 90) || (c >= 97 && c <= 122))', 'isspace': '(c == 32 || (c >= 9 && c <= 13))', 'isxdigit': '((c >= 48 && c <= 57) || (c >= 65 && c <= 70) || (c >= 97 && c <= 102))',
+    'isblank': '(c == 32 || c == 9)', 'isprint': '(c >= 32 && c <= 126)', 'iscntrl': '((c >= 0 && c <= 31) || c == 127)', 'isgraph': '(c >= 33 && c <= 126)'}
+LIB_VALUE = {'abs': '(c < 0 ? -c : c)', 'labs': '(c < 0 ? -c : c)', 'llabs': '(c < 0 ? -c : c)',    # exact, including the signed-overflow undefined behaviour at INT_MIN
+             'toupper': '((c >= 97 && c <= 122) ? c - 32 : c)', 'tolower': '((c >= 65 && c <= 90) ? c + 32 : c)', '__builtin_expect': 'c'}
+
+
+def _sub(text, name, expr_ast):
+    e = c_parser.CParser().parse('int f(){ int c; return %s; }' % text).ext[0].body.block_items[1].expr
+    for n in walk(e):
+        for nm, ch in list(n.children()):
+            if isinstance(ch, c_ast.ID) and ch.name == 'c': setchild(n, nm, c_ast.ID(name))
+    return e
+
+
+def setchild(n, name, new):
+    m = re.match(r'(\w+)\[(\d+)\]$', name)
+    if m: getattr(n, m.group(1))[int(m.group(2))] = new
+    else: setattr(n, name, new)
+
+
+def is_bool_ctx(parent, name):
+    if isinstance(parent, (c_ast.If, c_ast.While)) and name == 'cond': return True
+    if isinstance(parent, c_ast.UnaryOp) and parent.op == '!': return True
+    if isinstance(parent, c_ast.BinaryOp) and parent.op in ('&&', '||'): return True
+    if isinstance(parent, c_ast.TernaryOp) and name == 'cond': return True
+    return isinstance(parent, c_ast.BinaryOp) and parent.op in ('==', '!=') and any(isinstance(x, c_ast.Constant) and x.value == '0' for x in (parent.left, parent.right))
+
+
+def inline_calls(fd, defs_ast, notes, depth=0, stack=()):
+    """calls: drop output-only calls, library specs, inline same-file scalar callees (loops allowed: returns are removed with jump_eliminate first), nondeterministic result for other scalar calls;
+    calls in loop headers are hoisted: while (C(call)) B  ->  while (1) { pre; if (!C) break; B }"""
     counter = [0]
-    def callee_result(call):
+    def uid(): counter[0] += 1; return '__c%d_%d' % (depth, counter[0])
+    def scalar_decl(nm, init, ty=None):
+        return c_ast.Decl(nm, [], [], [], [], c_ast.TypeDecl(nm, [], None, c_ast.IdentifierType(ty or ['int'])), init, None)
+    def callee_result(call, boolctx=False):
         nm = getattr(call.name, 'name', None)
         if nm is None: raise ValueError('indirect call')
         args = call.args.exprs if call.args else []
@@ -225,66 +275,127 @@ def inline_calls(fd, defs_ast, notes, depth=0):
                 if any(isinstance(n, c_ast.BinaryOp) and n.op in ('/', '%', '<<', '>>') for n in walk(a)): raise ValueError('output call with computed arguments')
             return None, []
         if nm in EXITS: return 'EXIT', []
-        if nm in defs_ast and depth < 3 and nm != fd.decl.name:
-            cd = copy.deepcopy(defs_ast[nm]); check_scalar_only(cd)
-            if any(isinstance(n, (c_ast.While, c_ast.For, c_ast.DoWhile)) for n in walk(cd.body)): raise ValueError('callee has loops: ' + nm)
-            counter[0] += 1; sfx = '__c%d_%d' % (depth, counter[0]); names = {p.name for p in (cd.decl.type.args.params if cd.decl.type.args else [])} | {n.name for n in walk(cd.body) if isinstance(n, c_ast.Decl)}
+        if (nm in LIB_VALUE or (nm in LIB_BOOL and boolctx)) and len(args) == 1:
+            u = uid(); tmp = 'v' + u; res = 'v' + u + 'r'
+            spec = LIB_VALUE.get(nm) or '(%s ? 1 : 0)' % LIB_BOOL[nm]
+            notes.add('library spec: ' + nm)
+            return c_ast.ID(res), [scalar_decl(tmp, args[0]), scalar_decl(res, _sub(spec, tmp, None))]
+        if nm in LIB_RANGES and not args:
+            lo, hi = LIB_RANGES[nm]; u = uid(); tmp = 'v' + u; notes.add('library range: %s in [%d,%d]' % (nm, lo, hi))
+            clamp = [c_ast.If(c_ast.BinaryOp('<', c_ast.ID(tmp), c_ast.Constant('int', str(lo))), c_ast.Compound([c_ast.Assignment('=', c_ast.ID(tmp), c_ast.Constant('int', str(lo)))]), None),
+                     c_ast.If(c_ast.BinaryOp('>', c_ast.ID(tmp), c_ast.Constant('int', str(hi))), c_ast.Compound([c_ast.Assignment('=', c_ast.ID(tmp), c_ast.Constant('int', str(hi)))]), None)]
+            return c_ast.ID(tmp), [scalar_decl(tmp, c_ast.FuncCall(c_ast.ID('unknown'), None))] + clamp
+        if nm in defs_ast and depth < 3 and nm not in stack and nm != fd.decl.name:
+            cd = copy.deepcopy(defs_ast[nm]); check_scalar_only_decl(cd)
+            normalize_structure(cd, notes); uniquify_decls(cd)
+            inline_calls(cd, defs_ast, notes, depth + 1, stack + (fd.decl.name,))
+            check_scalar_only(cd); ensure_return(cd, set())
+            from llmloop.jump_eliminate import eliminate_jumps
+            eliminate_jumps(cd)
+            sfx = '__c%d_%d' % (depth, counter[0] + 1); counter[0] += 1
+            names = {p.name for p in (cd.decl.type.args.params if cd.decl.type.args else [])} | {n.name for n in walk(cd.body) if isinstance(n, c_ast.Decl)}
             for n in walk(cd):
-                if isinstance(n, c_ast.Decl) and n.name in names and n is not cd.decl: n.name += sfx; ty = n.type; ty.declname = n.name if isinstance(ty, c_ast.TypeDecl) else None
+                if isinstance(n, c_ast.Decl) and n.name in names and n is not cd.decl:
+                    n.name += sfx; ty = n.type
+                    while ty is not None and not isinstance(ty, c_ast.TypeDecl): ty = getattr(ty, 'type', None)
+                    if ty is not None: ty.declname = n.name
                 elif isinstance(n, c_ast.ID) and n.name in names: n.name += sfx
             decls = []; params = cd.decl.type.args.params if cd.decl.type.args else []
+            if len(params) != len(args): raise ValueError('arity mismatch for ' + nm)
             for p, a in zip(params, args):
                 if p.name is None: continue
-                pn = p.name + sfx; ty = copy.deepcopy(p.type); ty.declname = pn; decls.append(c_ast.Decl(pn, [], [], [], [], ty, a, None))
-            rv = '__rv' + sfx; dn = '__dn' + sfx; rty = cd.decl.type.type
-            has_ret = not (isinstance(rty.type, c_ast.IdentifierType) and rty.type.names == ['void'])
-            pre = decls + [c_ast.Decl(dn, [], [], [], [], c_ast.TypeDecl(dn, [], None, c_ast.IdentifierType(['int'])), c_ast.Constant('int', '0'), None)]
-            if has_ret:
-                t2 = copy.deepcopy(rty); t2.declname = rv; pre.append(c_ast.Decl(rv, [], [], [], [], t2, c_ast.Constant('int', '0'), None))
-            body = tr_returns(list(cd.body.block_items or []), rv if has_ret else None, dn)
-            notes.add('inlined ' + nm)
-            return (c_ast.ID(rv) if has_ret else None), pre + body
-        if any(not isinstance(a, (c_ast.ID, c_ast.Constant, c_ast.BinaryOp, c_ast.UnaryOp, c_ast.Cast)) or isinstance(a, c_ast.Constant) and a.type == 'string' for a in args): raise ValueError('call with non-scalar argument: ' + nm)
+                pn = p.name; ty = copy.deepcopy(p.type); ty.declname = pn; decls.append(c_ast.Decl(pn, [], [], [], [], ty, a, None))
+            rv = 'vrv' + sfx; items = list(cd.body.block_items); fin = items.pop()
+            has_ret = not (isinstance(cd.decl.type.type.type, c_ast.IdentifierType) and cd.decl.type.type.type.names == ['void'])
+            rty = copy.deepcopy(cd.decl.type.type); rty.declname = rv
+            pre = decls + ([c_ast.Decl(rv, [], [], [], [], rty, c_ast.Constant('int', '0'), None)] if has_ret else []) + items
+            if has_ret and isinstance(fin, c_ast.Return) and fin.expr is not None: pre.append(c_ast.Assignment('=', c_ast.ID(rv), fin.expr))
+            notes.add('inlined ' + nm + (' (with loops)' if any(isinstance(n, c_ast.While) for n in walk(cd.body)) else ''))
+            return (c_ast.ID(rv) if has_ret else None), pre
         for a in args:
-            for n in walk(a):
-                if isinstance(n, c_ast.UnaryOp) and n.op in ('&', '*'): raise ValueError('call with pointer argument: ' + nm)
+            if isinstance(a, c_ast.Constant) and a.type == 'string' or any(isinstance(n, c_ast.UnaryOp) and n.op in ('&', '*') for n in walk(a)) or any(isinstance(n, c_ast.Constant) and n.type == 'string' for n in walk(a)): raise ValueError('call with non-scalar argument: ' + nm)
         notes.add('nondeterministic result for ' + nm)
         return c_ast.FuncCall(c_ast.ID('unknown'), None), []
+    def replace_calls(root_parent, attr):
+        """calls inside root_parent.<attr> (an expression), innermost first; returns the statements to run before"""
+        pre = []
+        def rec(parent, name, node):
+            for nm, ch in list(node.children()): rec(node, nm, ch)
+            if isinstance(node, c_ast.FuncCall):
+                r, p = callee_result(node, is_bool_ctx(parent, name)); pre.extend(p)
+                if r is None: raise ValueError('output call used as a value')
+                if r == 'EXIT': raise ValueError('exit used as a value')
+                setchild(parent, name, r)
+        rec(root_parent, attr, getattr(root_parent, attr)); return pre
     def tr_stmt_list(items):
         out = []
         for it in items:
             if isinstance(it, c_ast.FuncCall):
                 r, pre = callee_result(it); out += pre
                 if r == 'EXIT': out.append(c_ast.Return(c_ast.Constant('int', '0')))
-            elif isinstance(it, (c_ast.Compound,)): it.block_items = tr_stmt_list(it.block_items or []); out.append(it)
+            elif isinstance(it, c_ast.Compound): it.block_items = tr_stmt_list(it.block_items or []); out.append(it)
             elif isinstance(it, c_ast.If):
                 it.iftrue = wrap(it.iftrue); it.iffalse = wrap(it.iffalse) if it.iffalse is not None else None
-                out += replace_in(it, 'cond'); out.append(it)
-            elif isinstance(it, (c_ast.While, c_ast.For, c_ast.DoWhile)):
-                if any(isinstance(n, c_ast.FuncCall) for _, c in it.children() if c is not it.stmt for n in walk(c)): raise ValueError('call in loop header')
-                it.stmt = wrap(it.stmt); out.append(it)
+                out += replace_calls(it, 'cond'); out.append(it)
+            elif isinstance(it, c_ast.While):
+                it.stmt = wrap(it.stmt)
+                if any(isinstance(n, c_ast.FuncCall) for n in walk(it.cond)):
+                    pre = replace_calls(it, 'cond'); notes.add('loop-header call hoisted')
+                    body = [c_ast.If(c_ast.UnaryOp('!', it.cond), c_ast.Compound([c_ast.Break()]), None)] + list(it.stmt.block_items)
+                    out.append(c_ast.While(c_ast.Constant('int', '1'), c_ast.Compound(pre + body)))
+                else: out.append(it)
+            elif isinstance(it, c_ast.Return):
+                if it.expr is not None: out += replace_calls(it, 'expr')
+                out.append(it)
+            elif isinstance(it, c_ast.Decl):
+                if it.init is not None and not isinstance(it.init, c_ast.InitList): out += replace_calls(it, 'init')
+                out.append(it)
             else:
-                out += replace_in(it, None); out.append(it)
+                if isinstance(it, c_ast.Assignment): out += replace_calls(it, 'rvalue')
+                elif isinstance(it, c_ast.UnaryOp): pass
+                else:
+                    holder = c_ast.ExprList([it]); out += replace_calls(holder, 'exprs[0]') if False else []
+                out.append(it)
         return out
     def wrap(s):
         if isinstance(s, c_ast.Compound): s.block_items = tr_stmt_list(s.block_items or []); return s
         return c_ast.Compound(tr_stmt_list([s]))
-    def replace_in(node, only):
-        pre = []
-        for parent in list(walk(node)):
-            if only and parent is not node: continue
-            for name, child in list(parent.children()):
-                if only and name != only: continue
-                if isinstance(child, c_ast.FuncCall):
-                    r, p = callee_result(child); pre += p
-                    if r is None: raise ValueError('output call used as a value')
-                    setchild(parent, name, r)
-        return pre
-    def setchild(n, name, new):
-        m = re.match(r'(\w+)\[(\d+)\]$', name)
-        if m: getattr(n, m.group(1))[int(m.group(2))] = new
-        else: setattr(n, name, new)
     fd.body.block_items = tr_stmt_list(fd.body.block_items or [])
+
+
+def check_scalar_only_decl(cd):
+    for p in (cd.decl.type.args.params if cd.decl.type.args else []):
+        if not isinstance(p, c_ast.Decl) or not scalar_type(p.type): raise ValueError('callee with non-scalar parameter')
+    if not ret_scalar(cd): raise ValueError('callee with non-scalar return type')
+
+
+def uniquify_decls(fd):
+    """nested declarations that reuse a name already declared in the function get a fresh name (sequential, so initializers still see the outer variable)"""
+    declared = {p.name for p in (fd.decl.type.args.params if fd.decl.type.args else []) if p.name} | {i.name for i in (fd.body.block_items or []) if isinstance(i, c_ast.Decl)}
+    counter = [0]; done = set()
+    def comp(c, top):
+        if id(c) in done: return
+        done.add(id(c)); cur = {}
+        def ren(node):
+            for n in walk(node):
+                if isinstance(n, c_ast.ID) and n.name in cur: n.name = cur[n.name]
+        for it in c.block_items or []:
+            if isinstance(it, c_ast.Decl) and it.name and not top:
+                if it.init is not None: ren(it.init)
+                if it.name in declared or it.name in cur.values():
+                    counter[0] += 1; new = '%s__u%d' % (it.name, counter[0]); cur[it.name] = new; old = it.name; it.name = new; ty = it.type
+                    while ty is not None and not isinstance(ty, c_ast.TypeDecl): ty = getattr(ty, 'type', None)
+                    if ty is not None: ty.declname = new
+                declared.add(it.name)
+            else:
+                ren(it)
+            for n in (list(walk(it)) if not isinstance(it, c_ast.Decl) else []):
+                if isinstance(n, c_ast.Compound) and n is not c: pass
+        for n in [x for it in (c.block_items or []) for x in walk(it) if isinstance(x, c_ast.Compound)]:
+            if n is not c: comp2(n)
+    def comp2(c):
+        comp(c, False)
+    comp(fd.body, True)
 
 
 def tr_returns(items, rv, dn):
@@ -318,6 +429,11 @@ def bounds_of(fd):
     return b
 
 
+class Info:
+    def __init__(self, fd, extra, prelude, nondet): self.fd, self.extra, self.prelude, self.nondet = fd, extra, prelude, nondet
+    def __iter__(self): return iter((self.fd, self.extra))
+
+
 def transcribe(path, name, includes):
     text = tu_text(path, includes); tmap = typedef_map(text); defs = extract(text, name)
     if name not in defs: raise ValueError('definition not found')
@@ -332,14 +448,17 @@ def transcribe(path, name, includes):
         if not isinstance(p, c_ast.Decl) or not scalar_type(p.type): raise ValueError('non-scalar parameter')
     for n in walk(fd.body):
         if isinstance(n, c_ast.UnaryOp) and n.op in ('*', '&'): raise ValueError('pointers/arrays/structs')
+    normalize_structure(fd, notes); uniquify_decls(fd)
     inline_calls(fd, asts, notes)
-    normalize_structure(fd, notes)
     extra_params = add_globals(fd, global_map(text, tmap), notes)
     check_scalar_only(fd)
-    hoist_and_init(fd, notes); ensure_return(fd, notes); rename_underscored(fd); copy_mutated_params(fd, notes)
+    hoist_and_init(fd, notes); flatten_blocks(fd, notes); ensure_return(fd, notes); rename_underscored(fd); copy_mutated_params(fd, notes)
     fd.decl.name = 'f'; fd.decl.type.type.declname = 'f' if hasattr(fd.decl.type.type, 'declname') else None
     for p in fd.decl.type.args.params: p.quals = []
-    return orig_src, G.visit(fd), bounds_of(fd), sorted(notes), (fd, extra_params)
+    inl = [re.sub(r' \(with loops\)$', '', n[len('inlined '):]) for n in notes if n.startswith('inlined')]
+    prelude = '\n'.join(clean(defs[k], tmap) for k in defs if k in inl)
+    nondet = any(n.startswith(('nondeterministic', 'library range')) for n in notes)
+    return orig_src, G.visit(fd), bounds_of(fd), sorted(notes), Info(fd, extra_params, prelude, nondet)
 
 
 def certify(src, bounds):
@@ -366,7 +485,7 @@ def certify(src, bounds):
     return res
 
 
-def native_check(orig_src, new_src, bounds, ncases=24, seed=1):
+def native_check(orig_src, new_src, bounds, ncases=24, seed=1, prelude=''):
     names = list(bounds); rng = random.Random(seed); cases = []
     for _ in range(ncases):
         row = []
@@ -379,7 +498,7 @@ def native_check(orig_src, new_src, bounds, ncases=24, seed=1):
     new2 = new_src.replace('f(', 'zz_new(', 1)
     args = ', '.join('(%s)strtoll(argv[%d], 0, 10)' % (t.strip() or 'long', i + 2) for i, t in enumerate(ptypes))
     args_u = ', '.join('(%s)strtoull(argv[%d], 0, 10)' % (t.strip() or 'long', i + 2) for i, t in enumerate(ptypes))
-    open(p, 'w').write('#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\nint unknown(void){return 0;}\n%s\n%s\nint main(int argc,char**argv){ if(argv[1][0]==\'o\') printf("%%lld\\n",(long long)%s(%s)); else printf("%%lld\\n",(long long)zz_new(%s)); return 0;}\n' % (orig_src, new2, fo, args, args)) 
+    open(p, 'w').write('#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <ctype.h>\nint unknown(void){return 0;}\n%s\n%s\n%s\nint main(int argc,char**argv){ if(argv[1][0]==\'o\') printf("%%lld\\n",(long long)%s(%s)); else printf("%%lld\\n",(long long)zz_new(%s)); return 0;}\n' % (prelude, orig_src, new2, fo, args, args)) 
     r = subprocess.run(['gcc', '-O0', '-w', '-o', p[:-2], p], capture_output=True, text=True)
     if r.returncode: return {'equivalent': None, 'detail': 'compile error: ' + r.stderr[:80]}
     same = 0; timeouts = 0; bad = 0
@@ -400,8 +519,8 @@ if __name__ == '__main__':
         if only and only not in c['function']: continue
         row = {'suite': c['suite'], 'file': Path(c['file']).name, 'function': c['function'], 'class': c['class']}
         try:
-            orig, new, bounds, notes, (fd, extra) = transcribe(c['file'], c['function'], inc); row.update({'stage': 'transcribed', 'notes': notes, 'bounds': bounds, 'transcription': new})
-            row['native'] = native_check(orig, new, bounds) if not extra and not any(n.startswith(('inlined', 'nondeterministic')) for n in notes) else {'equivalent': None, 'detail': 'not applicable (globals or callees)'}; row['certification'] = certify(new, bounds)
+            orig, new, bounds, notes, info = transcribe(c['file'], c['function'], inc); fd, extra = info; row.update({'stage': 'transcribed', 'notes': notes, 'bounds': bounds, 'transcription': new})
+            row['native'] = native_check(orig, new, bounds, prelude=info.prelude) if not extra and not info.nondet else {'equivalent': None, 'detail': 'not applicable (globals or nondeterministic stubs)'}; row['certification'] = certify(new, bounds)
             if row['certification']['status'] != 'PROVED' and any(lo < 0 for lo, hi in bounds.values()):    # full signed range includes overflowing inputs: retry under the (documented) precondition 0 <= x <= max/2
                 b2 = {k: ([0, hi // 2] if lo < 0 else [lo, hi]) for k, (lo, hi) in bounds.items()}; r2 = certify(new, b2)
                 if r2['status'] == 'PROVED': r2['precondition'] = b2; row['certification'] = r2
@@ -409,5 +528,5 @@ if __name__ == '__main__':
         except Exception as e: row.update({'stage': 'rejected', 'reason': str(e)[:90]})
         rows.append(row); print(row['file'], row['function'], row['stage'], row.get('reason') or row.get('certification', {}).get('status'), flush=True)
     if not only:
-        (ROOT / 'experiments/v081/auto_transcribe.json').write_text(json.dumps(rows, indent=1) + '\n')
+        (ROOT / 'experiments/v082/auto_transcribe.json').write_text(json.dumps(rows, indent=1) + '\n')
         print(collections.Counter(r['stage'] for r in rows)); print(collections.Counter(r.get('reason', '')[:40] for r in rows if r['stage'] == 'rejected').most_common(12))

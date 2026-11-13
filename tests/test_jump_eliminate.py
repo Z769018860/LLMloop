@@ -12,6 +12,11 @@ PROGRAMS = {
     'for_continue_break': ('int f(int n,int m){int x=0;int i;for(i=0;i<n;i++){if(i==m){continue;}if(i>m+5){break;}x=x+i;}return x+i;}', 3),
     'nested_break_return': ('int f(int n,int m){int x=0;int i=0;int j=0;while(i<n){j=0;while(j<n){if(j>m){break;}if(i*j>50){return x;}x=x+j;j=j+1;}i=i+1;}return x+7;}', 3),
     'break_nested_if': ('int f(int n,int m){int x=0;int i=0;while(i<n){if(i>1){if(x>m){break;}}x=x+i;i=i+1;}return x;}', 3),
+    'early_return_before_loops': ('int f(int n,int m){int x=0;int i=0;if(n==0){return m;}else{if(m==0){return n;}}while(i<n){x=x+i;i=i+1;}while(x>m&&m>=0){x=x-m-1;}return x+1;}', 3),
+    'early_return_two_loops_and_break': ('int f(int n,int m){int x=0;int i=0;if(n<2){return 5;}while(i<n){if(i>m){break;}x=x+i;i=i+1;}if(x>40){return x;}while(x<30){x=x+3;}return x;}', 3),
+    'do_while': ('int f(int n,int m){int x=0;int i=0;do{x=x+i;i=i+1;}while(i<n);return x+m;}', 3),
+    'do_while_return_inside': ('int f(int n,int m){int x=0;int i=0;do{if(x>m){return x;}x=x+i+1;i=i+1;}while(i<n);return x;}', 3),
+    'nested_do_while_in_while': ('int f(int n,int m){int x=0;int i=0;int j=0;while(i<n){j=0;do{x=x+1;j=j+1;}while(j<m);i=i+1;}return x;}', 3),
 }
 MULTMODP = '''unsigned int f(unsigned int a, unsigned int b){
 unsigned int m = 1u << 31; unsigned int p = 0;
@@ -49,3 +54,10 @@ def test_zlib_multmodp_and_lz4_optimal_bsid_are_equivalent_after_elimination():
 
 def test_programs_without_jumps_are_untouched():
     notes, new = transformed('int f(int n){int x=0;int i=0;while(i<n){x=x+i;i=i+1;}return x;}'); assert notes == [] and '__brk' not in new
+
+
+def test_early_return_and_two_loops_is_certified_end_to_end():
+    from llmloop.api import analyze_request
+    src = 'int f(int n){int x=0;int i=0;if(n<=0){return 0;}while(i<n){i=i+1;}while(x<i){x=x+1;}return 1/((x==i)||(n<0));}'
+    r = analyze_request({'source': src, 'frontend': 'typed_invariant_loops', 'range_invariants': {'invariants': [['i >= 0', 'i <= n', 'x == 0', '__done == 0', 'n >= 1'], ['x >= 0', 'x <= i', 'i == n', '__done == 0', 'n >= 1']]}, 'parameter_bounds': {'n': [-5, 1000]}, 'abi': 'LP64'})
+    assert r['status'].startswith('PROVED'), r
