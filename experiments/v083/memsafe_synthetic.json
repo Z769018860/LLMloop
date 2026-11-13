@@ -14,13 +14,17 @@
     "len_params": [
      "p__n"
     ],
+    "null_params": [
+     "p__null"
+    ],
+    "libcall_checks": 0,
     "notes": [
      "memory-safety pass: 1 checked accesses, 0 unchecked (calls)",
      "tracked bases: p"
     ],
-    "contract": "len >= each integer parameter",
-    "contract_strength": "length contract",
-    "contract_text": "(p__n >= n)",
+    "contract": "non-null pointers and len >= each integer parameter",
+    "contract_strength": "assumes non-NULL pointers and lengths",
+    "contract_text": "(p__null == 0) && (p__n >= n)",
     "method": "houdini_loops",
     "bounds": {
      "n": [
@@ -30,6 +34,10 @@
      "p__n": [
       0,
       1099511627776
+     ],
+     "p__null": [
+      0,
+      1
      ]
     }
    },
@@ -52,6 +60,10 @@
     "len_params": [
      "p__n"
     ],
+    "null_params": [
+     "p__null"
+    ],
+    "libcall_checks": 0,
     "notes": [
      "memory-safety pass: 1 checked accesses, 0 unchecked (calls)",
      "tracked bases: p"
@@ -59,7 +71,7 @@
    },
    "asan": {
     "runs": 60,
-    "asan_errors": 42
+    "asan_errors": 48
    }
   },
   {
@@ -78,18 +90,26 @@
     "len_params": [
      "s__n"
     ],
+    "null_params": [
+     "s__null"
+    ],
+    "libcall_checks": 0,
     "notes": [
      "memory-safety pass: 1 checked accesses, 0 unchecked (calls)",
      "tracked bases: s (string)"
     ],
-    "contract": "none",
-    "contract_strength": "strong",
-    "contract_text": null,
+    "contract": "non-null pointers",
+    "contract_strength": "assumes non-NULL pointer parameters",
+    "contract_text": "(s__null == 0)",
     "method": "houdini_loops",
     "bounds": {
      "s__n": [
       0,
       1099511627776
+     ],
+     "s__null": [
+      0,
+      1
      ]
     }
    },
@@ -114,18 +134,26 @@
     "len_params": [
      "s__n"
     ],
+    "null_params": [
+     "s__null"
+    ],
+    "libcall_checks": 0,
     "notes": [
      "memory-safety pass: 1 checked accesses, 0 unchecked (calls)",
      "tracked bases: s (string)"
     ],
-    "contract": "len >= 1",
-    "contract_strength": "weak (excludes empty buffers/strings)",
-    "contract_text": "(s__n >= 1)",
+    "contract": "non-null pointers and len >= 1",
+    "contract_strength": "assumes non-NULL pointers and lengths",
+    "contract_text": "(s__null == 0) && (s__n >= 1)",
     "method": "houdini_loops",
     "bounds": {
      "s__n": [
       0,
       1099511627776
+     ],
+     "s__null": [
+      0,
+      1
      ]
     }
    },
@@ -148,13 +176,17 @@
     "len_params": [
      "b__n"
     ],
+    "null_params": [
+     "b__null"
+    ],
+    "libcall_checks": 0,
     "notes": [
      "memory-safety pass: 1 checked accesses, 0 unchecked (calls)",
      "tracked bases: b"
     ],
-    "contract": "len >= each integer parameter",
-    "contract_strength": "length contract",
-    "contract_text": "(b__n >= n)",
+    "contract": "non-null pointers and len >= each integer parameter",
+    "contract_strength": "assumes non-NULL pointers and lengths",
+    "contract_text": "(b__null == 0) && (b__n >= n)",
     "method": "houdini_loops",
     "bounds": {
      "n": [
@@ -164,6 +196,10 @@
      "b__n": [
       0,
       1099511627776
+     ],
+     "b__null": [
+      0,
+      1
      ]
     }
    },
@@ -186,6 +222,10 @@
     "len_params": [
      "b__n"
     ],
+    "null_params": [
+     "b__null"
+    ],
+    "libcall_checks": 0,
     "notes": [
      "memory-safety pass: 1 checked accesses, 0 unchecked (calls)",
      "tracked bases: b"
@@ -193,7 +233,7 @@
    },
    "asan": {
     "runs": 60,
-    "asan_errors": 42
+    "asan_errors": 48
    }
   },
   {
@@ -212,13 +252,18 @@
      "d__n",
      "s__n"
     ],
+    "null_params": [
+     "d__null",
+     "s__null"
+    ],
+    "libcall_checks": 0,
     "notes": [
      "memory-safety pass: 2 checked accesses, 0 unchecked (calls)",
      "tracked bases: d, s"
     ],
-    "contract": "len >= each integer parameter",
-    "contract_strength": "length contract",
-    "contract_text": "(d__n >= n) && (s__n >= n)",
+    "contract": "non-null pointers and len >= each integer parameter",
+    "contract_strength": "assumes non-NULL pointers and lengths",
+    "contract_text": "(d__null == 0) && (s__null == 0) && (d__n >= n) && (s__n >= n)",
     "method": "houdini_loops",
     "bounds": {
      "n": [
@@ -232,6 +277,14 @@
      "s__n": [
       0,
       1099511627776
+     ],
+     "d__null": [
+      0,
+      1
+     ],
+     "s__null": [
+      0,
+      1
      ]
     }
    },
@@ -256,6 +309,11 @@
      "d__n",
      "s__n"
     ],
+    "null_params": [
+     "d__null",
+     "s__null"
+    ],
+    "libcall_checks": 0,
     "notes": [
      "memory-safety pass: 2 checked accesses, 0 unchecked (calls)",
      "tracked bases: d, s"
@@ -263,7 +321,7 @@
    },
    "asan": {
     "runs": 60,
-    "asan_errors": 42
+    "asan_errors": 52
    }
   },
   {
@@ -282,13 +340,17 @@
     "len_params": [
      "s__n"
     ],
+    "null_params": [
+     "s__null"
+    ],
+    "libcall_checks": 0,
     "notes": [
      "memory-safety pass: 2 checked accesses, 0 unchecked (calls)",
      "tracked bases: s (string)"
     ],
-    "contract": "none",
-    "contract_strength": "strong",
-    "contract_text": null,
+    "contract": "non-null pointers",
+    "contract_strength": "assumes non-NULL pointer parameters",
+    "contract_text": "(s__null == 0)",
     "method": "houdini_loops",
     "bounds": {
      "c": [
@@ -298,6 +360,10 @@
      "s__n": [
       0,
       1099511627776
+     ],
+     "s__null": [
+      0,
+      1
      ]
     }
    },
@@ -318,12 +384,14 @@
     ],
     "strings": [],
     "len_params": [],
+    "null_params": [],
+    "libcall_checks": 0,
     "notes": [
      "memory-safety pass: 2 checked accesses, 0 unchecked (calls)",
      "tracked bases: a"
     ],
     "contract": "none",
-    "contract_strength": "strong",
+    "contract_strength": "strong (no assumption)",
     "contract_text": null,
     "method": "trivial_invariants",
     "bounds": {
@@ -350,6 +418,8 @@
     ],
     "strings": [],
     "len_params": [],
+    "null_params": [],
+    "libcall_checks": 0,
     "notes": [
      "memory-safety pass: 2 checked accesses, 0 unchecked (calls)",
      "tracked bases: a"
@@ -358,6 +428,520 @@
    "asan": {
     "runs": 60,
     "asan_errors": 5
+   }
+  },
+  {
+   "case": "null_deref",
+   "expected_safe": false,
+   "memsafe": {
+    "status": "PROVED_MEMSAFE",
+    "checked_accesses": 1,
+    "unchecked_call_args": 0,
+    "bases": [
+     "p"
+    ],
+    "strings": [],
+    "len_params": [
+     "p__n"
+    ],
+    "null_params": [
+     "p__null"
+    ],
+    "libcall_checks": 0,
+    "notes": [
+     "memory-safety pass: 1 checked accesses, 0 unchecked (calls)",
+     "tracked bases: p"
+    ],
+    "contract": "non-null pointers and len >= 1",
+    "contract_strength": "assumes non-NULL pointers and lengths",
+    "contract_text": "(p__null == 0) && (p__n >= 1)",
+    "method": "typed_c_no_loops_after_stubbing",
+    "bounds": {
+     "p__n": [
+      0,
+      1099511627776
+     ],
+     "p__null": [
+      0,
+      1
+     ]
+    }
+   },
+   "asan": {
+    "runs": 60,
+    "asan_errors": 0
+   }
+  },
+  {
+   "case": "null_checked_ok",
+   "expected_safe": true,
+   "memsafe": {
+    "status": "PROVED_MEMSAFE",
+    "checked_accesses": 1,
+    "unchecked_call_args": 0,
+    "bases": [
+     "p"
+    ],
+    "strings": [],
+    "len_params": [
+     "p__n"
+    ],
+    "null_params": [
+     "p__null"
+    ],
+    "libcall_checks": 0,
+    "notes": [
+     "memory-safety pass: 1 checked accesses, 0 unchecked (calls)",
+     "tracked bases: p"
+    ],
+    "contract": "len >= 1",
+    "contract_strength": "weak (excludes empty buffers/strings)",
+    "contract_text": "(p__n >= 1)",
+    "method": "typed_c_no_loops_after_stubbing",
+    "bounds": {
+     "p__n": [
+      0,
+      1099511627776
+     ],
+     "p__null": [
+      0,
+      1
+     ]
+    }
+   },
+   "asan": {
+    "runs": 60,
+    "asan_errors": 0
+   }
+  },
+  {
+   "case": "free_ok",
+   "expected_safe": true,
+   "memsafe": {
+    "status": "PROVED_MEMSAFE",
+    "checked_accesses": 2,
+    "unchecked_call_args": 1,
+    "bases": [
+     "p"
+    ],
+    "strings": [],
+    "len_params": [
+     "p__n"
+    ],
+    "null_params": [
+     "p__null"
+    ],
+    "libcall_checks": 1,
+    "notes": [
+     "memory-safety pass: 2 checked accesses, 1 unchecked (calls)",
+     "tracked bases: p"
+    ],
+    "contract": "non-null pointers and len >= 1",
+    "contract_strength": "assumes non-NULL pointers and lengths",
+    "contract_text": "(p__null == 0) && (p__n >= 1)",
+    "method": "typed_c_no_loops_after_stubbing",
+    "bounds": {
+     "p__n": [
+      0,
+      1099511627776
+     ],
+     "p__null": [
+      0,
+      1
+     ]
+    }
+   },
+   "asan": {
+    "runs": 60,
+    "asan_errors": 0
+   }
+  },
+  {
+   "case": "use_after_free",
+   "expected_safe": false,
+   "memsafe": {
+    "status": "NOT_PROVED",
+    "checked_accesses": 3,
+    "unchecked_call_args": 1,
+    "bases": [
+     "p"
+    ],
+    "strings": [],
+    "len_params": [
+     "p__n"
+    ],
+    "null_params": [
+     "p__null"
+    ],
+    "libcall_checks": 1,
+    "notes": [
+     "memory-safety pass: 3 checked accesses, 1 unchecked (calls)",
+     "tracked bases: p"
+    ]
+   },
+   "asan": {
+    "runs": 51,
+    "asan_errors": 51
+   }
+  },
+  {
+   "case": "double_free",
+   "expected_safe": false,
+   "memsafe": {
+    "status": "NOT_PROVED",
+    "checked_accesses": 2,
+    "unchecked_call_args": 2,
+    "bases": [
+     "p"
+    ],
+    "strings": [],
+    "len_params": [
+     "p__n"
+    ],
+    "null_params": [
+     "p__null"
+    ],
+    "libcall_checks": 2,
+    "notes": [
+     "memory-safety pass: 2 checked accesses, 2 unchecked (calls)",
+     "tracked bases: p"
+    ]
+   },
+   "asan": {
+    "runs": 51,
+    "asan_errors": 51
+   }
+  },
+  {
+   "case": "memcpy_ok",
+   "expected_safe": true,
+   "memsafe": {
+    "status": "PROVED_MEMSAFE",
+    "checked_accesses": 2,
+    "unchecked_call_args": 2,
+    "bases": [
+     "d",
+     "s"
+    ],
+    "strings": [],
+    "len_params": [
+     "d__n",
+     "s__n"
+    ],
+    "null_params": [
+     "d__null",
+     "s__null"
+    ],
+    "libcall_checks": 2,
+    "notes": [
+     "memory-safety pass: 2 checked accesses, 2 unchecked (calls)",
+     "tracked bases: d, s"
+    ],
+    "contract": "non-null pointers and len >= each integer parameter",
+    "contract_strength": "assumes non-NULL pointers and lengths",
+    "contract_text": "(d__null == 0) && (s__null == 0) && (d__n >= n) && (s__n >= n)",
+    "method": "typed_c_no_loops_after_stubbing",
+    "bounds": {
+     "n": [
+      0,
+      4294967295
+     ],
+     "d__n": [
+      0,
+      1099511627776
+     ],
+     "s__n": [
+      0,
+      1099511627776
+     ],
+     "d__null": [
+      0,
+      1
+     ],
+     "s__null": [
+      0,
+      1
+     ]
+    }
+   },
+   "asan": {
+    "runs": 60,
+    "asan_errors": 0
+   }
+  },
+  {
+   "case": "memcpy_overflow",
+   "expected_safe": false,
+   "memsafe": {
+    "status": "PROVED_MEMSAFE",
+    "checked_accesses": 2,
+    "unchecked_call_args": 2,
+    "bases": [
+     "d",
+     "s"
+    ],
+    "strings": [],
+    "len_params": [
+     "d__n",
+     "s__n"
+    ],
+    "null_params": [
+     "d__null",
+     "s__null"
+    ],
+    "libcall_checks": 2,
+    "notes": [
+     "memory-safety pass: 2 checked accesses, 2 unchecked (calls)",
+     "tracked bases: d, s"
+    ],
+    "contract": "non-null pointers and len >= each integer parameter + 1",
+    "contract_strength": "assumes non-NULL pointers and lengths",
+    "contract_text": "(d__null == 0) && (s__null == 0) && (d__n >= n + 1) && (s__n >= n + 1)",
+    "method": "typed_c_no_loops_after_stubbing",
+    "bounds": {
+     "n": [
+      0,
+      4294967295
+     ],
+     "d__n": [
+      0,
+      1099511627776
+     ],
+     "s__n": [
+      0,
+      1099511627776
+     ],
+     "d__null": [
+      0,
+      1
+     ],
+     "s__null": [
+      0,
+      1
+     ]
+    }
+   },
+   "asan": {
+    "runs": 60,
+    "asan_errors": 0
+   }
+  },
+  {
+   "case": "memcpy_overlap",
+   "expected_safe": false,
+   "memsafe": {
+    "status": "NOT_PROVED",
+    "checked_accesses": 2,
+    "unchecked_call_args": 2,
+    "bases": [
+     "d"
+    ],
+    "strings": [],
+    "len_params": [
+     "d__n"
+    ],
+    "null_params": [
+     "d__null"
+    ],
+    "libcall_checks": 2,
+    "notes": [
+     "memory-safety pass: 2 checked accesses, 2 unchecked (calls)",
+     "tracked bases: d"
+    ]
+   },
+   "asan": {
+    "runs": 60,
+    "asan_errors": 53
+   }
+  },
+  {
+   "case": "void_buffer_ok",
+   "expected_safe": true,
+   "memsafe": {
+    "status": "PROVED_MEMSAFE",
+    "checked_accesses": 1,
+    "unchecked_call_args": 0,
+    "bases": [
+     "buf"
+    ],
+    "strings": [],
+    "len_params": [
+     "buf__n"
+    ],
+    "null_params": [
+     "buf__null"
+    ],
+    "libcall_checks": 0,
+    "notes": [
+     "memory-safety pass: 1 checked accesses, 0 unchecked (calls)",
+     "tracked bases: buf"
+    ],
+    "contract": "non-null pointers and len >= each integer parameter",
+    "contract_strength": "assumes non-NULL pointers and lengths",
+    "contract_text": "(buf__null == 0) && (buf__n >= n)",
+    "method": "houdini_loops",
+    "bounds": {
+     "n": [
+      0,
+      4294967295
+     ],
+     "buf__n": [
+      0,
+      1099511627776
+     ],
+     "buf__null": [
+      0,
+      1
+     ]
+    }
+   },
+   "asan": {
+    "runs": 60,
+    "asan_errors": 0
+   }
+  },
+  {
+   "case": "void_buffer_bug",
+   "expected_safe": false,
+   "memsafe": {
+    "status": "NOT_PROVED",
+    "checked_accesses": 1,
+    "unchecked_call_args": 0,
+    "bases": [
+     "buf"
+    ],
+    "strings": [],
+    "len_params": [
+     "buf__n"
+    ],
+    "null_params": [
+     "buf__null"
+    ],
+    "libcall_checks": 0,
+    "notes": [
+     "memory-safety pass: 1 checked accesses, 0 unchecked (calls)",
+     "tracked bases: buf"
+    ]
+   },
+   "asan": {
+    "runs": 60,
+    "asan_errors": 48
+   }
+  },
+  {
+   "case": "struct_array_ok",
+   "expected_safe": true,
+   "memsafe": {
+    "status": "PROVED_MEMSAFE",
+    "checked_accesses": 1,
+    "unchecked_call_args": 0,
+    "bases": [
+     "p"
+    ],
+    "strings": [],
+    "len_params": [
+     "p__n"
+    ],
+    "null_params": [
+     "p__null"
+    ],
+    "libcall_checks": 0,
+    "notes": [
+     "memory-safety pass: 1 checked accesses, 0 unchecked (calls)",
+     "tracked bases: p"
+    ],
+    "contract": "non-null pointers and len >= each integer parameter",
+    "contract_strength": "assumes non-NULL pointers and lengths",
+    "contract_text": "(p__null == 0) && (p__n >= n)",
+    "method": "houdini_loops",
+    "bounds": {
+     "n": [
+      0,
+      4294967295
+     ],
+     "p__n": [
+      0,
+      1099511627776
+     ],
+     "p__null": [
+      0,
+      1
+     ]
+    }
+   },
+   "asan": {
+    "runs": 60,
+    "asan_errors": 0
+   }
+  },
+  {
+   "case": "struct_array_bug",
+   "expected_safe": false,
+   "memsafe": {
+    "status": "NOT_PROVED",
+    "checked_accesses": 1,
+    "unchecked_call_args": 0,
+    "bases": [
+     "p"
+    ],
+    "strings": [],
+    "len_params": [
+     "p__n"
+    ],
+    "null_params": [
+     "p__null"
+    ],
+    "libcall_checks": 0,
+    "notes": [
+     "memory-safety pass: 1 checked accesses, 0 unchecked (calls)",
+     "tracked bases: p"
+    ]
+   },
+   "asan": {
+    "runs": 60,
+    "asan_errors": 48
+   }
+  },
+  {
+   "case": "struct_arrow_ok",
+   "expected_safe": true,
+   "memsafe": {
+    "status": "PROVED_MEMSAFE",
+    "checked_accesses": 1,
+    "unchecked_call_args": 0,
+    "bases": [
+     "p"
+    ],
+    "strings": [],
+    "len_params": [
+     "p__n"
+    ],
+    "null_params": [
+     "p__null"
+    ],
+    "libcall_checks": 0,
+    "notes": [
+     "memory-safety pass: 1 checked accesses, 0 unchecked (calls)",
+     "tracked bases: p"
+    ],
+    "contract": "non-null pointers and len >= 1",
+    "contract_strength": "assumes non-NULL pointers and lengths",
+    "contract_text": "(p__null == 0) && (p__n >= 1)",
+    "method": "typed_c_no_loops_after_stubbing",
+    "bounds": {
+     "p__n": [
+      0,
+      1099511627776
+     ],
+     "p__null": [
+      0,
+      1
+     ]
+    }
+   },
+   "asan": {
+    "runs": 60,
+    "asan_errors": 0
    }
   }
  ],

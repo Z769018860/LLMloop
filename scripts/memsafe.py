@@ -31,7 +31,7 @@ class MemSafe:
         self.string = {}          # base -> bool
         self.elem = {}            # base -> scalar word tuple
         self.checked = 0; self.unchecked = 0; self.k = 0; self.pre = []
-        self.len_params = []
+        self.len_params = []; self.null_params = []; self.nullable = set(); self.voidbase = set(); self.freeable = set(); self.libchecks = 0
 
     # ------------------------------------------------------------------ analysis
     def analyse(self):
@@ -43,7 +43,11 @@ class MemSafe:
             if isinstance(n, c_ast.Decl) and n.name: self.types[n.name] = desc(n.type)
         for p in params:
             d = desc(p.type)
-            if d and d[0] == 'p' and d[1] and d[1][0] == 's' and isinstance(p.type, c_ast.PtrDecl): self.base[p.name] = p.name; self.size[p.name] = ('param', p.name + '__n'); self.elem[p.name] = d[1][1]
+            if d and d[0] == 'p' and d[1] and d[1][0] == 's' and isinstance(p.type, c_ast.PtrDecl): self.base[p.name] = p.name; self.size[p.name] = ('param', p.name + '__n'); self.elem[p.name] = d[1][1]; self.nullable.add(p.name)
+            elif d and d[0] == 'p' and d[1] and d[1][0] == 'st' and isinstance(p.type, c_ast.PtrDecl) and d[1][1] in self.env.fields:          # struct pointer: base of struct ELEMENTS
+                self.base[p.name] = p.name; self.size[p.name] = ('param', p.name + '__n'); self.elem[p.name] = ('struct', d[1][1]); self.nullable.add(p.name)
+            elif d and d[0] == 'p' and d[1] and d[1][0] == 'v' and isinstance(p.type, c_ast.PtrDecl) and self.void_as_bytes(p.name):              # void *: a byte buffer when it is only cast to char pointers
+                self.base[p.name] = p.name; self.size[p.name] = ('param', p.name + '__n'); self.elem[p.name] = ('unsigned', 'char'); self.nullable.add(p.name); self.voidbase.add(p.name)
         for n in walk(fd.body):
             if isinstance(n, c_ast.Decl) and isinstance(n.type, c_ast.ArrayDecl) and isinstance(n.type.dim, c_ast.Constant) and isinstance(n.type.type, c_ast.TypeDecl):
                 d = desc(n.type.type)
@@ -90,9 +94,32 @@ class MemSafe:
                     if isinstance(x, c_ast.ID) and x.name in self.base: written.add(self.base[x.name])
         for b in set(self.base.values()):
             callees = passed.get(b, [])
+            if self.elem[b][0] == 'struct': self.string[b] = False; continue
             self.string[b] = (self.size[b][0] == 'param' and self.elem[b] in (('char',), ('unsigned', 'char'), ('signed', 'char')) and b not in written and bool(callees) and all(c in READONLY_STR for c in callees) and any(c in STR_USERS for c in callees)) or \
                              (self.size[b][0] == 'param' and self.elem[b] in (('char',), ('unsigned', 'char')) and b not in written and not callees and self.reads_until_nul(b))
+        for n in walk(fd.body):
+            if isinstance(n, c_ast.FuncCall) and isinstance(n.name, c_ast.ID) and n.name.name == 'free' and n.args:
+                b = self.base_of(n.args.exprs[0])
+                if b and b in self.nullable: self.freeable.add(b)
         if not self.base: raise ValueError('no trackable pointer')
+
+    def void_as_bytes(self, name):
+        par = {}
+        for n in walk(self.fd.body):
+            for nm, c in n.children(): par[id(c)] = (n, nm)
+        ok = False
+        for n in walk(self.fd.body):
+            if isinstance(n, c_ast.ID) and n.name == name:
+                pr, attr = par[id(n)]
+                if isinstance(pr, c_ast.Cast):
+                    d = desc(pr.to_type)
+                    if d and d[0] == 'p' and d[1] and d[1][0] == 's' and d[1][1] in (('char',), ('unsigned', 'char'), ('signed', 'char')): ok = True; continue
+                    return False
+                if isinstance(pr, c_ast.ExprList) or isinstance(pr, c_ast.BinaryOp) and pr.op in ('==', '!=') or isinstance(pr, c_ast.UnaryOp) and pr.op == '!' or isinstance(pr, (c_ast.If, c_ast.While)):
+                    continue
+                if isinstance(pr, c_ast.Decl): return False
+                return False
+        return ok
 
     def reads_until_nul(self, b):
         """a char base whose reads sit in a loop condition `*p` / `p[i]` (NUL-terminated walking)"""
@@ -135,17 +162,29 @@ class MemSafe:
         if isinstance(e, c_ast.UnaryOp) and e.op == '&' and isinstance(e.expr, c_ast.ArrayRef): return bin_('+', self.off(e.expr.name), self.ex(e.expr.subscript))
         raise ValueError('untracked pointer expression')
 
+    def nonnull_cond(self, b): return bin_('==', idn(self.nullvar(b)), num(0)) if b in self.nullable else num(1)
+
     def sizeast(self, b):
         k, v = self.size[b]; return num(v) if k == 'const' else idn(v)
 
-    def guard(self, b, E):
+    def nullvar(self, b): return b + '__null'
+
+    def freevar(self, b): return b + '__fr'
+
+    def guard(self, b, E, count=None):
+        """0*(1/cond): cond = in bounds (the access of `count` elements starting at E, default one element) AND the base is not NULL AND not freed"""
         N = self.sizeast(b); hi = '<=' if self.string.get(b) else '<'
-        cond = bin_('&&', bin_('>=', copy.deepcopy(E), num(0)), bin_(hi, bin_('+', copy.deepcopy(E), num(0)), N))
+        end = bin_('+', copy.deepcopy(E), num(0) if count is None else count)
+        cond = bin_('&&', bin_('>=', copy.deepcopy(E), num(0)), bin_(hi, end, N) if count is None else bin_('<=', end, N))
+        if count is not None: cond = bin_('||', bin_('==', copy.deepcopy(count), num(0)), cond)
+        if b in self.nullable: cond = bin_('&&', bin_('==', idn(self.nullvar(b)), num(0)), cond) if count is None else bin_('||', bin_('==', copy.deepcopy(count), num(0)), bin_('&&', bin_('==', idn(self.nullvar(b)), num(0)), cond))
+        if b in self.freeable: cond = bin_('&&', bin_('==', idn(self.freevar(b)), num(0)), cond)
         return bin_('*', num(0), bin_('/', num(1), cond))
 
     def nd(self, words): return c_ast.FuncCall(idn('nondet_' + NDNAME[words]), None)
 
     def read_value(self, b, E):
+        if self.elem[b][0] == 'struct': raise ValueError('struct element accessed as a value')
         self.checked += 1; g = self.guard(b, E); w = self.elem[b]
         if self.string.get(b):
             self.k += 1; t = '__s%d' % self.k
@@ -156,6 +195,21 @@ class MemSafe:
         return bin_('+', self.nd(w), g)
 
     # ------------------------------------------------------------------ expressions
+    def sacc(self, e):
+        """struct-element access `p->f`, `p[i].f`, `(*p).f` with a tracked struct base -> (base, offset AST, field desc) else None"""
+        if not isinstance(e, c_ast.StructRef): return None
+        root = e.name
+        if e.type == '->':
+            b = self.base_of(root)
+            if b and self.elem[b][0] == 'struct': off = self.off(root)
+            else: return None
+        else:
+            if isinstance(root, c_ast.ArrayRef) and self.base_of(root.name) and self.elem[self.base_of(root.name)][0] == 'struct': b = self.base_of(root.name); off = bin_('+', self.off(root.name), self.ex(root.subscript))
+            elif isinstance(root, c_ast.UnaryOp) and root.op == '*' and self.base_of(root.expr) and self.elem[self.base_of(root.expr)][0] == 'struct': b = self.base_of(root.expr); off = self.off(root.expr)
+            else: return None
+        fd_ = self.env.fields.get(self.elem[b][1], {}).get(e.field.name)
+        return b, off, fd_
+
     def acc(self, e):
         """(base, offset) if e is `*q` / `q[i]` with a tracked q, else None"""
         if isinstance(e, c_ast.UnaryOp) and e.op == '*' and self.base_of(e.expr): return self.base_of(e.expr), self.off(e.expr)
@@ -164,6 +218,11 @@ class MemSafe:
 
     def ex(self, e):
         if e is None: return None
+        sa = self.sacc(e)
+        if sa is not None:
+            b, off, fdsc = sa; self.checked += 1; g = self.guard(b, off)
+            if fdsc is None or fdsc[0] != 's': raise ValueError('struct field of non-scalar or unknown type')
+            return bin_('+', self.nd(fdsc[1]), g)
         a = self.acc(e)
         if a is not None: return self.read_value(a[0], a[1])
         if isinstance(e, c_ast.ID):
@@ -176,7 +235,11 @@ class MemSafe:
                     if lb != rb: raise ValueError('comparison of pointers with different bases')
                     return bin_(e.op, self.off(e.left), self.off(e.right))
                 other = e.right if lb else e.left
-                if isinstance(other, c_ast.Constant) and other.value == '0': return num(1 if e.op == '!=' else 0) if e.op in ('==', '!=') else (_ for _ in ()).throw(ValueError('ordered comparison with NULL'))
+                if isinstance(other, c_ast.Constant) and other.value == '0':
+                    if e.op not in ('==', '!='): raise ValueError('ordered comparison with NULL')
+                    b = lb or rb
+                    if b in self.nullable: return bin_('!=' if e.op == '==' else '==', idn(self.nullvar(b)), num(0))       # q == NULL  <=>  the base parameter is NULL
+                    return num(1 if e.op == '!=' else 0)
                 raise ValueError('comparison of a tracked pointer with an unknown pointer')
             if e.op == '-' and lb and rb:
                 if lb != rb: raise ValueError('difference of pointers with different bases')
@@ -184,7 +247,8 @@ class MemSafe:
             if e.op in ('+', '-') and (lb or rb): raise ValueError('pointer arithmetic as a value')
             e.left = self.ex(e.left); e.right = self.ex(e.right); return e
         if isinstance(e, c_ast.UnaryOp):
-            if e.op == '!' and self.base_of(e.expr): return num(0)
+            if e.op == '!' and self.base_of(e.expr):
+                b = self.base_of(e.expr); return bin_('!=', idn(self.nullvar(b)), num(0)) if b in self.nullable else num(0)
             if e.op in ('p++', 'p--', '++', '--') and self.base_of(e.expr) and isinstance(e.expr, c_ast.ID): raise ValueError('pointer increment as a value')
             if e.op in ('p++', 'p--', '++', '--') and self.acc(e.expr): raise ValueError('increment of a memory cell as a value')
             if e.op == '&': return e
@@ -194,7 +258,7 @@ class MemSafe:
             if self.base_of(e.expr): raise ValueError('pointer cast in scalar context')
             e.expr = self.ex(e.expr); return e
         if isinstance(e, c_ast.TernaryOp):
-            if self.base_of(e.cond): e.cond = num(1)
+            if self.base_of(e.cond): e.cond = self.nonnull_cond(self.base_of(e.cond))
             else: e.cond = self.ex(e.cond)
             e.iftrue = self.ex(e.iftrue); e.iffalse = self.ex(e.iffalse); return e
         if isinstance(e, c_ast.Assignment):
@@ -202,14 +266,52 @@ class MemSafe:
             if self.acc(e.lvalue): raise ValueError('memory write as a value')
             e.rvalue = self.ex(e.rvalue); return e
         if isinstance(e, c_ast.FuncCall):
+            self.libcall(e)
             if e.args:
                 for i, a in enumerate(e.args.exprs):
-                    if self.base_of(a): self.unchecked += 1               # the callee's accesses are not checked
+                    if self.base_of(a): self.unchecked += 1               # the callee's accesses are not checked (unless modelled by libcall)
                     else: e.args.exprs[i] = self.ex(a)
             return e
         for name, ch in list(e.children()):
             if isinstance(ch, c_ast.Node): setchild(e, name, self.ex(ch)) if isinstance(ch, (c_ast.ID, c_ast.BinaryOp, c_ast.UnaryOp, c_ast.Cast, c_ast.TernaryOp, c_ast.ArrayRef, c_ast.Assignment, c_ast.FuncCall, c_ast.Constant)) else None
         return e
+
+    def libcall(self, call):
+        """accesses made by well-known library functions on tracked pointers are checked as range accesses (+ memcpy overlap, free of a tracked base)"""
+        nm = call.name.name if isinstance(call.name, c_ast.ID) else None
+        args = call.args.exprs if call.args else []
+        def rng(a, n):
+            b = self.base_of(a)
+            if not b or self.elem[b][0] == 'struct': return None
+            self.libchecks += 1; self.checked += 1
+            return (b, self.off(a), self.guard(b, self.off(a), self.ex(copy.deepcopy(n))))
+        w = lambda g: self.pre.append(c_ast.Assignment('=', idn('__ms_w'), g))
+        if nm in ('memcpy', 'memmove', 'memcmp') and len(args) == 3:
+            r1, r2 = rng(args[0], args[2]), rng(args[1], args[2])
+            for r in (r1, r2):
+                if r: w(r[2])
+            if nm == 'memcpy' and r1 and r2 and r1[0] == r2[0]:                     # overlap of the two ranges is undefined
+                n = self.ex(copy.deepcopy(args[2]))
+                ov = bin_('||', bin_('==', copy.deepcopy(n), num(0)), bin_('||', bin_('<=', bin_('+', copy.deepcopy(r1[1]), copy.deepcopy(n)), copy.deepcopy(r2[1])), bin_('<=', bin_('+', copy.deepcopy(r2[1]), copy.deepcopy(n)), copy.deepcopy(r1[1]))))
+                w(bin_('*', num(0), bin_('/', num(1), ov))); self.notes.add('memcpy overlap checked')
+        elif nm == 'memset' and len(args) == 3:
+            r = rng(args[0], args[2])
+            if r: w(r[2])
+        elif nm in ('strncpy',) and len(args) == 3:
+            r = rng(args[0], args[2])
+            if r: w(r[2])
+        elif nm == 'strcpy' and len(args) == 2:
+            d, s = self.base_of(args[0]), self.base_of(args[1])
+            if d and s and self.string.get(s) and self.elem[d][0] != 'struct':          # copies strlen(s)+1 elements
+                n = bin_('+', bin_('-', self.sizeast(s), self.off(args[1])), num(1))
+                w(self.guard(d, self.off(args[0]), n)); self.libchecks += 1; self.checked += 1
+        elif nm == 'free' and len(args) == 1:
+            b = self.base_of(args[0])
+            if b and b in self.freeable:
+                o = self.off(args[0]); self.checked += 1; self.libchecks += 1
+                ok = bin_('||', bin_('!=', idn(self.nullvar(b)), num(0)), bin_('&&', bin_('==', copy.deepcopy(o), num(0)), bin_('==', idn(self.freevar(b)), num(0))))    # free(NULL) is fine; else offset 0 and not yet freed
+                w(bin_('*', num(0), bin_('/', num(1), ok)))
+                self.pre.append(c_ast.If(bin_('==', idn(self.nullvar(b)), num(0)), c_ast.Compound([c_ast.Assignment('=', idn(self.freevar(b)), num(1))]), None))
 
     # ------------------------------------------------------------------ statements
     def flush(self, out): r = self.pre; self.pre = []; return r + out
@@ -230,8 +332,16 @@ class MemSafe:
                 o = idn(lv.name + '__o')
                 if s.op == '=': return self.flush([c_ast.Assignment('=', o, self.off(s.rvalue))])
                 return self.flush([c_ast.Assignment('=', o, bin_(s.op[:-1], o, self.ex(s.rvalue)))])
+            sw = self.sacc(lv)
+            if sw is not None:
+                b, off, fdsc = sw
+                if fdsc is None or fdsc[0] != 's': raise ValueError('write to a struct field of non-scalar or unknown type')
+                self.checked += 1; out = [c_ast.Assignment('=', idn('__ms_w'), self.guard(b, off))]; rhs = self.ex(s.rvalue)
+                if s.op != '=': rhs = bin_(s.op[:-1], self.nd(fdsc[1]), rhs)
+                out.append(c_ast.Assignment('=', idn('__ms_w'), rhs)); return self.flush(out)
             a = self.acc(lv)
             if a is not None:
+                if self.elem[a[0]][0] == 'struct': raise ValueError('struct element assignment')
                 self.checked += 1; g = self.guard(a[0], a[1]); out = [c_ast.Assignment('=', idn('__ms_w'), g)]
                 rhs = self.ex(s.rvalue)
                 if s.op != '=': rhs = bin_(s.op[:-1], self.nd(self.elem[a[0]]), rhs)
@@ -244,13 +354,13 @@ class MemSafe:
             if a is not None:
                 self.checked += 1; return self.flush([c_ast.Assignment('=', idn('__ms_w'), self.guard(a[0], a[1])), c_ast.Assignment('=', idn('__ms_w'), bin_('+', self.nd(self.elem[a[0]]), num(1)))])
         if isinstance(s, c_ast.If):
-            s.cond = self.ex(s.cond) if not self.base_of(s.cond) else num(1); pre = self.pre; self.pre = []
+            s.cond = self.ex(s.cond) if not self.base_of(s.cond) else self.nonnull_cond(self.base_of(s.cond)); pre = self.pre; self.pre = []
             for x in ('iftrue', 'iffalse'):
                 b = getattr(s, x)
                 if b is not None: setattr(s, x, c_ast.Compound(self.stmts(b.block_items) if isinstance(b, c_ast.Compound) else self.stmt(b)))
             return pre + [s]
         if isinstance(s, c_ast.While):
-            s.cond = self.ex(s.cond) if not self.base_of(s.cond) else num(1); pre = self.pre; self.pre = []
+            s.cond = self.ex(s.cond) if not self.base_of(s.cond) else self.nonnull_cond(self.base_of(s.cond)); pre = self.pre; self.pre = []
             b = s.stmt; body = self.stmts(b.block_items) if isinstance(b, c_ast.Compound) else self.stmt(b)
             if pre: return [c_ast.While(num(1), c_ast.Compound(pre + [c_ast.If(c_ast.UnaryOp('!', s.cond), c_ast.Compound([c_ast.Break()]), None)] + body))]
             s.stmt = c_ast.Compound(body); return [s]
@@ -280,7 +390,11 @@ class MemSafe:
         params = list(fd.decl.type.args.params if fd.decl.type.args else [])
         for b in sorted({b for b in self.base.values() if self.size[b][0] == 'param'}):
             nm = b + '__n'; params.append(c_ast.Decl(nm, [], [], [], [], c_ast.TypeDecl(nm, [], None, c_ast.IdentifierType(['unsigned', 'long'])), None, None)); self.len_params.append(nm)
+        for b in sorted(self.nullable & set(self.base.values())):
+            nm = b + '__null'; params.append(c_ast.Decl(nm, [], [], [], [], c_ast.TypeDecl(nm, [], None, c_ast.IdentifierType(['int'])), None, None)); self.null_params.append(nm)
         fd.decl.type.args = c_ast.ParamList(params)
+        for b in sorted(self.freeable):
+            pre.append(c_ast.Decl(self.freevar(b), [], [], [], [], c_ast.TypeDecl(self.freevar(b), [], None, c_ast.IdentifierType(['int'])), num(0), None))
         keep_params = []
         decl_w = c_ast.Decl('__ms_w', [], [], [], [], c_ast.TypeDecl('__ms_w', [], None, c_ast.IdentifierType(['long', 'long'])), num(0), None)
         fd.body.block_items = [decl_w] + pre + body

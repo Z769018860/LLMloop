@@ -17,6 +17,19 @@ CASES = {
  'str_count_ok':  dict(src='unsigned f(const char *s, int c){ unsigned k = 0; unsigned i = 0; while (s[i]) { if (s[i] == c) k++; i++; } return k; }', ptrs=[('s', 'str', 'const char')], ints=['c'], safe=True),
  'local_array_ok': dict(src='unsigned f(unsigned n){ int a[10]; unsigned i; unsigned t = 0; for (i = 0; i < n % 10; i++) { a[i] = (int)i; t += (unsigned)a[i]; } return t; }', ptrs=[], ints=['n'], safe=True),
  'local_array_bug': dict(src='unsigned f(unsigned n){ int a[10]; unsigned i; unsigned t = 0; for (i = 0; i <= n % 11; i++) { a[i] = (int)i; t += (unsigned)a[i]; } return t; }', ptrs=[], ints=['n'], safe=False),
+ 'null_deref':     dict(src='unsigned f(const unsigned char *p){ return p[0]; }', ptrs=[('p', 'buf', 'const unsigned char')], ints=[], safe=False),
+ 'null_checked_ok': dict(src='unsigned f(const unsigned char *p){ if (p == 0) return 0; return p[0]; }', ptrs=[('p', 'buf', 'const unsigned char')], ints=[], safe=True),
+ 'free_ok':        dict(src='#include <stdlib.h>\nunsigned f(unsigned char *p){ unsigned s = p[0]; free(p); return s; }', ptrs=[('p', 'buf', 'unsigned char')], ints=[], safe=True, frees=True),
+ 'use_after_free': dict(src='#include <stdlib.h>\nunsigned f(unsigned char *p){ unsigned s = p[0]; free(p); return s + p[0]; }', ptrs=[('p', 'buf', 'unsigned char')], ints=[], safe=False, frees=True),
+ 'double_free':    dict(src='#include <stdlib.h>\nvoid f(unsigned char *p){ free(p); free(p); }', ptrs=[('p', 'buf', 'unsigned char')], ints=[], safe=False, frees=True),
+ 'memcpy_ok':      dict(src='#include <string.h>\nvoid f(unsigned char *d, const unsigned char *s, unsigned n){ memcpy(d, s, n); }', ptrs=[('d', 'buf', 'unsigned char'), ('s', 'buf', 'const unsigned char')], ints=['n'], safe=True),
+ 'memcpy_overflow': dict(src='#include <string.h>\nvoid f(unsigned char *d, const unsigned char *s, unsigned n){ memcpy(d, s, n + 1); }', ptrs=[('d', 'buf', 'unsigned char'), ('s', 'buf', 'const unsigned char')], ints=['n'], safe=False),
+ 'memcpy_overlap': dict(src='#include <string.h>\nvoid f(unsigned char *d, unsigned n){ memcpy(d + 1, d, n); }', ptrs=[('d', 'buf', 'unsigned char')], ints=['n'], safe=False),
+ 'void_buffer_ok': dict(src='unsigned f(void *buf, unsigned n){ unsigned char *p = (unsigned char *)buf; unsigned s = 0; unsigned i = 0; while (i < n) { s += p[i]; i++; } return s; }', ptrs=[('buf', 'void', 'void')], ints=['n'], safe=True),
+ 'void_buffer_bug': dict(src='unsigned f(void *buf, unsigned n){ unsigned char *p = (unsigned char *)buf; unsigned s = 0; unsigned i = 0; while (i <= n) { s += p[i]; i++; } return s; }', ptrs=[('buf', 'void', 'void')], ints=['n'], safe=False),
+ 'struct_array_ok': dict(src='struct S { unsigned a; unsigned char b; };\nunsigned f(struct S *p, unsigned n){ unsigned s = 0; unsigned i = 0; while (i < n) { s += p[i].a; i++; } return s; }', ptrs=[('p', 'struct', 'struct S')], ints=['n'], safe=True),
+ 'struct_array_bug': dict(src='struct S { unsigned a; unsigned char b; };\nunsigned f(struct S *p, unsigned n){ unsigned s = 0; unsigned i = 0; while (i < n) { s += p[i + 1].a; i++; } return s; }', ptrs=[('p', 'struct', 'struct S')], ints=['n'], safe=False),
+ 'struct_arrow_ok': dict(src='struct S { unsigned a; unsigned char b; };\nunsigned f(struct S *p){ return p->a + 1u; }', ptrs=[('p', 'struct', 'struct S')], ints=[], safe=True),
 }
 BOUNDS = {'n': [0, 1000], 'c': [0, 255]}
 
@@ -33,8 +46,9 @@ def asan_runs(case, contract, trials=60, seed=1):
     for i, (nm, kind, ty) in enumerate(ptrs):
         base = ty.replace('const ', '')
         extra = 1 if kind == 'str' else 0
-        decl += '    unsigned long L_%s = strtoul(argv[%d], 0, 10); %s *%s = (%s*)malloc((L_%s + %d) * sizeof(%s)); for (unsigned long q = 0; q < L_%s + %d; q++) %s[q] = %s;\n' % (nm, 1 + i, base, nm, base, nm, extra, base, nm, extra, nm, '(%s)(1 + rand() %% 120)' % base if kind == 'str' else '(%s)rand()' % base)
-        if kind == 'str': decl += '    %s[L_%s] = 0;\n' % (nm, nm)
+        elt = 'unsigned char' if kind == 'void' else base
+        decl += '    long LL_%s = strtol(argv[%d], 0, 10); unsigned long L_%s = LL_%s < 0 ? 0 : (unsigned long)LL_%s; %s *%s = 0;\n    if (LL_%s >= 0) { %s = (%s*)malloc((L_%s + %d) * sizeof(%s)); for (unsigned long q = 0; q < (L_%s + %d) * sizeof(%s); q++) ((unsigned char*)%s)[q] = %s; }\n' % (nm, 1 + i, nm, nm, nm, elt, nm, nm, nm, elt, nm, extra, elt, nm, extra, elt, nm, '(unsigned char)(1 + rand() % 120)' if kind == 'str' else '(unsigned char)rand()')
+        if kind == 'str': decl += '    if (%s) %s[L_%s] = 0;\n' % (nm, nm, nm)
     for j, nm in enumerate(ints): decl += '    long %s = strtol(argv[%d], 0, 10);\n' % (nm, 1 + len(ptrs) + j)
     main = '#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n%s\nint main(int argc, char **argv){\n%s    (void)%s(%s);\n    return 0;\n}\n' % (src.replace('f(', 'f(', 1), decl, fname, ', '.join(args))
     open(p, 'w').write(main)
@@ -43,14 +57,17 @@ def asan_runs(case, contract, trials=60, seed=1):
     rng = random.Random(seed); errs = 0; ran = 0
     env = dict(os.environ, ASAN_OPTIONS='detect_leaks=0')
     for _ in range(trials):
-        L = rng.randint(1 if contract in ('len >= 1', 'len >= each integer parameter + 1') else 0, 12); lens = [str(L)] * len(ptrs)
+        needs1 = contract and any(k in contract for k in ('len >= 1', 'integer parameter + 1'))
+        L = rng.randint(1 if needs1 or case.get('frees') else 0, 12); nonnull = contract and 'non-null' in contract
+        lens = [str(-1 if (not nonnull and rng.random() < 0.3) else L) for _ in ptrs]
         def val(nm):
             if nm == 'c': return rng.randint(0, 255)
             if not ptrs: return rng.randint(0, 1000)
-            if contract == 'len >= each integer parameter': return rng.randint(0, L)
-            if contract == 'len >= each integer parameter + 1': return rng.randint(0, L - 1)
+            if contract and contract.endswith('len >= each integer parameter'): return rng.randint(0, L)
+            if contract and contract.endswith('len >= each integer parameter + 1'): return rng.randint(0, L - 1)
             return rng.randint(0, 20)
         vals = [str(val(nm)) for nm in ints]
+        if any(x == '-1' for x in lens) and case.get('frees'): continue
         out = subprocess.run([p[:-2]] + lens + vals, capture_output=True, text=True, timeout=20, env=env); ran += 1
         errs += 'ERROR: AddressSanitizer' in out.stderr
     return {'runs': ran, 'asan_errors': errs}

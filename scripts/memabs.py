@@ -14,6 +14,7 @@ INTS = {('int',): 1, ('unsigned',): 1, ('unsigned', 'int'): 1, ('long',): 1, ('l
 NDNAME = {('int',): 'int', ('signed',): 'int', ('signed', 'int'): 'int', ('unsigned',): 'uint', ('unsigned', 'int'): 'uint', ('long',): 'long', ('long', 'int'): 'long', ('unsigned', 'long'): 'ulong', ('unsigned', 'long', 'int'): 'ulong',
           ('short',): 'short', ('short', 'int'): 'short', ('unsigned', 'short'): 'ushort', ('unsigned', 'short', 'int'): 'ushort', ('char',): 'char', ('unsigned', 'char'): 'uchar', ('signed', 'char'): 'char', ('long', 'long'): 'longlong',
           ('long', 'long', 'int'): 'longlong', ('unsigned', 'long', 'long'): 'ulonglong', ('unsigned', 'long', 'long', 'int'): 'ulonglong'}
+ND_RANGES = {k: (tuple(w), lo, hi) for k, w, lo, hi in [('int', ['int'], -2**31, 2**31 - 1), ('uint', ['unsigned', 'int'], 0, 2**32 - 1), ('short', ['short'], -2**15, 2**15 - 1), ('ushort', ['unsigned', 'short'], 0, 2**16 - 1), ('char', ['char'], -128, 127), ('uchar', ['unsigned', 'char'], 0, 255), ('long', ['long'], -2**63, 2**63 - 1), ('ulong', ['unsigned', 'long'], 0, 2**64 - 1), ('longlong', ['long', 'long'], -2**63, 2**63 - 1), ('ulonglong', ['unsigned', 'long', 'long'], 0, 2**64 - 1)]}
 SIZES = {'char': 1, 'uchar': 1, 'short': 2, 'ushort': 2, 'int': 4, 'uint': 4, 'long': 8, 'ulong': 8, 'longlong': 8, 'ulonglong': 8}
 from pycparser import c_generator
 _gen = c_generator.CGenerator()

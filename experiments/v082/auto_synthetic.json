@@ -1260,10 +1260,10 @@
   "case": "goto_forward_exits",
   "notes": [
    "dead trailing return",
-   "forward gotos eliminated (2)",
+   "gotos eliminated (2)",
    "memory abstraction (memory safety assumed)"
   ],
-  "transcription": "unsigned int f(unsigned int n)\n{\n  unsigned int s = 0;\n  unsigned int i = 0;\n  int v__gt = 0;\n  if (n > 100)\n  {\n    v__gt = 2;\n  }\n  if (v__gt == 0)\n  {\n    while ((i < (n % 20)) && (v__gt == 0))\n    {\n      if (i == 7)\n      {\n        v__gt = 1;\n      }\n      if (v__gt == 0)\n      {\n        s += i;\n        i++;\n      }\n    }\n\n    if (v__gt == 0)\n    {\n      s += 1000;\n    }\n  }\n  if ((v__gt == 0) || (v__gt == 1))\n  {\n    v__gt = 0;\n    s += 1;\n    return s;\n  }\n  if ((v__gt == 0) || (v__gt == 2))\n  {\n    v__gt = 0;\n    return 99;\n  }\n  return 0;\n}\n\n",
+  "transcription": "unsigned int f(unsigned int n)\n{\n  unsigned int s = 0;\n  unsigned int i = 0;\n  int v__gt1 = 0;\n  if (n > 100)\n  {\n    v__gt1 = 2;\n  }\n  if (v__gt1 == 0)\n  {\n    while ((i < (n % 20)) && (v__gt1 == 0))\n    {\n      if (i == 7)\n      {\n        v__gt1 = 1;\n      }\n      if (v__gt1 == 0)\n      {\n        s += i;\n        i++;\n      }\n    }\n\n    if (v__gt1 == 0)\n    {\n      s += 1000;\n    }\n  }\n  if ((v__gt1 == 0) || (v__gt1 == 1))\n  {\n    v__gt1 = 0;\n    s += 1;\n    return s;\n  }\n  if ((v__gt1 == 0) || (v__gt1 == 2))\n  {\n    v__gt1 = 0;\n    return 99;\n  }\n  return 0;\n}\n\n",
   "bounds": {
    "n": [
     0,
@@ -1285,9 +1285,9 @@
      "s >= 0",
      "i >= 0",
      "i <= 7",
-     "v__gt >= 0",
-     "v__gt <= 1",
-     "(v__gt == 0 or v__gt == 1)",
+     "v__gt1 >= 0",
+     "v__gt1 <= 1",
+     "(v__gt1 == 0 or v__gt1 == 1)",
      "__done >= 0",
      "__done <= 0",
      "__done == 0",
@@ -1316,9 +1316,9 @@
      "n - i >= 0",
      "n + i >= 0",
      "n >= i",
-     "n - v__gt >= 0",
-     "n + v__gt >= 0",
-     "n >= v__gt",
+     "n - v__gt1 >= 0",
+     "n + v__gt1 >= 0",
+     "n >= v__gt1",
      "n - __done >= 0",
      "n + __done >= 0",
      "n >= __done",
@@ -1326,18 +1326,18 @@
      "n + __rv >= 0",
      "n >= __rv",
      "s + i >= 0",
-     "s + v__gt >= 0",
+     "s + v__gt1 >= 0",
      "s - __done >= 0",
      "s + __done >= 0",
      "s >= __done",
      "s - __rv >= 0",
      "s + __rv >= 0",
      "s >= __rv",
-     "i - v__gt >= 0",
-     "i - v__gt <= 7",
-     "i + v__gt >= 0",
-     "i + v__gt <= 8",
-     "i >= v__gt",
+     "i - v__gt1 >= 0",
+     "i - v__gt1 <= 7",
+     "i + v__gt1 >= 0",
+     "i + v__gt1 <= 8",
+     "i >= v__gt1",
      "i - __done >= 0",
      "i - __done <= 7",
      "i + __done >= 0",
@@ -1348,16 +1348,16 @@
      "i + __rv >= 0",
      "i + __rv <= 7",
      "i >= __rv",
-     "v__gt - __done >= 0",
-     "v__gt - __done <= 1",
-     "v__gt + __done >= 0",
-     "v__gt + __done <= 1",
-     "v__gt >= __done",
-     "v__gt - __rv >= 0",
-     "v__gt - __rv <= 1",
-     "v__gt + __rv >= 0",
-     "v__gt + __rv <= 1",
-     "v__gt >= __rv",
+     "v__gt1 - __done >= 0",
+     "v__gt1 - __done <= 1",
+     "v__gt1 + __done >= 0",
+     "v__gt1 + __done <= 1",
+     "v__gt1 >= __done",
+     "v__gt1 - __rv >= 0",
+     "v__gt1 - __rv <= 1",
+     "v__gt1 + __rv >= 0",
+     "v__gt1 + __rv <= 1",
+     "v__gt1 >= __rv",
      "__done - __rv == 0",
      "(__done - __rv) % 2 == 0",
      "(__done - __rv) % 3 == 0",
@@ -1386,22 +1386,22 @@
      "i <= 999",
      "i <= 1000",
      "i <= 1001",
-     "v__gt >= -1",
-     "v__gt <= 2",
-     "v__gt <= 3",
-     "v__gt <= 6",
-     "v__gt <= 7",
-     "v__gt <= 8",
-     "v__gt <= 19",
-     "v__gt <= 20",
-     "v__gt <= 21",
-     "v__gt <= 98",
-     "v__gt <= 99",
-     "v__gt <= 100",
-     "v__gt <= 101",
-     "v__gt <= 999",
-     "v__gt <= 1000",
-     "v__gt <= 1001",
+     "v__gt1 >= -1",
+     "v__gt1 <= 2",
+     "v__gt1 <= 3",
+     "v__gt1 <= 6",
+     "v__gt1 <= 7",
+     "v__gt1 <= 8",
+     "v__gt1 <= 19",
+     "v__gt1 <= 20",
+     "v__gt1 <= 21",
+     "v__gt1 <= 98",
+     "v__gt1 <= 99",
+     "v__gt1 <= 100",
+     "v__gt1 <= 101",
+     "v__gt1 <= 999",
+     "v__gt1 <= 1000",
+     "v__gt1 <= 1001",
      "__done >= -1",
      "__done <= 1",
      "__done <= 2",
@@ -1446,10 +1446,10 @@
   "case": "goto_cleanup_chain",
   "notes": [
    "dead trailing return",
-   "forward gotos eliminated (2)",
+   "gotos eliminated (2)",
    "memory abstraction (memory safety assumed)"
   ],
-  "transcription": "unsigned int f(unsigned int n)\n{\n  unsigned int s = 0;\n  unsigned int r = 0;\n  int v__gt = 0;\n  if ((n % 3) == 0)\n  {\n    v__gt = 2;\n  }\n  if (v__gt == 0)\n  {\n    s = n * 2;\n    if ((n % 5) == 0)\n    {\n      v__gt = 1;\n    }\n    if (v__gt == 0)\n    {\n      s += 7;\n      r = 1;\n    }\n  }\n  if ((v__gt == 0) || (v__gt == 1))\n  {\n    v__gt = 0;\n    s += 100;\n  }\n  if ((v__gt == 0) || (v__gt == 2))\n  {\n    v__gt = 0;\n    s += 1;\n    return s + r;\n  }\n  return 0;\n}\n\n",
+  "transcription": "unsigned int f(unsigned int n)\n{\n  unsigned int s = 0;\n  unsigned int r = 0;\n  int v__gt1 = 0;\n  if ((n % 3) == 0)\n  {\n    v__gt1 = 1;\n  }\n  if (v__gt1 == 0)\n  {\n    s = n * 2;\n    if ((n % 5) == 0)\n    {\n      v__gt1 = 2;\n    }\n    if (v__gt1 == 0)\n    {\n      s += 7;\n      r = 1;\n    }\n  }\n  if ((v__gt1 == 0) || (v__gt1 == 2))\n  {\n    v__gt1 = 0;\n    s += 100;\n  }\n  if ((v__gt1 == 0) || (v__gt1 == 1))\n  {\n    v__gt1 = 0;\n    s += 1;\n    return s + r;\n  }\n  return 0;\n}\n\n",
   "bounds": {
    "n": [
     0,
@@ -1471,6 +1471,95 @@
   "stage": "certified"
  },
  {
+  "case": "goto_backward_retry",
+  "notes": [
+   "backward goto -> loop",
+   "gotos eliminated (1)",
+   "memory abstraction (memory safety assumed)"
+  ],
+  "transcription": "unsigned int f(unsigned int n)\n{\n  unsigned int tries = 0;\n  unsigned int s = n % 50;\n  while (1)\n  {\n    s = (s / 2) + 1;\n    tries++;\n    if ((s > 3) && (tries < 20))\n    {\n      continue;\n    }\n    break;\n  }\n\n  return s + tries;\n}\n\n",
+  "bounds": {
+   "n": [
+    0,
+    4294967295
+   ]
+  },
+  "native": {
+   "equivalent": true,
+   "cases": 24,
+   "agree": 24,
+   "both_timeout": 0,
+   "one_sided_timeout": 0
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "trivial_invariants",
+   "invariant": [
+    "True"
+   ],
+   "rounds": 1
+  },
+  "stage": "certified"
+ },
+ {
+  "case": "goto_nested_label",
+  "notes": [
+   "gotos eliminated (1)",
+   "memory abstraction (memory safety assumed)"
+  ],
+  "transcription": "unsigned int f(unsigned int n)\n{\n  unsigned int s = 0;\n  unsigned int i = 0;\n  int v__gt1 = 0;\n  while (i < (n % 20))\n  {\n    i++;\n    if ((i % 3) == 0)\n    {\n      v__gt1 = 1;\n    }\n    if (v__gt1 == 0)\n    {\n      s += i;\n    }\n    if ((v__gt1 == 0) || (v__gt1 == 1))\n    {\n      v__gt1 = 0;\n      s += 1;\n    }\n  }\n\n  return s;\n}\n\n",
+  "bounds": {
+   "n": [
+    0,
+    4294967295
+   ]
+  },
+  "native": {
+   "equivalent": true,
+   "cases": 24,
+   "agree": 24,
+   "both_timeout": 0,
+   "one_sided_timeout": 0
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "trivial_invariants",
+   "invariant": [
+    "True"
+   ],
+   "rounds": 1
+  },
+  "stage": "certified"
+ },
+ {
+  "case": "asm_barrier_and_output",
+  "notes": [
+   "implicitly declared function __asm_havoc (C: returns int)",
+   "memory abstraction (memory safety assumed)",
+   "nondeterministic result for __asm_havoc"
+  ],
+  "transcription": "unsigned int f(unsigned int n)\n{\n  unsigned int s = n % 100;\n  unsigned int t = 0;\n  unsigned int i = 0;\n  t = nondet_uint();\n  while (i < 10)\n  {\n    s = s % 1000;\n    i++;\n  }\n\n  return s;\n}\n\n",
+  "bounds": {
+   "n": [
+    0,
+    4294967295
+   ]
+  },
+  "native": {
+   "equivalent": null,
+   "detail": "nondeterministic stub: no deterministic original to compare"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "trivial_invariants",
+   "invariant": [
+    "True"
+   ],
+   "rounds": 1
+  },
+  "stage": "certified"
+ },
+ {
   "case": "mem_sum_unsigned",
   "notes": [
    "for -> while",
@@ -1487,7 +1576,7 @@
   },
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpef59anar/h.c: In function \u2018main\u2019:\n/tmp/tmpef59anar/h.c:29:79: error: too"
+   "detail": "compile error: /tmp/tmpkls69vkg/h.c: In function \u2018main\u2019:\n/tmp/tmpkls69vkg/h.c:29:79: error: too"
   },
   "certification": {
    "status": "PROVED",
@@ -1515,7 +1604,7 @@
   },
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpnwxdplh5/h.c: In function \u2018f\u2019:\n/tmp/tmpnwxdplh5/h.c:10:17: error: invali"
+   "detail": "compile error: /tmp/tmpl8nijyww/h.c: In function \u2018f\u2019:\n/tmp/tmpl8nijyww/h.c:10:17: error: invali"
   },
   "certification": {
    "status": "PROVED",
@@ -1543,7 +1632,7 @@
   },
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmp_e59gvdk/h.c: In function \u2018main\u2019:\n/tmp/tmp_e59gvdk/h.c:32:79: error: too"
+   "detail": "compile error: /tmp/tmpwtmiih64/h.c: In function \u2018main\u2019:\n/tmp/tmpwtmiih64/h.c:32:79: error: too"
   },
   "certification": {
    "status": "PROVED",
@@ -1574,7 +1663,7 @@
   },
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpotoj0kop/h.c: In function \u2018main\u2019:\n/tmp/tmpotoj0kop/h.c:28:79: error: too"
+   "detail": "compile error: /tmp/tmp82v15519/h.c: In function \u2018main\u2019:\n/tmp/tmp82v15519/h.c:28:79: error: too"
   },
   "certification": {
    "status": "PROVED",
@@ -1601,7 +1690,7 @@
   },
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpf6x6yh03/h.c: In function \u2018main\u2019:\n/tmp/tmpf6x6yh03/h.c:31:79: error: too"
+   "detail": "compile error: /tmp/tmpjl2bz09v/h.c: In function \u2018main\u2019:\n/tmp/tmpjl2bz09v/h.c:31:79: error: too"
   },
   "certification": {
    "status": "STUCK:top/loop0/body operations defined",
@@ -1626,7 +1715,7 @@
   },
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpnp1tss9n/h.c: In function \u2018main\u2019:\n/tmp/tmpnp1tss9n/h.c:31:79: error: too"
+   "detail": "compile error: /tmp/tmp7k00u1un/h.c: In function \u2018main\u2019:\n/tmp/tmp7k00u1un/h.c:31:79: error: too"
   },
   "certification": {
    "status": "STUCK:top/loop0/body operations defined",
@@ -1651,7 +1740,7 @@
   },
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmp3b3pi5ip/h.c: In function \u2018main\u2019:\n/tmp/tmp3b3pi5ip/h.c:31:79: error: too"
+   "detail": "compile error: /tmp/tmpz9yt2jt2/h.c: In function \u2018main\u2019:\n/tmp/tmpz9yt2jt2/h.c:31:79: error: too"
   },
   "certification": {
    "status": "STUCK:top/loop0/body operations defined",

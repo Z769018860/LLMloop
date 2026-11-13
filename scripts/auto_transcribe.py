@@ -92,7 +92,51 @@ def extract(text, name):
     return defs
 
 
+def rewrite_asm(src):
+    """asm statements become `__asm_havoc(&out1, &out2, ...)`: an opaque call that overwrites its output operands (a barrier-only asm has none); input operands are ignored"""
+    out = []; i = 0
+    while True:
+        m = re.search(r'\b(?:__asm__|asm)\b\s*(?:volatile\b|__volatile__\b)?\s*\(', src[i:])
+        if not m: out.append(src[i:]); break
+        s = i + m.start(); k = i + m.end(); depth = 1; instr = False; sections = [[]]; cur = ''
+        while k < len(src) and depth:
+            ch = src[k]
+            if instr:
+                cur += ch
+                if ch == '\\': k += 1; cur += src[k]
+                elif ch == '"': instr = False
+            elif ch == '"': instr = True; cur += ch
+            elif ch == '(': depth += 1; cur += ch
+            elif ch == ')':
+                depth -= 1
+                if depth: cur += ch
+            elif ch == ':' and depth == 1: sections.append(cur); cur = ''; sections[-1:] = [sections[-1]] if False else sections[-1:]
+            else: cur += ch
+            k += 1
+        parts = [x for x in sections]
+        # sections list holds [ [] , text-before-first-colon, outputs, inputs ...]: rebuild properly
+        out.append(src[i:s]); body = src[s:k]
+        segs = []; d = 0; instr = False; cur = ''
+        inner = body[body.index('(') + 1:-1]
+        for ch in inner:
+            if instr:
+                cur += ch
+                if ch == '"': instr = False
+            elif ch == '"': instr = True; cur += ch
+            elif ch in '([': d += 1; cur += ch
+            elif ch in ')]': d -= 1; cur += ch
+            elif ch == ':' and d == 0: segs.append(cur); cur = ''
+            else: cur += ch
+        segs.append(cur)
+        outs = segs[1] if len(segs) > 1 else ''
+        args = []
+        for om in re.finditer(r'"[^"]*"\s*\(((?:[^()]|\([^()]*\))*)\)', outs): args.append('&(%s)' % om.group(1))
+        out.append('__asm_havoc(%s)' % ', '.join(args)); i = k
+    return ''.join(out)
+
+
 def clean(src, tmap):
+    src = rewrite_asm(src)
     src = re.sub(r'__attribute__\(\(.*?\)\)', '', src)
     src = re.sub(r'__builtin_offsetof\s*\([^()]*(?:\([^()]*\)[^()]*)*\)', 'nondet_ulong()', src)       # an offset: an arbitrary size_t value (sound)
     src = re.sub(r'__builtin_constant_p\s*\([^()]*(?:\([^()]*\)[^()]*)*\)', '0', src)
@@ -223,6 +267,8 @@ def normalize_structure(fd, notes):
         out = []
         for it in items:
             if isinstance(it, c_ast.Cast) and isinstance(it.expr, c_ast.Constant): continue
+            if isinstance(it, c_ast.Label):
+                inner = tr([it.stmt]); it.stmt = inner[0] if len(inner) == 1 else c_ast.Compound(inner); out.append(it); continue
             if isinstance(it, c_ast.Switch):
                 if any(isinstance(x, c_ast.Continue) for x in walk(it)) and False: raise ValueError('continue in switch')
                 out += tr(conv_switch(it)); continue
@@ -615,59 +661,94 @@ def normalize_chars(fd, notes):
 
 
 def eliminate_gotos(fd, notes):
-    """forward gotos to labels at function level (the usual error/cleanup exits) become a pending-jump variable: `goto L` -> `__gt = id(L)`, the statements that follow (in every enclosing list) are guarded by
-    `__gt == 0`, loops that contain a goto get `&& __gt == 0`, and the code of a label runs when no jump is pending or the pending jump targets it.  Backward gotos, nested labels: rejected."""
-    items = fd.body.block_items or []
+    """gotos whose label sits in a statement list (any nesting level).  BACKWARD goto (label earlier in the same list, no loop in between): the region from the label to the last goto becomes
+    `while (1) { region; break; }` with `goto L` -> `continue`.  FORWARD goto: a pending-jump variable per list (`goto L` -> `__gtK = id(L)`; the statements that follow, in every enclosing list, are guarded by
+    `__gtK == 0`; loops containing a goto get `&& __gtK == 0`; the code of a label runs when no jump is pending or the pending jump targets it).  Lists are processed innermost first.
+    Rejected: gotos into blocks, gotos inside an inner loop that target a label of an outer list when the loop is a for/do/switch (normalize first), forward and backward gotos to the same label."""
     gotos = [n for n in walk(fd.body) if isinstance(n, c_ast.Goto)]
     labels = [n for n in walk(fd.body) if isinstance(n, c_ast.Label)]
     if not gotos and not labels: return
-    top_labels = [i for i, it in enumerate(items) if isinstance(it, c_ast.Label)]
-    if len(top_labels) != len(labels): raise ValueError('label inside a nested block')
-    ids = {items[i].name: k + 1 for k, i in enumerate(top_labels)}
-    pos = {items[i].name: i for i in top_labels}
-    if any(g.name not in ids for g in gotos): raise ValueError('goto to an unknown label')
-    def has_goto(n): return any(isinstance(x, c_ast.Goto) for x in walk(n))
-    def tr_list(stmts):
+    flags = []; counter = [0]
+    def has_goto(n, names=None): return any(isinstance(x, c_ast.Goto) and (names is None or x.name in names) for x in walk(n))
+    def lists():
         out = []
-        for k, s in enumerate(stmts):
-            hg = has_goto(s); new = tr_stmt(s); out += new
-            if hg and k + 1 < len(stmts):
-                rest = tr_list(stmts[k + 1:]); out.append(c_ast.If(c_ast.BinaryOp('==', c_ast.ID('__gt'), c_ast.Constant('int', '0')), c_ast.Compound(rest), None)); break
-        return out
-    def tr_stmt(s):
-        if isinstance(s, c_ast.Goto): return [c_ast.Assignment('=', c_ast.ID('__gt'), c_ast.Constant('int', str(ids[s.name])))]
-        if isinstance(s, c_ast.Compound): return [c_ast.Compound(tr_list(list(s.block_items or [])))]
-        if isinstance(s, c_ast.If):
-            for a in ('iftrue', 'iffalse'):
-                b = getattr(s, a)
-                if b is not None: setattr(s, a, c_ast.Compound(tr_list(list(b.block_items) if isinstance(b, c_ast.Compound) else [b])))
+        def rec(node):
+            for _, c in node.children(): rec(c)
+            if isinstance(node, c_ast.Compound): out.append(node)
+        rec(fd.body); return out
+    for comp in lists():
+        items = comp.block_items or []
+        names = {it.name for it in items if isinstance(it, c_ast.Label)}
+        if not names: continue
+        # ---- backward gotos
+        for lab in sorted(names):
+            idx = next(k for k, it in enumerate(items) if isinstance(it, c_ast.Label) and it.name == lab)
+            where = [k for k, it in enumerate(items) if has_goto(it, {lab})]
+            back = [k for k in where if k >= idx]; fwd = [k for k in where if k < idx]
+            if back and fwd: raise ValueError('forward and backward gotos to the same label')
+            if back:
+                jmax = max(back); region = [items[idx].stmt] + items[idx + 1:jmax + 1]
+                for it in region:
+                    for n in walk(it):
+                        if isinstance(n, (c_ast.While, c_ast.For, c_ast.DoWhile, c_ast.Switch)) and has_goto(n, {lab}): raise ValueError('backward goto inside an inner loop')
+                par = parents_of(c_ast.Compound(region))
+                for it in region:
+                    for n in list(walk(it)):
+                        if isinstance(n, c_ast.Goto) and n.name == lab:
+                            pr, attr = par[id(n)] if id(n) in par else (None, None)
+                            if pr is None: region[region.index(it)] = c_ast.Continue()
+                            else: setchild(pr, attr, c_ast.Continue())
+                loop = c_ast.While(c_ast.Constant('int', '1'), c_ast.Compound(region + [c_ast.Break()]))
+                items = items[:idx] + [loop] + items[jmax + 1:]; comp.block_items = items; notes.add('backward goto -> loop')
+        names = {it.name for it in items if isinstance(it, c_ast.Label)}
+        if not names: continue
+        # ---- forward gotos to the labels of this list
+        counter[0] += 1; gt = '__gt%d' % counter[0]; flags.append(gt)
+        ids = {nm: k + 1 for k, nm in enumerate(sorted(names))}
+        def tr_list(stmts):
+            out = []
+            for k, s in enumerate(stmts):
+                hg = has_goto(s, names); new = tr_stmt(s); out += new
+                if hg and k + 1 < len(stmts):
+                    rest = tr_list(stmts[k + 1:]); out.append(c_ast.If(c_ast.BinaryOp('==', c_ast.ID(gt), c_ast.Constant('int', '0')), c_ast.Compound(rest), None)); break
+            return out
+        def tr_stmt(s):
+            if isinstance(s, c_ast.Goto) and s.name in names: return [c_ast.Assignment('=', c_ast.ID(gt), c_ast.Constant('int', str(ids[s.name])))]
+            if isinstance(s, c_ast.Compound): s.block_items = tr_list(list(s.block_items or [])); return [s]
+            if isinstance(s, c_ast.If):
+                for a in ('iftrue', 'iffalse'):
+                    b = getattr(s, a)
+                    if b is not None: setattr(s, a, c_ast.Compound(tr_list(list(b.block_items) if isinstance(b, c_ast.Compound) else [b])))
+                return [s]
+            if isinstance(s, c_ast.While):
+                body = list(s.stmt.block_items) if isinstance(s.stmt, c_ast.Compound) else [s.stmt]
+                if has_goto(s, names): s.cond = c_ast.BinaryOp('&&', s.cond, c_ast.BinaryOp('==', c_ast.ID(gt), c_ast.Constant('int', '0')))
+                s.stmt = c_ast.Compound(tr_list(body)); return [s]
+            if isinstance(s, c_ast.Label): return [s]
+            if has_goto(s, names): raise ValueError('goto inside a for/do/switch (normalize first)')
             return [s]
-        if isinstance(s, c_ast.While):
-            body = list(s.stmt.block_items) if isinstance(s.stmt, c_ast.Compound) else [s.stmt]
-            if has_goto(s): s.cond = c_ast.BinaryOp('&&', s.cond, c_ast.BinaryOp('==', c_ast.ID('__gt'), c_ast.Constant('int', '0')))
-            s.stmt = c_ast.Compound(tr_list(body)); return [s]
-        if isinstance(s, c_ast.Switch) or isinstance(s, (c_ast.For, c_ast.DoWhile)) and has_goto(s): raise ValueError('goto inside a for/do/switch (normalize first)')
-        return [s]
-    # segments: [before first label] [L1: ...] [L2: ...]
-    segs = []; cur = []; curlab = None
-    for it in items:
-        if isinstance(it, c_ast.Label):
-            segs.append((curlab, cur)); cur = [it.stmt]; curlab = it.name
-        else: cur.append(it)
-    segs.append((curlab, cur))
-    for lab in ids:                               # forward only
-        if any(isinstance(g, c_ast.Goto) and g.name == lab and not any(g in list(walk(it)) for it in sum([s for l, s in segs[:ids[lab]]], [])) for g in gotos): raise ValueError('backward goto')
-    decl = c_ast.Decl('__gt', [], [], [], [], c_ast.TypeDecl('__gt', [], None, c_ast.IdentifierType(['int'])), c_ast.Constant('int', '0'), None)
-    lead = [it for it in items if isinstance(it, c_ast.Decl)]; k = 0
-    new = []
-    for lab, body in segs:
-        body = [b for b in body if not isinstance(b, c_ast.Decl)] if True else body
-        tb = tr_list(body)
-        if lab is None: new += tb
-        else:
-            cond = c_ast.BinaryOp('||', c_ast.BinaryOp('==', c_ast.ID('__gt'), c_ast.Constant('int', '0')), c_ast.BinaryOp('==', c_ast.ID('__gt'), c_ast.Constant('int', str(ids[lab]))))
-            new.append(c_ast.If(cond, c_ast.Compound([c_ast.Assignment('=', c_ast.ID('__gt'), c_ast.Constant('int', '0'))] + tb), None))
-    fd.body.block_items = lead + [decl] + new; notes.add('forward gotos eliminated (%d)' % len(gotos))
+        segs = []; cur = []; curlab = None
+        for it in items:
+            if isinstance(it, c_ast.Label): segs.append((curlab, cur)); cur = [it.stmt]; curlab = it.name
+            else: cur.append(it)
+        segs.append((curlab, cur))
+        pos = {lab: k for k, (lab, _) in enumerate(segs) if lab}
+        for lab, k in pos.items():                   # forward only: every goto to lab comes from an earlier segment
+            for later in segs[k:]:
+                if any(has_goto(b, {lab}) for b in later[1]): raise ValueError('backward goto (after forward elimination)')
+        new = []
+        for lab, body in segs:
+            tb = tr_list(body)
+            if lab is None: new += tb
+            else:
+                cond = c_ast.BinaryOp('||', c_ast.BinaryOp('==', c_ast.ID(gt), c_ast.Constant('int', '0')), c_ast.BinaryOp('==', c_ast.ID(gt), c_ast.Constant('int', str(ids[lab]))))
+                new.append(c_ast.If(cond, c_ast.Compound([c_ast.Assignment('=', c_ast.ID(gt), c_ast.Constant('int', '0'))] + tb), None))
+        comp.block_items = new
+    if any(isinstance(n, (c_ast.Goto, c_ast.Label)) for n in walk(fd.body)): raise ValueError('goto/label that could not be eliminated (jump into a block or out of a loop body list)')
+    items = fd.body.block_items; k = 0
+    while k < len(items) and isinstance(items[k], c_ast.Decl): k += 1
+    decls = [c_ast.Decl(f, [], [], [], [], c_ast.TypeDecl(f, [], None, c_ast.IdentifierType(['int'])), c_ast.Constant('int', '0'), None) for f in flags]
+    items[k:k] = decls; notes.add('gotos eliminated (%d)' % len(gotos))
 
 
 def hoist_effects(fd, notes):
@@ -801,6 +882,7 @@ def bounds_of(fd):
         if p.name is None: continue
         if p.name in forced: b[p.name] = forced[p.name]; continue
         if p.name.endswith('__n'): b[p.name] = [0, 1 << 40]; continue
+        if p.name.endswith('__null'): b[p.name] = [0, 1]; continue
         bits, signed = INTS[tuple(p.type.type.names)]; b[p.name] = [-(1 << (bits - 1)), (1 << (bits - 1)) - 1] if signed else [0, (1 << bits) - 1]
     return b
 
@@ -834,8 +916,7 @@ def transcribe(path, name, includes, memsafe=False):
     notes = set()
     if name not in asts: raise ValueError('parse failure')
     orig_src = clean(defs[name], tmap); fd = copy.deepcopy(asts[name])
-    eliminate_gotos(fd, notes)
-    normalize_structure(fd, notes); uniquify_decls(fd)
+    normalize_structure(fd, notes); eliminate_gotos(fd, notes); uniquify_decls(fd)
     ms = MemSafe(fd, env, notes).run() if memsafe else None
     MemAbs(fd, env, notes).run(); normalize_chars(fd, notes); hoist_effects(fd, notes)
     inline_calls(fd, asts, notes)
@@ -852,21 +933,60 @@ def transcribe(path, name, includes, memsafe=False):
     return orig_src, G.visit(fd), bounds_of(fd), sorted(notes), Info(fd, extra_params, prelude, nondet, ms)
 
 
+def nondet_to_params(src, bounds):
+    """loop-free code: every nondeterministic read is evaluated once, so it is equivalent to a fresh parameter of the same type (full range)"""
+    from scripts.memabs import ND_RANGES
+    fd = c_parser.CParser().parse(src).ext[0]; par = parents_of(fd.body); extra = []; b2 = {k: list(v) for k, v in bounds.items()}
+    for n in list(walk(fd.body)):
+        if isinstance(n, c_ast.FuncCall) and isinstance(n.name, c_ast.ID) and (n.name.name.startswith('nondet_') or n.name.name == 'unknown') and id(n) in par:
+            kind = n.name.name[len('nondet_'):] if n.name.name != 'unknown' else 'int'
+            words, lo, hi = ND_RANGES[kind]; nm = '__rd%d' % len(extra)
+            extra.append(c_ast.Decl(nm, [], [], [], [], c_ast.TypeDecl(nm, [], None, c_ast.IdentifierType(list(words))), None, None)); b2[nm] = [lo, hi]
+            pr, attr = par[id(n)]; setchild(pr, attr, c_ast.ID(nm))
+    if not extra: return src, bounds
+    if fd.decl.type.args is None: fd.decl.type.args = c_ast.ParamList([])
+    fd.decl.type.args.params = list(fd.decl.type.args.params) + extra
+    return G.visit(fd), b2
+
+
 def with_contract(fd, contract_text):
-    """the function with `if (!(contract)) return 0;` after its leading declarations (the verdict is then relative to the contract)"""
+    """the function under a contract.  With loops: `if (!(contract)) return 0;` after the leading declarations.  Loop-free (the straight-line front end has no early returns):
+    `T r = 0; if (contract) { stmts; r = expr; } return r;` after eliminating internal returns."""
     f2 = copy.deepcopy(fd); items = f2.body.block_items; k = 0
     while k < len(items) and isinstance(items[k], c_ast.Decl): k += 1
+    moved = []                         # initializers that evaluate anything (guards!) must run UNDER the contract
+    for d in items[:k]:
+        if d.init is not None and not isinstance(d.init, (c_ast.Constant, c_ast.InitList)):
+            moved.append(c_ast.Assignment('=', c_ast.ID(d.name), d.init)); d.init = c_ast.Constant('int', '0')
     cond = c_parser.CParser().parse('int f(){ return %s; }' % contract_text).ext[0].body.block_items[0].expr
-    items.insert(k, c_ast.If(c_ast.UnaryOp('!', cond), c_ast.Compound([c_ast.Return(c_ast.Constant('int', '0'))]), None)); return f2
+    if any(isinstance(n, c_ast.While) for n in walk(f2.body)):
+        items.insert(k, c_ast.If(c_ast.UnaryOp('!', cond), c_ast.Compound([c_ast.Return(c_ast.Constant('int', '0'))]), None)); items[k + 1:k + 1] = moved; return f2
+    items[k:k] = moved
+    from llmloop.jump_eliminate import eliminate_jumps
+    try: eliminate_jumps(f2)
+    except ValueError: pass
+    items = f2.body.block_items; k = 0
+    while k < len(items) and isinstance(items[k], c_ast.Decl) and (items[k].init is None or isinstance(items[k].init, c_ast.Constant)): k += 1
+    fin = items[-1]
+    if not isinstance(fin, c_ast.Return): return f2
+    rty = copy.deepcopy(f2.decl.type.type); rty.declname = '__cr'
+    rdecl = c_ast.Decl('__cr', [], [], [], [], rty, c_ast.Constant('int', '0'), None)
+    inner = items[k:-1] + ([c_ast.Assignment('=', c_ast.ID('__cr'), fin.expr)] if fin.expr is not None else [])
+    f2.body.block_items = items[:k] + [rdecl, c_ast.If(cond, c_ast.Compound(inner), None), c_ast.Return(c_ast.ID('__cr'))]
+    return f2
 
 
-def contract_candidates(fd, len_params):
-    ints = [p.name for p in (fd.decl.type.args.params if fd.decl.type.args else []) if isinstance(p, c_ast.Decl) and p.name not in len_params and p.name != '__z' and scalar_type(p.type)]
+def contract_candidates(fd, len_params, null_params=()):
+    ints = [p.name for p in (fd.decl.type.args.params if fd.decl.type.args else []) if isinstance(p, c_ast.Decl) and p.name not in len_params and p.name not in null_params and p.name != '__z' and scalar_type(p.type)]
+    nn = ' && '.join('(%s == 0)' % n for n in null_params)
+    lens = [('len >= each integer parameter', ' && '.join('(%s >= %s)' % (L, q) for L in len_params for q in ints))] if ints and len_params else []
+    lens += [('len >= each integer parameter + 1', ' && '.join('(%s >= %s + 1)' % (L, q) for L in len_params for q in ints))] if ints and len_params else []
+    lens += [('len >= 1', ' && '.join('(%s >= 1)' % L for L in len_params))] if len_params else []
     out = [('none', None)]
-    if ints:
-        out.append(('len >= each integer parameter', ' && '.join('(%s >= %s)' % (L, q) for L in len_params for q in ints)))
-        out.append(('len >= each integer parameter + 1', ' && '.join('(%s >= %s + 1)' % (L, q) for L in len_params for q in ints)))
-    out.append(('len >= 1', ' && '.join('(%s >= 1)' % L for L in len_params)))
+    if nn: out.append(('non-null pointers', nn))
+    for name, c in lens:
+        out.append((name, c))
+        if nn: out.append(('non-null pointers and ' + name, nn + ' && ' + c))
     return out
 
 
@@ -875,14 +995,14 @@ def certify_memsafe(path, fn, includes, budget=120):
     try: orig, new, bounds, notes, info = transcribe(path, fn, includes, memsafe=True)
     except Exception as e: return {'status': 'NOT_APPLICABLE', 'reason': str(e)[:80]}
     ms = info.ms
-    res = {'status': 'NOT_PROVED', 'checked_accesses': ms.checked, 'unchecked_call_args': ms.unchecked, 'bases': sorted(set(ms.base.values())), 'strings': sorted(b for b, s in ms.string.items() if s), 'len_params': ms.len_params, 'notes': [n for n in notes if n.startswith(('memory-safety', 'tracked'))]}
+    res = {'status': 'NOT_PROVED', 'checked_accesses': ms.checked, 'unchecked_call_args': ms.unchecked, 'bases': sorted(set(ms.base.values())), 'strings': sorted(b for b, s in ms.string.items() if s), 'len_params': ms.len_params, 'null_params': ms.null_params, 'libcall_checks': ms.libchecks, 'notes': [n for n in notes if n.startswith(('memory-safety', 'tracked'))]}
     if ms.checked == 0: res['status'] = 'NO_CHECKED_ACCESSES'; return res
-    for name, c in contract_candidates(info.fd, ms.len_params):
+    for name, c in contract_candidates(info.fd, ms.len_params, ms.null_params):
         if c is None and not ms.len_params: pass
         f2 = with_contract(info.fd, c) if c else info.fd
         f2 = copy.deepcopy(f2); f2.decl.name = 'f'
         src = G.visit(f2); r = certify(src, bounds, budget=budget)
-        if r['status'] == 'PROVED': res.update({'status': 'PROVED_MEMSAFE', 'contract': name, 'contract_strength': 'weak (excludes empty buffers/strings)' if name == 'len >= 1' else 'strong' if name == 'none' else 'length contract', 'contract_text': c, 'method': r['method'], 'source': src, 'bounds': bounds}); return res
+        if r['status'] == 'PROVED': res.update({'status': 'PROVED_MEMSAFE', 'contract': name, 'contract_strength': 'strong (no assumption)' if name == 'none' else 'assumes non-NULL pointer parameters' if name == 'non-null pointers' else 'assumes non-NULL pointers and lengths' if name.startswith('non-null') else 'weak (excludes empty buffers/strings)' if name == 'len >= 1' else 'length contract', 'contract_text': c, 'method': r['method'], 'source': src, 'bounds': bounds}); return res
     return res
 
 
@@ -902,6 +1022,7 @@ def _certify(src, bounds):
         from llmloop.houdini_loops import _prepare
         nl = len(_prepare(src)[2])
         if nl == 0:
+            src, bounds = nondet_to_params(src, bounds)
             r0 = analyze_request({'source': src, 'frontend': 'typed_c', 'abi': 'LP64', 'parameter_bounds': bounds}); return {'status': 'PROVED' if r0['status'].startswith('PROVED') else r0['status'][:40], 'method': 'typed_c_no_loops_after_stubbing', 'rounds': 0}
         req = {'source': src, 'parameter_bounds': bounds, 'abi': 'LP64', 'solver_timeout_ms': 20000}
         r = analyze_request({**req, 'frontend': 'typed_invariant_while', 'range_invariants': {'invariant': ['True']}} if nl == 1 else {**req, 'frontend': 'typed_invariant_loops', 'range_invariants': {'invariants': [['True']] * nl}})
@@ -1016,9 +1137,9 @@ if __name__ == '__main__':
             for k, fut in enumerate(as_completed([pool.submit(run_file, j) for j in jobs])):
                 rs = fut.result()
                 rows += rs; print(k, len(jobs), len(rows), flush=True)
-                with open(ROOT / 'experiments/v083/auto_transcribe_all.jsonl', 'a') as fh:
+                with open(ROOT / 'experiments/v084/auto_transcribe_all.jsonl', 'a') as fh:
                     for r in rs: fh.write(json.dumps(r) + '\n')
-        (ROOT / 'experiments/v083/auto_transcribe_all.json').write_text(json.dumps(rows, indent=1) + '\n')
+        (ROOT / 'experiments/v084/auto_transcribe_all.json').write_text(json.dumps(rows, indent=1) + '\n')
         print(collections.Counter(r['stage'] for r in rows)); print(collections.Counter(r.get('reason', '')[:50] for r in rows if r['stage'] == 'rejected').most_common(25))
         sys.exit(0)
     cands = json.loads((ROOT / 'experiments/v081/gnulib_coverage_candidates.json').read_text()); rows = []

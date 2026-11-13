@@ -5,12 +5,12 @@ E = Path(__file__).resolve().parents[1] / 'experiments/v082'
 
 def test_synthetic_suite():
     rows = {r['case']: r for r in json.load(open(E / 'auto_synthetic.json'))}
-    assert len(rows) == 27
+    assert len(rows) == 30
     notc = sorted(k for k, r in rows.items() if r['stage'] != 'certified')
     assert notc == ['loop_header_call_nonlinear_timeout', 'mem_UNSAFE_compound_assign', 'mem_UNSAFE_div_by_content', 'mem_UNSAFE_signed_sum']
     assert all(r['stage'] != 'certified' for k, r in rows.items() if 'UNSAFE' in k)               # memory-abstraction soundness controls are never certified
     assert all(r['native'].get('equivalent') in (True, None) for r in rows.values())
-    assert sum(r['native'].get('equivalent') is True for r in rows.values()) == 19
+    assert sum(r['native'].get('equivalent') is True for r in rows.values()) == 21
     assert any('inlined popc (with loops)' in r['notes'] for r in rows.values())
     assert rows['lib_abs']['native']['equivalent'] is True and rows['lib_ctype_bool']['native']['equivalent'] is True
 
