@@ -684,7 +684,7 @@ def hoist_effects(fd, notes):
         while inner is not None and not isinstance(inner, c_ast.TypeDecl): inner = getattr(inner, 'type', None)
         inner.declname = nm; return nm, ty
     def rec(parent, name, node, conditional, pre):
-        if isinstance(node, c_ast.ExprList) and len(node.exprs) > 1 and parent is not None:          # comma expression: strictly left to right
+        if isinstance(node, c_ast.ExprList) and len(node.exprs) > 1 and parent is not None and not isinstance(parent, c_ast.FuncCall):          # comma expression (not an argument list): strictly left to right
             if conditional: raise ValueError('comma expression under a short-circuit operand')
             last = len(node.exprs) - 1
             for i in range(len(node.exprs)):
@@ -708,7 +708,8 @@ def hoist_effects(fd, notes):
             pre.append(copy.deepcopy(nd)); setchild(parent, name, c_ast.ID(nd.lvalue.name))
         notes.add('side effect hoisted out of an expression')
     def effects_in(expr):
-        return any((isinstance(n, c_ast.UnaryOp) and n.op in ('p++', 'p--', '++', '--')) or isinstance(n, c_ast.Assignment) or (isinstance(n, c_ast.ExprList) and len(n.exprs) > 1) for n in walk(expr))
+        par2 = parents_of(expr) if isinstance(expr, c_ast.Node) else {}
+        return any((isinstance(n, c_ast.UnaryOp) and n.op in ('p++', 'p--', '++', '--')) or isinstance(n, c_ast.Assignment) or (isinstance(n, c_ast.ExprList) and len(n.exprs) > 1 and not (id(n) in par2 and isinstance(par2[id(n)][0], c_ast.FuncCall))) for n in walk(expr))
     def do_expr(holder, attr):
         pre = []; rec(holder, attr, getattr(holder, attr), False, pre); return pre
     def tr(items):
