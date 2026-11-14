@@ -67,3 +67,16 @@ def test_synthetic_suite_v084_extra_cases():
     assert 'non-null' not in rows['null_checked_ok']['memsafe']['contract']                 # the explicit NULL test is understood (and ASan passed NULL to it)
     for k in ('use_after_free', 'double_free', 'memcpy_overlap', 'void_buffer_bug', 'struct_array_bug'):
         assert rows[k]['memsafe']['status'] != 'PROVED_MEMSAFE' and rows[k]['asan']['asan_errors'] > 0
+
+
+def test_v085_synthetic_suite_heap_argv_fields_overlap_callee():
+    d = json.load(open(Path(__file__).resolve().parents[1] / 'experiments/v085/memsafe_synthetic.json'))
+    rows = {r['case']: r for r in d['rows']}
+    assert len(rows) == 37 and d["unsound"] == []
+    proved = ('heap_ok', 'heap_calloc_ok', 'argv_ok', 'field_array_ok', 'nested_field_ok', 'callee_ok', 'callee_offset_ok', 'memcpy_ok')
+    for k in proved: assert rows[k]['memsafe']['status'] == 'PROVED_MEMSAFE' and rows[k]['asan']['asan_errors'] == 0, k
+    for k in ('heap_overflow', 'heap_uaf', 'heap_unchecked_null', 'argv_bug', 'field_array_bug', 'callee_bug', 'memcpy_overlap'): assert rows[k]['memsafe']['status'] != 'PROVED_MEMSAFE', k
+    for k in ('heap_overflow', 'heap_uaf', 'argv_bug', 'callee_bug', 'memcpy_overlap'): assert rows[k]['asan']['asan_errors'] > 0, k
+    assert rows['heap_ok']['memsafe']['contract'] == 'none'                                    # heap objects are self-contained: no caller contract
+    assert 'disjoint objects' in rows['memcpy_ok']['memsafe']['contract']
+    assert rows['memcpy_ok']['asan_if_the_disjointness_contract_were_dropped']['asan_errors'] > 0        # dropping the contract is NOT safe: ASan finds the overlap

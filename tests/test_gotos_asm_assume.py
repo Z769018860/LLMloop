@@ -31,3 +31,20 @@ def test_assumption_inference_names_the_read_that_needs_the_assumption(tmp_path)
     f = tmp_path / 'c.c'; f.write_text('unsigned f(unsigned *a, unsigned n){ unsigned s = 0; unsigned i = 0; while (i < n % 10) { s += 100u / a[i]; i++; } return s; }\nint g(int *p, int n){ return n / p[0]; }\n')
     r = I.infer(str(f), 'f', budget=20); assert r['status'] == 'CERTIFIED_UNDER_ASSUMPTIONS' and r['template'] == 'nonzero' and '100U /' in r['statements'][0]
     r = I.infer(str(f), 'g', budget=20); assert r['status'] == 'CERTIFIED_UNDER_ASSUMPTIONS' and r['template'] == 'divisor'
+
+
+def test_jump_into_an_if_branch_and_statement_expressions(tmp_path):
+    src = 'unsigned f(unsigned n){ unsigned s = 0; if (n % 7 == 3) goto inside; s = n % 5; if (n % 2 == 0) { s += 100; s *= 2; inside: s += 10; } else { s += 1; } return s; }'
+    orig, new, bounds, notes, info = tr(tmp_path, src)
+    assert 'jump into an if-branch eliminated' in notes and 'goto' not in new
+    assert A.native_check(orig, new, {k: [0, 200] for k in bounds}, ncases=80)['equivalent'] is True
+    src = '#define MAX2(a,b) ({ unsigned _a = (a); unsigned _b = (b); _a > _b ? _a : _b; })\nunsigned f(unsigned n){ unsigned s = 0; unsigned i = 0; while (i < n % 20) { s += MAX2(i, 7u) * 2; i++; } return s; }'
+    orig, new, bounds, notes, info = tr(tmp_path, src)
+    assert '({' not in new and A.native_check(orig, new, bounds)['equivalent'] is True
+
+
+def test_parameter_preconditions_are_inferred(tmp_path):
+    import scripts.assume_infer as I
+    f = tmp_path / 'c.c'; f.write_text('unsigned f(const char *s, unsigned n){ unsigned h = 0; while (*s) { h = (h * 31 + (unsigned)*s) % n; s++; } return h; }\n')
+    r = I.infer(str(f), 'f', budget=20)
+    assert r['status'] == 'CERTIFIED_UNDER_ASSUMPTIONS' and r['parameter_preconditions'] == ['(n != 0)']

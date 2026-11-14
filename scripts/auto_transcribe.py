@@ -1278,8 +1278,31 @@ def run_file(args):
     return rows
 
 
+def memsafe_one(args):
+    row, = args
+    path = '/tmp/cu/' + ('gnulib/lib/' if (row.get('suite') or '').startswith('gnulib') else 'coreutils/src/') + row['file']
+    import multiprocessing as mp
+    q = mp.get_context('fork').Queue()
+    def work():
+        try: q.put(certify_memsafe(path, row['function'], INC, budget=40))
+        except Exception as e: q.put({'status': 'NOT_APPLICABLE', 'reason': 'error: ' + str(e)[:60]})
+    pr = mp.get_context('fork').Process(target=work); pr.start(); pr.join(400)
+    if pr.is_alive(): pr.terminate(); pr.join(); res = {'status': 'NOT_PROVED', 'reason': 'timeout'}
+    else: res = q.get()
+    return row['file'], row['function'], row.get('suite'), res
+
+
 if __name__ == '__main__':
     only = sys.argv[1] if len(sys.argv) > 1 else None
+    if only == 'memsafe':        # re-run ONLY the bounds-checking pass over the already certified rows of a survey: auto_transcribe.py memsafe in.json out.json
+        from concurrent.futures import ProcessPoolExecutor, as_completed
+        rows = json.load(open(sys.argv[2])); idx = {(r['file'], r['function'], r.get('suite')): r for r in rows}
+        todo = [r for r in rows if r['stage'] == 'certified' and r['certification']['method'] != 'typed_c_no_loops_after_stubbing']
+        with ProcessPoolExecutor(3) as pool:
+            for k, f in enumerate(as_completed([pool.submit(memsafe_one, (r,)) for r in todo])):
+                fl, fn, su, res = f.result(); idx[(fl, fn, su)]['memsafe'] = res
+                if k % 50 == 0: print(k, len(todo), flush=True)
+        Path(sys.argv[3]).write_text(json.dumps(rows, indent=1) + '\n'); print('done'); sys.exit(0)
     if only == 'all':
         from concurrent.futures import ProcessPoolExecutor, as_completed
         jobs = [(str(f), s) for s, d in (('gnulib:lib', CU / 'gnulib/lib'), ('coreutils:src', CU / 'coreutils/src')) for f in sorted(d.glob('*.c'))]

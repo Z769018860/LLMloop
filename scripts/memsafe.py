@@ -73,7 +73,7 @@ class MemSafe:
             for v in sorted(locs - bad):
                 bs = set()
                 for rv in assigns.get(v, []):
-                    if rv is None: continue
+                    if rv is None or self.null_const(rv): continue                           # `p = NULL` keeps the base (it only makes the heap pointer NULL)
                     b = self.heap_base(v, rv) or self.base_of(rv)
                     bs.add(b)
                 if not assigns.get(v) or None in bs or len(bs) != 1 or list(bs)[0] is None and True:
@@ -109,9 +109,16 @@ class MemSafe:
                 if b and b in self.nullable: self.freeable.add(b)
         if not self.base: raise ValueError('no trackable pointer')
 
+    ALLOCS = {'malloc': (1, True), 'calloc': (2, True), 'xmalloc': (1, False), 'xzalloc': (1, False), 'ximalloc': (1, False), 'xcalloc': (2, False), 'xnmalloc': (2, False), 'xcharalloc': (1, False)}      # name -> (arguments, may return NULL)
+
+    def null_const(self, rv):
+        while isinstance(rv, c_ast.Cast): rv = rv.expr
+        return isinstance(rv, c_ast.Constant) and rv.value == '0'
+
     def alloc_call(self, rv):
         while isinstance(rv, c_ast.Cast): rv = rv.expr
-        return rv if isinstance(rv, c_ast.FuncCall) and isinstance(rv.name, c_ast.ID) and rv.name.name in ('malloc', 'calloc') and rv.args and len(rv.args.exprs) == (1 if rv.name.name == 'malloc' else 2) else None
+        if isinstance(rv, c_ast.FuncCall) and isinstance(rv.name, c_ast.ID) and rv.name.name in self.ALLOCS and rv.args and len(rv.args.exprs) == self.ALLOCS[rv.name.name][0]: return rv
+        return None
 
     def heap_base(self, v, rv):
         """`v = malloc(n)` / `calloc(a, b)`: v points to the heap object (v + '__h') whose size (in elements) is recorded at the allocation"""
@@ -231,7 +238,7 @@ class MemSafe:
                     inner = self.sacc(root)
                     if inner is None: return None
                     b, off, cur, guards = inner
-                    if not (cur and cur[0] == 'st' and cur[1] in self.env.fields): raise ValueError('field access on a non-struct field')
+                    if not (cur and cur[0] == 'st' and cur[1] in self.env.fields): return None
                     tag = cur[1]
             fd_ = self.env.fields.get(tag, {}).get(e.field.name)
             self.dims_pending = list(self.env.fdims.get((tag, e.field.name), []))
@@ -241,7 +248,7 @@ class MemSafe:
             if inner is None: return None
             b, off, cur, guards = inner
             dims = getattr(self, 'dims_pending', [])
-            if not (cur and cur[0] == 'p' and dims): raise ValueError('index into a field without a known array dimension')
+            if not (cur and cur[0] == 'p' and dims): return None          # a pointer field or an unknown dimension: left to the plain memory abstraction (unchecked)
             idx = self.ex(e.subscript)
             guards = guards + [bin_('&&', bin_('>=', copy.deepcopy(idx), num(0)), bin_('<', copy.deepcopy(idx), num(dims[0])))]
             self.dims_pending = dims[1:]
@@ -268,7 +275,8 @@ class MemSafe:
         if sa is not None:
             b, off, fdsc, gs = sa; self.checked += 1; g = self.guard(b, off)
             for c in gs: self.checked += 1; g = bin_('+', g, bin_('*', num(0), bin_('/', num(1), c)))
-            if fdsc is None or fdsc[0] != 's': raise ValueError('struct field of non-scalar or unknown type')
+            if fdsc is None or fdsc[0] != 's':                           # a pointer/struct-valued field: the root access (and array indices) are checked, the value is left to the plain memory abstraction
+                self.pre.append(c_ast.Assignment('=', idn('__ms_w'), g)); self.unchecked += 1; return e
             return bin_('+', self.nd(fdsc[1]), g)
         pa = self.pacc(e)
         if pa is not None:                                          # `argv[i][j]`: the pointer element is checked, the inner access has no size information
@@ -400,12 +408,13 @@ class MemSafe:
     # ------------------------------------------------------------------ statements
     def alloc_stmts(self, v, rv, decl):
         hb, w = self.heap[v]; call = self.alloc_call(rv); a = call.args.exprs
-        bytes_ = self.ex(a[0]) if call.name.name == 'malloc' else bin_('*', self.ex(a[0]), self.ex(a[1]))
+        bytes_ = self.ex(a[0]) if len(a) == 1 else bin_('*', self.ex(a[0]), self.ex(a[1]))
+        mayfail = self.ALLOCS[call.name.name][1]
         esz = SIZES[NDNAME[w]]
         out = []
         if decl: out.append(c_ast.Decl(v + '__o', [], [], [], [], c_ast.TypeDecl(v + '__o', [], None, c_ast.IdentifierType(['long'])), num(0), None)); self.pvars.add(v)
         out += [c_ast.Assignment('=', idn(hb + '__n'), bin_('/', bin_('+', bytes_, num(0)), num(esz))), c_ast.Assignment('=', idn(hb + '__fr'), num(0)),
-                c_ast.Assignment('=', idn(hb + '__null'), bin_('!=', self.nd(('unsigned', 'char')), num(0))), c_ast.Assignment('=', idn(v + '__o'), num(0))]
+                c_ast.Assignment('=', idn(hb + '__null'), bin_('!=', self.nd(('unsigned', 'char')), num(0)) if mayfail else num(0)), c_ast.Assignment('=', idn(v + '__o'), num(0))]
         self.notes.add('heap object tracked: ' + hb); return out
 
     def flush(self, out): r = self.pre; self.pre = []; return r + out
@@ -415,6 +424,8 @@ class MemSafe:
         if isinstance(s, c_ast.Decl):
             if s.name in self.base and s.name not in self.arrays and s.name in self.heap and s.init is not None and self.alloc_call(s.init) is not None:
                 return self.flush(self.alloc_stmts(s.name, s.init, True))
+            if s.name in self.base and s.name in self.heap and s.init is not None and self.null_const(s.init):
+                self.pvars.add(s.name); return [c_ast.Decl(s.name + '__o', [], [], [], [], c_ast.TypeDecl(s.name + '__o', [], None, c_ast.IdentifierType(['long'])), num(0), None), c_ast.Assignment('=', idn(self.heap[s.name][0] + '__null'), num(1))]
             if s.name in self.base and s.name not in self.arrays:        # tracked pointer local
                 out = [c_ast.Decl(s.name + '__o', [], [], [], [], c_ast.TypeDecl(s.name + '__o', [], None, c_ast.IdentifierType(['long'])), num(0), None)]
                 if s.init is not None: out.append(c_ast.Assignment('=', idn(s.name + '__o'), self.off(s.init)))
@@ -428,6 +439,7 @@ class MemSafe:
         if isinstance(s, c_ast.Assignment):
             lv = s.lvalue
             if isinstance(lv, c_ast.ID) and lv.name in self.heap and s.op == '=' and self.alloc_call(s.rvalue) is not None: return self.flush(self.alloc_stmts(lv.name, s.rvalue, False))
+            if isinstance(lv, c_ast.ID) and lv.name in self.heap and s.op == '=' and self.null_const(s.rvalue): return [c_ast.Assignment('=', idn(self.heap[lv.name][0] + '__null'), num(1))]
             if isinstance(lv, c_ast.ID) and lv.name in self.base and lv.name not in self.arrays:
                 o = idn(lv.name + '__o')
                 if s.op == '=': return self.flush([c_ast.Assignment('=', o, self.off(s.rvalue))])
@@ -440,7 +452,9 @@ class MemSafe:
             sw = self.sacc(lv)
             if sw is not None:
                 b, off, fdsc, gs = sw
-                if fdsc is None or fdsc[0] != 's': raise ValueError('write to a struct field of non-scalar or unknown type')
+                if fdsc is None or fdsc[0] != 's':
+                    self.checked += 1; self.unchecked += 1; s.rvalue = self.ex(s.rvalue) if not self.base_of(s.rvalue) else s.rvalue
+                    return self.flush([c_ast.Assignment('=', idn('__ms_w'), self.guard(b, off))] + [c_ast.Assignment('=', idn('__ms_w'), bin_('*', num(0), bin_('/', num(1), c))) for c in gs] + [s])
                 self.checked += 1; out = [c_ast.Assignment('=', idn('__ms_w'), self.guard(b, off))] + [c_ast.Assignment('=', idn('__ms_w'), bin_('*', num(0), bin_('/', num(1), c))) for c in gs]; rhs = self.ex(s.rvalue)
                 if s.op != '=': rhs = bin_(s.op[:-1], self.nd(fdsc[1]), rhs)
                 out.append(c_ast.Assignment('=', idn('__ms_w'), rhs)); return self.flush(out)

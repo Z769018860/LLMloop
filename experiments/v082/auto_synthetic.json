@@ -1560,6 +1560,66 @@
   "stage": "certified"
  },
  {
+  "case": "goto_into_if_branch",
+  "notes": [
+   "gotos eliminated (1)",
+   "jump into an if-branch eliminated",
+   "memory abstraction (memory safety assumed)"
+  ],
+  "transcription": "unsigned int f(unsigned int n)\n{\n  unsigned int s = 0;\n  int v__gj1 = 0;\n  if ((n % 7) == 3)\n  {\n    v__gj1 = 1;\n  }\n  if (v__gj1 == 0)\n  {\n    s = n % 5;\n  }\n  if (((n % 2) == 0) || (v__gj1 == 1))\n  {\n    if (v__gj1 == 0)\n    {\n      s += 100;\n      s *= 2;\n    }\n    v__gj1 = 0;\n    s += 10;\n  }\n  else\n  {\n    s += 1;\n  }\n  return s;\n}\n\n",
+  "bounds": {
+   "n": [
+    0,
+    4294967295
+   ]
+  },
+  "native": {
+   "equivalent": true,
+   "cases": 24,
+   "agree": 24,
+   "both_timeout": 0,
+   "one_sided_timeout": 0
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "typed_c_no_loops_after_stubbing",
+   "rounds": 0
+  },
+  "stage": "certified"
+ },
+ {
+  "case": "stmt_expr_max",
+  "notes": [
+   "flattened blocks",
+   "hoisted loop-body declaration",
+   "memory abstraction (memory safety assumed)",
+   "zero-initialized locals"
+  ],
+  "transcription": "unsigned int f(unsigned int n)\n{\n  unsigned int v__se1 = 0;\n  unsigned int v_a = 0;\n  unsigned int v_b = 0;\n  unsigned int s = 0;\n  unsigned int i = 0;\n  while (i < (n % 20))\n  {\n    v_a = i;\n    v_b = 7U;\n    v__se1 = (v_a > v_b) ? (v_a) : (v_b);\n    s += v__se1 * 2;\n    i++;\n  }\n\n  return s;\n}\n\n",
+  "bounds": {
+   "n": [
+    0,
+    4294967295
+   ]
+  },
+  "native": {
+   "equivalent": true,
+   "cases": 24,
+   "agree": 24,
+   "both_timeout": 0,
+   "one_sided_timeout": 0
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "trivial_invariants",
+   "invariant": [
+    "True"
+   ],
+   "rounds": 1
+  },
+  "stage": "certified"
+ },
+ {
   "case": "mem_sum_unsigned",
   "notes": [
    "for -> while",
@@ -1576,7 +1636,7 @@
   },
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmp7wns_gy6/h.c: In function \u2018main\u2019:\n/tmp/tmp7wns_gy6/h.c:29:79: error: too"
+   "detail": "compile error: /tmp/tmpfnsurl08/h.c: In function \u2018main\u2019:\n/tmp/tmpfnsurl08/h.c:29:79: error: too"
   },
   "certification": {
    "status": "PROVED",
@@ -1604,7 +1664,7 @@
   },
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpbte76we5/h.c: In function \u2018f\u2019:\n/tmp/tmpbte76we5/h.c:10:17: error: invali"
+   "detail": "compile error: /tmp/tmp_rlsmnh2/h.c: In function \u2018f\u2019:\n/tmp/tmp_rlsmnh2/h.c:10:17: error: invali"
   },
   "certification": {
    "status": "PROVED",
@@ -1632,7 +1692,7 @@
   },
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpzj5x_ru5/h.c: In function \u2018main\u2019:\n/tmp/tmpzj5x_ru5/h.c:32:79: error: too"
+   "detail": "compile error: /tmp/tmpnfg5o00m/h.c: In function \u2018main\u2019:\n/tmp/tmpnfg5o00m/h.c:32:79: error: too"
   },
   "certification": {
    "status": "PROVED",
@@ -1663,7 +1723,7 @@
   },
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpsa7l9tdf/h.c: In function \u2018main\u2019:\n/tmp/tmpsa7l9tdf/h.c:28:79: error: too"
+   "detail": "compile error: /tmp/tmpyai93gnp/h.c: In function \u2018main\u2019:\n/tmp/tmpyai93gnp/h.c:28:79: error: too"
   },
   "certification": {
    "status": "PROVED",
@@ -1690,7 +1750,7 @@
   },
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmp6u1ui8rq/h.c: In function \u2018main\u2019:\n/tmp/tmp6u1ui8rq/h.c:31:79: error: too"
+   "detail": "compile error: /tmp/tmpa5ow61mx/h.c: In function \u2018main\u2019:\n/tmp/tmpa5ow61mx/h.c:31:79: error: too"
   },
   "certification": {
    "status": "STUCK:top/loop0/body operations defined",
@@ -1715,7 +1775,7 @@
   },
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmp_183481r/h.c: In function \u2018main\u2019:\n/tmp/tmp_183481r/h.c:31:79: error: too"
+   "detail": "compile error: /tmp/tmp83gapqlk/h.c: In function \u2018main\u2019:\n/tmp/tmp83gapqlk/h.c:31:79: error: too"
   },
   "certification": {
    "status": "STUCK:top/loop0/body operations defined",
@@ -1740,7 +1800,7 @@
   },
   "native": {
    "equivalent": null,
-   "detail": "compile error: /tmp/tmpkampc6ni/h.c: In function \u2018main\u2019:\n/tmp/tmpkampc6ni/h.c:31:79: error: too"
+   "detail": "compile error: /tmp/tmpksv3yzvy/h.c: In function \u2018main\u2019:\n/tmp/tmpksv3yzvy/h.c:31:79: error: too"
   },
   "certification": {
    "status": "STUCK:top/loop0/body operations defined",

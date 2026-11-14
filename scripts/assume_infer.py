@@ -127,7 +127,7 @@ def infer(path, fn, budget=25, max_sites=10):
 
 def one(args):
     r, = args
-    path = '/tmp/cu/' + ('gnulib/lib/' if (A.CU / 'gnulib/lib' / r['file']).exists() else 'coreutils/src/') + r['file']
+    path = '/tmp/cu/' + ('gnulib/lib/' if (r.get('suite') or '').startswith('gnulib') else 'coreutils/src/') + r['file']
     t0 = time.time()
     import multiprocessing as mp
     q = mp.get_context('fork').Queue()
