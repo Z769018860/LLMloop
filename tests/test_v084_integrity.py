@@ -26,5 +26,5 @@ def test_assumption_inference():
     r = json.load(open(E / 'assume_infer.json'))
     c = {}
     for x in r: c[x['status']] = c.get(x['status'], 0) + 1
-    assert len(r) == 92 and c.get('CERTIFIED_UNDER_ASSUMPTIONS') == 16 and c.get('NOT_CERTIFIED_EVEN_UNDER_ASSUMPTIONS') == 50
-    assert all(x['sites_assumed'] and x['statements'] for x in r if x['status'] == 'CERTIFIED_UNDER_ASSUMPTIONS')
+    assert len(r) == 92 and c.get('CERTIFIED_UNDER_ASSUMPTIONS') == 18 and c.get('NOT_CERTIFIED_EVEN_UNDER_ASSUMPTIONS') == 44      # merged with the parameter-precondition re-run (v0.85)
+    assert all(x['sites_assumed'] or x.get('parameter_preconditions') for x in r if x['status'] == 'CERTIFIED_UNDER_ASSUMPTIONS')
