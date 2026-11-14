@@ -13,6 +13,8 @@ TEMPLATES = ['nonzero', 'nonneg', 'divisor', 'small', 'nonzero+small']
 
 
 def cond_of(t, lo, hi, tmp):
+    if t.startswith('le:'):
+        q = t[3:]; return ('(%s >= 0 && %s <= %s)' % (tmp, tmp, q)) if lo < 0 else '(%s <= %s)' % (tmp, q)
     parts = []
     if 'nonzero' in t: parts.append('%s != 0' % tmp)
     if t == 'divisor': parts.append('%s != 0' % tmp); parts.append('%s != -1' % tmp) if lo < 0 else None
@@ -36,7 +38,7 @@ def clamp_reads(fd, spec):
         kind = call.name.name[len('nondet_'):]; words, lo, hi = ND_RANGES[kind]; cnt[0] += 1; tmp = '__av%d' % cnt[0]
         decls.append(c_ast.Decl(tmp, [], [], [], [], c_ast.TypeDecl(tmp, [], None, c_ast.IdentifierType(list(words))), c_ast.Constant('int', '0'), None))
         cond = P.parse('int f(){ return %s; }' % cond_of(tmpl, lo, hi, tmp)).ext[0].body.block_items[0].expr
-        safe = '1' if ('nonzero' in tmpl or tmpl == 'divisor') else '0'
+        safe = '1' if ('nonzero' in tmpl or tmpl == 'divisor') else '0'          # le:q -> 0 is always <= q for q >= 0 (negative q: the clamp still yields 0, which is only an assumption on the caller)
         return tmp, [c_ast.Assignment('=', c_ast.ID(tmp), call), c_ast.If(c_ast.UnaryOp('!', cond), c_ast.Compound([c_ast.Assignment('=', c_ast.ID(tmp), c_ast.Constant('int', safe))]), None)]
     def hoist(holder, attr):
         pre = []
@@ -83,22 +85,43 @@ def snippet(fd, site):
     return A.G.visit(n).replace('\n', ' ')[:90]
 
 
+def param_atoms(fd, kind):
+    out = []
+    for p in (fd.decl.type.args.params if fd.decl.type.args else []):
+        if not isinstance(p, c_ast.Decl) or p.name == '__z' or not A.scalar_type(p.type) or p.name.endswith(('__n', '__null')): continue
+        signed = tuple(p.type.type.names) not in (('unsigned',), ('unsigned', 'int'), ('unsigned', 'long'), ('unsigned', 'long', 'int'), ('unsigned', 'short'), ('unsigned', 'char'), ('unsigned', 'long', 'long'))
+        n = p.name
+        out.append({'nonzero': '(%s != 0)' % n, 'pos': ('(%s > 0)' % n) if signed else '(%s != 0)' % n, 'small': ('(%s >= -32768 && %s <= 32767)' % (n, n)) if signed else '(%s <= 65535)' % n}[kind])
+    return out
+
+
 def infer(path, fn, budget=25, max_sites=10):
+    """search over (parameter precondition) x (read-site assumption); minimise both"""
     orig, new, bounds, notes, info = A.transcribe(path, fn, A.INC)
     fd = info.fd; sites = sites_of(fd)
-    if not sites: return {'status': 'NO_READ_SITES'}
+    ints = [p.name for p in (fd.decl.type.args.params if fd.decl.type.args else []) if isinstance(p, c_ast.Decl) and p.name != '__z' and A.scalar_type(p.type)]
+    if not sites and not ints: return {'status': 'NO_READ_SITES'}
     if len(sites) > max_sites: return {'status': 'TOO_MANY_SITES', 'sites': len(sites)}
-    def try_spec(spec):
-        f2 = copy.deepcopy(fd); clamp_reads(f2, spec); f2.decl.name = 'f'
-        return A.certify(A.G.visit(f2), bounds, budget=budget)['status'] == 'PROVED'
     snips = [snippet(fd, s) for s in sites]
-    for t in TEMPLATES:
-        spec = {k: t for k in range(len(sites))}
-        if try_spec(spec):
-            for k in range(len(sites)):           # delta-debugging: release sites that do not need the assumption
-                trial = {j: t for j in spec if j != k}
-                if k in spec and try_spec(trial): spec = trial
-            return {'status': 'CERTIFIED_UNDER_ASSUMPTIONS', 'template': t, 'sites_total': len(sites), 'sites_assumed': sorted(spec), 'statements': [snips[k] for k in sorted(spec)]}
+    def try_spec(spec, patoms):
+        f2 = copy.deepcopy(fd)
+        if spec: clamp_reads(f2, spec)
+        if patoms: f2 = A.with_contract(f2, ' && '.join(patoms))
+        f2.decl.name = 'f'; return A.certify(A.G.visit(f2), bounds, budget=budget)['status'] == 'PROVED'
+    P = [(k, param_atoms(fd, k)) for k in ('nonzero', 'pos', 'small')] if ints else []
+    S = (TEMPLATES if sites else []); R = (['le:' + q for q in ints] if sites else [])
+    order = [(pk, pat, None) for pk, pat in P] + [(None, [], st) for st in S] + [(pk, pat, st) for pk, pat in P for st in S] + [(None, [], st) for st in R] + [(pk, pat, st) for pk, pat in P for st in R]      # plain parameter preconditions first, relational read clamps last
+    for pk, pat, st in order:
+        if True:
+            spec = {k: st for k in range(len(sites))} if st else {}
+            if not try_spec(spec, pat): continue
+            for k in sorted(spec):                          # release read sites that do not need the assumption
+                trial = {j: st for j in spec if j != k}
+                if try_spec(trial, pat): spec = trial
+            for a in list(pat):                              # release parameter atoms that do not need it
+                trial = [x for x in pat if x != a]
+                if try_spec(spec, trial): pat = trial
+            return {'status': 'CERTIFIED_UNDER_ASSUMPTIONS', 'template': st, 'param_template': pk, 'parameter_preconditions': pat, 'sites_total': len(sites), 'sites_assumed': sorted(spec), 'statements': [snips[k] for k in sorted(spec)]}
     return {'status': 'NOT_CERTIFIED_EVEN_UNDER_ASSUMPTIONS', 'sites_total': len(sites)}
 
 
@@ -120,7 +143,8 @@ def one(args):
 if __name__ == '__main__':
     from concurrent.futures import ProcessPoolExecutor, as_completed
     src = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / 'experiments/v084/auto_transcribe_all.json'
-    rows = json.load(open(src)); todo = [r for r in rows if r['stage'] == 'not_certified' and r['certification']['status'].startswith(('STUCK:top operations', 'STUCK:top/loop0/body operations', 'STUCK:top/then'))]
+    rows = json.load(open(src)); only = set(json.load(open(sys.argv[2]))) if len(sys.argv) > 2 else None
+    todo = [r for r in rows if r['stage'] == 'not_certified' and r['certification']['status'].startswith(('STUCK:top operations', 'STUCK:top/loop0/body operations', 'STUCK:top/then')) and (only is None or r['function'] in only)]
     seen = {}; [seen.setdefault(r.get('src_sha1') or (r['file'], r['function']), r) for r in todo]; todo = list(seen.values())      # one run per distinct source text
     out = []
     with ProcessPoolExecutor(4) as ex:

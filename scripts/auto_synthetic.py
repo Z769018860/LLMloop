@@ -29,6 +29,8 @@ CASES = {
  'goto_backward_retry': 'unsigned f(unsigned n){ unsigned tries = 0; unsigned s = n % 50; retry: s = s / 2 + 1; tries++; if (s > 3 && tries < 20) goto retry; return s + tries; }',
  'goto_nested_label': 'unsigned f(unsigned n){ unsigned s = 0; unsigned i = 0; while (i < n % 20) { i++; if (i % 3 == 0) goto next; s += i; next: s += 1; } return s; }',
  'asm_barrier_and_output': 'unsigned f(unsigned n){ unsigned s = n % 100; unsigned t = 0; unsigned i = 0; __asm__ volatile ("" ::: "memory"); __asm__ ("" : "=r" (t) : "0" (s)); while (i < 10) { s = s % 1000; i++; } return s; }',
+ 'goto_into_if_branch': 'unsigned f(unsigned n){ unsigned s = 0; if (n % 7 == 3) goto inside; s = n % 5; if (n % 2 == 0) { s += 100; s *= 2; inside: s += 10; } else { s += 1; } return s; }',
+ 'stmt_expr_max': 'unsigned f(unsigned n){ unsigned s = 0; unsigned i = 0; while (i < n % 20) { s += ({ unsigned _a = i; unsigned _b = 7u; _a > _b ? _a : _b; }) * 2; i++; } return s; }',
  'mem_sum_unsigned': 'unsigned f(unsigned char *p, unsigned n){ unsigned s = 0; unsigned i; for (i = 0; i < n; i++) s += p[i]; return s; }',
  'mem_struct_field': 'struct S { unsigned n; unsigned char *buf; };\nunsigned f(struct S *p){ unsigned t = 0; unsigned i = 0; while (i < p->n) { t += p->buf[i]; i++; } return t; }',
  'mem_ptr_walk': 'unsigned f(const char *s){ unsigned n = 0; while (*s) { s++; n++; } return n; }',

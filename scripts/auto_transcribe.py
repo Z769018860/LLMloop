@@ -92,6 +92,73 @@ def extract(text, name):
     return defs
 
 
+def _match(src, i, open_ch, close_ch):
+    d = 0; instr = None; k = i
+    while k < len(src):
+        ch = src[k]
+        if instr:
+            if ch == '\\': k += 1
+            elif ch == instr: instr = None
+        elif ch in '"\'': instr = ch
+        elif ch == open_ch: d += 1
+        elif ch == close_ch:
+            d -= 1
+            if d == 0: return k
+        k += 1
+    raise ValueError('unbalanced')
+
+
+def _split_top(body):
+    parts = []; d = 0; cur = ''; instr = None; k = 0
+    while k < len(body):
+        ch = body[k]; cur += ch
+        if instr:
+            if ch == '\\': k += 1; cur += body[k]
+            elif ch == instr: instr = None
+        elif ch in '"\'': instr = ch
+        elif ch in '({[': d += 1
+        elif ch in ')}]': d -= 1
+        elif ch == ';' and d == 0: parts.append(cur); cur = ''
+        k += 1
+    if cur.strip(): parts.append(cur)
+    return parts
+
+
+def rewrite_stmt_exprs(src):
+    """GNU statement expressions `({ S1; S2; e; })` (innermost first): the statements are hoisted in front of the enclosing statement into a block that assigns the value of `e` to a fresh variable whose type is the type of the
+    first local declared in the body (the MAX/MIN/SWAP macro shape); anything else, and statement expressions in loop conditions, are rejected.  Evaluation order inside the enclosing statement changes only if it has other side effects."""
+    n = 0
+    while True:
+        idx = [m.start() for m in re.finditer(r'\(\s*\{', src)]
+        if not idx: return src
+        # innermost: the last opening that has no further ({ inside its body
+        for s in reversed(idx):
+            e = _match(src, src.index('{', s), '{', '}')
+            if src[e + 1:].lstrip().startswith(')'): break
+        else: raise ValueError('statement expression shape')
+        close = src.index(')', e)
+        body = src[src.index('{', s) + 1:e]; parts = _split_top(body)
+        if not parts: raise ValueError('empty statement expression')
+        last = parts[-1].strip().rstrip(';').strip(); stmts = parts[:-1]
+        decl = next((m for m in (re.match(r'\s*(.+?)\s*(\**)\s*(\w+)\s*=(?!=)', st) for st in stmts) if m and re.fullmatch(r'(?:(?:const|unsigned|signed|long|short|int|char|_Bool|size_t|ssize_t|ptrdiff_t|intmax_t|uintmax_t|[A-Za-z_]\w*)\s*)+', m.group(1)) and not m.group(2)), None)
+        if not decl: raise ValueError('statement expression without a typed local')
+        ty = decl.group(1).strip().replace('const ', ''); n += 1; tmp = '__se%d' % n
+        # start of the enclosing statement: scan backwards over balanced groups to a ; { } at depth 0
+        k = s - 1; d = 0
+        while k >= 0:
+            ch = src[k]
+            if ch in ')]': d += 1
+            elif ch in '([': d -= 1
+            elif ch in ';{}' and d <= 0 and not (ch == '{' and False): break
+            k -= 1
+        start = k + 1
+        head = src[start:s].lstrip()
+        if re.match(r'(while|for)\b', head) or re.match(r'else\s+(while|for)\b', head): raise ValueError('statement expression in a loop header')
+        hoisted = ' %s %s; { %s %s = %s; } ' % (ty, tmp, ' '.join(x.strip() for x in stmts), tmp, last)
+        src = src[:start] + hoisted + src[start:s] + tmp + src[close + 1:]
+    return src
+
+
 def rewrite_asm(src):
     """asm statements become `__asm_havoc(&out1, &out2, ...)`: an opaque call that overwrites its output operands (a barrier-only asm has none); input operands are ignored"""
     out = []; i = 0
@@ -137,6 +204,9 @@ def rewrite_asm(src):
 
 def clean(src, tmap):
     src = rewrite_asm(src)
+    if re.search(r'\(\s*\{', src):
+        try: src = rewrite_stmt_exprs(src)
+        except ValueError: pass
     src = re.sub(r'__attribute__\(\(.*?\)\)', '', src)
     src = re.sub(r'__builtin_offsetof\s*\([^()]*(?:\([^()]*\)[^()]*)*\)', 'nondet_ulong()', src)       # an offset: an arbitrary size_t value (sound)
     src = re.sub(r'__builtin_constant_p\s*\([^()]*(?:\([^()]*\)[^()]*)*\)', '0', src)
@@ -680,6 +750,11 @@ def eliminate_gotos(fd, notes):
         items = comp.block_items or []
         names = {it.name for it in items if isinstance(it, c_ast.Label)}
         if not names: continue
+        used_here = {lab for lab in names if any(has_goto(it, {lab}) for it in items)}
+        for lab in names - used_here:                              # labels no goto of this list refers to: unreferenced ones vanish, the others are targets of jumps from OUTSIDE (handled below)
+            if not any(isinstance(g, c_ast.Goto) and g.name == lab for g in gotos): comp.block_items = [it.stmt if isinstance(it, c_ast.Label) and it.name == lab else it for it in (comp.block_items or [])]
+        items = comp.block_items; names = used_here
+        if not names: continue
         # ---- backward gotos
         for lab in sorted(names):
             idx = next(k for k, it in enumerate(items) if isinstance(it, c_ast.Label) and it.name == lab)
@@ -744,7 +819,54 @@ def eliminate_gotos(fd, notes):
                 cond = c_ast.BinaryOp('||', c_ast.BinaryOp('==', c_ast.ID(gt), c_ast.Constant('int', '0')), c_ast.BinaryOp('==', c_ast.ID(gt), c_ast.Constant('int', str(ids[lab]))))
                 new.append(c_ast.If(cond, c_ast.Compound([c_ast.Assignment('=', c_ast.ID(gt), c_ast.Constant('int', '0'))] + tb), None))
         comp.block_items = new
-    if any(isinstance(n, (c_ast.Goto, c_ast.Label)) for n in walk(fd.body)): raise ValueError('goto/label that could not be eliminated (jump into a block or out of a loop body list)')
+    # ---- jump INTO an if-branch: `goto L` from an earlier statement of the same list to a label inside the branch of a later `if`
+    for comp in lists():
+        items = comp.block_items or []
+        for si, S in enumerate(list(items)):
+            if not isinstance(S, c_ast.If): continue
+            inner_labels = {n.name for n in walk(S) if isinstance(n, c_ast.Label)}
+            if not inner_labels: continue
+            for lab in sorted(inner_labels):
+                src_idx = [k for k, it in enumerate(items) if k < si and has_goto(it, {lab})]
+                if not src_idx or any(has_goto(it, {lab}) for k, it in enumerate(items) if k >= si): continue
+                # the label must sit directly in a branch list of S (not deeper, not in a loop)
+                for a in ('iftrue', 'iffalse'):
+                    br = getattr(S, a)
+                    if not isinstance(br, c_ast.Compound): continue
+                    lst = br.block_items or []
+                    li = next((k for k, it in enumerate(lst) if isinstance(it, c_ast.Label) and it.name == lab), None)
+                    if li is None: continue
+                    counter[0] += 1; gj = '__gj%d' % counter[0]; flags.append(gj)
+                    def tr2(stmts):
+                        out = []
+                        for k, s2 in enumerate(stmts):
+                            hg = has_goto(s2, {lab}); new = tr2s(s2); out += new
+                            if hg and k + 1 < len(stmts): out.append(c_ast.If(c_ast.BinaryOp('==', c_ast.ID(gj), c_ast.Constant('int', '0')), c_ast.Compound(tr2(stmts[k + 1:])), None)); break
+                        return out
+                    def tr2s(s2):
+                        if isinstance(s2, c_ast.Goto) and s2.name == lab: return [c_ast.Assignment('=', c_ast.ID(gj), c_ast.Constant('int', '1'))]
+                        if isinstance(s2, c_ast.Compound): s2.block_items = tr2(list(s2.block_items or [])); return [s2]
+                        if isinstance(s2, c_ast.If):
+                            for b2 in ('iftrue', 'iffalse'):
+                                x = getattr(s2, b2)
+                                if x is not None: setattr(s2, b2, c_ast.Compound(tr2(list(x.block_items) if isinstance(x, c_ast.Compound) else [x])))
+                            return [s2]
+                        if isinstance(s2, c_ast.While):
+                            if has_goto(s2, {lab}): s2.cond = c_ast.BinaryOp('&&', s2.cond, c_ast.BinaryOp('==', c_ast.ID(gj), c_ast.Constant('int', '0')))
+                            body = list(s2.stmt.block_items) if isinstance(s2.stmt, c_ast.Compound) else [s2.stmt]; s2.stmt = c_ast.Compound(tr2(body)); return [s2]
+                        if has_goto(s2, {lab}): raise ValueError('jump into a block from inside a for/do/switch')
+                        return [s2]
+                    pre = tr2(items[:si])
+                    # statements between the goto source and S are skipped while the jump is pending (tr2 guarded them); S itself is entered when no jump is pending or the pending jump targets it
+                    before, after = lst[:li], lst[li + 1:]
+                    jump_entry = c_ast.BinaryOp('==', c_ast.ID(gj), c_ast.Constant('int', '1'))
+                    newbr = c_ast.Compound([c_ast.If(c_ast.BinaryOp('==', c_ast.ID(gj), c_ast.Constant('int', '0')), c_ast.Compound(before), None), c_ast.Assignment('=', c_ast.ID(gj), c_ast.Constant('int', '0')), lst[li].stmt] + after)
+                    setattr(S, a, newbr)
+                    S.cond = c_ast.BinaryOp('||', S.cond, jump_entry) if a == 'iftrue' else c_ast.BinaryOp('||', S.cond, c_ast.UnaryOp('!', c_ast.BinaryOp('==', c_ast.ID(gj), c_ast.Constant('int', '0'))))
+                    if a == 'iffalse': raise ValueError('jump into an else branch')
+                    comp.block_items = pre + [S] + items[si + 1:]; items = comp.block_items; notes.add('jump into an if-branch eliminated')
+                    break
+    if any(isinstance(n, (c_ast.Goto, c_ast.Label)) for n in walk(fd.body)): raise ValueError('goto/label that could not be eliminated (jump into a loop/switch or out of a loop body list)')
     items = fd.body.block_items; k = 0
     while k < len(items) and isinstance(items[k], c_ast.Decl): k += 1
     decls = [c_ast.Decl(f, [], [], [], [], c_ast.TypeDecl(f, [], None, c_ast.IdentifierType(['int'])), c_ast.Constant('int', '0'), None) for f in flags]
@@ -883,6 +1005,7 @@ def bounds_of(fd):
         if p.name in forced: b[p.name] = forced[p.name]; continue
         if p.name.endswith('__n'): b[p.name] = [0, 1 << 40]; continue
         if p.name.endswith('__null'): b[p.name] = [0, 1]; continue
+        if p.name.endswith('__pos'): b[p.name] = [0, 1 << 40]; continue
         bits, signed = INTS[tuple(p.type.type.names)]; b[p.name] = [-(1 << (bits - 1)), (1 << (bits - 1)) - 1] if signed else [0, (1 << bits) - 1]
     return b
 
@@ -976,28 +1099,56 @@ def with_contract(fd, contract_text):
     return f2
 
 
-def contract_candidates(fd, len_params, null_params=()):
-    ints = [p.name for p in (fd.decl.type.args.params if fd.decl.type.args else []) if isinstance(p, c_ast.Decl) and p.name not in len_params and p.name not in null_params and p.name != '__z' and scalar_type(p.type)]
+def contract_candidates(fd, len_params, null_params=(), disjoint=()):
+    ints = [p.name for p in (fd.decl.type.args.params if fd.decl.type.args else []) if isinstance(p, c_ast.Decl) and p.name not in len_params and p.name not in null_params and not p.name.endswith('__pos') and p.name != '__z' and scalar_type(p.type)]
     nn = ' && '.join('(%s == 0)' % n for n in null_params)
     lens = [('len >= each integer parameter', ' && '.join('(%s >= %s)' % (L, q) for L in len_params for q in ints))] if ints and len_params else []
     lens += [('len >= each integer parameter + 1', ' && '.join('(%s >= %s + 1)' % (L, q) for L in len_params for q in ints))] if ints and len_params else []
     lens += [('len >= 1', ' && '.join('(%s >= 1)' % L for L in len_params))] if len_params else []
     out = [('none', None)]
     if nn: out.append(('non-null pointers', nn))
+    dj = ' && '.join(disjoint)
     for name, c in lens:
         out.append((name, c))
         if nn: out.append(('non-null pointers and ' + name, nn + ' && ' + c))
+    if dj:                                          # contracts that also assume the pointer parameters do not overlap (restrict-like)
+        out += [(n + ' and disjoint objects', (c + ' && ' if c else '') + dj) for n, c in list(out) if n.startswith(('non-null pointers and', 'len'))]
     return out
 
 
-def certify_memsafe(path, fn, includes, budget=120):
+_SUMMARIES = {}
+
+
+def callee_summary_fn(path, depth):
+    """memoised bounds summaries of the other functions of the file (one level deep): {'params': [(name, tracked)], 'contract': text|None} for callees proved memory-safe under a contract"""
+    from scripts import memsafe as MS
+    def fn(name):
+        key = (str(path), name)
+        if key not in _SUMMARIES:
+            _SUMMARIES[key] = None
+            if depth < 1:
+                prev = MS.SUMMARY_FN; MS.SUMMARY_FN = None
+                try:
+                    r = certify_memsafe(path, name, INC, budget=25, _depth=depth + 1)
+                    if r['status'] == 'PROVED_MEMSAFE' and r.get('summary_params'): _SUMMARIES[key] = {'params': r['summary_params'], 'contract': r.get('contract_text')}
+                except Exception: pass
+                finally: MS.SUMMARY_FN = prev
+        return _SUMMARIES[key]
+    return fn
+
+
+def certify_memsafe(path, fn, includes, budget=120, bounds_override=None, _depth=0):
     """bounds checking of tracked pointers: returns a row fragment (status PROVED_MEMSAFE / NOT_PROVED / NOT_APPLICABLE)"""
+    from scripts import memsafe as MS
+    MS.SUMMARY_FN = callee_summary_fn(path, _depth) if _depth < 1 else None
     try: orig, new, bounds, notes, info = transcribe(path, fn, includes, memsafe=True)
     except Exception as e: return {'status': 'NOT_APPLICABLE', 'reason': str(e)[:80]}
+    finally: MS.SUMMARY_FN = None
     ms = info.ms
-    res = {'status': 'NOT_PROVED', 'checked_accesses': ms.checked, 'unchecked_call_args': ms.unchecked, 'bases': sorted(set(ms.base.values())), 'strings': sorted(b for b, s in ms.string.items() if s), 'len_params': ms.len_params, 'null_params': ms.null_params, 'libcall_checks': ms.libchecks, 'notes': [n for n in notes if n.startswith(('memory-safety', 'tracked'))]}
+    if bounds_override: bounds = {**bounds, **{k: v for k, v in bounds_override.items() if k in bounds}}
+    res = {'status': 'NOT_PROVED', 'checked_accesses': ms.checked, 'unchecked_call_args': ms.unchecked, 'bases': sorted(set(ms.base.values())), 'strings': sorted(b for b, s in ms.string.items() if s), 'len_params': ms.len_params, 'null_params': ms.null_params, 'libcall_checks': ms.libchecks, 'callee_checks': ms.callee_checks, 'summary_params': ms.orig_params, 'notes': [n for n in notes if n.startswith(('memory-safety', 'tracked'))]}
     if ms.checked == 0: res['status'] = 'NO_CHECKED_ACCESSES'; return res
-    for name, c in contract_candidates(info.fd, ms.len_params, ms.null_params):
+    for name, c in contract_candidates(info.fd, ms.len_params, ms.null_params, ms.disjoint):
         if c is None and not ms.len_params: pass
         f2 = with_contract(info.fd, c) if c else info.fd
         f2 = copy.deepcopy(f2); f2.decl.name = 'f'
@@ -1137,9 +1288,9 @@ if __name__ == '__main__':
             for k, fut in enumerate(as_completed([pool.submit(run_file, j) for j in jobs])):
                 rs = fut.result()
                 rows += rs; print(k, len(jobs), len(rows), flush=True)
-                with open(ROOT / 'experiments/v084/auto_transcribe_all.jsonl', 'a') as fh:
+                with open(ROOT / 'experiments/v085/auto_transcribe_all.jsonl', 'a') as fh:
                     for r in rs: fh.write(json.dumps(r) + '\n')
-        (ROOT / 'experiments/v084/auto_transcribe_all.json').write_text(json.dumps(rows, indent=1) + '\n')
+        (ROOT / 'experiments/v085/auto_transcribe_all.json').write_text(json.dumps(rows, indent=1) + '\n')
         print(collections.Counter(r['stage'] for r in rows)); print(collections.Counter(r.get('reason', '')[:50] for r in rows if r['stage'] == 'rejected').most_common(25))
         sys.exit(0)
     cands = json.loads((ROOT / 'experiments/v081/gnulib_coverage_candidates.json').read_text()); rows = []

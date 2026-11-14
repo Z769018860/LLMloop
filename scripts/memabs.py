@@ -59,13 +59,20 @@ def parse_decl(text):
 class Env:
     """TU-level type information: struct fields, global variable types, prototype return types"""
     def __init__(self, text, tmap, clean):
-        self.fields = {}; self.gtypes = {}; self.ret = {}
+        self.fields = {}; self.gtypes = {}; self.ret = {}; self.fdims = {}
         blocks = re.findall(r'^(?:struct|union) (\w+) \{\n(.*?)\n\};', text, re.M | re.S) + [(nm, body) for body, nm in re.findall(r'^typedef (?:struct|union) \{\n(.*?)\n\} (\w+);', text, re.M | re.S)]
         for tag, body in blocks:
             f = {}
             def add_struct(st):
                 for d in st.decls or []:
-                    if d.name: f[d.name] = desc(d.type)
+                    if d.name:
+                        f[d.name] = desc(d.type)
+                        dims = []; ty = d.type
+                        while isinstance(ty, c_ast.ArrayDecl):
+                            try: dims.append(int(ty.dim.value.rstrip('uUlL'), 0))
+                            except Exception: dims = None; break
+                            ty = ty.type
+                        if dims: self.fdims[(tag, d.name)] = dims
                     elif isinstance(d.type, c_ast.TypeDecl) and isinstance(d.type.type, (c_ast.Struct, c_ast.Union)) and d.type.type.decls: add_struct(d.type.type)          # anonymous member: promoted
             try: add_struct(_P.parse('struct __t { %s };' % re.sub(r'\s*:\s*\d+;', ';', clean(body, tmap))).ext[0].type)
             except Exception:
