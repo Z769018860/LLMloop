@@ -1138,6 +1138,19 @@ def callee_summary_fn(path, depth):
 
 
 def certify_memsafe(path, fn, includes, budget=120, bounds_override=None, _depth=0):
+    """two attempts: without tracking of loaded pointers (v0.85 behaviour: pointers read from memory stay with the plain memory abstraction), then with it (fresh object per loaded pointer); the better verdict wins"""
+    from scripts import memsafe as MS
+    try:
+        MS.MemSafe.USE_LOADED = False; a = _certify_memsafe(path, fn, includes, budget, bounds_override, _depth)
+        if a['status'] == 'PROVED_MEMSAFE': return a
+        MS.MemSafe.USE_LOADED = True; b = _certify_memsafe(path, fn, includes, budget, bounds_override, _depth)
+    finally: MS.MemSafe.USE_LOADED = True
+    rank = {'PROVED_MEMSAFE': 3, 'NOT_PROVED': 2, 'NO_CHECKED_ACCESSES': 1, 'NOT_APPLICABLE': 0}
+    if rank.get(b['status'], 0) > rank.get(a['status'], 0): b['loaded_tracking'] = True; return b
+    return a
+
+
+def _certify_memsafe(path, fn, includes, budget=120, bounds_override=None, _depth=0):
     """bounds checking of tracked pointers: returns a row fragment (status PROVED_MEMSAFE / NOT_PROVED / NOT_APPLICABLE)"""
     from scripts import memsafe as MS
     MS.SUMMARY_FN = callee_summary_fn(path, _depth) if _depth < 3 else None

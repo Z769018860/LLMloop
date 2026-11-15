@@ -61,7 +61,7 @@ class MemSafe:
                     except Exception: continue
                     self.base[n.name] = n.name; self.size[n.name] = ('const', N); self.elem[n.name] = d[1]
         # pointer locals: fixpoint over the assignments
-        locs = {n.name for n in walk(fd.body) if isinstance(n, c_ast.Decl) and n.name and isinstance(n.type, c_ast.PtrDecl) and desc(n.type) and desc(n.type)[1] and desc(n.type)[1][0] in ('s', 'st')}
+        locs = {n.name for n in walk(fd.body) if isinstance(n, c_ast.Decl) and n.name and isinstance(n.type, c_ast.PtrDecl) and desc(n.type) and desc(n.type)[1] and desc(n.type)[1][0] in (('s', 'st') if self.USE_LOADED else ('s',))}
         assigns = collections_defaultdict()
         for n in walk(fd.body):
             if isinstance(n, c_ast.Decl) and n.name in locs and n.init is not None: assigns[n.name].append(n.init)
@@ -159,7 +159,10 @@ class MemSafe:
             if b and self.elem[b][0] == 'ptr': return self.elem[b][1]
         return None
 
+    USE_LOADED = True
+
     def loaded_base(self, v, rv):
+        if not self.USE_LOADED: return None
         w = self.loaded_info(rv)
         if w is None: return None
         d = self.types.get(v)
