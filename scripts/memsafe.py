@@ -124,7 +124,7 @@ class MemSafe:
 
     def alloc_call(self, rv):
         while isinstance(rv, c_ast.Cast): rv = rv.expr
-        if isinstance(rv, c_ast.FuncCall) and isinstance(rv.name, c_ast.ID) and rv.name.name in self.ALLOCS and rv.args and len(rv.args.exprs) == self.ALLOCS[rv.name.name][0]: return rv
+        if isinstance(rv, c_ast.FuncCall) and isinstance(rv.name, c_ast.ID) and rv.name.name in self.ALLOCS and (self.USE_LOADED or not rv.name.name.endswith('realloc')) and rv.args and len(rv.args.exprs) == self.ALLOCS[rv.name.name][0]: return rv
         return None
 
     def path_desc(self, e):

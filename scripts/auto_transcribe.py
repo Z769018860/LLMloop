@@ -1146,8 +1146,9 @@ def certify_memsafe(path, fn, includes, budget=120, bounds_override=None, _depth
         MS.MemSafe.USE_LOADED = True; b = _certify_memsafe(path, fn, includes, budget, bounds_override, _depth)
     finally: MS.MemSafe.USE_LOADED = True
     rank = {'PROVED_MEMSAFE': 3, 'NOT_PROVED': 2, 'NO_CHECKED_ACCESSES': 1, 'NOT_APPLICABLE': 0}
-    if rank.get(b['status'], 0) > rank.get(a['status'], 0): b['loaded_tracking'] = True; return b
-    return a
+    if rank.get(b['status'], 0) > rank.get(a['status'], 0): b['loaded_tracking'] = True; best = b
+    else: best = a
+    return best
 
 
 def _certify_memsafe(path, fn, includes, budget=120, bounds_override=None, _depth=0):

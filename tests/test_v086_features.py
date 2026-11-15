@@ -42,3 +42,16 @@ def test_linked_list_walk_is_tracked_with_a_fresh_object_per_load():
 def test_realloc_resets_the_size_and_null_state():
     out, ms = run('unsigned f(unsigned n){ unsigned char *p = (unsigned char*)malloc(4); if (!p) return 0; unsigned i=0; while (i<n) { if (i>=4) { p = (unsigned char*)realloc(p, n); if (!p) return 0; } p[i]=1; i++; } return i; }')
     assert out.count('p__h__n = ') == 3 and out.count('p__h__null = nondet_uchar()') == 2
+
+
+def test_integrity_v086():
+    import json
+    E = Path(__file__).resolve().parents[1] / 'experiments'
+    r = json.load(open(E / 'v086/auto_transcribe_all.json')); ms = [x['memsafe'] for x in r if 'memsafe' in x]
+    c = {k: sum(m['status'] == k for m in ms) for k in ('PROVED_MEMSAFE', 'NOT_PROVED', 'NO_CHECKED_ACCESSES', 'NOT_APPLICABLE')}
+    assert c == {'PROVED_MEMSAFE': 120, 'NOT_PROVED': 67, 'NO_CHECKED_ACCESSES': 45, 'NOT_APPLICABLE': 812}
+    old = {(x['file'], x['function'], x.get('suite')) for x in json.load(open(E / 'v085/auto_transcribe_all.json')) if x.get('memsafe', {}).get('status') == 'PROVED_MEMSAFE'}
+    new = {(x['file'], x['function'], x.get('suite')) for x in r if x.get('memsafe', {}).get('status') == 'PROVED_MEMSAFE'}
+    assert old <= new and len(new - old) == 3                                  # nothing proved in v0.85 was lost
+    a = json.load(open(E / 'v086/assume_relational.json'))
+    assert len(a) == 44 and sum(x['status'] == 'CERTIFIED_UNDER_ASSUMPTIONS' for x in a) == 2 and sum(x['status'] == 'TIMEOUT' for x in a) == 3
