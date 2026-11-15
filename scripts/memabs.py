@@ -102,8 +102,19 @@ class Env:
                 if ty is not None: self.ret.setdefault(m.group(2), desc(ty))
 
 
+def register_local_structs(fd, env):
+    """struct types DEFINED inside the function body (`struct infomap { char *program; char *node; } infomap[] = {...};`): their fields join the type environment"""
+    for n in walk(fd):
+        if isinstance(n, (c_ast.Struct, c_ast.Union)) and n.decls and n.name and n.name not in env.fields:
+            f = {}
+            for d in n.decls:
+                if d.name: f[d.name] = desc(d.type)
+            env.fields[n.name] = f
+
+
 class MemAbs:
     def __init__(self, fd, env, notes, defs_ret=None):
+        register_local_structs(fd, env)
         self.fd, self.env, self.notes, self.k = fd, env, notes, 0
         self.sym = {}
         for p in (fd.decl.type.args.params if fd.decl.type.args else []):

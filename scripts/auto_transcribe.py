@@ -823,14 +823,14 @@ def eliminate_gotos(fd, notes):
     for comp in lists():
         items = comp.block_items or []
         for si, S in enumerate(list(items)):
-            if not isinstance(S, c_ast.If): continue
+            if not isinstance(S, (c_ast.If, c_ast.While)): continue
             inner_labels = {n.name for n in walk(S) if isinstance(n, c_ast.Label)}
             if not inner_labels: continue
             for lab in sorted(inner_labels):
                 src_idx = [k for k, it in enumerate(items) if k < si and has_goto(it, {lab})]
                 if not src_idx or any(has_goto(it, {lab}) for k, it in enumerate(items) if k >= si): continue
                 # the label must sit directly in a branch list of S (not deeper, not in a loop)
-                for a in ('iftrue', 'iffalse'):
+                for a in (('iftrue', 'iffalse') if isinstance(S, c_ast.If) else ('stmt',)):
                     br = getattr(S, a)
                     if not isinstance(br, c_ast.Compound): continue
                     lst = br.block_items or []
@@ -862,9 +862,9 @@ def eliminate_gotos(fd, notes):
                     jump_entry = c_ast.BinaryOp('==', c_ast.ID(gj), c_ast.Constant('int', '1'))
                     newbr = c_ast.Compound([c_ast.If(c_ast.BinaryOp('==', c_ast.ID(gj), c_ast.Constant('int', '0')), c_ast.Compound(before), None), c_ast.Assignment('=', c_ast.ID(gj), c_ast.Constant('int', '0')), lst[li].stmt] + after)
                     setattr(S, a, newbr)
-                    S.cond = c_ast.BinaryOp('||', S.cond, jump_entry) if a == 'iftrue' else c_ast.BinaryOp('||', S.cond, c_ast.UnaryOp('!', c_ast.BinaryOp('==', c_ast.ID(gj), c_ast.Constant('int', '0'))))
-                    if a == 'iffalse': raise ValueError('jump into an else branch')
-                    comp.block_items = pre + [S] + items[si + 1:]; items = comp.block_items; notes.add('jump into an if-branch eliminated')
+                    if a in ('iftrue', 'stmt'): S.cond = c_ast.BinaryOp('||', jump_entry, S.cond)
+                    else: S.cond = c_ast.BinaryOp('&&', c_ast.BinaryOp('==', c_ast.ID(gj), c_ast.Constant('int', '0')), S.cond)
+                    comp.block_items = pre + [S] + items[si + 1:]; items = comp.block_items; notes.add('jump into an if/else/loop body eliminated')
                     break
     if any(isinstance(n, (c_ast.Goto, c_ast.Label)) for n in walk(fd.body)): raise ValueError('goto/label that could not be eliminated (jump into a loop/switch or out of a loop body list)')
     items = fd.body.block_items; k = 0
@@ -1126,7 +1126,7 @@ def callee_summary_fn(path, depth):
         key = (str(path), name)
         if key not in _SUMMARIES:
             _SUMMARIES[key] = None
-            if depth < 1:
+            if depth < 3:
                 prev = MS.SUMMARY_FN; MS.SUMMARY_FN = None
                 try:
                     r = certify_memsafe(path, name, INC, budget=25, _depth=depth + 1)
@@ -1140,7 +1140,7 @@ def callee_summary_fn(path, depth):
 def certify_memsafe(path, fn, includes, budget=120, bounds_override=None, _depth=0):
     """bounds checking of tracked pointers: returns a row fragment (status PROVED_MEMSAFE / NOT_PROVED / NOT_APPLICABLE)"""
     from scripts import memsafe as MS
-    MS.SUMMARY_FN = callee_summary_fn(path, _depth) if _depth < 1 else None
+    MS.SUMMARY_FN = callee_summary_fn(path, _depth) if _depth < 3 else None
     try: orig, new, bounds, notes, info = transcribe(path, fn, includes, memsafe=True)
     except Exception as e: return {'status': 'NOT_APPLICABLE', 'reason': str(e)[:80]}
     finally: MS.SUMMARY_FN = None

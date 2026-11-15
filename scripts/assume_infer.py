@@ -95,6 +95,12 @@ def param_atoms(fd, kind):
     return out
 
 
+def relational_atoms(fd):
+    """one precondition per ordered pair of integer parameters: a <= b (the relation between sizes/offsets that loops usually rely on)"""
+    ps = [p.name for p in (fd.decl.type.args.params if fd.decl.type.args else []) if isinstance(p, c_ast.Decl) and p.name != '__z' and A.scalar_type(p.type) and not p.name.endswith(('__n', '__null'))][:4]
+    return [('rel:%s<=%s' % (a, b), ['(%s <= %s)' % (a, b)]) for a in ps for b in ps if a != b]
+
+
 def infer(path, fn, budget=25, max_sites=10):
     """search over (parameter precondition) x (read-site assumption); minimise both"""
     orig, new, bounds, notes, info = A.transcribe(path, fn, A.INC)
@@ -109,6 +115,7 @@ def infer(path, fn, budget=25, max_sites=10):
         if patoms: f2 = A.with_contract(f2, ' && '.join(patoms))
         f2.decl.name = 'f'; return A.certify(A.G.visit(f2), bounds, budget=budget)['status'] == 'PROVED'
     P = [(k, param_atoms(fd, k)) for k in ('nonzero', 'pos', 'small')] if ints else []
+    P += relational_atoms(fd)
     S = (TEMPLATES if sites else []); R = (['le:' + q for q in ints] if sites else [])
     order = [(pk, pat, None) for pk, pat in P] + [(None, [], st) for st in S] + [(pk, pat, st) for pk, pat in P for st in S] + [(None, [], st) for st in R] + [(pk, pat, st) for pk, pat in P for st in R]      # plain parameter preconditions first, relational read clamps last
     for pk, pat, st in order:
