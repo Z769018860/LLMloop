@@ -84,7 +84,7 @@ def extract(text, name):
     while i < len(lines):
         l = lines[i]
         m = re.match(r'^(?:static |inline |extern )*[A-Za-z_][\w \*]*?\b(\w+)\(([^;]*)\) \{$', l)
-        if m and not l.startswith(('typedef', 'struct')):
+        if m and not l.startswith('typedef'):
             j = i
             while j < len(lines) and lines[j] != '}': j += 1
             defs.setdefault(m.group(1), '\n'.join(lines[i:j + 1])); i = j
@@ -1306,11 +1306,12 @@ def has_loop(fd): return any(isinstance(n, (c_ast.While, c_ast.For, c_ast.DoWhil
 
 
 def run_file(args):
-    path, suite = args; rows = []
+    path, suite = args[:2]; skip = args[2] if len(args) > 2 else (); rows = []
     try:
         text, tmap, defs, protos, asts, gmap, env = file_material(path, INC)
     except Exception as e: return [{'suite': suite, 'file': Path(path).name, 'function': '*', 'stage': 'rejected', 'reason': 'file: ' + str(e)[:60]}]
     for fn in defs:
+        if (suite, Path(path).name, fn) in skip: continue
         if fn in asts and not has_loop(asts[fn]): continue
         if fn not in asts and not re.search(r'\b(while|for|do)\b', defs[fn]): continue
         rows.append(run_one_isolated(path, fn, 'loop' if fn in asts else 'unparsed', suite, limit=300))
@@ -1342,6 +1343,16 @@ if __name__ == '__main__':
                 fl, fn, su, res = f.result(); idx[(fl, fn, su)]['memsafe'] = res
                 if k % 50 == 0: print(k, len(todo), flush=True)
         Path(sys.argv[3]).write_text(json.dumps(rows, indent=1) + '\n'); print('done'); sys.exit(0)
+    if only == 'new':            # functions that an earlier survey did not contain (e.g. functions returning `struct X *`): auto_transcribe.py new old_survey.json out.json
+        from concurrent.futures import ProcessPoolExecutor, as_completed
+        skip = {(r['suite'], r['file'], r['function']) for r in json.load(open(sys.argv[2]))}
+        jobs = [(str(f), s, skip) for s, d in (('gnulib:lib', CU / 'gnulib/lib'), ('coreutils:src', CU / 'coreutils/src')) for f in sorted(d.glob('*.c'))]
+        rows = []
+        with ProcessPoolExecutor(3) as pool:
+            for k, fut in enumerate(as_completed([pool.submit(run_file, j) for j in jobs])):
+                rows += fut.result()
+                if k % 50 == 0: print(k, len(jobs), len(rows), flush=True)
+        Path(sys.argv[3]).write_text(json.dumps(rows, indent=1) + '\n'); print(collections.Counter(r['stage'] for r in rows)); sys.exit(0)
     if only == 'all':
         from concurrent.futures import ProcessPoolExecutor, as_completed
         jobs = [(str(f), s) for s, d in (('gnulib:lib', CU / 'gnulib/lib'), ('coreutils:src', CU / 'coreutils/src')) for f in sorted(d.glob('*.c'))]

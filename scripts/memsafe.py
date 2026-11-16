@@ -37,7 +37,7 @@ class MemSafe:
         self.string = {}          # base -> bool
         self.elem = {}            # base -> scalar word tuple
         self.checked = 0; self.unchecked = 0; self.untracked_derefs = 0; self.untracked_list = []; self.k = 0; self.pre = []
-        self.heap = {}; self.loaded = {}; self.merged = set(); self.enull = set(); self.orig_params = []; self.callee_checks = 0; self.pos_bases = set(); self.disjoint = []; self.len_params = []; self.null_params = []; self.nullable = set(); self.voidbase = set(); self.freeable = set(); self.libchecks = 0
+        self.heap = {}; self.loaded = {}; self.merged = set(); self.enull = set(); self.fcache = {}; self.fn_vars = []; self.orig_params = []; self.callee_checks = 0; self.pos_bases = set(); self.disjoint = []; self.len_params = []; self.null_params = []; self.nullable = set(); self.voidbase = set(); self.freeable = set(); self.libchecks = 0
 
     # ------------------------------------------------------------------ analysis
     def analyse(self):
@@ -81,9 +81,14 @@ class MemSafe:
                     if rv is None or self.null_const(rv): continue                           # `p = NULL` keeps the base (it only makes the heap pointer NULL)
                     b = self.heap_base(v, rv) or self.loaded_base(v, rv) or self.base_of(rv)
                     bs.add(b)
-                if v in self.loaded and None not in bs and len(bs) > 1 and self.loaded[v][0] in bs and all(x is not None and self.elem.get(x) == self.loaded[v][1] for x in bs if x != self.loaded[v][0]):
+                if self.USE_LOADED and None not in bs and v not in self.loaded:
+                    lb_ = {h for h, w in self.loaded.values()}                   # copying a variable that walks over objects (`found = node`): v needs its OWN object state
+                    if any(x in lb_ for x in bs) and all(self.elem.get(x) == self.elem.get(next(iter(bs))) for x in bs):
+                        w_ = self.elem[next(iter(bs))]; self.loaded[v] = (v + '__ld', w_); self.elem[v + '__ld'] = w_; bs = bs | {v + '__ld'}
+                if v in self.loaded and None not in bs and (len(bs) > 1 or self.loaded[v][0] not in bs) and all(x in {h for h, w in self.loaded.values()} or x is not None for x in bs) and all(x is not None and self.elem.get(x) == self.loaded[v][1] for x in bs if x != self.loaded[v][0]):
                     bs = {self.loaded[v][0]}; self.merged.add(v)          # the variable walks over several objects (`p = head; p = p->next`): one fresh object per assignment
                 if not assigns.get(v) or None in bs or len(bs) != 1 or list(bs)[0] is None and True:
+                    if None in bs and assigns.get(v) and len(bs) == 1 and v not in self.base: continue                      # depends on a variable that is not resolved yet (`found = node` before `node` is): retry in the next round
                     if not assigns.get(v) or None in bs or len(bs) != 1: bad.add(v); changed = True; continue
                 b = list(bs)[0]
                 if self.base.get(v) != b: self.base[v] = b; changed = True
@@ -184,14 +189,15 @@ class MemSafe:
     def loaded_null(self, rv):
         """NULL state of a loaded pointer: an element of a pointer ARRAY is NULL according to the parameter `<array>__enull` (a precondition the caller can state: no element is NULL); a pointer field is NULL or not (end of a list)"""
         while isinstance(rv, c_ast.Cast): rv = rv.expr
+        ck = G_.visit(rv)
+        if ck in self.fcache: self.notes.add('NULL state of a re-read pointer field taken from the preceding test'); return idn(self.fcache[ck][0])
         op = rv.name if isinstance(rv, c_ast.ArrayRef) else rv.expr if isinstance(rv, c_ast.UnaryOp) and rv.op == '*' else None
         b = self.base_of(op) if op is not None and not isinstance(op, c_ast.StructRef) else None
         if b and self.elem[b][0] == 'ptr': self.enull.add(b); return idn(b + '__enull')
         return bin_('!=', self.nd(('unsigned', 'char')), num(0))
 
-    def load_stmts(self, v, rv, decl):
-        """v = (pointer loaded from memory): the access that loads it is checked; v then points to a fresh object that is NULL or valid (assumed well-formed data) with at least one element"""
-        hb, w = self.loaded[v]; out = []
+    def path_guard(self, rv):
+        """the checked access that loads a pointer value (`p->next`, `argv[i]`): its guard lands in self.pre"""
         while isinstance(rv, c_ast.Cast): rv = rv.expr
         sa = self.sacc(rv) if isinstance(rv, c_ast.StructRef) else None
         if sa is not None:
@@ -202,6 +208,52 @@ class MemSafe:
             a = self.acc(rv)
             if a is None: raise ValueError('loaded pointer: unsupported access')
             self.checked += 1; self.pre.append(c_ast.Assignment('=', idn('__ms_w'), self.guard(a[0], a[1])))
+
+    def field_test(self, cond):
+        """a NULL test of a loaded pointer path: (path, True when the condition holds for a non-NULL path) or None"""
+        if not self.USE_LOADED: return None
+        c = cond
+        while isinstance(c, c_ast.Cast): c = c.expr
+        if isinstance(c, c_ast.BinaryOp) and c.op in ('==', '!='):
+            if self.null_const(c.right): path = c.left
+            elif self.null_const(c.left): path = c.right
+            else: return None
+            sense = c.op == '!='
+        elif isinstance(c, c_ast.UnaryOp) and c.op == '!': path = c.expr; sense = False
+        else: path = c; sense = True
+        while isinstance(path, c_ast.Cast): path = path.expr
+        if not isinstance(path, (c_ast.StructRef, c_ast.ArrayRef, c_ast.UnaryOp)) or isinstance(path, c_ast.UnaryOp) and path.op != '*': return None
+        return (path, sense) if self.loaded_info(path) is not None else None
+
+    def test_stmts(self, path, sense):
+        """cond for a NULL test of a loaded path: the test result is remembered so that an immediately following load of the same path sees the same NULL state"""
+        self.path_guard(path); self.k += 1; nm = '__fn%d' % self.k; self.fn_vars.append(nm)
+        self.pre.append(c_ast.Assignment('=', idn(nm), bin_('!=', self.nd(('unsigned', 'char')), num(0))))
+        return nm, (bin_('==', idn(nm), num(0)) if sense else bin_('!=', idn(nm), num(0)))
+
+    def invalidation(self, s):
+        """cache entries a statement may invalidate: ('all',) after calls/stores, else the set of assigned variables"""
+        names = set()
+        for n in walk(s):
+            if isinstance(n, c_ast.FuncCall): return None
+            if isinstance(n, c_ast.Assignment):
+                if isinstance(n.lvalue, c_ast.ID): names.add(n.lvalue.name)
+                else: return None
+            if isinstance(n, c_ast.UnaryOp) and n.op in ('p++', 'p--', '++', '--'):
+                if isinstance(n.expr, c_ast.ID): names.add(n.expr.name)
+                else: return None
+            if isinstance(n, c_ast.Decl) and n.name: names.add(n.name)
+        return names
+
+    def apply_invalidation(self, inv):
+        if inv is None: self.fcache.clear(); return
+        for key in list(self.fcache):
+            if {x.name for x in walk(self.fcache[key][1]) if isinstance(x, c_ast.ID)} & inv: del self.fcache[key]
+
+    def load_stmts(self, v, rv, decl):
+        """v = (pointer loaded from memory): the access that loads it is checked; v then points to a fresh object that is NULL or valid (assumed well-formed data) with at least one element"""
+        hb, w = self.loaded[v]; out = []
+        self.path_guard(rv)
         if decl: out.append(c_ast.Decl(v + '__o', [], [], [], [], c_ast.TypeDecl(v + '__o', [], None, c_ast.IdentifierType(['long'])), num(0), None)); self.pvars.add(v)
         out += [c_ast.Assignment('=', idn(hb + '__n'), self.nd(('unsigned', 'long'))), c_ast.If(bin_('==', idn(hb + '__n'), num(0)), c_ast.Compound([c_ast.Assignment('=', idn(hb + '__n'), num(1))]), None),
                 c_ast.Assignment('=', idn(hb + '__fr'), num(0)), c_ast.Assignment('=', idn(hb + '__null'), self.loaded_null(rv)), c_ast.Assignment('=', idn(v + '__o'), num(0))]
@@ -376,20 +428,23 @@ class MemSafe:
         if a is not None and self.elem[a[0]][0] == 'ptr': raise ValueError('pointer element read as a value')
         if a is not None: return self.read_value(a[0], a[1])
         if isinstance(e, c_ast.ID):
-            if e.name in self.base and e.name not in self.arrays: raise ValueError('tracked pointer used as a value')
+            if e.name in self.base and e.name not in self.arrays: raise ValueError('tracked pointer used as a value: ' + G_.visit(e)[:40])
             return e
         if isinstance(e, c_ast.BinaryOp):
             lb, rb = self.base_of(e.left), self.base_of(e.right)
             if e.op in ('==', '!=', '<', '<=', '>', '>=') and (lb or rb):
                 if lb and rb:
-                    if lb != rb: raise ValueError('comparison of pointers with different bases')
+                    if lb != rb:
+                        if self.USE_LOADED and e.op in ('==', '!='): self.notes.add('pointer (in)equality between different objects: nondeterministic'); return bin_('!=', self.nd(('unsigned', 'char')), num(0))
+                        raise ValueError('comparison of pointers with different bases')
                     return bin_(e.op, self.off(e.left), self.off(e.right))
                 other = e.right if lb else e.left
-                if isinstance(other, c_ast.Constant) and other.value == '0':
+                if self.null_const(other):
                     if e.op not in ('==', '!='): raise ValueError('ordered comparison with NULL')
                     b = lb or rb
                     if b in self.nullable: return bin_('!=' if e.op == '==' else '==', idn(self.nullvar(b)), num(0))       # q == NULL  <=>  the base parameter is NULL
                     return num(1 if e.op == '!=' else 0)
+                if self.USE_LOADED and e.op in ('==', '!='): self.notes.add('pointer (in)equality with an untracked pointer: nondeterministic'); return bin_('!=', self.nd(('unsigned', 'char')), num(0))
                 raise ValueError('comparison of a tracked pointer with an unknown pointer')
             if e.op == '-' and lb and rb:
                 if lb != rb: raise ValueError('difference of pointers with different bases')
@@ -570,19 +625,34 @@ class MemSafe:
             if a is not None:
                 self.checked += 1; return self.flush([c_ast.Assignment('=', idn('__ms_w'), self.guard(a[0], a[1])), c_ast.Assignment('=', idn('__ms_w'), bin_('+', self.nd(self.elem[a[0]]), num(1)))])
         if isinstance(s, c_ast.If):
-            s.cond = self.ex(s.cond) if not self.base_of(s.cond) else self.nonnull_cond(self.base_of(s.cond)); pre = self.pre; self.pre = []
+            ft = self.field_test(s.cond); cache_in = None
+            if ft: nm, s.cond = self.test_stmts(*ft); cache_in = (G_.visit(ft[0]), (nm, ft[0]), ft[1])
+            else: s.cond = self.ex(s.cond) if not self.base_of(s.cond) else self.nonnull_cond(self.base_of(s.cond))
+            pre = self.pre; self.pre = []
             for x in ('iftrue', 'iffalse'):
                 b = getattr(s, x)
-                if b is not None: setattr(s, x, c_ast.Compound(self.stmts(b.block_items) if isinstance(b, c_ast.Compound) else self.stmt(b)))
+                if b is not None:
+                    saved = dict(self.fcache)
+                    if cache_in and (x == 'iftrue') == cache_in[2]: self.fcache[cache_in[0]] = cache_in[1]
+                    setattr(s, x, c_ast.Compound(self.stmts(b.block_items) if isinstance(b, c_ast.Compound) else self.stmt(b)))
+                    self.fcache = saved
             return pre + [s]
         if isinstance(s, c_ast.While):
-            s.cond = self.ex(s.cond) if not self.base_of(s.cond) else self.nonnull_cond(self.base_of(s.cond)); pre = self.pre; self.pre = []
+            ft = self.field_test(s.cond); cache_in = None
+            if ft: nm, s.cond = self.test_stmts(*ft); cache_in = (G_.visit(ft[0]), (nm, ft[0]), ft[1])
+            else: s.cond = self.ex(s.cond) if not self.base_of(s.cond) else self.nonnull_cond(self.base_of(s.cond))
+            pre = self.pre; self.pre = []
+            saved = dict(self.fcache); self.fcache = {}
+            if cache_in and cache_in[2]: self.fcache[cache_in[0]] = cache_in[1]
             b = s.stmt; body = self.stmts(b.block_items) if isinstance(b, c_ast.Compound) else self.stmt(b)
+            self.fcache = saved; self.fcache.clear()
             if pre: return [c_ast.While(num(1), c_ast.Compound(pre + [c_ast.If(c_ast.UnaryOp('!', s.cond), c_ast.Compound([c_ast.Break()]), None)] + body))]
             s.stmt = c_ast.Compound(body); return [s]
         if isinstance(s, c_ast.Return):
             if s.expr is not None:
-                if self.base_of(s.expr): raise ValueError('returning a tracked pointer')
+                if self.base_of(s.expr):
+                    if self.USE_LOADED: self.notes.add('returned pointer value dropped (the scalar program returns 0)'); return self.flush([c_ast.Return(num(0))])
+                    raise ValueError('returning a tracked pointer')
                 s.expr = self.ex(s.expr)
             return self.flush([s])
         if isinstance(s, c_ast.FuncCall): return self.flush([self.ex(s)])
@@ -591,7 +661,10 @@ class MemSafe:
 
     def stmts(self, ss):
         out = []
-        for s in ss: out += self.stmt(s)
+        for s in ss:
+            inv = self.invalidation(s) if self.fcache else set()
+            out += self.stmt(s)
+            if self.fcache: self.apply_invalidation(inv)
         return out
 
     def run(self):
@@ -617,6 +690,7 @@ class MemSafe:
         for v, (hb, w) in sorted(list(self.heap.items()) + list(self.loaded.items())):
             pre.append(c_ast.Decl(hb + '__n', [], [], [], [], c_ast.TypeDecl(hb + '__n', [], None, c_ast.IdentifierType(['unsigned', 'long'])), num(0), None))
             pre.append(c_ast.Decl(hb + '__null', [], [], [], [], c_ast.TypeDecl(hb + '__null', [], None, c_ast.IdentifierType(['int'])), num(1), None))
+        for nm in self.fn_vars: pre.append(c_ast.Decl(nm, [], [], [], [], c_ast.TypeDecl(nm, [], None, c_ast.IdentifierType(['int'])), num(0), None))
         for b in sorted(self.freeable | {hb for hb, w in self.heap.values()} | {hb for hb, w in self.loaded.values()}):
             pre.append(c_ast.Decl(self.freevar(b), [], [], [], [], c_ast.TypeDecl(self.freevar(b), [], None, c_ast.IdentifierType(['int'])), num(0), None))
         keep_params = []

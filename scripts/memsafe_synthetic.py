@@ -108,4 +108,4 @@ if __name__ == '__main__':
         rows.append(row); print(name, res['status'], res.get('contract'), res.get('checked_accesses'), row['asan'], flush=True)
     if not only:
         wrong = [r['case'] for r in rows if r['memsafe']['status'] == 'PROVED_MEMSAFE' and r['asan'].get('asan_errors', 0) > 0]          # proved but AddressSanitizer found an error with contract-satisfying inputs
-        (ROOT / 'experiments/v087').mkdir(exist_ok=True); (ROOT / 'experiments/v087/memsafe_synthetic.json').write_text(json.dumps({'rows': rows, 'unsound': wrong}, indent=1) + '\n'); print('unsound:', wrong)
+        (ROOT / 'experiments/v088').mkdir(exist_ok=True); (ROOT / 'experiments/v088/memsafe_synthetic.json').write_text(json.dumps({'rows': rows, 'unsound': wrong}, indent=1) + '\n'); print('unsound:', wrong)
