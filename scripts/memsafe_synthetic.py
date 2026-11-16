@@ -43,6 +43,10 @@ CASES = {
  'callee_ok':      dict(src='static unsigned sumv(const unsigned char *p, unsigned n){ unsigned s = 0; unsigned i = 0; while (i < n) { s += p[i]; i++; } return s; }\nunsigned f(const unsigned char *q, unsigned m){ return sumv(q, m); }', ptrs=[('q', 'buf', 'const unsigned char')], ints=['m'], safe=True),
  'callee_bug':     dict(src='static unsigned sumv(const unsigned char *p, unsigned n){ unsigned s = 0; unsigned i = 0; while (i < n) { s += p[i]; i++; } return s; }\nunsigned f(const unsigned char *q, unsigned m){ return sumv(q, 8) + m; }', ptrs=[('q', 'buf', 'const unsigned char')], ints=['m'], safe=False),
  'callee_offset_ok': dict(src='static unsigned sumv(const unsigned char *p, unsigned n){ unsigned s = 0; unsigned i = 0; while (i < n) { s += p[i]; i++; } return s; }\nunsigned f(const unsigned char *q, unsigned m){ if (m == 0) return 0; return sumv(q + 1, m - 1); }', ptrs=[('q', 'buf', 'const unsigned char')], ints=['m'], safe=True),
+ 'realloc_ok':     dict(src='#include <stdlib.h>\nunsigned f(unsigned n){ unsigned char *p = (unsigned char *)malloc(2); unsigned s = 0; unsigned i = 0; if (p == 0) return 0; while (i < n) { if (i >= 2) { p = (unsigned char *)realloc(p, i + 1); if (p == 0) return 0; } p[i] = (unsigned char)i; s += p[i]; i++; } free(p); return s; }', ptrs=[], ints=['n'], safe=True, small=True),
+ 'realloc_bug':    dict(src='#include <stdlib.h>\nunsigned f(unsigned n){ unsigned char *p = (unsigned char *)malloc(2); unsigned s = 0; unsigned i = 0; if (p == 0) return 0; while (i < n) { if (i >= 2) { p = (unsigned char *)realloc(p, i); if (p == 0) return 0; } p[i] = (unsigned char)i; s += p[i]; i++; } free(p); return s; }', ptrs=[], ints=['n'], safe=False, small=True),
+ 'loaded_str_ok':  dict(src='unsigned f(char **av, unsigned n){ unsigned t = 0; unsigned i = 0; while (i < n) { const char *s = av[i]; unsigned j = 0; while (s[j]) { t++; j++; } i++; } return t; }', ptrs=[('av', 'pptr', 'char')], ints=['n'], safe=True),
+ 'loaded_str_bug': dict(src='unsigned f(char **av, unsigned n){ unsigned t = 0; unsigned i = 0; while (i <= n) { const char *s = av[i]; unsigned j = 0; while (s[j]) { t++; j++; } i++; } return t; }', ptrs=[('av', 'pptr', 'char')], ints=['n'], safe=False),
 }
 BOUNDS = {'n': [0, 1000], 'c': [0, 255]}
 
@@ -101,4 +105,4 @@ if __name__ == '__main__':
         rows.append(row); print(name, res['status'], res.get('contract'), res.get('checked_accesses'), row['asan'], flush=True)
     if not only:
         wrong = [r['case'] for r in rows if r['memsafe']['status'] == 'PROVED_MEMSAFE' and r['asan'].get('asan_errors', 0) > 0]          # proved but AddressSanitizer found an error with contract-satisfying inputs
-        (ROOT / 'experiments/v085').mkdir(exist_ok=True); (ROOT / 'experiments/v085/memsafe_synthetic.json').write_text(json.dumps({'rows': rows, 'unsound': wrong}, indent=1) + '\n'); print('unsound:', wrong)
+        (ROOT / 'experiments/v086').mkdir(exist_ok=True); (ROOT / 'experiments/v086/memsafe_synthetic.json').write_text(json.dumps({'rows': rows, 'unsound': wrong}, indent=1) + '\n'); print('unsound:', wrong)

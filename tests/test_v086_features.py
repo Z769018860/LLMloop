@@ -55,3 +55,13 @@ def test_integrity_v086():
     assert old <= new and len(new - old) == 3                                  # nothing proved in v0.85 was lost
     a = json.load(open(E / 'v086/assume_relational.json'))
     assert len(a) == 44 and sum(x['status'] == 'CERTIFIED_UNDER_ASSUMPTIONS' for x in a) == 2 and sum(x['status'] == 'TIMEOUT' for x in a) == 3
+
+
+def test_v086_synthetic_suite_realloc_and_loaded_strings_under_asan():
+    import json
+    d = json.load(open(Path(__file__).resolve().parents[1] / 'experiments/v086/memsafe_synthetic.json'))
+    rows = {r['case']: r for r in d['rows']}
+    assert len(rows) == 41 and d['unsound'] == []
+    assert rows['realloc_ok']['memsafe']['status'] == 'PROVED_MEMSAFE' and rows['realloc_ok']['asan']['asan_errors'] == 0
+    assert rows['realloc_bug']['memsafe']['status'] != 'PROVED_MEMSAFE' and rows['realloc_bug']['asan']['asan_errors'] > 0
+    assert rows['loaded_str_ok']['asan']['asan_errors'] == 0 and rows['loaded_str_bug']['memsafe']['status'] != 'PROVED_MEMSAFE' and rows['loaded_str_bug']['asan']['asan_errors'] > 0

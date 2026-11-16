@@ -21,7 +21,8 @@
 - 第一次重跑出现回归:已加载指针跟踪与 `realloc` 跟踪让 63 个原本已证明的函数变为 NOT_APPLICABLE(比较指针与未知指针、把指针存入静态变量等)。修复:先按 v0.85 模式检查,未证明时才启用这两项并取更好结论(`MemSafe.USE_LOADED`)。
 - `temp_stream` 在修复 `realloc` 后单独重跑并写回调查文件,不是整批重跑的结果。
 - 已加载指针模型只能证明"NULL 已被检查"的遍历;`argv[i]` 这类可能为 NULL 的元素无法证明;链表遍历的证明依赖"非 NULL 的已加载指针合法"这一假设,不是对堆结构的证明。
-- **没有**新增 AddressSanitizer 合成用例(已加载指针/`realloc` 仅做了代码变换与单元测试);goto 跳入循环体只覆盖标签直接位于循环体语句列表的情形。
+- **补充**:新增 4 个 ASan 合成用例(`realloc_ok/bug`、`loaded_str_ok/bug`,`experiments/v086/memsafe_synthetic.json`,共 41 个,无不可靠结论):`realloc_ok` 已证明且 ASan 无错误,两个 bug 用例未被证明且 ASan 报错。`loaded_str_ok` 的"已证明"来自 v0.85 模式(内层 `argv[i][j]` 读取不检查);改用完整已加载指针跟踪时它**不能**证明——嵌套循环下 Houdini 找不到内层不变式(已验证:即使假设已加载指针非 NULL 仍卡住),这是验证能力的局限,不是不可靠;
+- goto 跳入循环体只覆盖标签直接位于循环体语句列表的情形。
 - 翻译单元错误的 191 个函数(正则/时区内部头文件)不可修复,需要真实构建,仅记录。
 
 ## English
@@ -45,5 +46,6 @@
 - The first rerun regressed: loaded-pointer and `realloc` tracking turned 63 previously proved functions into NOT_APPLICABLE (pointer compared with an unknown pointer, pointer stored into a static, …). Fix: check in v0.85 mode first and enable both features only as a fallback, keeping the better verdict (`MemSafe.USE_LOADED`).
 - `temp_stream` was re-run alone after the `realloc` fix and patched into the survey file; it is not part of the batch run.
 - The loaded-pointer model proves only traversals whose NULLs are checked; possibly-NULL elements such as `argv[i]` cannot be proved; list-walk proofs rest on the assumption that non-NULL loaded pointers are valid, so they are not heap-structure proofs.
-- **No** new AddressSanitizer synthetic cases (loaded pointers/`realloc` were only checked by code transformation and unit tests); goto into loops covers only labels directly in the loop body list.
+- **Added**: 4 ASan synthetic cases (`realloc_ok/bug`, `loaded_str_ok/bug`; `experiments/v086/memsafe_synthetic.json`, 41 in total, no unsound verdict): `realloc_ok` is proved with 0 ASan errors, both bug cases are unproved with ASan errors. The PROVED verdict of `loaded_str_ok` comes from the v0.85 mode (inner `argv[i][j]` reads unchecked); under full loaded-pointer tracking it is **not** proved — Houdini finds no inner-loop invariant for the nested loop (checked: it stays stuck even when loaded pointers are assumed non-NULL). This is a prover-power limit, not unsoundness;
+-  goto into loops covers only labels directly in the loop body list.
 - The 191 translation-unit-error functions (regex/time-zone internals) cannot be fixed without a real build; recorded only.
