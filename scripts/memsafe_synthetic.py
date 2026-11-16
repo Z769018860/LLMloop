@@ -47,6 +47,8 @@ CASES = {
  'realloc_bug':    dict(src='#include <stdlib.h>\nunsigned f(unsigned n){ unsigned char *p = (unsigned char *)malloc(2); unsigned s = 0; unsigned i = 0; if (p == 0) return 0; while (i < n) { if (i >= 2) { p = (unsigned char *)realloc(p, i); if (p == 0) return 0; } p[i] = (unsigned char)i; s += p[i]; i++; } free(p); return s; }', ptrs=[], ints=['n'], safe=False, small=True),
  'loaded_str_ok':  dict(src='unsigned f(char **av, unsigned n){ unsigned t = 0; unsigned i = 0; while (i < n) { const char *s = av[i]; unsigned j = 0; while (s[j]) { t++; j++; } i++; } return t; }', ptrs=[('av', 'pptr', 'char')], ints=['n'], safe=True),
  'loaded_str_bug': dict(src='unsigned f(char **av, unsigned n){ unsigned t = 0; unsigned i = 0; while (i <= n) { const char *s = av[i]; unsigned j = 0; while (s[j]) { t++; j++; } i++; } return t; }', ptrs=[('av', 'pptr', 'char')], ints=['n'], safe=False),
+ 'list_sum_ok':    dict(src='struct N { struct N *next; int v; };\nunsigned f(struct N *h){ unsigned t = 0; struct N *p = h; while (p) { t += p->v & 255; p = p->next; } return t; }', ptrs=[('h', 'list', 'struct N')], ints=[], safe=True),
+ 'list_next_bug':  dict(src='struct N { struct N *next; int v; };\nunsigned f(struct N *h){ unsigned t = 0; struct N *p = h; while (p) { t += p->next->v & 255; p = p->next; } return t; }', ptrs=[('h', 'list', 'struct N')], ints=[], safe=False),
 }
 BOUNDS = {'n': [0, 1000], 'c': [0, 255]}
 
@@ -63,9 +65,10 @@ def asan_runs(case, contract, trials=60, seed=1):
     for i, (nm, kind, ty) in enumerate(ptrs):
         base = ty.replace('const ', '')
         extra = 1 if kind == 'str' else 0
-        elt = 'unsigned char' if kind == 'void' else ('char *' if kind == 'pptr' else base)
+        elt = 'unsigned char' if kind == 'void' else base if kind == 'list' else ('unsigned char' if kind == 'void' else ('char *' if kind == 'pptr' else base))
         decl += '    long LL_%s = strtol(argv[%d], 0, 10); unsigned long L_%s = LL_%s < 0 ? 0 : (unsigned long)LL_%s; %s *%s = 0;\n    if (LL_%s >= 0) { %s = (%s*)malloc((L_%s + %d) * sizeof(%s)); for (unsigned long __qq = 0; __qq < (L_%s + %d) * sizeof(%s); __qq++) ((unsigned char*)%s)[__qq] = %s; }\n' % (nm, 1 + i, nm, nm, nm, elt, nm, nm, nm, elt, nm, extra, elt, nm, extra, elt, nm, '(unsigned char)(1 + rand() % 120)' if kind == 'str' else '(unsigned char)rand()')
         if kind == 'str': decl += '    if (%s) %s[L_%s] = 0;\n' % (nm, nm, nm)
+        if kind == 'list': decl += '    %s = 0; for (unsigned long __qq = 0; LL_%s >= 0 && __qq < L_%s; __qq++) { struct N *__nn = (struct N *)malloc(sizeof(struct N)); __nn->next = %s; __nn->v = (int)(rand() %% 50); %s = __nn; }\n' % (nm, nm, nm, nm, nm)
         if kind == 'pptr': decl += '    if (%s) for (unsigned long __qq = 0; __qq < L_%s; __qq++) { %s[__qq] = (char *)malloc(4); %s[__qq][0] = 120; %s[__qq][1] = 0; }\n' % (nm, nm, nm, nm, nm)
     for j, nm in enumerate(ints): decl += '    long %s = strtol(argv[%d], 0, 10);\n' % (nm, 1 + len(ptrs) + j)
     aliasing = '    if (argc > %d) { unsigned char *bb = (unsigned char *)malloc(L_%s + 2); for (unsigned long __qq = 0; __qq < L_%s + 2; __qq++) bb[__qq] = (unsigned char)rand(); %s = bb; %s = bb + 1; }\n' % (1 + len(ptrs) + len(ints), ptrs[0][0], ptrs[0][0], ptrs[0][0], ptrs[1][0]) if len(ptrs) == 2 and case.get('alias') else ''

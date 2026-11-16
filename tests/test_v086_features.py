@@ -20,6 +20,9 @@ def tr(tmp_path, src):
 @pytest.mark.parametrize('src', [
     'unsigned f(unsigned n){ unsigned s = 0; if (n > 100) goto in_else; if (n % 2) { s = 1; } else { s = 2; in_else: s += 10; } return s + n; }',
     'unsigned f(unsigned n){ unsigned s = 0, i = 0; if (n % 7 == 0) goto mid; while (i < n % 10) { s += 1; mid: s += 100; i++; } return s; }',
+    'unsigned f(unsigned n){ unsigned s = 0, i = 0; if (n % 5 == 0) goto deep; while (i < n % 9) { s += 1; if (i % 2) { s += 3; deep: s += 50; } else { s += 7; } i++; } return s + 1; }',
+    'unsigned f(unsigned n){ unsigned s = 0, i = 0; if (n % 3 == 0) goto inner; if (n > 40) { s = 5; } else { while (i < 4) { s += 2; inner: s += 11; i++; } } return s; }',
+    'unsigned f(unsigned n){ unsigned s = 0; if (n % 4 == 0) goto blk; s = 1; { s += 2; blk: s += 30; } return s + n; }',
 ])
 def test_goto_into_else_and_loop_body_is_equivalent(tmp_path, src):
     orig, new, bounds, notes, info = tr(tmp_path, src)

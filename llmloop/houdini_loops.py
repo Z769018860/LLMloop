@@ -42,18 +42,31 @@ def sample_heads(source, bounds, runs=60, seed=1, math=False, typed=True):
     return heads, len(loops)
 
 
+def _prio(a):
+    """order atoms so that the 256 the verifier accepts per loop contain the relational ones (`i <= n`, `j <= len`), then small value sets, constant bounds, difference/sum ranges, moduli"""
+    if re.fullmatch(r'\w+ (<=|>=) \w+', a) or re.fullmatch(r'\w+ == \w+', a): return 0
+    if a.startswith('(') and ' or ' in a: return 1
+    if re.fullmatch(r'\w+ (<=|>=|==) -?\d+', a): return 2
+    if '%' in a: return 4
+    return 3
+
+
+CAP = 256        # invariant atoms per loop passed to the verifier (relational atoms come late in the list)
+
+
 def houdini_loops(source, bounds, abi='LP64', runs=60, max_rounds=60, solver_timeout_ms=5000, seed=1, integer_model='c'):
     bounds = {k: list(v) for k, v in bounds.items()}
     heads, nl = sample_heads(source, {k: tuple(v) for k, v in bounds.items()}, runs, seed, integer_model == 'mathematical')
     if nl == 0 or any(not heads.get(k) for k in range(nl)): return 'NO_SAMPLES', [], 0, []
     consts = {int(x) for x in re.findall(r'(?<![\w.])\d+', source)}; consts |= {c + d for c in list(consts) for d in (-1, 1)} | {0, 1, -1}
     cands = [atoms_from(heads[k], tuple(sorted(c for c in consts if abs(c) <= 10 ** 7)), valsets=True) for k in range(nl)]; log = []
+    cands = [sorted(c, key=_prio) if len(c) > CAP else c for c in cands]
     for rnd in range(max_rounds):
         from . import houdini_while as _hw
         import time as _t
         if _hw.DEADLINE is not None and _t.time() > _hw.DEADLINE: return 'TIMEOUT', cands, rnd, log
         if any(not c for c in cands): return 'EMPTY', [], rnd, log
-        r = analyze_request({'source': source, 'frontend': 'typed_invariant_loops', 'range_invariants': {'invariants': [c[:256] for c in cands]}, 'parameter_bounds': bounds, 'abi': abi, 'solver_timeout_ms': solver_timeout_ms, 'integer_model': integer_model})
+        r = analyze_request({'source': source, 'frontend': 'typed_invariant_loops', 'range_invariants': {'invariants': [c[:CAP] for c in cands]}, 'parameter_bounds': bounds, 'abi': abi, 'solver_timeout_ms': solver_timeout_ms, 'integer_model': integer_model})
         if r['status'].startswith('PROVED'): return 'PROVED', cands, rnd + 1, log
         fo = r.get('failed_obligation') or ''; cx = r.get('counterexample') or {}; log.append(fo or str(r.get('reason')))
         m = re.search(r'loop(\d+): invariant (at entry|preserved) \((?:body )?path (\d+)\)', fo)

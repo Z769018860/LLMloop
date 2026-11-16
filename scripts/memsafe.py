@@ -33,8 +33,8 @@ class MemSafe:
         self.size = {}            # base -> size expression (AST factory)
         self.string = {}          # base -> bool
         self.elem = {}            # base -> scalar word tuple
-        self.checked = 0; self.unchecked = 0; self.k = 0; self.pre = []
-        self.heap = {}; self.loaded = {}; self.merged = set(); self.orig_params = []; self.callee_checks = 0; self.pos_bases = set(); self.disjoint = []; self.len_params = []; self.null_params = []; self.nullable = set(); self.voidbase = set(); self.freeable = set(); self.libchecks = 0
+        self.checked = 0; self.unchecked = 0; self.untracked_derefs = 0; self.k = 0; self.pre = []
+        self.heap = {}; self.loaded = {}; self.merged = set(); self.enull = set(); self.orig_params = []; self.callee_checks = 0; self.pos_bases = set(); self.disjoint = []; self.len_params = []; self.null_params = []; self.nullable = set(); self.voidbase = set(); self.freeable = set(); self.libchecks = 0
 
     # ------------------------------------------------------------------ analysis
     def analyse(self):
@@ -115,6 +115,7 @@ class MemSafe:
                 b = self.base_of(n.args.exprs[0])
                 if b and b in self.nullable: self.freeable.add(b)
         if not self.base: raise ValueError('no trackable pointer')
+        if any(self.elem[b][0] == 'ptr' for b in set(self.base.values())): self.notes.add('pointer-element base: pointers read from it may be dereferenced')
 
     ALLOCS = {'malloc': (1, True), 'calloc': (2, True), 'xmalloc': (1, False), 'xzalloc': (1, False), 'ximalloc': (1, False), 'xcalloc': (2, False), 'xnmalloc': (2, False), 'xcharalloc': (1, False), 'realloc': (2, True), 'xrealloc': (2, False), 'xirealloc': (2, False)}      # name -> (arguments, may return NULL)
 
@@ -177,6 +178,14 @@ class MemSafe:
                 c_ast.Assignment('=', idn(hb + '__fr'), idn(self.freevar(b)) if b in self.freeable else num(0)), c_ast.Assignment('=', idn(v + '__o'), self.off(rv))]
         return out
 
+    def loaded_null(self, rv):
+        """NULL state of a loaded pointer: an element of a pointer ARRAY is NULL according to the parameter `<array>__enull` (a precondition the caller can state: no element is NULL); a pointer field is NULL or not (end of a list)"""
+        while isinstance(rv, c_ast.Cast): rv = rv.expr
+        op = rv.name if isinstance(rv, c_ast.ArrayRef) else rv.expr if isinstance(rv, c_ast.UnaryOp) and rv.op == '*' else None
+        b = self.base_of(op) if op is not None and not isinstance(op, c_ast.StructRef) else None
+        if b and self.elem[b][0] == 'ptr': self.enull.add(b); return idn(b + '__enull')
+        return bin_('!=', self.nd(('unsigned', 'char')), num(0))
+
     def load_stmts(self, v, rv, decl):
         """v = (pointer loaded from memory): the access that loads it is checked; v then points to a fresh object that is NULL or valid (assumed well-formed data) with at least one element"""
         hb, w = self.loaded[v]; out = []
@@ -192,7 +201,7 @@ class MemSafe:
             self.checked += 1; self.pre.append(c_ast.Assignment('=', idn('__ms_w'), self.guard(a[0], a[1])))
         if decl: out.append(c_ast.Decl(v + '__o', [], [], [], [], c_ast.TypeDecl(v + '__o', [], None, c_ast.IdentifierType(['long'])), num(0), None)); self.pvars.add(v)
         out += [c_ast.Assignment('=', idn(hb + '__n'), self.nd(('unsigned', 'long'))), c_ast.If(bin_('==', idn(hb + '__n'), num(0)), c_ast.Compound([c_ast.Assignment('=', idn(hb + '__n'), num(1))]), None),
-                c_ast.Assignment('=', idn(hb + '__fr'), num(0)), c_ast.Assignment('=', idn(hb + '__null'), bin_('!=', self.nd(('unsigned', 'char')), num(0))), c_ast.Assignment('=', idn(v + '__o'), num(0))]
+                c_ast.Assignment('=', idn(hb + '__fr'), num(0)), c_ast.Assignment('=', idn(hb + '__null'), self.loaded_null(rv)), c_ast.Assignment('=', idn(v + '__o'), num(0))]
         self.notes.add('loaded pointer tracked: ' + hb + ' (assumes a non-NULL loaded pointer is valid)'); return out
 
     def heap_base(self, v, rv):
@@ -357,6 +366,9 @@ class MemSafe:
         if pa is not None:                                          # `argv[i][j]`: the pointer element is checked, the inner access has no size information
             self.checked += 1; self.unchecked += 1; g = self.guard(pa[0], pa[1]); idx = self.ex(e.subscript) if isinstance(e, c_ast.ArrayRef) else num(0)
             return bin_('+', bin_('+', self.nd(self.elem[pa[0]][1]), g), bin_('*', num(0), idx))
+        if isinstance(e, c_ast.StructRef) and e.type == '->' and self.base_of(e.name) is None: self.untracked_derefs += 1          # dereference of a pointer the pass does not track: NOT checked
+        elif isinstance(e, c_ast.ArrayRef) and self.base_of(e.name) is None and not (isinstance(e.name, c_ast.ID) and e.name.name in self.arrays): self.untracked_derefs += 1
+        elif isinstance(e, c_ast.UnaryOp) and e.op == '*' and self.base_of(e.expr) is None: self.untracked_derefs += 1
         a = self.acc(e)
         if a is not None and self.elem[a[0]][0] == 'ptr': raise ValueError('pointer element read as a value')
         if a is not None: return self.read_value(a[0], a[1])
@@ -596,6 +608,8 @@ class MemSafe:
             nm = b + '__pos'; params.append(c_ast.Decl(nm, [], [], [], [], c_ast.TypeDecl(nm, [], None, c_ast.IdentifierType(['unsigned', 'long'])), None, None))
         for b in sorted(x for x in self.nullable & set(self.base.values()) if self.size[x][0] == 'param'):
             nm = b + '__null'; params.append(c_ast.Decl(nm, [], [], [], [], c_ast.TypeDecl(nm, [], None, c_ast.IdentifierType(['int'])), None, None)); self.null_params.append(nm)
+        for b in sorted(self.enull):
+            nm = b + '__enull'; params.append(c_ast.Decl(nm, [], [], [], [], c_ast.TypeDecl(nm, [], None, c_ast.IdentifierType(['int'])), None, None)); self.null_params.append(nm)
         fd.decl.type.args = c_ast.ParamList(params)
         for v, (hb, w) in sorted(list(self.heap.items()) + list(self.loaded.items())):
             pre.append(c_ast.Decl(hb + '__n', [], [], [], [], c_ast.TypeDecl(hb + '__n', [], None, c_ast.IdentifierType(['unsigned', 'long'])), num(0), None))
