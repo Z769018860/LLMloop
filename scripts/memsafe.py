@@ -10,7 +10,7 @@ Tracked pointers: pointer PARAMETERS of scalar element type, LOCAL ARRAYS of con
     provenance) are NOT checked; the number of checked/unchecked accesses is reported.
 Rejected (ValueError -> the caller falls back to the plain memory abstraction): pointers with several bases, ordered comparisons across bases, pointer-to-integer casts, address of a tracked variable."""
 import copy, re
-from pycparser import c_ast, c_parser
+from pycparser import c_ast, c_parser, c_generator
 from scripts.memabs import desc, walk, num, setchild, NDNAME, INTS, _gen, _P, SIZES
 
 SUMMARY_FN = None      # callable(name) -> {'params': [(name, tracked?)], 'contract': text or None} | None   (set by scripts/auto_transcribe.certify_memsafe)
@@ -24,6 +24,9 @@ def idn(n): return c_ast.ID(n)
 def bin_(op, a, b): return c_ast.BinaryOp(op, a, b)
 
 
+G_ = c_generator.CGenerator()
+
+
 class MemSafe:
     def __init__(self, fd, env, notes):
         from scripts.memabs import register_local_structs
@@ -33,7 +36,7 @@ class MemSafe:
         self.size = {}            # base -> size expression (AST factory)
         self.string = {}          # base -> bool
         self.elem = {}            # base -> scalar word tuple
-        self.checked = 0; self.unchecked = 0; self.untracked_derefs = 0; self.k = 0; self.pre = []
+        self.checked = 0; self.unchecked = 0; self.untracked_derefs = 0; self.untracked_list = []; self.k = 0; self.pre = []
         self.heap = {}; self.loaded = {}; self.merged = set(); self.enull = set(); self.orig_params = []; self.callee_checks = 0; self.pos_bases = set(); self.disjoint = []; self.len_params = []; self.null_params = []; self.nullable = set(); self.voidbase = set(); self.freeable = set(); self.libchecks = 0
 
     # ------------------------------------------------------------------ analysis
@@ -366,9 +369,9 @@ class MemSafe:
         if pa is not None:                                          # `argv[i][j]`: the pointer element is checked, the inner access has no size information
             self.checked += 1; self.unchecked += 1; g = self.guard(pa[0], pa[1]); idx = self.ex(e.subscript) if isinstance(e, c_ast.ArrayRef) else num(0)
             return bin_('+', bin_('+', self.nd(self.elem[pa[0]][1]), g), bin_('*', num(0), idx))
-        if isinstance(e, c_ast.StructRef) and e.type == '->' and self.base_of(e.name) is None: self.untracked_derefs += 1          # dereference of a pointer the pass does not track: NOT checked
-        elif isinstance(e, c_ast.ArrayRef) and self.base_of(e.name) is None and not (isinstance(e.name, c_ast.ID) and e.name.name in self.arrays): self.untracked_derefs += 1
-        elif isinstance(e, c_ast.UnaryOp) and e.op == '*' and self.base_of(e.expr) is None: self.untracked_derefs += 1
+        if isinstance(e, c_ast.StructRef) and e.type == '->' and self.base_of(e.name) is None: self.untracked_derefs += 1; self.untracked_list.append(G_.visit(e)[:60])          # dereference of a pointer the pass does not track: NOT checked
+        elif isinstance(e, c_ast.ArrayRef) and self.base_of(e.name) is None and not (isinstance(e.name, c_ast.ID) and e.name.name in self.arrays): self.untracked_derefs += 1; self.untracked_list.append(G_.visit(e)[:60])
+        elif isinstance(e, c_ast.UnaryOp) and e.op == '*' and self.base_of(e.expr) is None: self.untracked_derefs += 1; self.untracked_list.append(G_.visit(e)[:60])
         a = self.acc(e)
         if a is not None and self.elem[a[0]][0] == 'ptr': raise ValueError('pointer element read as a value')
         if a is not None: return self.read_value(a[0], a[1])

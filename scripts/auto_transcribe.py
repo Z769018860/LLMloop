@@ -1185,7 +1185,7 @@ def _certify_memsafe(path, fn, includes, budget=120, bounds_override=None, _dept
     finally: MS.SUMMARY_FN = None
     ms = info.ms
     if bounds_override: bounds = {**bounds, **{k: v for k, v in bounds_override.items() if k in bounds}}
-    res = {'status': 'NOT_PROVED', 'untracked_derefs': ms.untracked_derefs, 'checked_accesses': ms.checked, 'unchecked_call_args': ms.unchecked, 'bases': sorted(set(ms.base.values())), 'strings': sorted(b for b, s in ms.string.items() if s), 'len_params': ms.len_params, 'null_params': ms.null_params, 'libcall_checks': ms.libchecks, 'callee_checks': ms.callee_checks, 'summary_params': ms.orig_params, 'notes': [n for n in notes if n.startswith(('memory-safety', 'tracked', 'loaded pointer', 'heap object', 'pointer-element'))]}
+    res = {'status': 'NOT_PROVED', 'untracked_derefs': ms.untracked_derefs, 'untracked_exprs': ms.untracked_list[:8], 'checked_accesses': ms.checked, 'unchecked_call_args': ms.unchecked, 'bases': sorted(set(ms.base.values())), 'strings': sorted(b for b, s in ms.string.items() if s), 'len_params': ms.len_params, 'null_params': ms.null_params, 'libcall_checks': ms.libchecks, 'callee_checks': ms.callee_checks, 'summary_params': ms.orig_params, 'notes': [n for n in notes if n.startswith(('memory-safety', 'tracked', 'loaded pointer', 'heap object', 'pointer-element'))]}
     if ms.checked == 0: res['status'] = 'NO_CHECKED_ACCESSES'; return res
     for name, c in contract_candidates(info.fd, ms.len_params, ms.null_params, ms.disjoint):
         if c is None and not ms.len_params: pass
