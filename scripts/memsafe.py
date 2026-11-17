@@ -324,12 +324,15 @@ class MemSafe:
             if self.base_of(e.left): return bin_(e.op, self.off(e.left), self.ex(e.right))
             return bin_('+', self.ex(e.left), self.off(e.right))
         if isinstance(e, c_ast.UnaryOp) and e.op == '&' and isinstance(e.expr, c_ast.ArrayRef): return bin_('+', self.off(e.expr.name), self.ex(e.expr.subscript))
-        raise ValueError('untracked pointer expression')
+        raise ValueError('untracked pointer expression: ' + G_.visit(e)[:50])
 
     def nonnull_cond(self, b): return bin_('==', idn(self.nullvar(b)), num(0)) if b in self.nullable else num(1)
 
     def sizeast(self, b):
         k, v = self.size[b]; return num(v) if k == 'const' else idn(v)
+
+    def pvars_or_param(self):
+        return set(self.base) | self.pvars
 
     def nullvar(self, b): return b + '__null'
 
@@ -404,6 +407,14 @@ class MemSafe:
 
     def acc(self, e):
         """(base, offset) if e is `*q` / `q[i]` with a tracked q, else None"""
+        if isinstance(e, c_ast.UnaryOp) and e.op == '*' and isinstance(e.expr, c_ast.UnaryOp) and e.expr.op in ('p++', 'p--', '++', '--') and isinstance(e.expr.expr, c_ast.ID) \
+                and e.expr.expr.name in self.base and e.expr.expr.name not in self.arrays and self.base[e.expr.expr.name] and e.expr.expr.name in self.pvars_or_param():
+            q = e.expr.expr; o = idn(q.name + '__o'); step = num(1); post = e.expr.op in ('p++', 'p--'); sign = '+' if e.expr.op in ('p++', '++') else '-'
+            self.k += 1; tmp = '__pi%d' % self.k; self.fn_vars.append(tmp)
+            if post: self.pre += [c_ast.Assignment('=', idn(tmp), copy.deepcopy(o)), c_ast.Assignment('=', copy.deepcopy(o), bin_(sign, copy.deepcopy(o), step))]
+            else: self.pre += [c_ast.Assignment('=', copy.deepcopy(o), bin_(sign, copy.deepcopy(o), step)), c_ast.Assignment('=', idn(tmp), copy.deepcopy(o))]
+            self.notes.add('*p++ / *++p on a tracked pointer: offset update hoisted before the access')
+            return self.base[q.name], idn(tmp)
         if isinstance(e, c_ast.UnaryOp) and e.op == '*' and self.base_of(e.expr): return self.base_of(e.expr), self.off(e.expr)
         if isinstance(e, c_ast.ArrayRef) and self.base_of(e.name): return self.base_of(e.name), bin_('+', self.off(e.name), self.ex(e.subscript))
         return None
@@ -450,6 +461,13 @@ class MemSafe:
                 if lb != rb: raise ValueError('difference of pointers with different bases')
                 return bin_('-', self.off(e.left), self.off(e.right))
             if e.op in ('+', '-') and (lb or rb): raise ValueError('pointer arithmetic as a value')
+            if e.op in ('&&', '||'):                       # side effects / guards of the right operand must only run when it is evaluated
+                e.left = self.ex(e.left); saved = self.pre; self.pre = []; right = self.ex(e.right); rpre = self.pre; self.pre = saved
+                if not rpre: e.right = right; return e
+                self.k += 1; tmp = '__sc%d' % self.k; self.fn_vars.append(tmp)
+                cond = idn(tmp) if e.op == '&&' else c_ast.UnaryOp('!', idn(tmp))
+                self.pre += [c_ast.Assignment('=', idn(tmp), bin_('!=', e.left, num(0))), c_ast.If(cond, c_ast.Compound(rpre + [c_ast.Assignment('=', idn(tmp), bin_('!=', right, num(0)))]), None)]
+                return idn(tmp)
             e.left = self.ex(e.left); e.right = self.ex(e.right); return e
         if isinstance(e, c_ast.UnaryOp):
             if e.op == '!' and self.base_of(e.expr):
@@ -465,10 +483,16 @@ class MemSafe:
         if isinstance(e, c_ast.TernaryOp):
             if self.base_of(e.cond): e.cond = self.nonnull_cond(self.base_of(e.cond))
             else: e.cond = self.ex(e.cond)
-            e.iftrue = self.ex(e.iftrue); e.iffalse = self.ex(e.iffalse); return e
+            saved = self.pre; self.pre = []; a_ = self.ex(e.iftrue); apre = self.pre; self.pre = []; b_ = self.ex(e.iffalse); bpre = self.pre; self.pre = saved
+            if not apre and not bpre: e.iftrue, e.iffalse = a_, b_; return e
+            raise ValueError('side effects or guards inside a conditional expression')
         if isinstance(e, c_ast.Assignment):
             if isinstance(e.lvalue, c_ast.ID) and e.lvalue.name in self.base: raise ValueError('pointer assignment as a value')
-            if self.acc(e.lvalue): raise ValueError('memory write as a value')
+            wa = self.acc(e.lvalue)
+            if wa is not None:
+                if e.op != '=' or self.elem[wa[0]][0] in ('struct', 'ptr'): raise ValueError('memory write as a value')
+                self.checked += 1; self.pre.append(c_ast.Assignment('=', idn('__ms_w'), self.guard(wa[0], wa[1])))      # the store itself is dropped (memory abstraction); its value is the stored value
+                return self.ex(e.rvalue)
             e.rvalue = self.ex(e.rvalue); return e
         if isinstance(e, c_ast.FuncCall):
             self.libcall(e); self.callee_contract(e)
@@ -690,7 +714,7 @@ class MemSafe:
         for v, (hb, w) in sorted(list(self.heap.items()) + list(self.loaded.items())):
             pre.append(c_ast.Decl(hb + '__n', [], [], [], [], c_ast.TypeDecl(hb + '__n', [], None, c_ast.IdentifierType(['unsigned', 'long'])), num(0), None))
             pre.append(c_ast.Decl(hb + '__null', [], [], [], [], c_ast.TypeDecl(hb + '__null', [], None, c_ast.IdentifierType(['int'])), num(1), None))
-        for nm in self.fn_vars: pre.append(c_ast.Decl(nm, [], [], [], [], c_ast.TypeDecl(nm, [], None, c_ast.IdentifierType(['int'])), num(0), None))
+        for nm in self.fn_vars: pre.append(c_ast.Decl(nm, [], [], [], [], c_ast.TypeDecl(nm, [], None, c_ast.IdentifierType(['long'])), num(0), None))
         for b in sorted(self.freeable | {hb for hb, w in self.heap.values()} | {hb for hb, w in self.loaded.values()}):
             pre.append(c_ast.Decl(self.freevar(b), [], [], [], [], c_ast.TypeDecl(self.freevar(b), [], None, c_ast.IdentifierType(['int'])), num(0), None))
         keep_params = []

@@ -49,6 +49,10 @@ CASES = {
  'loaded_str_bug': dict(src='unsigned f(char **av, unsigned n){ unsigned t = 0; unsigned i = 0; while (i <= n) { const char *s = av[i]; unsigned j = 0; while (s[j]) { t++; j++; } i++; } return t; }', ptrs=[('av', 'pptr', 'char')], ints=['n'], safe=False),
  'list_sum_ok':    dict(src='struct N { struct N *next; int v; };\nunsigned f(struct N *h){ unsigned t = 0; struct N *p = h; while (p) { t += p->v & 255; p = p->next; } return t; }', ptrs=[('h', 'list', 'struct N')], ints=[], safe=True),
  'list_next_bug':  dict(src='struct N { struct N *next; int v; };\nunsigned f(struct N *h){ unsigned t = 0; struct N *p = h; while (p) { t += p->next->v & 255; p = p->next; } return t; }', ptrs=[('h', 'list', 'struct N')], ints=[], safe=False),
+ 'cpy_postinc_ok':  dict(src='void f(char *d, const char *s, unsigned n){ unsigned i = 0; while (i < n && (*d++ = *s++)) i++; }', ptrs=[('d', 'buf', 'char'), ('s', 'str', 'const char')], ints=['n'], safe=True),
+ 'cpy_postinc_bug': dict(src='void f(char *d, const char *s, unsigned n){ unsigned i = 0; while (i <= n && (*d++ = *s++)) i++; }', ptrs=[('d', 'buf', 'char'), ('s', 'str', 'const char')], ints=['n'], safe=False),
+ 'sum_postinc_ok':  dict(src='unsigned f(const unsigned char *p, unsigned n){ unsigned s = 0; unsigned i = 0; while (i < n) { s += *p++; i++; } return s; }', ptrs=[('p', 'buf', 'const unsigned char')], ints=['n'], safe=True),
+ 'sum_postinc_bug': dict(src='unsigned f(const unsigned char *p, unsigned n){ unsigned s = 0; unsigned i = 0; while (i <= n) { s += *p++; i++; } return s; }', ptrs=[('p', 'buf', 'const unsigned char')], ints=['n'], safe=False),
 }
 BOUNDS = {'n': [0, 1000], 'c': [0, 255]}
 
