@@ -53,6 +53,8 @@ CASES = {
  'cpy_postinc_bug': dict(src='void f(char *d, const char *s, unsigned n){ unsigned i = 0; while (i <= n && (*d++ = *s++)) i++; }', ptrs=[('d', 'buf', 'char'), ('s', 'str', 'const char')], ints=['n'], safe=False),
  'sum_postinc_ok':  dict(src='unsigned f(const unsigned char *p, unsigned n){ unsigned s = 0; unsigned i = 0; while (i < n) { s += *p++; i++; } return s; }', ptrs=[('p', 'buf', 'const unsigned char')], ints=['n'], safe=True),
  'sum_postinc_bug': dict(src='unsigned f(const unsigned char *p, unsigned n){ unsigned s = 0; unsigned i = 0; while (i <= n) { s += *p++; i++; } return s; }', ptrs=[('p', 'buf', 'const unsigned char')], ints=['n'], safe=False),
+ 'strchr_ok':      dict(src='unsigned f(const char *s){ const char *q = strchr(s, 58); unsigned t = 0; if (q) { while (*q) { t++; q++; } } return t; }', ptrs=[('s', 'str', 'const char')], ints=[], safe=True),
+ 'strchr_bug':     dict(src='unsigned f(const char *s){ const char *q = strchr(s, 58); unsigned t = 0; if (q) { while (q[1]) { t++; q++; } } return t; }', ptrs=[('s', 'str', 'const char')], ints=[], safe=False),
 }
 BOUNDS = {'n': [0, 1000], 'c': [0, 255]}
 

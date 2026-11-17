@@ -37,7 +37,7 @@ class MemSafe:
         self.string = {}          # base -> bool
         self.elem = {}            # base -> scalar word tuple
         self.checked = 0; self.unchecked = 0; self.untracked_derefs = 0; self.untracked_list = []; self.k = 0; self.pre = []
-        self.heap = {}; self.loaded = {}; self.merged = set(); self.enull = set(); self.fcache = {}; self.fn_vars = []; self.orig_params = []; self.callee_checks = 0; self.pos_bases = set(); self.disjoint = []; self.len_params = []; self.null_params = []; self.nullable = set(); self.voidbase = set(); self.freeable = set(); self.libchecks = 0
+        self.heap = {}; self.loaded = {}; self.merged = set(); self.enull = set(); self.fcache = {}; self.fn_vars = []; self.ul_vars = []; self.orig_params = []; self.callee_checks = 0; self.pos_bases = set(); self.disjoint = []; self.len_params = []; self.null_params = []; self.nullable = set(); self.voidbase = set(); self.freeable = set(); self.libchecks = 0
 
     # ------------------------------------------------------------------ analysis
     def analyse(self):
@@ -169,9 +169,33 @@ class MemSafe:
         return None
 
     USE_LOADED = True
+    DERIVE = {'strchr', 'strrchr', 'strstr', 'strpbrk'}        # return a pointer INTO their first argument (or NULL)
+
+    def derived_call(self, rv):
+        while isinstance(rv, c_ast.Cast): rv = rv.expr
+        if self.USE_LOADED and isinstance(rv, c_ast.FuncCall) and isinstance(rv.name, c_ast.ID) and rv.name.name in self.DERIVE and rv.args and len(rv.args.exprs) == 2:
+            b = self.base_of(rv.args.exprs[0])
+            if b and self.elem.get(b) in (('char',), ('unsigned', 'char'), ('signed', 'char')): return rv, b
+        return None
+
+    def derive_stmts(self, v, rv, decl):
+        """v = strchr(s, c): v is NULL or points into s; its object is the suffix of s (size = remaining - q for a nondeterministic q, so a string suffix keeps its terminator)"""
+        call, b = self.derived_call(rv); hb = self.loaded[v][0]; a0 = call.args.exprs[0]; out = []
+        self.checked += 1; self.pre.append(c_ast.Assignment('=', idn('__ms_w'), self.guard(b, self.off(a0))))
+        self.ex(call.args.exprs[1]) if False else None
+        if decl: out.append(c_ast.Decl(v + '__o', [], [], [], [], c_ast.TypeDecl(v + '__o', [], None, c_ast.IdentifierType(['long'])), num(0), None)); self.pvars.add(v)
+        rem = '%s__rem' % hb; self.ul_vars.append(rem); q = '%s__q' % hb; self.ul_vars.append(q)
+        out += [c_ast.Assignment('=', idn(rem), num(0)), c_ast.If(bin_('>=', self.sizeast(b), self.off(a0)), c_ast.Compound([c_ast.Assignment('=', idn(rem), bin_('-', self.sizeast(b), self.off(a0)))]), None),
+                c_ast.Assignment('=', idn(q), self.nd(('unsigned', 'long'))), c_ast.If(bin_('>', idn(q), idn(rem)), c_ast.Compound([c_ast.Assignment('=', idn(q), idn(rem))]), None),
+                c_ast.Assignment('=', idn(hb + '__n'), bin_('-', idn(rem), idn(q))), c_ast.Assignment('=', idn(hb + '__fr'), idn(self.freevar(b)) if b in self.freeable else num(0)),
+                c_ast.Assignment('=', idn(hb + '__null'), bin_('!=', self.nd(('unsigned', 'char')), num(0))), c_ast.Assignment('=', idn(v + '__o'), num(0))]
+        self.notes.add('pointer derived from ' + call.name.name + ' tracked as a suffix object of its first argument'); return out
 
     def loaded_base(self, v, rv):
         if not self.USE_LOADED: return None
+        dc = self.derived_call(rv)
+        if dc is not None:
+            self.loaded[v] = (v + '__ld', self.elem[dc[1]]); self.elem[v + '__ld'] = self.elem[dc[1]]; return v + '__ld'
         w = self.loaded_info(rv)
         if w is None: return None
         d = self.types.get(v)
@@ -593,6 +617,7 @@ class MemSafe:
         if isinstance(s, c_ast.Decl):
             if s.name in self.base and s.name not in self.arrays and s.name in self.heap and s.init is not None and self.alloc_call(s.init) is not None:
                 return self.flush(self.alloc_stmts(s.name, s.init, True))
+            if s.name in self.loaded and s.init is not None and self.derived_call(s.init) is not None: return self.flush(self.derive_stmts(s.name, s.init, True))
             if s.name in self.loaded and s.init is not None and self.loaded_info(s.init) is not None: return self.flush(self.load_stmts(s.name, s.init, True))
             if s.name in self.loaded and s.init is not None and not self.null_const(s.init) and self.base_of(s.init) and self.base_of(s.init) != self.loaded[s.name][0]: return self.flush(self.copy_stmts(s.name, s.init, True))
             if s.name in self.loaded and s.init is not None and self.null_const(s.init):
@@ -611,6 +636,7 @@ class MemSafe:
             return self.flush([s])
         if isinstance(s, c_ast.Assignment):
             lv = s.lvalue
+            if isinstance(lv, c_ast.ID) and lv.name in self.loaded and s.op == '=' and self.derived_call(s.rvalue) is not None: return self.flush(self.derive_stmts(lv.name, s.rvalue, False))
             if isinstance(lv, c_ast.ID) and lv.name in self.loaded and s.op == '=' and self.loaded_info(s.rvalue) is not None: return self.flush(self.load_stmts(lv.name, s.rvalue, False))
             if isinstance(lv, c_ast.ID) and lv.name in self.loaded and s.op == '=' and not self.null_const(s.rvalue) and self.loaded_info(s.rvalue) is None and self.base_of(s.rvalue) and self.base_of(s.rvalue) != self.loaded[lv.name][0]: return self.flush(self.copy_stmts(lv.name, s.rvalue, False))
             if isinstance(lv, c_ast.ID) and lv.name in self.loaded and s.op == '=' and self.null_const(s.rvalue): return [c_ast.Assignment('=', idn(self.loaded[lv.name][0] + '__null'), num(1))]
@@ -714,6 +740,7 @@ class MemSafe:
         for v, (hb, w) in sorted(list(self.heap.items()) + list(self.loaded.items())):
             pre.append(c_ast.Decl(hb + '__n', [], [], [], [], c_ast.TypeDecl(hb + '__n', [], None, c_ast.IdentifierType(['unsigned', 'long'])), num(0), None))
             pre.append(c_ast.Decl(hb + '__null', [], [], [], [], c_ast.TypeDecl(hb + '__null', [], None, c_ast.IdentifierType(['int'])), num(1), None))
+        for nm in self.ul_vars: pre.append(c_ast.Decl(nm, [], [], [], [], c_ast.TypeDecl(nm, [], None, c_ast.IdentifierType(['unsigned', 'long'])), num(0), None))
         for nm in self.fn_vars: pre.append(c_ast.Decl(nm, [], [], [], [], c_ast.TypeDecl(nm, [], None, c_ast.IdentifierType(['long'])), num(0), None))
         for b in sorted(self.freeable | {hb for hb, w in self.heap.values()} | {hb for hb, w in self.loaded.values()}):
             pre.append(c_ast.Decl(self.freevar(b), [], [], [], [], c_ast.TypeDecl(self.freevar(b), [], None, c_ast.IdentifierType(['int'])), num(0), None))

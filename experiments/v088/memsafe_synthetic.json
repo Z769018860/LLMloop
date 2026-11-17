@@ -2165,6 +2165,232 @@
     "runs": 60,
     "asan_errors": 51
    }
+  },
+  {
+   "case": "cpy_postinc_ok",
+   "expected_safe": true,
+   "memsafe": {
+    "status": "PROVED_MEMSAFE",
+    "untracked_derefs": 0,
+    "untracked_exprs": [],
+    "checked_accesses": 2,
+    "unchecked_call_args": 0,
+    "bases": [
+     "d",
+     "s"
+    ],
+    "strings": [
+     "s"
+    ],
+    "len_params": [
+     "d__n",
+     "s__n"
+    ],
+    "null_params": [
+     "d__null",
+     "s__null"
+    ],
+    "libcall_checks": 0,
+    "callee_checks": 0,
+    "summary_params": [
+     [
+      "d",
+      true
+     ],
+     [
+      "s",
+      true
+     ],
+     [
+      "n",
+      false
+     ]
+    ],
+    "notes": [
+     "memory-safety pass: 2 checked accesses, 0 unchecked (calls)",
+     "tracked bases: d, s (string)"
+    ],
+    "contract": "non-null pointers and len >= each integer parameter",
+    "contract_strength": "assumes non-NULL pointers and lengths",
+    "contract_text": "(d__null == 0) && (s__null == 0) && (d__n >= n) && (s__n >= n)",
+    "method": "houdini_loops",
+    "bounds": {
+     "n": [
+      0,
+      4294967295
+     ],
+     "d__n": [
+      0,
+      1099511627776
+     ],
+     "s__n": [
+      0,
+      1099511627776
+     ],
+     "d__null": [
+      0,
+      1
+     ],
+     "s__null": [
+      0,
+      1
+     ]
+    }
+   },
+   "asan": {
+    "runs": 60,
+    "asan_errors": 0
+   }
+  },
+  {
+   "case": "cpy_postinc_bug",
+   "expected_safe": false,
+   "memsafe": {
+    "status": "NOT_PROVED",
+    "untracked_derefs": 0,
+    "untracked_exprs": [],
+    "checked_accesses": 2,
+    "unchecked_call_args": 0,
+    "bases": [
+     "d",
+     "s"
+    ],
+    "strings": [
+     "s"
+    ],
+    "len_params": [
+     "d__n",
+     "s__n"
+    ],
+    "null_params": [
+     "d__null",
+     "s__null"
+    ],
+    "libcall_checks": 0,
+    "callee_checks": 0,
+    "summary_params": [
+     [
+      "d",
+      true
+     ],
+     [
+      "s",
+      true
+     ],
+     [
+      "n",
+      false
+     ]
+    ],
+    "notes": [
+     "memory-safety pass: 2 checked accesses, 0 unchecked (calls)",
+     "tracked bases: d, s (string)"
+    ]
+   },
+   "asan": {
+    "runs": 60,
+    "asan_errors": 49
+   }
+  },
+  {
+   "case": "sum_postinc_ok",
+   "expected_safe": true,
+   "memsafe": {
+    "status": "PROVED_MEMSAFE",
+    "untracked_derefs": 0,
+    "untracked_exprs": [],
+    "checked_accesses": 1,
+    "unchecked_call_args": 0,
+    "bases": [
+     "p"
+    ],
+    "strings": [],
+    "len_params": [
+     "p__n"
+    ],
+    "null_params": [
+     "p__null"
+    ],
+    "libcall_checks": 0,
+    "callee_checks": 0,
+    "summary_params": [
+     [
+      "p",
+      true
+     ],
+     [
+      "n",
+      false
+     ]
+    ],
+    "notes": [
+     "memory-safety pass: 1 checked accesses, 0 unchecked (calls)",
+     "tracked bases: p"
+    ],
+    "contract": "non-null pointers and len >= each integer parameter",
+    "contract_strength": "assumes non-NULL pointers and lengths",
+    "contract_text": "(p__null == 0) && (p__n >= n)",
+    "method": "houdini_loops",
+    "bounds": {
+     "n": [
+      0,
+      4294967295
+     ],
+     "p__n": [
+      0,
+      1099511627776
+     ],
+     "p__null": [
+      0,
+      1
+     ]
+    }
+   },
+   "asan": {
+    "runs": 60,
+    "asan_errors": 0
+   }
+  },
+  {
+   "case": "sum_postinc_bug",
+   "expected_safe": false,
+   "memsafe": {
+    "status": "NOT_PROVED",
+    "untracked_derefs": 0,
+    "untracked_exprs": [],
+    "checked_accesses": 1,
+    "unchecked_call_args": 0,
+    "bases": [
+     "p"
+    ],
+    "strings": [],
+    "len_params": [
+     "p__n"
+    ],
+    "null_params": [
+     "p__null"
+    ],
+    "libcall_checks": 0,
+    "callee_checks": 0,
+    "summary_params": [
+     [
+      "p",
+      true
+     ],
+     [
+      "n",
+      false
+     ]
+    ],
+    "notes": [
+     "memory-safety pass: 1 checked accesses, 0 unchecked (calls)",
+     "tracked bases: p"
+    ]
+   },
+   "asan": {
+    "runs": 60,
+    "asan_errors": 48
+   }
   }
  ],
  "unsound": []
