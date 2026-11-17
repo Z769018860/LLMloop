@@ -2391,6 +2391,104 @@
     "runs": 60,
     "asan_errors": 48
    }
+  },
+  {
+   "case": "strchr_ok",
+   "expected_safe": true,
+   "memsafe": {
+    "status": "PROVED_MEMSAFE",
+    "untracked_derefs": 0,
+    "untracked_exprs": [],
+    "checked_accesses": 2,
+    "unchecked_call_args": 0,
+    "bases": [
+     "q__ld",
+     "s"
+    ],
+    "strings": [
+     "q__ld",
+     "s"
+    ],
+    "len_params": [
+     "s__n"
+    ],
+    "null_params": [
+     "s__null"
+    ],
+    "libcall_checks": 0,
+    "callee_checks": 0,
+    "summary_params": [
+     [
+      "s",
+      true
+     ]
+    ],
+    "notes": [
+     "memory-safety pass: 2 checked accesses, 0 unchecked (calls)",
+     "tracked bases: q__ld (string), s (string)"
+    ],
+    "contract": "non-null pointers",
+    "contract_strength": "assumes non-NULL pointer parameters",
+    "contract_text": "(s__null == 0)",
+    "method": "houdini_loops",
+    "bounds": {
+     "s__n": [
+      0,
+      1099511627776
+     ],
+     "s__null": [
+      0,
+      1
+     ]
+    },
+    "loaded_tracking": true
+   },
+   "asan": {
+    "runs": 60,
+    "asan_errors": 0
+   }
+  },
+  {
+   "case": "strchr_bug",
+   "expected_safe": false,
+   "memsafe": {
+    "status": "NOT_PROVED",
+    "untracked_derefs": 0,
+    "untracked_exprs": [],
+    "checked_accesses": 2,
+    "unchecked_call_args": 0,
+    "bases": [
+     "q__ld",
+     "s"
+    ],
+    "strings": [
+     "q__ld",
+     "s"
+    ],
+    "len_params": [
+     "s__n"
+    ],
+    "null_params": [
+     "s__null"
+    ],
+    "libcall_checks": 0,
+    "callee_checks": 0,
+    "summary_params": [
+     [
+      "s",
+      true
+     ]
+    ],
+    "notes": [
+     "memory-safety pass: 2 checked accesses, 0 unchecked (calls)",
+     "tracked bases: q__ld (string), s (string)"
+    ],
+    "loaded_tracking": true
+   },
+   "asan": {
+    "runs": 60,
+    "asan_errors": 8
+   }
   }
  ],
  "unsound": []

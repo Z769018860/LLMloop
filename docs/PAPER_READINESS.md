@@ -227,3 +227,6 @@ Ultimate Automizer 是最强工具（Code2Inv 110/118 TRUE，无超时），ESBM
 - 全量测试（v0.86）：3505 passed
 - v0.87：更正 v0.86——内存安全"已证明"拆分为完整证明 19 与仅检查子集 100（未跟踪解引用单列 `PROVED_CHECKED_SUBSET`）；验证器 256 条不变式上限导致关系原子被截断，改为按优先级排序；指针数组元素 NULL 前置条件 `__enull`；goto 跳入任意深度嵌套；翻译单元错误 191→14 认证/5 未认证/172 仍拒绝；关系前置条件与重新认证几乎无收益（0 与 +1）；链表证明仍依赖"已加载非 NULL 指针有效"假设。报告：`paper/report_v087_bilingual.md`。
 - 全量测试（v0.87）：3512 passed
+
+## v0.89
+memsafe 全量重跑:完整 42 / 子集 89 / NOT_PROVED 250 / NOT_APPLICABLE 617;8 个树函数由完整降为子集(纠正)。合成 49 例无不安全判定。报告 paper/report_v089_bilingual.md。
