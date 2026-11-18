@@ -118,6 +118,8 @@ def polynomial_equalities(rows, names, degree, max_atoms=12, max_cols=70):
         for x in vec: den = den * x.denominator // gcd(den, x.denominator)
         iv = [int(x * den) for x in vec]
         if max(abs(x) for x in iv) > 60 or all(len(m) < 2 for m, c in zip(mons, iv) if c): continue
+        supp = [m for m, c in zip(mons, iv) if c]
+        if supp and all(m for m in supp) and set.intersection(*[set(m) for m in supp]): continue      # a multiple v*(lower-degree relation): redundant, and it makes the nonlinear queries much harder
         terms = ['%d*%s' % (c, '*'.join(m)) if m else '%d' % c for c, m in zip(iv, mons) if c]
         out.append(' + '.join(terms) + ' == 0')
     return out
