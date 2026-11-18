@@ -238,3 +238,4 @@ memsafe 全量重跑:完整 42 / 子集 89 / NOT_PROVED 250 / NOT_APPLICABLE 617
 
 ## v0.91
 CBMC 独立复核 238/241;存量认证复核:C 286→282、数学 409→405(形参修改缺陷);留出集(冻结 ea0aa25):我方 2/22,Ultimate 8/22,CPAchecker 5/22,ESBMC 1/22,无误判;事后翻译修复 4/42。多项式挖掘未成功(默认关)。留出 LLM 实验受阻(无凭据)。报告 paper/report_v091_bilingual.md。
+全量测试（v0.91）：3523 passed
