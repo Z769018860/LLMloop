@@ -6,8 +6,9 @@ ROOT = Path(__file__).resolve().parents[1]; sys.path.insert(0, str(ROOT))
 import json
 import scripts.llm_study_w as W
 
-HO = ROOT / 'experiments/v091_heldout_posthoc/translated.json'
-frozen_names = {(r['dir'], r['file']) for r in json.loads((ROOT / 'experiments/v091_heldout/translated.json').read_text()) if r['stage'].startswith('in_')}
+SET = os.environ.get('HO_SET', 'v091')
+HO = ROOT / ('experiments/v091_heldout_posthoc/translated.json' if SET == 'v091' else 'experiments/v092_scaling/translated.json')
+frozen_names = {(r['dir'], r['file']) for r in json.loads((ROOT / 'experiments/v091_heldout/translated.json').read_text()) if r['stage'].startswith('in_')} if SET == 'v091' else set()
 
 
 def build():
@@ -20,7 +21,10 @@ def build():
     return out
 
 
-W.build = build; W.OUT = ROOT / 'experiments/v091_heldout/llm_w'; W.PROTOCOL = ROOT / 'experiments/protocols/v091_study_ho.json'
+W.build = build
+if SET == 'v091': W.OUT = ROOT / 'experiments/v091_heldout/llm_w'; W.PROTOCOL = ROOT / 'experiments/protocols/v091_study_ho.json'
+else:
+    W.OUT = ROOT / 'experiments/v092_scaling/llm_w'; W.PROTOCOL = ROOT / 'experiments/protocols/v092_study_scaling.json'; W.MODELS = [m for m in W.MODELS if m != 'gemini-3-flash']      # gemini-3-flash is not served any more (model_not_found)
 if __name__ == '__main__':
     p = argparse.ArgumentParser(); p.add_argument('stage', choices=['freeze', 'generate', 'verify']); a = p.parse_args()
     {'freeze': W.freeze, 'generate': W.generate, 'verify': W.verify}[a.stage]()
