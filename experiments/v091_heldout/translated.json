@@ -1,0 +1,1247 @@
+[
+ {
+  "dir": "nla-digbench",
+  "file": "bresenham-ll.c",
+  "expected_unreach": "true",
+  "source": "int f(int X, int Y){\nlong long x;\nlong long y;\nlong long v;\nlong long xy;\nlong long yx;\nint __a = 0;\nv = (((long long) 2) * Y) - X;\ny = 0;\nx = 0;\nwhile (1)\n{\n  yx = ((long long) Y) * x;\n  xy = ((long long) X) * y;\n  __a = 1 / ((((((2 * yx) - (2 * xy)) - X) + (((long long) 2) * Y)) - v) == 0);\n  if (!(x <= X))\n    break;\n  if (v < 0)\n  {\n    v = v + (((long long) 2) * Y);\n  }\n  else\n  {\n    v = v + (2 * (((long long) Y) - X));\n    y++;\n  }\n  x++;\n}\n\nxy = ((long long) x) * y;\nyx = ((long long) Y) * x;\nreturn 1/((((((((2 * yx) - (2 * xy)) - X) + (((long long) 2) * Y)) - v) + (2 * y)) == 0));\n}\n",
+  "parameter_bounds": {
+   "X": [
+    -2147483648,
+    2147483647
+   ],
+   "Y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "bresenham.c",
+  "expected_unreach": null,
+  "source": "int f(int X, int Y){\nint v;\nint x;\nint y;\nint __a = 0;\nv = (2 * Y) - X;\ny = 0;\nx = 0;\nwhile (1)\n{\n  __a = 1 / (((((((2 * Y) * x) - ((2 * X) * y)) - X) + (2 * Y)) - v) == 0);\n  if (!(x <= X))\n    break;\n  if (v < 0)\n  {\n    v = v + (2 * Y);\n  }\n  else\n  {\n    v = v + (2 * (Y - X));\n    y++;\n  }\n  x++;\n}\n\nreturn 1/(((((((((2 * Y) * x) - ((2 * x) * y)) - X) + (2 * Y)) - v) + (2 * y)) == 0));\n}\n",
+  "parameter_bounds": {
+   "X": [
+    -2147483648,
+    2147483647
+   ],
+   "Y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "cohencu-ll.c",
+  "expected_unreach": "true",
+  "source": "int f(unsigned short a){\nlong long n = 0;\nlong long x = 0;\nlong long y = 1;\nlong long z = 6;\nint __a = 0;\nwhile (1)\n{\n  __a = 1 / (z == ((6 * n) + 6));\n  __a = 1 / (y == ((((3 * n) * n) + (3 * n)) + 1));\n  __a = 1 / (x == ((n * n) * n));\n  __a = 1 / ((((((y * z) - (18 * x)) - (12 * y)) + (2 * z)) - 6) == 0);\n  __a = 1 / (((((z * z) - (12 * y)) - (6 * z)) + 12) == 0);\n  if (!(n <= a))\n    break;\n  n = n + 1;\n  x = x + y;\n  y = y + z;\n  z = z + 6;\n}\n\nreturn 1/((z == ((6 * n) + 6)) && (((((6 * a) * x) - (x * z)) + (12 * x)) == 0) && ((((((a * z) - (6 * a)) - (2 * y)) + (2 * z)) - 10) == 0) && ((((((((2 * y) * y) - ((3 * x) * z)) - (18 * x)) - (10 * y)) + (3 * z)) - 10) == 0) && (((((z * z) - (12 * y)) - (6 * z)) + 12) == 0) && ((((((y * z) - (18 * x)) - (12 * y)) + (2 * z)) - 6) == 0));\n}\n",
+  "parameter_bounds": {
+   "a": [
+    0,
+    65535
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "cohencu.c",
+  "expected_unreach": null,
+  "source": "int f(int a){\nint n = 0;\nint x = 0;\nint y = 1;\nint z = 6;\nint __a = 0;\nwhile (1)\n{\n  __a = 1 / (z == ((6 * n) + 6));\n  __a = 1 / (y == ((((3 * n) * n) + (3 * n)) + 1));\n  __a = 1 / (x == ((n * n) * n));\n  __a = 1 / ((((((y * z) - (18 * x)) - (12 * y)) + (2 * z)) - 6) == 0);\n  __a = 1 / (((((z * z) - (12 * y)) - (6 * z)) + 12) == 0);\n  if (!(n <= a))\n    break;\n  n = n + 1;\n  x = x + y;\n  y = y + z;\n  z = z + 6;\n}\n\nreturn 1/((z == ((6 * n) + 6)) && (((((6 * a) * x) - (x * z)) + (12 * x)) == 0) && ((((((a * z) - (6 * a)) - (2 * y)) + (2 * z)) - 10) == 0) && ((((((((2 * y) * y) - ((3 * x) * z)) - (18 * x)) - (10 * y)) + (3 * z)) - 10) == 0) && (((((z * z) - (12 * y)) - (6 * z)) + 12) == 0) && ((((((y * z) - (18 * x)) - (12 * y)) + (2 * z)) - 6) == 0));\n}\n",
+  "parameter_bounds": {
+   "a": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "cohendiv-ll.c",
+  "expected_unreach": "true",
+  "source": "int f(int x, int y){\nlong long q = 0;\nlong long r;\nlong long a;\nlong long b;\nint __a = 0;\nr = x;\na = 0;\nb = 0;\nwhile (1)\n{\n  __a = 1 / (b == (y * a));\n  __a = 1 / (x == ((q * y) + r));\n  if (!(r >= y))\n    break;\n  a = 1;\n  b = y;\n  while (1)\n  {\n    __a = 1 / (b == (y * a));\n    __a = 1 / (x == ((q * y) + r));\n    __a = 1 / (r >= 0);\n    if (!(r >= (2 * b)))\n      break;\n    __a = 1 / (r >= ((2 * y) * a));\n    a = 2 * a;\n    b = 2 * b;\n  }\n\n  r = r - b;\n  q = q + a;\n}\n\nreturn 1/((x == ((q * y) + r)));\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    1,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required | loops:Initialized named scalar locals required"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "cohendiv.c",
+  "expected_unreach": null,
+  "source": "int f(int x, int y){\nint q = 0;\nint r;\nint a;\nint b;\nint __a = 0;\nr = x;\na = 0;\nb = 0;\nwhile (1)\n{\n  __a = 1 / (b == (y * a));\n  __a = 1 / (x == ((q * y) + r));\n  if (!(r >= y))\n    break;\n  a = 1;\n  b = y;\n  while (1)\n  {\n    __a = 1 / (b == (y * a));\n    __a = 1 / (x == ((q * y) + r));\n    __a = 1 / (r >= 0);\n    if (!(r >= (2 * b)))\n      break;\n    __a = 1 / (r >= ((2 * y) * a));\n    a = 2 * a;\n    b = 2 * b;\n  }\n\n  r = r - b;\n  q = q + a;\n}\n\nreturn 1/((x == ((q * y) + r)));\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    1,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required | loops:Initialized named scalar locals required"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "dijkstra-u.c",
+  "expected_unreach": "true",
+  "stage": "reject:assumption is not a conjunction of var-vs-constant comparisons"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "dijkstra.c",
+  "expected_unreach": null,
+  "source": "int f(int n){\nint p = 0;\nint q = 1;\nint r;\nint h;\nint __a = 0;\nr = n;\nh = 0;\nwhile (1)\n{\n  if (!(q <= n))\n    break;\n  q = 4 * q;\n}\n\nwhile (1)\n{\n  __a = 1 / (r < ((2 * p) + q));\n  __a = 1 / (((p * p) + (r * q)) == (n * q));\n  __a = 1 / (((((((((h * h) * h) - (((12 * h) * n) * q)) + (((16 * n) * p) * q)) - ((h * q) * q)) - (((4 * p) * q) * q)) + (((12 * h) * q) * r)) - (((16 * p) * q) * r)) == 0);\n  __a = 1 / (((((((((((h * h) * n) - (((4 * h) * n) * p)) + ((4 * (n * n)) * q)) - ((n * q) * q)) - ((h * h) * r)) + (((4 * h) * p) * r)) - (((8 * n) * q) * r)) + ((q * q) * r)) + (((4 * q) * r) * r)) == 0);\n  __a = 1 / ((((((((h * h) * p) - (((4 * h) * n) * q)) + (((4 * n) * p) * q)) - ((p * q) * q)) + (((4 * h) * q) * r)) - (((4 * p) * q) * r)) == 0);\n  __a = 1 / ((((p * p) - (n * q)) + (q * r)) == 0);\n  if (!(q != 1))\n    break;\n  q = q / 4;\n  h = p + q;\n  p = p / 2;\n  if (r >= h)\n  {\n    p = p + q;\n    r = r - h;\n  }\n}\n\nreturn 1/((((((((((h * h) * h) - ((12 * h) * n)) + ((16 * n) * p)) + ((12 * h) * r)) - ((16 * p) * r)) - h) - (4 * p)) == 0) && ((((p * p) - n) + r) == 0) && ((((((((h * h) * p) - ((4 * h) * n)) + ((4 * n) * p)) + ((4 * h) * r)) - ((4 * p) * r)) - p) == 0));\n}\n",
+  "parameter_bounds": {
+   "n": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required | loops:Initialized named scalar locals required"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "divbin.c",
+  "expected_unreach": "false",
+  "stage": "reject:assumption is not a conjunction of var-vs-constant comparisons"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "divbin2.c",
+  "expected_unreach": "true",
+  "source": "int f(unsigned int A){\nunsigned B = 1;\nunsigned q = 0;\nunsigned r;\nunsigned b;\nint __a = 0;\nr = A;\nb = B;\nwhile (1)\n{\n  if (!(r >= b))\n    break;\n  b = 2 * b;\n}\n\nwhile (1)\n{\n  __a = 1 / (A == ((q * b) + r));\n  if (!(b != B))\n    break;\n  q = 2 * q;\n  b = b / 2;\n  if (r >= b)\n  {\n    q = q + 1;\n    r = r - b;\n  }\n}\n\nreturn 1/((A == ((q * b) + r)));\n}\n",
+  "parameter_bounds": {
+   "A": [
+    0,
+    4294967295
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required | loops:Initialized named scalar locals required"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "egcd-ll.c",
+  "expected_unreach": "true",
+  "source": "int f(int x, int y){\nlong long a;\nlong long b;\nlong long p;\nlong long q;\nlong long r;\nlong long s;\nint __a = 0;\na = x;\nb = y;\np = 1;\nq = 0;\nr = 0;\ns = 1;\nwhile (1)\n{\n  __a = 1 / (1 == ((p * s) - (r * q)));\n  __a = 1 / (a == ((y * r) + (x * p)));\n  __a = 1 / (b == ((x * q) + (y * s)));\n  if (!(a != b))\n    break;\n  if (a > b)\n  {\n    a = a - b;\n    p = p - q;\n    r = r - s;\n  }\n  else\n  {\n    b = b - a;\n    q = q - p;\n    s = s - r;\n  }\n}\n\nreturn 1/(((a - b) == 0) && ((((p * x) + (r * y)) - b) == 0) && ((((q * r) - (p * s)) + 1) == 0) && ((((q * x) + (s * y)) - b) == 0));\n}\n",
+  "parameter_bounds": {
+   "x": [
+    1,
+    2147483647
+   ],
+   "y": [
+    1,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "egcd.c",
+  "expected_unreach": null,
+  "source": "int f(int x, int y){\nint a;\nint b;\nint p;\nint q;\nint r;\nint s;\nint __a = 0;\na = x;\nb = y;\np = 1;\nq = 0;\nr = 0;\ns = 1;\nwhile (1)\n{\n  __a = 1 / (1 == ((p * s) - (r * q)));\n  __a = 1 / (a == ((y * r) + (x * p)));\n  __a = 1 / (b == ((x * q) + (y * s)));\n  if (!(a != b))\n    break;\n  if (a > b)\n  {\n    a = a - b;\n    p = p - q;\n    r = r - s;\n  }\n  else\n  {\n    b = b - a;\n    q = q - p;\n    s = s - r;\n  }\n}\n\nreturn 1/(((a - b) == 0) && ((((p * x) + (r * y)) - b) == 0) && ((((q * r) - (p * s)) + 1) == 0) && ((((q * x) + (s * y)) - b) == 0));\n}\n",
+  "parameter_bounds": {
+   "x": [
+    1,
+    2147483647
+   ],
+   "y": [
+    1,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "egcd2-ll.c",
+  "expected_unreach": "true",
+  "stage": "reject:assumption after statements"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "egcd2.c",
+  "expected_unreach": null,
+  "source": "int f(int x, int y){\nint a;\nint b;\nint p;\nint q;\nint r;\nint s;\nint c;\nint k;\nint __a = 0;\na = x;\nb = y;\np = 1;\nq = 0;\nr = 0;\ns = 1;\nc = 0;\nk = 0;\nwhile (1)\n{\n  if (!(b != 0))\n    break;\n  c = a;\n  k = 0;\n  while (1)\n  {\n    __a = 1 / (a == ((k * b) + c));\n    __a = 1 / (a == ((y * r) + (x * p)));\n    __a = 1 / (b == ((x * q) + (y * s)));\n    __a = 1 / ((((((((q * x) * y) + ((s * y) * y)) - (q * x)) - (b * y)) - (s * y)) + b) == 0);\n    if (!(c >= b))\n      break;\n    c = c - b;\n    k = k + 1;\n  }\n\n  a = b;\n  b = c;\n  int temp;\n  temp = p;\n  p = q;\n  q = temp - (q * k);\n  temp = r;\n  r = s;\n  s = temp - (s * k);\n}\n\nreturn 1/((((q * x) + (s * y)) == 0) && (((p * x) + (r * y)) == a));\n}\n",
+  "parameter_bounds": {
+   "x": [
+    1,
+    2147483647
+   ],
+   "y": [
+    1,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required | loops:Initialized named scalar locals required"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "egcd3-ll.c",
+  "expected_unreach": "true",
+  "source": "int f(int x, int y){\nlong long a;\nlong long b;\nlong long p;\nlong long q;\nlong long r;\nlong long s;\nint __a = 0;\na = x;\nb = y;\np = 1;\nq = 0;\nr = 0;\ns = 1;\nwhile (1)\n{\n  if (!(b != 0))\n    break;\n  long long c;\n  long long k;\n  c = a;\n  k = 0;\n  while (1)\n  {\n    if (!(c >= b))\n      break;\n    long long d;\n    long long v;\n    d = 1;\n    v = b;\n    while (1)\n    {\n      __a = 1 / (a == ((y * r) + (x * p)));\n      __a = 1 / (b == ((x * q) + (y * s)));\n      __a = 1 / (a == ((k * b) + c));\n      __a = 1 / (v == (b * d));\n      if (!(c >= (2 * v)))\n        break;\n      d = 2 * d;\n      v = 2 * v;\n    }\n\n    c = c - v;\n    k = k + d;\n  }\n\n  a = b;\n  b = c;\n  long long temp;\n  temp = p;\n  p = q;\n  q = temp - (q * k);\n  temp = r;\n  r = s;\n  s = temp - (s * k);\n}\n\nreturn 1/((((((p * x) - (q * x)) + (r * y)) - (s * y)) == a));\n}\n",
+  "parameter_bounds": {
+   "x": [
+    1,
+    2147483647
+   ],
+   "y": [
+    1,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required | loops:Initialized named scalar locals required"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "egcd3.c",
+  "expected_unreach": null,
+  "source": "int f(int x, int y){\nint a;\nint b;\nint p;\nint q;\nint r;\nint s;\nint __a = 0;\na = x;\nb = y;\np = 1;\nq = 0;\nr = 0;\ns = 1;\nwhile (1)\n{\n  if (!(b != 0))\n    break;\n  int c;\n  int k;\n  c = a;\n  k = 0;\n  while (1)\n  {\n    if (!(c >= b))\n      break;\n    int d;\n    int v;\n    d = 1;\n    v = b;\n    while (1)\n    {\n      __a = 1 / (a == ((y * r) + (x * p)));\n      __a = 1 / (b == ((x * q) + (y * s)));\n      __a = 1 / (a == ((k * b) + c));\n      __a = 1 / (v == (b * d));\n      if (!(c >= (2 * v)))\n        break;\n      d = 2 * d;\n      v = 2 * v;\n    }\n\n    c = c - v;\n    k = k + d;\n  }\n\n  a = b;\n  b = c;\n  int temp;\n  temp = p;\n  p = q;\n  q = temp - (q * k);\n  temp = r;\n  r = s;\n  s = temp - (s * k);\n}\n\nreturn 1/((((((p * x) - (q * x)) + (r * y)) - (s * y)) == a));\n}\n",
+  "parameter_bounds": {
+   "x": [
+    1,
+    2147483647
+   ],
+   "y": [
+    1,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required | loops:Initialized named scalar locals required"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "fermat1-ll.c",
+  "expected_unreach": "true",
+  "stage": "reject:assumption is not a conjunction of var-vs-constant comparisons"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "fermat1.c",
+  "expected_unreach": null,
+  "stage": "reject:unsupported nondet assignment"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "fermat2-ll.c",
+  "expected_unreach": "true",
+  "stage": "reject:assumption is not a conjunction of var-vs-constant comparisons"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "fermat2.c",
+  "expected_unreach": null,
+  "stage": "reject:unsupported nondet assignment"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "freire1.c",
+  "expected_unreach": "false",
+  "stage": "reject:floating point"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "freire2.c",
+  "expected_unreach": "false",
+  "stage": "reject:floating point"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "geo1-ll.c",
+  "expected_unreach": "true",
+  "source": "int f(int z, int k){\nlong long x = 1;\nlong long y;\nlong long c;\nint __a = 0;\ny = z;\nc = 1;\nwhile (1)\n{\n  __a = 1 / (((((x * z) - x) - y) + 1) == 0);\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 1/((((1 + x) - y) == 0));\n}\n",
+  "parameter_bounds": {
+   "z": [
+    1,
+    2147483647
+   ],
+   "k": [
+    1,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "geo1-u.c",
+  "expected_unreach": "false",
+  "source": "int f(unsigned int z, unsigned int k){\nlong long x = 1;\nlong long y;\nlong long c;\nint __a = 0;\ny = z;\nc = 1;\nwhile (1)\n{\n  __a = 1 / (((((x * z) - x) - y) + 1) == 0);\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 1/((((1 + x) - y) == 0));\n}\n",
+  "parameter_bounds": {
+   "z": [
+    0,
+    4294967295
+   ],
+   "k": [
+    0,
+    4294967295
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "geo1.c",
+  "expected_unreach": null,
+  "source": "int f(int z, int k){\nint x = 1;\nint y;\nint c;\nint __a = 0;\ny = z;\nc = 1;\nwhile (1)\n{\n  __a = 1 / (((((x * z) - x) - y) + 1) == 0);\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 1/((((1 + x) - y) == 0));\n}\n",
+  "parameter_bounds": {
+   "z": [
+    -2147483648,
+    2147483647
+   ],
+   "k": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "geo2-ll.c",
+  "expected_unreach": "true",
+  "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 1;\nlong long c = 1;\nint __a = 0;\nwhile (1)\n{\n  __a = 1 / ((((1 + (x * z)) - x) - (z * y)) == 0);\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nreturn 1/(((((1 + (x * z)) - x) - (z * y)) == 0));\n}\n",
+  "parameter_bounds": {
+   "z": [
+    -2147483648,
+    2147483647
+   ],
+   "k": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "geo2.c",
+  "expected_unreach": null,
+  "source": "int f(int z, int k){\nint x = 1;\nint y = 1;\nint c = 1;\nint __a = 0;\nwhile (1)\n{\n  __a = 1 / ((((1 + (x * z)) - x) - (z * y)) == 0);\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nreturn 1/(((((1 + (x * z)) - x) - (z * y)) == 0));\n}\n",
+  "parameter_bounds": {
+   "z": [
+    -2147483648,
+    2147483647
+   ],
+   "k": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "geo3-ll.c",
+  "expected_unreach": "true",
+  "source": "int f(int z, int a, int k){\nlong long x;\nlong long y;\nlong long c;\nlong long az;\nint __a = 0;\nx = a;\ny = 1;\nc = 1;\naz = ((long long) a) * z;\nwhile (1)\n{\n  __a = 1 / (((((z * x) - x) + a) - (az * y)) == 0);\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + a;\n  y = y * z;\n}\n\nreturn 1/((((((z * x) - x) + a) - (az * y)) == 0));\n}\n",
+  "parameter_bounds": {
+   "z": [
+    -2147483648,
+    2147483647
+   ],
+   "a": [
+    -2147483648,
+    2147483647
+   ],
+   "k": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "geo3.c",
+  "expected_unreach": null,
+  "source": "int f(int z, int a, int k){\nint x;\nint y;\nint c;\nint __a = 0;\nx = a;\ny = 1;\nc = 1;\nwhile (1)\n{\n  __a = 1 / (((((z * x) - x) + a) - ((a * z) * y)) == 0);\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + a;\n  y = y * z;\n}\n\nreturn 1/((((((z * x) - x) + a) - ((a * z) * y)) == 0));\n}\n",
+  "parameter_bounds": {
+   "z": [
+    -2147483648,
+    2147483647
+   ],
+   "a": [
+    -2147483648,
+    2147483647
+   ],
+   "k": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "hard-ll.c",
+  "expected_unreach": "true",
+  "source": "int f(unsigned int A, unsigned int B){\nlong long r;\nlong long d;\nlong long p;\nlong long q;\nint __a = 0;\nr = A;\nd = B;\np = 1;\nq = 0;\nwhile (1)\n{\n  __a = 1 / (q == 0);\n  __a = 1 / (r == A);\n  __a = 1 / (d == (B * p));\n  if (!(r >= d))\n    break;\n  d = 2 * d;\n  p = 2 * p;\n}\n\nwhile (1)\n{\n  __a = 1 / (A == ((q * B) + r));\n  __a = 1 / (d == (B * p));\n  if (!(p != 1))\n    break;\n  d = d / 2;\n  p = p / 2;\n  if (r >= d)\n  {\n    r = r - d;\n    q = q + p;\n  }\n}\n\nreturn 1/((A == ((d * q) + r)) && (B == d));\n}\n",
+  "parameter_bounds": {
+   "A": [
+    0,
+    4294967295
+   ],
+   "B": [
+    1,
+    4294967295
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required | loops:Initialized named scalar locals required"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "hard-u.c",
+  "expected_unreach": "false",
+  "source": "int f(unsigned int A, unsigned int B){\nunsigned int r;\nunsigned int d;\nunsigned int p;\nunsigned int q;\nint __a = 0;\nr = A;\nd = B;\np = 1;\nq = 0;\nwhile (1)\n{\n  __a = 1 / (q == 0);\n  __a = 1 / (r == A);\n  __a = 1 / (d == (B * p));\n  if (!(r >= d))\n    break;\n  d = 2 * d;\n  p = 2 * p;\n}\n\nwhile (1)\n{\n  __a = 1 / (A == ((q * B) + r));\n  __a = 1 / (d == (B * p));\n  if (!(p != 1))\n    break;\n  d = d / 2;\n  p = p / 2;\n  if (r >= d)\n  {\n    r = r - d;\n    q = q + p;\n  }\n}\n\nreturn 1/((A == ((d * q) + r)) && (B == d));\n}\n",
+  "parameter_bounds": {
+   "A": [
+    0,
+    4294967295
+   ],
+   "B": [
+    1,
+    4294967295
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required | loops:Initialized named scalar locals required"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "hard.c",
+  "expected_unreach": null,
+  "source": "int f(int A, int B){\nint r;\nint d;\nint p;\nint q;\nint __a = 0;\nr = A;\nd = B;\np = 1;\nq = 0;\nwhile (1)\n{\n  __a = 1 / (q == 0);\n  __a = 1 / (r == A);\n  __a = 1 / (d == (B * p));\n  if (!(r >= d))\n    break;\n  d = 2 * d;\n  p = 2 * p;\n}\n\nwhile (1)\n{\n  __a = 1 / (A == ((q * B) + r));\n  __a = 1 / (d == (B * p));\n  if (!(p != 1))\n    break;\n  d = d / 2;\n  p = p / 2;\n  if (r >= d)\n  {\n    r = r - d;\n    q = q + p;\n  }\n}\n\nreturn 1/((A == ((d * q) + r)) && (B == d));\n}\n",
+  "parameter_bounds": {
+   "A": [
+    -2147483648,
+    2147483647
+   ],
+   "B": [
+    1,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required | loops:Initialized named scalar locals required"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "hard2.c",
+  "expected_unreach": "true",
+  "source": "int f(int A){\nint B = 1;\nint r;\nint d;\nint p;\nint q;\nint __a = 0;\nr = A;\nd = B;\np = 1;\nq = 0;\nwhile (1)\n{\n  __a = 1 / (q == 0);\n  __a = 1 / (r == A);\n  __a = 1 / (d == (B * p));\n  if (!(r >= d))\n    break;\n  d = 2 * d;\n  p = 2 * p;\n}\n\nwhile (1)\n{\n  __a = 1 / (A == ((q * B) + r));\n  __a = 1 / (d == (B * p));\n  if (!(p != 1))\n    break;\n  d = d / 2;\n  p = p / 2;\n  if (r >= d)\n  {\n    r = r - d;\n    q = q + p;\n  }\n}\n\nreturn 1/((A == ((d * q) + r)) && (B == d));\n}\n",
+  "parameter_bounds": {
+   "A": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required | loops:Initialized named scalar locals required"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "knuth.c",
+  "expected_unreach": "true",
+  "stage": "reject:assumption is not a conjunction of var-vs-constant comparisons"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "lcm1.c",
+  "expected_unreach": "true",
+  "source": "int f(unsigned int a, unsigned int b){\nunsigned x;\nunsigned y;\nunsigned u;\nunsigned v;\nint __a = 0;\nx = a;\ny = b;\nu = b;\nv = 0;\nwhile (1)\n{\n  __a = 1 / (((x * u) + (y * v)) == (a * b));\n  if (!(x != y))\n    break;\n  while (1)\n  {\n    __a = 1 / (((x * u) + (y * v)) == (a * b));\n    if (!(x > y))\n      break;\n    x = x - y;\n    v = v + u;\n  }\n\n  while (1)\n  {\n    __a = 1 / (((x * u) + (y * v)) == (a * b));\n    if (!(x < y))\n      break;\n    y = y - x;\n    u = u + v;\n  }\n\n}\n\nreturn 1/((((u * y) + (v * y)) == (a * b)) && (x == y));\n}\n",
+  "parameter_bounds": {
+   "a": [
+    1,
+    65535
+   ],
+   "b": [
+    1,
+    65535
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required | loops:Initialized named scalar locals required"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "lcm2.c",
+  "expected_unreach": "true",
+  "source": "int f(unsigned int a, unsigned int b){\nunsigned x;\nunsigned y;\nunsigned u;\nunsigned v;\nint __a = 0;\nx = a;\ny = b;\nu = b;\nv = a;\nwhile (1)\n{\n  __a = 1 / (((x * u) + (y * v)) == ((2 * a) * b));\n  if (!(x != y))\n    break;\n  if (x > y)\n  {\n    x = x - y;\n    v = v + u;\n  }\n  else\n  {\n    y = y - x;\n    u = u + v;\n  }\n}\n\nreturn 1/((((x * u) + (y * v)) == ((2 * a) * b)));\n}\n",
+  "parameter_bounds": {
+   "a": [
+    1,
+    65535
+   ],
+   "b": [
+    1,
+    65535
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "mannadiv.c",
+  "expected_unreach": "true",
+  "stage": "reject:assumption is not a conjunction of var-vs-constant comparisons"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "prod4br-ll.c",
+  "expected_unreach": "true",
+  "source": "int f(int x, int y){\nlong long a;\nlong long b;\nlong long p;\nlong long q;\nint __a = 0;\na = x;\nb = y;\np = 1;\nq = 0;\nwhile (1)\n{\n  __a = 1 / ((q + ((a * b) * p)) == (((long long) x) * y));\n  if (!((a != 0) && (b != 0)))\n    break;\n  if (((a % 2) == 0) && ((b % 2) == 0))\n  {\n    a = a / 2;\n    b = b / 2;\n    p = 4 * p;\n  }\n  else\n    if (((a % 2) == 1) && ((b % 2) == 0))\n  {\n    a = a - 1;\n    q = q + (b * p);\n  }\n  else\n    if (((a % 2) == 0) && ((b % 2) == 1))\n  {\n    b = b - 1;\n    q = q + (a * p);\n  }\n  else\n  {\n    a = a - 1;\n    b = b - 1;\n    q = q + (((a + b) + 1) * p);\n  }\n}\n\nreturn 1/((q == (((long long) x) * y)) && ((a * b) == 0));\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    1,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "prod4br.c",
+  "expected_unreach": null,
+  "source": "int f(int x, int y){\nint a;\nint b;\nint p;\nint q;\nint __a = 0;\na = x;\nb = y;\np = 1;\nq = 0;\nwhile (1)\n{\n  __a = 1 / ((q + ((a * b) * p)) == (x * y));\n  if (!((a != 0) && (b != 0)))\n    break;\n  if (((a % 2) == 0) && ((b % 2) == 0))\n  {\n    a = a / 2;\n    b = b / 2;\n    p = 4 * p;\n  }\n  else\n    if (((a % 2) == 1) && ((b % 2) == 0))\n  {\n    a = a - 1;\n    q = q + (b * p);\n  }\n  else\n    if (((a % 2) == 0) && ((b % 2) == 1))\n  {\n    b = b - 1;\n    q = q + (a * p);\n  }\n  else\n  {\n    a = a - 1;\n    b = b - 1;\n    q = q + (((a + b) + 1) * p);\n  }\n}\n\nreturn 1/((q == (x * y)) && ((a * b) == 0));\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    1,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "prodbin-ll.c",
+  "expected_unreach": "true",
+  "source": "int f(int a, int b){\nlong long x;\nlong long y;\nlong long z;\nint __a = 0;\nx = a;\ny = b;\nz = 0;\nwhile (1)\n{\n  __a = 1 / ((z + (x * y)) == (((long long) a) * b));\n  if (!(y != 0))\n    break;\n  if ((y % 2) == 1)\n  {\n    z = z + x;\n    y = y - 1;\n  }\n  x = 2 * x;\n  y = y / 2;\n}\n\nreturn 1/((z == (((long long) a) * b)));\n}\n",
+  "parameter_bounds": {
+   "a": [
+    -2147483648,
+    2147483647
+   ],
+   "b": [
+    1,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "prodbin.c",
+  "expected_unreach": null,
+  "stage": "reject:unsupported nondet assignment"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "ps2-ll.c",
+  "expected_unreach": "true",
+  "source": "int f(int k){\nlong long y = 0;\nlong long x = 0;\nlong long c = 0;\nint __a = 0;\nwhile (1)\n{\n  __a = 1 / ((((y * y) - (2 * x)) + y) == 0);\n  if (!(c < k))\n    break;\n  c = c + 1;\n  y = y + 1;\n  x = y + x;\n}\n\nreturn 1/(((((y * y) - (2 * x)) + y) == 0));\n}\n",
+  "parameter_bounds": {
+   "k": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "ps2.c",
+  "expected_unreach": null,
+  "source": "int f(int k){\nint y = 0;\nint x = 0;\nint c = 0;\nint __a = 0;\nwhile (1)\n{\n  __a = 1 / ((((y * y) - (2 * x)) + y) == 0);\n  if (!(c < k))\n    break;\n  c = c + 1;\n  y = y + 1;\n  x = y + x;\n}\n\nreturn 1/(((((y * y) - (2 * x)) + y) == 0));\n}\n",
+  "parameter_bounds": {
+   "k": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "ps3-ll.c",
+  "expected_unreach": "true",
+  "source": "int f(short k){\nlong long y = 0;\nlong long x = 0;\nlong long c = 0;\nint __a = 0;\nwhile (1)\n{\n  __a = 1 / (((((6 * x) - (((2 * y) * y) * y)) - ((3 * y) * y)) - y) == 0);\n  if (!(c < k))\n    break;\n  c = c + 1;\n  y = y + 1;\n  x = (y * y) + x;\n}\n\nreturn 1/((((((6 * x) - (((2 * y) * y) * y)) - ((3 * y) * y)) - y) == 0));\n}\n",
+  "parameter_bounds": {
+   "k": [
+    -32768,
+    32767
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "ps3.c",
+  "expected_unreach": null,
+  "source": "int f(int k){\nint y = 0;\nint x = 0;\nint c = 0;\nint __a = 0;\nwhile (1)\n{\n  __a = 1 / (((((6 * x) - (((2 * y) * y) * y)) - ((3 * y) * y)) - y) == 0);\n  if (!(c < k))\n    break;\n  c = c + 1;\n  y = y + 1;\n  x = (y * y) + x;\n}\n\nreturn 1/((((((6 * x) - (((2 * y) * y) * y)) - ((3 * y) * y)) - y) == 0));\n}\n",
+  "parameter_bounds": {
+   "k": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "ps4-ll.c",
+  "expected_unreach": "true",
+  "source": "int f(short k){\nlong long y = 0;\nlong long x = 0;\nlong long c = 0;\nint __a = 0;\nwhile (1)\n{\n  __a = 1 / (((((4 * x) - (((y * y) * y) * y)) - (((2 * y) * y) * y)) - (y * y)) == 0);\n  if (!(c < k))\n    break;\n  c = c + 1;\n  y = y + 1;\n  x = ((y * y) * y) + x;\n}\n\nreturn 1/((((k * y) - (y * y)) == 0) && (((((4 * x) - (((y * y) * y) * y)) - (((2 * y) * y) * y)) - (y * y)) == 0));\n}\n",
+  "parameter_bounds": {
+   "k": [
+    -32768,
+    32767
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "ps4.c",
+  "expected_unreach": null,
+  "source": "int f(int k){\nint y = 0;\nint x = 0;\nint c = 0;\nint __a = 0;\nwhile (1)\n{\n  __a = 1 / (((((4 * x) - (((y * y) * y) * y)) - (((2 * y) * y) * y)) - (y * y)) == 0);\n  if (!(c < k))\n    break;\n  c = c + 1;\n  y = y + 1;\n  x = ((y * y) * y) + x;\n}\n\nreturn 1/((((k * y) - (y * y)) == 0) && (((((4 * x) - (((y * y) * y) * y)) - (((2 * y) * y) * y)) - (y * y)) == 0));\n}\n",
+  "parameter_bounds": {
+   "k": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "ps5-ll.c",
+  "expected_unreach": "true",
+  "source": "int f(short k){\nlong long y = 0;\nlong long x = 0;\nlong long c = 0;\nint __a = 0;\nwhile (1)\n{\n  __a = 1 / ((((((((((6 * y) * y) * y) * y) * y) + ((((15 * y) * y) * y) * y)) + (((10 * y) * y) * y)) - (30 * x)) - y) == 0);\n  if (!(c < k))\n    break;\n  c = c + 1;\n  y = y + 1;\n  x = (((y * y) * y) * y) + x;\n}\n\nreturn 1/(((((((((((6 * y) * y) * y) * y) * y) + ((((15 * y) * y) * y) * y)) + (((10 * y) * y) * y)) - (30 * x)) - y) == 0) && ((k * y) == (y * y)));\n}\n",
+  "parameter_bounds": {
+   "k": [
+    -32768,
+    256
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "ps5.c",
+  "expected_unreach": null,
+  "source": "int f(int k){\nint y = 0;\nint x = 0;\nint c = 0;\nint __a = 0;\nwhile (1)\n{\n  __a = 1 / ((((((((((6 * y) * y) * y) * y) * y) + ((((15 * y) * y) * y) * y)) + (((10 * y) * y) * y)) - (30 * x)) - y) == 0);\n  if (!(c < k))\n    break;\n  c = c + 1;\n  y = y + 1;\n  x = (((y * y) * y) * y) + x;\n}\n\nreturn 1/(((((((((((6 * y) * y) * y) * y) * y) + ((((15 * y) * y) * y) * y)) + (((10 * y) * y) * y)) - (30 * x)) - y) == 0) && ((k * y) == (y * y)));\n}\n",
+  "parameter_bounds": {
+   "k": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "ps6-ll.c",
+  "expected_unreach": "true",
+  "source": "int f(short k){\nlong long y = 0;\nlong long x = 0;\nlong long c = 0;\nint __a = 0;\nwhile (1)\n{\n  __a = 1 / ((((((((((((-2) * y) * y) * y) * y) * y) * y) - (((((6 * y) * y) * y) * y) * y)) - ((((5 * y) * y) * y) * y)) + (y * y)) + (12 * x)) == 0);\n  if (!(c < k))\n    break;\n  c = c + 1;\n  y = y + 1;\n  x = ((((y * y) * y) * y) * y) + x;\n}\n\nreturn 1/(((((((((((((-2) * y) * y) * y) * y) * y) * y) - (((((6 * y) * y) * y) * y) * y)) - ((((5 * y) * y) * y) * y)) + (y * y)) + (12 * x)) == 0) && ((k * y) == (y * y)));\n}\n",
+  "parameter_bounds": {
+   "k": [
+    -32768,
+    256
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "ps6.c",
+  "expected_unreach": null,
+  "source": "int f(int k){\nint y = 0;\nint x = 0;\nint c = 0;\nint __a = 0;\nwhile (1)\n{\n  __a = 1 / ((((((((((((-2) * y) * y) * y) * y) * y) * y) - (((((6 * y) * y) * y) * y) * y)) - ((((5 * y) * y) * y) * y)) + (y * y)) + (12 * x)) == 0);\n  if (!(c < k))\n    break;\n  c = c + 1;\n  y = y + 1;\n  x = ((((y * y) * y) * y) * y) + x;\n}\n\nreturn 1/(((((((((((((-2) * y) * y) * y) * y) * y) * y) - (((((6 * y) * y) * y) * y) * y)) - ((((5 * y) * y) * y) * y)) + (y * y)) + (12 * x)) == 0) && ((k * y) == (y * y)));\n}\n",
+  "parameter_bounds": {
+   "k": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "sqrt1-ll.c",
+  "expected_unreach": "true",
+  "source": "int f(int n){\nlong long a = 0;\nlong long s = 1;\nlong long t = 1;\nint __a = 0;\nwhile (1)\n{\n  __a = 1 / (t == ((2 * a) + 1));\n  __a = 1 / (s == ((a + 1) * (a + 1)));\n  __a = 1 / (((((t * t) - (4 * s)) + (2 * t)) + 1) == 0);\n  if (!(s <= n))\n    break;\n  a = a + 1;\n  t = t + 2;\n  s = s + t;\n}\n\nreturn 1/((t == ((2 * a) + 1)) && (s == ((a + 1) * (a + 1))) && (((((t * t) - (4 * s)) + (2 * t)) + 1) == 0));\n}\n",
+  "parameter_bounds": {
+   "n": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "nla-digbench",
+  "file": "sqrt1.c",
+  "expected_unreach": null,
+  "source": "int f(int n){\nint a = 0;\nint s = 1;\nint t = 1;\nint __a = 0;\nwhile (1)\n{\n  __a = 1 / (t == ((2 * a) + 1));\n  __a = 1 / (s == ((a + 1) * (a + 1)));\n  __a = 1 / (((((t * t) - (4 * s)) + (2 * t)) + 1) == 0);\n  if (!(s <= n))\n    break;\n  a = a + 1;\n  t = t + 2;\n  s = s + t;\n}\n\nreturn 1/((t == ((2 * a) + 1)) && (s == ((a + 1) * (a + 1))) && (((((t * t) - (4 * s)) + (2 * t)) + 1) == 0));\n}\n",
+  "parameter_bounds": {
+   "n": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "Mono1_1-1.c",
+  "expected_unreach": "false",
+  "source": "int f(int __z){\nunsigned int x = 0;\nwhile (x < 100000000)\n{\n  if (x < 10000000)\n  {\n    x++;\n  }\n  else\n  {\n    x += 2;\n  }\n}\n\nreturn 1/((x == 100000001));\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "Mono1_1-2.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nunsigned int x = 0;\nwhile (x < 100000000)\n{\n  if (x < 10000000)\n  {\n    x++;\n  }\n  else\n  {\n    x += 2;\n  }\n}\n\nreturn 1/((x == 100000000));\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "Mono3_1.c",
+  "expected_unreach": "false",
+  "source": "int f(int __z){\nunsigned int x = 0;\nunsigned int y = 0;\nwhile (x < 1000000)\n{\n  if (x < 500000)\n  {\n    y++;\n  }\n  else\n  {\n    y--;\n  }\n  x++;\n}\n\nreturn 1/((y != 0));\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_fragment"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "Mono4_1.c",
+  "expected_unreach": "false",
+  "source": "int f(int __z){\nint x = 0;\nint y = 500000;\nwhile (x < 1000000)\n{\n  if (x < 500000)\n  {\n    x = x + 1;\n  }\n  else\n  {\n    x = x + 1;\n    y = y + 1;\n  }\n}\n\nreturn 1/((y != x));\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "Mono5_1.c",
+  "expected_unreach": "false",
+  "source": "int f(int __z){\nunsigned int x = 0;\nunsigned int y = 10000000;\nunsigned int z = 5000000;\nwhile (x < y)\n{\n  if (x >= 5000000)\n    z--;\n  x++;\n}\n\nreturn 1/((z != 0));\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "Mono6_1.c",
+  "expected_unreach": "false",
+  "source": "int f(int __z){\nunsigned int x = 0;\nunsigned int y = 10000000;\nunsigned int z = 5000000;\nwhile (x < y)\n{\n  if (x >= 5000000)\n    z++;\n  x++;\n}\n\nreturn 1/((z != x));\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "discover_list.c",
+  "expected_unreach": "true",
+  "stage": "reject:non-scalar declaration"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "iftelse.c",
+  "expected_unreach": "true",
+  "stage": "reject:assumption is not a conjunction of var-vs-constant comparisons"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "in-de20.c",
+  "expected_unreach": "true",
+  "source": "int f(unsigned int n){\nunsigned int x = n;\nunsigned int y = 0;\nunsigned int z;\nwhile (x > 0)\n{\n  x--;\n  y++;\n}\n\nz = y;\nwhile (z > 0)\n{\n  x++;\n  z--;\n}\n\nreturn 1/((x == n));\n}\n",
+  "parameter_bounds": {
+   "n": [
+    0,
+    4294967295
+   ]
+  },
+  "stage": "structural:tree:Unknown lifted integer variable | while:Initialized named scalar locals required | loops:Initialized named scalar locals required"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "in-de31.c",
+  "expected_unreach": "true",
+  "source": "int f(unsigned int n){\nunsigned int x = n;\nunsigned int y = 0;\nunsigned int z;\nwhile (x > 0)\n{\n  x--;\n  y++;\n}\n\nz = y;\nwhile (z > 0)\n{\n  x++;\n  z--;\n}\n\nwhile (y > 0)\n{\n  y--;\n  z++;\n}\n\nreturn 1/((z == n));\n}\n",
+  "parameter_bounds": {
+   "n": [
+    0,
+    4294967295
+   ]
+  },
+  "stage": "structural:tree:Initialized named scalar locals required | while:Initialized named scalar locals required | loops:Initialized named scalar locals required"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "in-de32.c",
+  "expected_unreach": "true",
+  "source": "int f(unsigned int n){\nunsigned int x = n;\nunsigned int y = 0;\nunsigned int z;\nwhile (x > 0)\n{\n  x--;\n  y++;\n}\n\nz = y;\nwhile (z > 0)\n{\n  x++;\n  z--;\n}\n\nwhile (y > 0)\n{\n  x--;\n  y--;\n}\n\nreturn 1/((x == 0));\n}\n",
+  "parameter_bounds": {
+   "n": [
+    0,
+    4294967295
+   ]
+  },
+  "stage": "structural:tree:while/do loops unsupported | while:Initialized named scalar locals required | loops:Initialized named scalar locals required"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "in-de41.c",
+  "expected_unreach": "true",
+  "source": "int f(unsigned int n){\nunsigned int x = n;\nunsigned int y = 0;\nunsigned int z;\nwhile (x > 0)\n{\n  x--;\n  y++;\n}\n\nz = y;\nwhile (z > 0)\n{\n  x++;\n  z--;\n}\n\nwhile (y > 0)\n{\n  y--;\n  z++;\n}\n\nwhile (x > 0)\n{\n  x--;\n  y++;\n}\n\nreturn 1/((y == n));\n}\n",
+  "parameter_bounds": {
+   "n": [
+    0,
+    4294967295
+   ]
+  },
+  "stage": "structural:tree:Initialized named scalar locals required | while:Initialized named scalar locals required | loops:Initialized named scalar locals required"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "in-de42.c",
+  "expected_unreach": "true",
+  "source": "int f(unsigned int n){\nunsigned int x = n;\nunsigned int y = 0;\nunsigned int z;\nwhile (x > 0)\n{\n  x--;\n  y++;\n}\n\nz = y;\nwhile (z > 0)\n{\n  x++;\n  z--;\n}\n\nwhile (y > 0)\n{\n  y--;\n  z++;\n}\n\nwhile (x > 0)\n{\n  x--;\n  z++;\n}\n\nreturn 1/((z == (2 * n)));\n}\n",
+  "parameter_bounds": {
+   "n": [
+    0,
+    4294967295
+   ]
+  },
+  "stage": "structural:tree:Initialized named scalar locals required | while:Initialized named scalar locals required | loops:Initialized named scalar locals required"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "in-de51.c",
+  "expected_unreach": "true",
+  "source": "int f(unsigned int n){\nunsigned int x = n;\nunsigned int y = 0;\nunsigned int z;\nwhile (x > 0)\n{\n  x--;\n  y++;\n}\n\nz = y;\nwhile (z > 0)\n{\n  x++;\n  z--;\n}\n\nwhile (y > 0)\n{\n  y--;\n  z++;\n}\n\nwhile (x > 0)\n{\n  x--;\n  y++;\n}\n\nwhile (z > 0)\n{\n  x++;\n  z--;\n}\n\nreturn 1/((x == n));\n}\n",
+  "parameter_bounds": {
+   "n": [
+    0,
+    4294967295
+   ]
+  },
+  "stage": "structural:tree:Initialized named scalar locals required | while:Initialized named scalar locals required | loops:Initialized named scalar locals required"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "in-de52.c",
+  "expected_unreach": "true",
+  "source": "int f(unsigned int n){\nunsigned int x = n;\nunsigned int y = 0;\nunsigned int z;\nwhile (x > 0)\n{\n  x--;\n  y++;\n}\n\nz = y;\nwhile (z > 0)\n{\n  x++;\n  z--;\n}\n\nwhile (y > 0)\n{\n  y--;\n  z++;\n}\n\nwhile (x > 0)\n{\n  x--;\n  y++;\n}\n\nwhile (z > 0)\n{\n  y--;\n  z--;\n}\n\nreturn 1/((y == 0));\n}\n",
+  "parameter_bounds": {
+   "n": [
+    0,
+    4294967295
+   ]
+  },
+  "stage": "structural:tree:Initialized named scalar locals required | while:Initialized named scalar locals required | loops:Initialized named scalar locals required"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "in-de61.c",
+  "expected_unreach": "true",
+  "source": "int f(unsigned int n){\nunsigned int x = n;\nunsigned int y = 0;\nunsigned int z;\nwhile (x > 0)\n{\n  x--;\n  y++;\n}\n\nz = y;\nwhile (z > 0)\n{\n  x++;\n  z--;\n}\n\nwhile (y > 0)\n{\n  y--;\n  z++;\n}\n\nwhile (x > 0)\n{\n  x--;\n  y++;\n}\n\nwhile (z > 0)\n{\n  x++;\n  z--;\n}\n\nwhile (y > 0)\n{\n  y--;\n  z++;\n}\n\nreturn 1/((z == n));\n}\n",
+  "parameter_bounds": {
+   "n": [
+    0,
+    4294967295
+   ]
+  },
+  "stage": "structural:tree:Initialized named scalar locals required | while:Initialized named scalar locals required | loops:Initialized named scalar locals required"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "in-de62.c",
+  "expected_unreach": "true",
+  "source": "int f(unsigned int n){\nunsigned int x = n;\nunsigned int y = 0;\nunsigned int z;\nwhile (x > 0)\n{\n  x--;\n  y++;\n}\n\nz = y;\nwhile (z > 0)\n{\n  x++;\n  z--;\n}\n\nwhile (y > 0)\n{\n  y--;\n  z++;\n}\n\nwhile (x > 0)\n{\n  x--;\n  y++;\n}\n\nwhile (z > 0)\n{\n  x++;\n  z--;\n}\n\nwhile (y > 0)\n{\n  y--;\n  x--;\n}\n\nreturn 1/((x == 0));\n}\n",
+  "parameter_bounds": {
+   "n": [
+    0,
+    4294967295
+   ]
+  },
+  "stage": "structural:tree:Initialized named scalar locals required | while:Initialized named scalar locals required | loops:Initialized named scalar locals required"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "loopv1.c",
+  "expected_unreach": "true",
+  "stage": "reject:assumption is not a conjunction of var-vs-constant comparisons"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "loopv2.c",
+  "expected_unreach": "true",
+  "stage": "reject:assumption is not a conjunction of var-vs-constant comparisons"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "loopv3.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nint i = 0;\nint j = 0;\nwhile (i < SIZE)\n{\n  if (__VERIFIER_nondet_int())\n    i = i + 8;\n  else\n    i = i + 4;\n}\n\nj = i / 4;\nreturn 1/(((j * 4) == i));\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Unknown lifted integer variable"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "mono-crafted_1.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nint x = 0;\nint y = 50000;\nint z = 0;\nx = 0;\nwhile (x < 1000000)\n{\n  if (x < 50000)\n    x++;\n  else\n  {\n    x++;\n    y++;\n  }\n}\n\nwhile (y > z)\n{\n  y--;\n  x--;\n}\n\nreturn 1/((x == z));\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_loops_fragment"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "mono-crafted_10.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nunsigned int x = 0;\nunsigned int y = 10000000;\nunsigned int z = 5000000;\nwhile (x < y)\n{\n  if (x >= 5000000)\n    z++;\n  x++;\n}\n\nreturn 1/((z == x));\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "mono-crafted_11.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nunsigned int x = 0;\nwhile (x < 100000000)\n{\n  if (x < 10000000)\n  {\n    x++;\n  }\n  else\n  {\n    x += 2;\n  }\n}\n\nreturn 1/(((x % 2) == 0));\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "mono-crafted_12.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nunsigned int x = 0;\nunsigned int y = 10000000;\nunsigned int z = 0;\nwhile (x < y)\n{\n  if (x >= 5000000)\n    z = z + 2;\n  x++;\n}\n\nreturn 1/((!(z % 2)));\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "mono-crafted_13.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nint x = 0;\nint y = 50000;\nint z = 0;\nx = 0;\nwhile (x < 1000000)\n{\n  if (x < 50000)\n    x++;\n  else\n  {\n    x = x + 2;\n    y = y + 2;\n  }\n}\n\nwhile (y > z)\n{\n  y--;\n  x--;\n}\n\nreturn 1/(((x % 2) == 0));\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_loops_fragment"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "mono-crafted_14.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nint x = 0;\nint y = 500000;\nint z = 0;\nx = 0;\nwhile (x < 1000000)\n{\n  if (x < 500000)\n    x++;\n  else\n  {\n    x++;\n    y++;\n  }\n}\n\nwhile (y > 0)\n{\n  x--;\n  z++;\n  y = y - 2;\n}\n\nreturn 1/(((z % 2) == 0) && ((x % 2) == 0));\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_loops_fragment"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "mono-crafted_3.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nint x = 0;\nint y = 500000;\nint z = 0;\nx = 0;\nwhile (x < 1000000)\n{\n  if (x < 500000)\n    x++;\n  else\n  {\n    x++;\n    y++;\n  }\n}\n\nwhile (y > 0)\n{\n  x--;\n  z++;\n  y = y - 2;\n}\n\nreturn 1/((x == z));\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_loops_fragment"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "mono-crafted_6.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nint x = 0;\nint y = 500000;\nint z = 0;\nx = 0;\nwhile (x < 1000000)\n{\n  if (x < 500000)\n    x++;\n  else\n  {\n    if (x < 750000)\n    {\n      x++;\n    }\n    else\n    {\n      x = x + 2;\n    }\n    y++;\n  }\n}\n\nreturn 1/((x == 1000000));\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "mono-crafted_7.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nint x = 0;\nint y = 50000;\nint z = 0;\nx = 0;\nwhile (x < 1000000)\n{\n  if (x < 50000)\n    x++;\n  else\n  {\n    x++;\n    y++;\n  }\n}\n\nwhile (y > 0)\n{\n  y = y - 2;\n  x = x - 2;\n}\n\nreturn 1/((z == x));\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_loops_fragment"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "mono-crafted_8.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nunsigned int x = 0;\nunsigned int y = 10000000;\nunsigned int z = 5000000;\nwhile (x < y)\n{\n  if (x >= 5000000)\n    z--;\n  x++;\n}\n\nreturn 1/((z == 0));\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "mono-crafted_9.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nint x = 0;\nint y = 500000;\nwhile (x < 1000000)\n{\n  if (x < 500000)\n  {\n    x = x + 1;\n  }\n  else\n  {\n    x = x + 1;\n    y = y + 1;\n  }\n}\n\nreturn 1/((y == x));\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "nested3-1.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nunsigned int x = 0;\nunsigned int y = 0;\nunsigned int z = 0;\nunsigned int w = 0;\nint __a = 0;\nwhile (x < 0x0fffffff)\n{\n  y = 0;\n  while (y < 0x0fffffff)\n  {\n    z = 0;\n    while (z < 0x0fffffff)\n    {\n      z++;\n    }\n\n    __a = 1 / (z % 4);\n    y++;\n  }\n\n  __a = 1 / (y % 2);\n  x++;\n}\n\nreturn 1/((x % 2));\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_loops_fragment"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "nested3-2.c",
+  "expected_unreach": "false",
+  "source": "int f(int __z){\nunsigned int x = 0;\nunsigned int y = 0;\nunsigned int z = 0;\nunsigned int w = 0;\nint __a = 0;\nwhile (x < 0x0fffffff)\n{\n  y = 0;\n  while (y < 0x0fffffff)\n  {\n    z = 0;\n    while (z < 0x0fffffff)\n    {\n      z++;\n    }\n\n    __a = 1 / (!(z % 4));\n    y++;\n  }\n\n  __a = 1 / (!(y % 2));\n  x++;\n}\n\nreturn 1/((!(x % 2)));\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_loops_fragment"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "nested5-1.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nunsigned int x = 0;\nunsigned int y = 0;\nunsigned int z = 0;\nunsigned int w = 0;\nunsigned int v = 0;\nint __a = 0;\nfor (w = 0; w < 0x0fffffff; w++)\n  for (x = 0; x < 10; x++)\n  for (y = 0; y < 10; y++)\n  for (z = 0; z < 10; z++)\n{\n  for (v = 0; v < 10; v++)\n    ;\n\n  __a = 1 / (v % 4);\n}\n\n\n\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_loops_fragment"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "nested5-2.c",
+  "expected_unreach": "false",
+  "source": "int f(int __z){\nunsigned int x = 0;\nunsigned int y = 0;\nunsigned int z = 0;\nunsigned int w = 0;\nunsigned int v = 0;\nint __a = 0;\nfor (w = 0; w < 0x0fffffff; w++)\n{\n  for (x = 0; x < 10; x++)\n    for (y = 0; y < 10; y++)\n    for (z = 0; z < 10; z++)\n  {\n    for (v = 0; v < 0x0fffffff; v++)\n      ;\n\n    __a = 1 / (!(v % 4));\n  }\n\n\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_loops_fragment"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "nested_delay_nd.c",
+  "expected_unreach": "true",
+  "stage": "reject:unsupported nondet assignment"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "nested_delay_notd2.c",
+  "expected_unreach": "false",
+  "stage": "reject:unsupported nondet assignment"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "net_reset.c",
+  "expected_unreach": "true",
+  "stage": "reject:non-scalar declaration"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "sum_by_3.c",
+  "expected_unreach": "true",
+  "stage": "reject:assumption is not a conjunction of var-vs-constant comparisons"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "sum_natnum.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nint i;\nunsigned long long sum;\ni = 0, sum = 0;\nwhile (i < SIZE)\n{\n  i = i + 1;\n  sum += i;\n}\n\nreturn 1/((sum == ((SIZE * (SIZE + 1)) / 2)));\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "sumt2.c",
+  "expected_unreach": "true",
+  "stage": "reject:assumption is not a conjunction of var-vs-constant comparisons"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "sumt3.c",
+  "expected_unreach": "true",
+  "stage": "reject:assumption is not a conjunction of var-vs-constant comparisons"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "sumt4.c",
+  "expected_unreach": "true",
+  "stage": "reject:assumption is not a conjunction of var-vs-constant comparisons"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "sumt5.c",
+  "expected_unreach": "true",
+  "stage": "reject:assumption is not a conjunction of var-vs-constant comparisons"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "sumt6.c",
+  "expected_unreach": "true",
+  "stage": "reject:assumption is not a conjunction of var-vs-constant comparisons"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "sumt7.c",
+  "expected_unreach": "true",
+  "stage": "reject:assumption is not a conjunction of var-vs-constant comparisons"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "sumt8.c",
+  "expected_unreach": "true",
+  "stage": "reject:assumption is not a conjunction of var-vs-constant comparisons"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "sumt9.c",
+  "expected_unreach": "true",
+  "stage": "reject:assumption is not a conjunction of var-vs-constant comparisons"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "theatreSquare.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: correct_version"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "vnew1.c",
+  "expected_unreach": "true",
+  "stage": "reject:assumption is not a conjunction of var-vs-constant comparisons"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "vnew2.c",
+  "expected_unreach": "true",
+  "stage": "reject:assumption is not a conjunction of var-vs-constant comparisons"
+ },
+ {
+  "dir": "loops-crafted-1",
+  "file": "watermelon.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: correct_version"
+ }
+]

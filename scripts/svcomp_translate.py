@@ -211,7 +211,7 @@ if __name__ == '__main__':
     from llmloop.typed_invariant_tree import TypedCInvariantTree
     from llmloop.smt_spath import SMTGraphError
     rows = []; cnt = collections.Counter()
-    for d in DIRS:
+    for d in (sys.argv[sys.argv.index('--dirs') + 1].split(',') if '--dirs' in sys.argv else DIRS):
         for p in sorted((BENCH / d).glob('*.c')):
             r = {'dir': d, 'file': p.name, 'expected_unreach': verdict(p)}
             try:
