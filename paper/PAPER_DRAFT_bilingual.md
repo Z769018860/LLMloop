@@ -51,8 +51,14 @@
 - **越界/空指针/释放后使用检查（v0.83–v0.90，`scripts/memsafe.py`）：** 合成函数 49 个用 AddressSanitizer 交叉验证，**0 个"证明但报错"**。真实函数（v0.89 全量 1047 行）：**完整证明 42、仅检查子集 89、未证明 250、不适用 617**（353 个无可跟踪指针）。完整证明多数是弱契约（非空 + 长度≥1）；链表/树遍历的证明依赖"已加载指针合法"这一**明确列出的**良构性前提（结果里的 `loaded_paths`），不是对堆结构的证明。曾更正：v0.86 的"120 个证明"实为 19 个完整 + 100 个子集。 Real functions: 42 full / 89 checked-subset / 250 not proved / 617 not applicable; list/tree proofs are conditional on an explicit well-formedness assumption.
 - **翻译单元错误（v0.90）：** 126 行中 7 认证，73 行因 `windows.h`、生成数据头、regex 片段等仍无法构建。
 
+## 4c. 证书复核、存量审计与留出集 / Certificate re-check, stored-certificate audit, held-out set (v0.91)
+- **CBMC 独立复核：** 241 个已认证的 C 语义不变式，238 个被 CBMC 循环契约独立验证；2 个失败正是被审计发现的失效旧证书。 238/241 independently verified by CBMC.
+- **存量认证审计：** 用当前验证器重验 695 条存量认证响应，8 条失效（形参修改缺陷，v0.79 修复）；程序级计数不变，响应级 286→282（C）、409→405（数学）。 8 of 695 stored certificates no longer hold; program-level counts unchanged.
+- **留出集（冻结工具链、无 LLM，`nla-digbench` + `loops-crafted-1`）：** 预期成立 22 个中，我方 2、Ultimate 8、CPAchecker 5、ESBMC 1；预期违反 7 个均未被我方认证；**我方在多项式不变式主导的留出集上明显较弱**。 Ours 2/22 vs Ultimate 8/22 on the held-out set: a real weakness.
+详见 `paper/report_v091_bilingual.md`。
+
 ## 5. 更正与披露 / Corrections and disclosures
-1. **译写缺陷（v0.76）**：Code2Inv 译写丢弃声明初始值，28 个程序结果无效，已更正并只重跑受影响部分后合并。 2. **提示覆盖（v0.74）**：Study W 首次运行因旧提示函数覆盖而无效，已重跑。 3. **解释器缺陷（v0.74）**：负数操作数中止采样；修复后拟合器结果不变。 4. **portfolio 信封缺陷（v0.68）**：`@rel` 被拒，已修复并对同批生成重验。 5. **CBMC 基线缺陷（v0.70/v0.73）**：常量边界循环展开不足，已修复。 6. 拟合器基函数（含 min/max）和 Houdini 候选空间在看过 Code2Inv 的失败后加入，**不是纯留出**；新增 min/max 基后在全新种子的合成语料上无回退（循环树 16/27、关系型 16/22、if-循环 6/19）。 7. 每个 LLM 研究每程序 1 次采样（WM 另有 2 次重复，见 v0.77 报告）；无多重比较校正；无加速声明。
+1. **译写缺陷（v0.76）**：Code2Inv 译写丢弃声明初始值，28 个程序结果无效，已更正并只重跑受影响部分后合并。 2. **提示覆盖（v0.74）**：Study W 首次运行因旧提示函数覆盖而无效，已重跑。 3. **解释器缺陷（v0.74）**：负数操作数中止采样；修复后拟合器结果不变。 4. **portfolio 信封缺陷（v0.68）**：`@rel` 被拒，已修复并对同批生成重验。 5. **CBMC 基线缺陷（v0.70/v0.73）**：常量边界循环展开不足，已修复。 6. 拟合器基函数（含 min/max）和 Houdini 候选空间在看过 Code2Inv 的失败后加入，**不是纯留出**；新增 min/max 基后在全新种子的合成语料上无回退（循环树 16/27、关系型 16/22、if-循环 6/19）。 8. **存量认证失效（v0.91）：** 695 条存量认证中 8 条在当前验证器下不再成立（形参修改缺陷）；留出集首轮 Ultimate/CPAchecker 因内存耗尽作废并重跑。 7. 每个 LLM 研究每程序 1 次采样（WM 另有 2 次重复，见 v0.77 报告）；无多重比较校正；无加速声明。
 
 ## 6. 威胁有效性 / Threats to validity
 合成语料由生成器构造；译写改变性质表述；数学整数结论 ≠ C 语义结论；基准程序小；模型家族数量有限；LLM 输出随机；CPAchecker 比较的性质不同；真实代码覆盖近 0（Juliet 90–95% 函数无循环，其余带 I/O/指针；LIG-MM 为堆结构）。 Synthetic corpora are generator-built; translation changes the property statement; mathematical-integer conclusions are not C-semantics conclusions; benchmarks are small; limited model families; stochastic LLMs; CPAchecker compares a different property; real-code coverage is near zero.

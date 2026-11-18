@@ -235,3 +235,6 @@ memsafe 全量重跑:完整 42 / 子集 89 / NOT_PROVED 250 / NOT_APPLICABLE 617
 ## v0.90
 翻译单元回退(C23 + 占位头):126 行中 7 认证/7 未认证,73 行仍为 TU 错误(33 windows.h、10 片段、2 NEON、28 生成数据头/gmp,不做数据头空桩)。字符常量重跑 20 行:8 认证。`loaded_paths` 写入结果。已加载指针假设与关系前置条件未解决。报告 paper/report_v090_bilingual.md。
 全量测试（v0.90）：3518 passed
+
+## v0.91
+CBMC 独立复核 238/241;存量认证复核:C 286→282、数学 409→405(形参修改缺陷);留出集(冻结 ea0aa25):我方 2/22,Ultimate 8/22,CPAchecker 5/22,ESBMC 1/22,无误判;事后翻译修复 4/42。多项式挖掘未成功(默认关)。留出 LLM 实验受阻(无凭据)。报告 paper/report_v091_bilingual.md。
