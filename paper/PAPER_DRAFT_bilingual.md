@@ -10,7 +10,7 @@
 - **信任基 / trust base.** 候选只是字符串；验证器（Z3 + 类型化 C 整数语义引擎）对任意满足候选的类型化状态检查：入口、归纳（一次迭代无未定义行为且保持）、出口（后续代码与返回表达式有定义）。规范化器（`llmloop/loop_index_normalize.py`）属于受信流程，均配原生 UBSan 差分测试。 Candidates are strings; the verifier (Z3 + typed C integer engine) checks entry, preservation (defined iteration) and exit for ANY typed state satisfying them; normalizers are part of the trusted pipeline and have native UBSan differential tests.
 - **模式 / modes.** `typed_invariant_tree`（计数循环树，区间 + `@rel` + 分支内循环）；`typed_invariant_while`（单循环谓词合取，`unknown()`/nondet 被改写为全称量化输入，可选 `ranking`，`integer_model` ∈ {c, mathematical}）；`typed_invariant_loops`（多个顺序/嵌套循环的组合式检查）。
 - **生成器 / generators.** LLM（6 个模型，其中 `claude-dsflash-itkk` 是 DeepSeek V4.1 Flash 别名）；轨迹拟合器（精确有理线性代数 + floor/ceil/min/max/指示项基，不受信）；采样 + Houdini（用验证器反例削弱）；LLM 候选原子 + Houdini 的混合方案；级联与反馈修复。
-- **可靠性证据 / soundness evidence.** 3405 项测试（全量）；对小程序的穷举探索（认证 ⇒ 无可达未定义行为）；原生 UBSan 差分；**违例见证**：被找到具体违例的程序（C 语义 Code2Inv 34 个等）从未被任何生成器认证。 3405 tests; exhaustive exploration of small programs; native differentials; programs with a concrete violation witness were never certified.
+- **可靠性证据 / soundness evidence.** 3518 项测试（全量，v0.90）；对小程序的穷举探索（认证 ⇒ 无可达未定义行为）；原生 UBSan 差分；**违例见证**：被找到具体违例的程序（C 语义 Code2Inv 34 个等）从未被任何生成器认证。 3405 tests; exhaustive exploration of small programs; native differentials; programs with a concrete violation witness were never certified.
 
 ## 2. 基准 / Benchmarks
 | 语料 / corpus | 规模 / size | 来源 / source |
@@ -43,7 +43,13 @@
 - **Z3 Spacer：** 范围型不变式秒证，关系型/嵌套超时；与 LLM 互补（级联省 52% LLM 调用）。 
 - **MALICE（QCP）：** 在匹配合约下对比，其分支不变式表达能力受限（v0.64–v0.66）。
 - **CPAchecker 4.2.2：** 决断率更高（SV-COMP 期望成立 43 中 TRUE 37；Code2Inv 118 中 TRUE 86、FALSE 9），但按回绕语义只检查断言可达，不检查未定义行为，也无可独立检查的证书；与我们的认证逐程序比较见 `experiments/v077/cpachecker_comparison.json`（我们认证的 108/118 Code2Inv 与 41/43 SV-COMP 中，CPAchecker 对 22 与 6 个返回 UNKNOWN）。
-- ESBMC、Ultimate 未运行（GitHub release 403）。 not run.
+- **Ultimate Automizer / ESBMC（v0.78）：** Ultimate 是最强的外部工具（Code2Inv 118 个中 110 个 TRUE，无超时），ESBMC 29，CPAchecker 86，我们（并集）108；我们的价值不在决断率，而在**可独立检查的证书**与**未定义行为检查**（见 `paper/report_v078_bilingual.md`）。 Ultimate is the strongest external tool (110/118 TRUE on Code2Inv, no timeouts); ESBMC 29, CPAchecker 86, ours (union) 108. Our value is an independently checkable certificate and UB checking, not decision rate.
+
+## 4b. 真实代码与内存安全 / Real code and memory safety (v0.79–v0.90)
+- **Juliet（v0.80–v0.81）：** CWE124/126/127 全入口函数 7146 个：bad 2898 个被标出、good 4219 个被证明，**0 错判**（期间发现并修复过 2 个 bad 误证明）。 7146 functions, 0 misjudgments.
+- **gnulib/coreutils 自动译写：** 含循环函数 2759 行（v0.82b），"认证"建立在**内存抽象**（假设内存安全，只证标量算术无未定义行为）之上；按源码去重 1783 个函数：认证 520、拒绝 983。 Certificates there assume memory safety.
+- **越界/空指针/释放后使用检查（v0.83–v0.90，`scripts/memsafe.py`）：** 合成函数 49 个用 AddressSanitizer 交叉验证，**0 个"证明但报错"**。真实函数（v0.89 全量 1047 行）：**完整证明 42、仅检查子集 89、未证明 250、不适用 617**（353 个无可跟踪指针）。完整证明多数是弱契约（非空 + 长度≥1）；链表/树遍历的证明依赖"已加载指针合法"这一**明确列出的**良构性前提（结果里的 `loaded_paths`），不是对堆结构的证明。曾更正：v0.86 的"120 个证明"实为 19 个完整 + 100 个子集。 Real functions: 42 full / 89 checked-subset / 250 not proved / 617 not applicable; list/tree proofs are conditional on an explicit well-formedness assumption.
+- **翻译单元错误（v0.90）：** 126 行中 7 认证，73 行因 `windows.h`、生成数据头、regex 片段等仍无法构建。
 
 ## 5. 更正与披露 / Corrections and disclosures
 1. **译写缺陷（v0.76）**：Code2Inv 译写丢弃声明初始值，28 个程序结果无效，已更正并只重跑受影响部分后合并。 2. **提示覆盖（v0.74）**：Study W 首次运行因旧提示函数覆盖而无效，已重跑。 3. **解释器缺陷（v0.74）**：负数操作数中止采样；修复后拟合器结果不变。 4. **portfolio 信封缺陷（v0.68）**：`@rel` 被拒，已修复并对同批生成重验。 5. **CBMC 基线缺陷（v0.70/v0.73）**：常量边界循环展开不足，已修复。 6. 拟合器基函数（含 min/max）和 Houdini 候选空间在看过 Code2Inv 的失败后加入，**不是纯留出**；新增 min/max 基后在全新种子的合成语料上无回退（循环树 16/27、关系型 16/22、if-循环 6/19）。 7. 每个 LLM 研究每程序 1 次采样（WM 另有 2 次重复，见 v0.77 报告）；无多重比较校正；无加速声明。
@@ -52,4 +58,4 @@
 合成语料由生成器构造；译写改变性质表述；数学整数结论 ≠ C 语义结论；基准程序小；模型家族数量有限；LLM 输出随机；CPAchecker 比较的性质不同；真实代码覆盖近 0（Juliet 90–95% 函数无循环，其余带 I/O/指针；LIG-MM 为堆结构）。 Synthetic corpora are generator-built; translation changes the property statement; mathematical-integer conclusions are not C-semantics conclusions; benchmarks are small; limited model families; stochastic LLMs; CPAchecker compares a different property; real-code coverage is near zero.
 
 ## 7. 复现 / Reproducibility
-`python3 -m pytest -q`（3405 项）；各研究：`scripts/llm_study_*.py {freeze,generate,verify}`，`scripts/llm_repair_cascade.py`，`scripts/cascade_report.py --merged`，`scripts/final_summary_v076.py`；数据与协议在 `experiments/` 与 `experiments/protocols/`（协议在生成前冻结并提交）。API 密钥仅经环境变量传入，未入库。
+`python3 -m pytest -q`（3518 项，v0.90）；各研究：`scripts/llm_study_*.py {freeze,generate,verify}`，`scripts/llm_repair_cascade.py`，`scripts/cascade_report.py --merged`，`scripts/final_summary_v076.py`；数据与协议在 `experiments/` 与 `experiments/protocols/`（协议在生成前冻结并提交）。API 密钥仅经环境变量传入，未入库。
