@@ -103,6 +103,15 @@ def translate(path):
         tgt = [d for d in decls if d.name == prog[0].lvalue.name and d.init is None]
         if not tgt: break
         tgt[0].init = prog[0].rvalue; prog.pop(0)
+    # v0.91: `T z; ... z = e;` where the first mention of z is an unconditional top-level assignment whose right side does not read z: the value given to the declaration (0) is never observed
+    for d in decls:
+        if d.init is not None or d.name in params: continue
+        for st in prog:
+            names = {x.name for x in _walk(st) if isinstance(x, c_ast.ID)}
+            if d.name not in names: continue
+            if isinstance(st, c_ast.Assignment) and st.op == '=' and isinstance(st.lvalue, c_ast.ID) and st.lvalue.name == d.name and d.name not in {x.name for x in _walk(st.rvalue) if isinstance(x, c_ast.ID)}:
+                d.init = c_ast.Constant('int', '0')
+            break
     # assertions / reach_error() inside the program (loops, branches): turn each into `__a = 1/(cond);` (UB iff the assertion fails) using a dummy local
     n_inner = [0]
     def rewrite(stmts):
