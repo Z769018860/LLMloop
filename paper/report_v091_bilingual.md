@@ -17,3 +17,16 @@
 **D. Negative/partial:** polynomial-equality mining (off by default) finds the right invariants and loop preservation passes, but exit obligations stall on nonlinear solving; `cohencu` stays uncertified.
 **Blocked:** LLM runs on the held-out set (no credentials in this environment).
 **Implication:** A and B strengthen the "independently checkable certificates, bugs found and disclosed" story; C exposes a generalisation weakness that must be reported. Still missing for a main track: family-disjoint held-out LLM study, nonlinear-invariant capability, a same-task win over the strongest baseline.
+
+---
+## 补充:留出集 LLM 实验(Study HO)/ Held-out LLM study
+## 中文
+协议 `experiments/protocols/v091_study_ho.json` 在生成前冻结并提交;沿用 Study W 的提示、验证路径(`typed_summary_portfolio` + `typed_invariant_while`,无回退)、每模型每程序 1 次采样、温度 0.7。程序:留出目录中进入单循环片段的 26 个(21 个预期成立、5 个不安全对照)。**模型可用性(披露):** `gemini-3-flash` 在网关返回 `model_not_found`,26 个请求全部失败(0 响应);`glm-5.3-ark` 慢且 9 次传输失败,仅得到 16 个响应(11 个安全、5 个不安全);其余 3 个模型全量。共 120 个响应被验证。
+结果:不安全对照 **0/25 被认证**。21 个安全程序中 **9 个被至少一个模型认证**(并上 Houdini 共 12 个);按模型的响应级认证:glm 8/11、deepseek-ark 7/21、deepseek-itkk 5/21、gpt-4.1-mini 3/21、claude-dsflash 3/21。认证的不变式经 CBMC 循环契约独立复核:26 个中 **23 个 VERIFIED**,0 FAILED,2 个转换错误,1 个 CBMC 超时(含模 2³² 的 lcm2)。
+**与工具同任务比较**(冻结翻译与工具运行覆盖的 15 个单循环预期成立程序):LLM 8、Ultimate 7、CPAchecker 4、ESBMC 0;**5 个程序被我们认证而没有任何工具证明**(均为 `loops-crafted-1/mono-crafted_*`、`Mono1_1-2` 单调系列);我们的弱点仍是 nla-digbench 多项式程序(仅 `lcm2`、`sqrt1-ll` 被认证)。
+局限:每程序 1 次采样;5 个有效模型;glm 缺 10 个响应;工具 75 秒/程序、2 线程,是单一配置;LLM 并集对比单工具含"多个模型取并集"的优势;模型可能见过这些公开程序(SV-COMP 公开),留出只保证"未用于开发工具链/提示",不保证"未被训练见过"。
+## English
+Protocol frozen and committed before generation; same prompt, verifier path (`typed_summary_portfolio` + `typed_invariant_while`, no fallback), 1 sample per model/program, temperature 0.7, on 26 held-out single-loop programs (21 valid, 5 unsafe controls). **Availability (disclosed):** `gemini-3-flash` returned `model_not_found` (0/26 responses); `glm-5.3-ark` was slow with 9 transport failures (16 responses); the other 3 models complete; 120 responses verified.
+Results: **0/25 unsafe controls certified**; **9/21 safe programs certified by at least one model** (12 with Houdini); response-level: glm 8/11, deepseek-ark 7/21, deepseek-itkk 5/21, gpt-4.1-mini 3/21, claude-dsflash 3/21. CBMC loop-contract re-check of the certified invariants: **23/26 verified**, 0 failed, 2 conversion errors, 1 timeout.
+Same-task comparison (15 single-loop valid programs covered by both frozen translation and tool runs): LLM 8, Ultimate 7, CPAchecker 4, ESBMC 0; **5 programs certified by us and proved by no tool** (the monotone `mono-crafted_*`/`Mono1_1-2` series); our weakness remains the nla-digbench polynomial programs (only `lcm2`, `sqrt1-ll`).
+Limits: single sample; 5 effective models; 10 glm responses missing; one tool configuration (75 s, 2 threads); union over models vs single tools favours us; training-data exposure cannot be excluded (public SV-COMP).

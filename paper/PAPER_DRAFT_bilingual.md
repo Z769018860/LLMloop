@@ -55,6 +55,7 @@
 - **CBMC 独立复核：** 241 个已认证的 C 语义不变式，238 个被 CBMC 循环契约独立验证；2 个失败正是被审计发现的失效旧证书。 238/241 independently verified by CBMC.
 - **存量认证审计：** 用当前验证器重验 695 条存量认证响应，8 条失效（形参修改缺陷，v0.79 修复）；程序级计数不变，响应级 286→282（C）、409→405（数学）。 8 of 695 stored certificates no longer hold; program-level counts unchanged.
 - **留出集（冻结工具链、无 LLM，`nla-digbench` + `loops-crafted-1`）：** 预期成立 22 个中，我方 2、Ultimate 8、CPAchecker 5、ESBMC 1；预期违反 7 个均未被我方认证；**我方在多项式不变式主导的留出集上明显较弱**。 Ours 2/22 vs Ultimate 8/22 on the held-out set: a real weakness.
+- **留出集 LLM 研究（协议冻结在前）：** 26 个单循环程序（21 成立/5 不安全）、5 个有效模型：不安全 0/25 被认证；21 个安全程序中 9 个被至少一个模型认证（并 Houdini 12）；认证不变式经 CBMC 复核 23/26，0 失败。与工具同任务（15 个程序）：LLM 8、Ultimate 7、CPAchecker 4、ESBMC 0，**5 个程序仅我们认证**；多项式程序仍是弱点。 Held-out LLM study: 9/21 safe certified, 0/25 unsafe; 8 vs Ultimate 7 on 15 shared programs; 5 programs proved by no tool.
 详见 `paper/report_v091_bilingual.md`。
 
 ## 5. 更正与披露 / Corrections and disclosures

@@ -30,3 +30,14 @@ def test_certificate_recheck_and_stale_audit_recorded():
 def test_heldout_unsafe_never_certified():
     for d in ('v091_heldout', 'v091_heldout_posthoc'):
         o = json.load(open(E / d / 'ours.json')); assert o['unsafe_certified'] == []
+
+def test_study_ho_recorded():
+    import collections
+    v = [json.loads(l) for l in open(E / 'v091_heldout/llm_w/verifications.jsonl')]
+    assert len(v) == 120
+    st = lambda r: (r.get('result') or {}).get('status', '')
+    assert sum(st(r).startswith('PROVED') for r in v if r['role'] == 'unsafe_source_control') == 0
+    assert len({r['program'] for r in v if r['role'] == 'provable_safe' and st(r).startswith('PROVED')}) == 9
+    rc = json.load(open(E / 'v091_heldout/cert_recheck_cbmc.json'))
+    assert len(rc) == 26 and sum(r['cbmc'] == 'VERIFIED' for r in rc) == 23 and not any(r['cbmc'] == 'FAILED' for r in rc)
+    assert json.load(open(ROOT / 'experiments/protocols/v091_study_ho.json'))['study'] == 'v074_study_w'

@@ -239,3 +239,5 @@ memsafe 全量重跑:完整 42 / 子集 89 / NOT_PROVED 250 / NOT_APPLICABLE 617
 ## v0.91
 CBMC 独立复核 238/241;存量认证复核:C 286→282、数学 409→405(形参修改缺陷);留出集(冻结 ea0aa25):我方 2/22,Ultimate 8/22,CPAchecker 5/22,ESBMC 1/22,无误判;事后翻译修复 4/42。多项式挖掘未成功(默认关)。留出 LLM 实验受阻(无凭据)。报告 paper/report_v091_bilingual.md。
 全量测试（v0.91）：3523 passed
+
+v0.91b 留出集 LLM(Study HO,协议冻结在前):不安全 0/25;安全 9/21 被认证(并 Houdini 12);CBMC 复核 23/26;同任务 15 程序 LLM 8 / Ultimate 7 / CPAchecker 4 / ESBMC 0。gemini 不可用,glm 缺 10 响应。
