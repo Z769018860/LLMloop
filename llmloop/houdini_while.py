@@ -83,6 +83,46 @@ def linear_equalities(rows, names, max_atoms=8):
     return out
 
 
+POLY_DEGREE = 0        # v0.91: 0 = off (frozen pipeline); 2/3 = also mine polynomial equalities of that degree from the samples (untrusted, filtered by the verifier like every other atom)
+
+
+def polynomial_equalities(rows, names, degree, max_atoms=12, max_cols=70):
+    """Integer polynomial relations over monomials of total degree <= `degree` (>= 2 somewhere) satisfied by ALL sampled states: nullspace over the rationals, small coefficients only."""
+    from fractions import Fraction
+    from math import gcd
+    names = [n for n in names if len({r[n] for r in rows}) > 1]
+    while True:                                                     # keep the monomial basis small
+        mons = [()]
+        for d in range(1, degree + 1): mons += list(itertools.combinations_with_replacement(names, d))
+        if len(mons) <= max_cols or len(names) <= 2: break
+        names = names[:-1]
+    if len(rows) < len(mons) + 5: return []
+    def val(r, m):
+        v = 1
+        for n in m: v *= r[n]
+        return v
+    M = [[Fraction(val(r, m)) for m in mons] for r in rows]; ncol = len(mons); piv = []; rr = 0
+    for c in range(ncol):
+        p = next((i for i in range(rr, len(M)) if M[i][c] != 0), None)
+        if p is None: continue
+        M[rr], M[p] = M[p], M[rr]; inv = 1 / M[rr][c]; M[rr] = [x * inv for x in M[rr]]
+        for i in range(len(M)):
+            if i != rr and M[i][c] != 0:
+                f = M[i][c]; M[i] = [a - f * b for a, b in zip(M[i], M[rr])]
+        piv.append(c); rr += 1
+    out = []
+    for f in [c for c in range(ncol) if c not in piv][:max_atoms]:
+        vec = [Fraction(0)] * ncol; vec[f] = Fraction(1)
+        for i, c in enumerate(piv): vec[c] = -M[i][f]
+        den = 1
+        for x in vec: den = den * x.denominator // gcd(den, x.denominator)
+        iv = [int(x * den) for x in vec]
+        if max(abs(x) for x in iv) > 60 or all(len(m) < 2 for m, c in zip(mons, iv) if c): continue
+        terms = ['%d*%s' % (c, '*'.join(m)) if m else '%d' % c for c, m in zip(iv, mons) if c]
+        out.append(' + '.join(terms) + ' == 0')
+    return out
+
+
 DEADLINE = None        # wall-clock deadline (time.time() value) honoured by the enumeration and by the weakening rounds of houdini / houdini_loops
 MAX_ATOM_VARS = 24      # pairwise/linear atoms only over the most informative variables (inlined 60 KB functions have thousands; the enumeration used to run for hours)
 
@@ -120,6 +160,7 @@ def atoms_from(states, program_consts=(), valsets=False, deadline=None):
         if all(r[a] <= r[b] for r in rows): out.append('%s <= %s' % (a, b))
         if all(r[a] >= r[b] for r in rows): out.append('%s >= %s' % (a, b))
     out += linear_equalities(rows, pair_names if len(pair_names) <= 12 else pair_names[:12])
+    if POLY_DEGREE >= 2: out += polynomial_equalities(rows, pair_names, POLY_DEGREE)
     for v in sn:  # bounds from program constants (Houdini needs them when sampling never reaches the extreme values)
         for k in sorted(set(program_consts)):
             out += ['%s <= %d' % (v, k), '%s >= %d' % (v, k)]

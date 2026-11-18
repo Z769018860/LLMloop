@@ -35,7 +35,9 @@ if __name__ == '__main__':
         else:
             from scripts.tools_eval import run as r2
             one = lambda p: r2((what, p))
-        pp = [dict(corpus='svcomp', name=r['dir'] + '/' + r['file'], source=r['source'], parameter_bounds=r['parameter_bounds'], abi='ILP32', expected='valid' if r['expected_unreach'] == 'true' else 'violated') for r in ps]
+        import re
+        inner = lambda src: re.sub(r'^(\s*)__a = 1 / (\(.*\));$', r'\1if (!\2) reach_error();', src, flags=re.M)      # in-body assertions become reach_error() calls for the tools
+        pp = [dict(corpus='svcomp', name=r['dir'] + '/' + r['file'], source=inner(r['source']), parameter_bounds=r['parameter_bounds'], abi='ILP32', expected='valid' if r['expected_unreach'] == 'true' else 'violated') for r in ps]
         with ThreadPoolExecutor(3) as ex: res = list(ex.map(one, pp))
         rows = [{'program': p['name'], 'expected': p['expected'], what: (x if isinstance(x, str) else str(x))} for p, x in zip(pp, res)]
         (OUT / (what + '.json')).write_text(json.dumps(rows, indent=1) + '\n')
