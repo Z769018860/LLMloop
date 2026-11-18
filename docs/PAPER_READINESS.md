@@ -231,3 +231,6 @@ Ultimate Automizer 是最强工具（Code2Inv 110/118 TRUE，无超时），ESBM
 ## v0.89
 memsafe 全量重跑:完整 42 / 子集 89 / NOT_PROVED 250 / NOT_APPLICABLE 617;8 个树函数由完整降为子集(纠正)。合成 49 例无不安全判定。报告 paper/report_v089_bilingual.md。
 全量测试（v0.89）：3515 passed
+
+## v0.90
+翻译单元回退(C23 + 占位头):126 行中 7 认证/7 未认证,73 行仍为 TU 错误(33 windows.h、10 片段、2 NEON、28 生成数据头/gmp,不做数据头空桩)。字符常量重跑 20 行:8 认证。`loaded_paths` 写入结果。已加载指针假设与关系前置条件未解决。报告 paper/report_v090_bilingual.md。

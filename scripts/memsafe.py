@@ -36,7 +36,7 @@ class MemSafe:
         self.size = {}            # base -> size expression (AST factory)
         self.string = {}          # base -> bool
         self.elem = {}            # base -> scalar word tuple
-        self.checked = 0; self.unchecked = 0; self.untracked_derefs = 0; self.untracked_list = []; self.k = 0; self.pre = []
+        self.checked = 0; self.unchecked = 0; self.untracked_derefs = 0; self.untracked_list = []; self.loaded_paths = []; self.k = 0; self.pre = []
         self.heap = {}; self.loaded = {}; self.merged = set(); self.enull = set(); self.fcache = {}; self.fn_vars = []; self.ul_vars = []; self.orig_params = []; self.callee_checks = 0; self.pos_bases = set(); self.disjoint = []; self.len_params = []; self.null_params = []; self.nullable = set(); self.voidbase = set(); self.freeable = set(); self.libchecks = 0
 
     # ------------------------------------------------------------------ analysis
@@ -277,6 +277,8 @@ class MemSafe:
     def load_stmts(self, v, rv, decl):
         """v = (pointer loaded from memory): the access that loads it is checked; v then points to a fresh object that is NULL or valid (assumed well-formed data) with at least one element"""
         hb, w = self.loaded[v]; out = []
+        txt = G_.visit(rv) if rv is not None else ''
+        if txt not in self.loaded_paths: self.loaded_paths.append(txt)
         self.path_guard(rv)
         if decl: out.append(c_ast.Decl(v + '__o', [], [], [], [], c_ast.TypeDecl(v + '__o', [], None, c_ast.IdentifierType(['long'])), num(0), None)); self.pvars.add(v)
         out += [c_ast.Assignment('=', idn(hb + '__n'), self.nd(('unsigned', 'long'))), c_ast.If(bin_('==', idn(hb + '__n'), num(0)), c_ast.Compound([c_ast.Assignment('=', idn(hb + '__n'), num(1))]), None),

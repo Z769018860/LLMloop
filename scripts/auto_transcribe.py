@@ -26,10 +26,23 @@ INTS = {('int',): (32, True), ('unsigned',): (32, False), ('unsigned', 'int'): (
 _TU = {}
 
 
+FALLBACK_TU = set()
+
+
+def _clang_ast(path, includes, extra):
+    return subprocess.run(['clang', '-fsyntax-only', '-w', '-ferror-limit=0'] + extra[0] + ['-include', str(CU / 'fake/config.h'), '-include', 'stdbool.h', '-include', 'stdint.h', '-include', 'stddef.h', '-include', str(CU / 'fake/prelude.h')] + extra[1] + ['-DNDEBUG', '-D__NO_CTYPE', '-Xclang', '-ast-print'] + [x for i in includes for x in ('-I', str(i))] + [str(path)], capture_output=True, text=True, timeout=180)
+
+
 def tu_text(path, includes):
+    """default translation unit; when it has errors, retry with C23 (nullptr) and the fallback stand-in header, keep whichever has fewer errors"""
     key = str(path)
     if key not in _TU:
-        r = subprocess.run(['clang', '-fsyntax-only', '-w', '-ferror-limit=0', '-include', str(CU / 'fake/config.h'), '-include', 'stdbool.h', '-include', 'stdint.h', '-include', 'stddef.h', '-include', str(CU / 'fake/prelude.h'), '-DNDEBUG', '-D__NO_CTYPE', '-Xclang', '-ast-print'] + [x for i in includes for x in ('-I', str(i))] + [str(path)], capture_output=True, text=True, timeout=180)
+        r = _clang_ast(path, includes, ([], []))
+        nerr = lambda x: sum(1 for l in x.stderr.splitlines() if 'error:' in l)
+        if r.returncode != 0 and (CU / 'fake/prelude2.h').exists():
+            for rename in ([], ['-Dstreq=_fb_streq', '-Dmemeq=_fb_memeq', '-Dsetgroups=_fb_setgroups']):
+                r2 = _clang_ast(path, list(includes) + [CU / 'gnulib/lib/unictype'], (['-std=gnu2x', '-Dtrue=1', '-Dfalse=0'] + rename, ['-include', str(CU / 'fake/prelude2.h')]))
+                if nerr(r2) < nerr(r): r = r2; FALLBACK_TU.add(key)
         _TU[key] = re.sub(r'__attribute__\(\(.*?\)\)\s*', '', r.stdout)
     return _TU[key]
 
@@ -1056,6 +1069,7 @@ def transcribe(path, name, includes, memsafe=False):
     if name not in defs: raise ValueError('definition not found')
     if '<recovery-expr>' in defs[name]: raise ValueError('translation-unit errors (missing project macros/headers)')
     notes = set()
+    if str(path) in FALLBACK_TU: notes.add('translation unit built with stand-in macros/declarations (C23 mode, experiments/v090/fake_headers/prelude2.h): platform constants such as O_NOLINKS, SIG2STR_MAX are placeholders')
     if name not in asts: raise ValueError('parse failure')
     orig_src = clean(defs[name], tmap); fd = copy.deepcopy(asts[name])
     normalize_structure(fd, notes); eliminate_gotos(fd, notes); uniquify_decls(fd)
@@ -1067,6 +1081,7 @@ def transcribe(path, name, includes, memsafe=False):
     hoist_and_init(fd, notes); flatten_blocks(fd, notes); ensure_return(fd, notes); rename_underscored(fd); copy_mutated_params(fd, notes)
     if fd.decl.type.args is None or not fd.decl.type.args.params:          # the verifier front ends need one parameter
         fd.decl.type.args = c_ast.ParamList([c_ast.Decl('__z', [], [], [], [], c_ast.TypeDecl('__z', [], None, c_ast.IdentifierType(['int'])), None, None)]); FORCED['__z'] = [0, 0]
+    char_literals_to_int(fd, notes)
     fd.decl.name = 'f'; fd.decl.type.type.declname = 'f' if hasattr(fd.decl.type.type, 'declname') else None
     for p in fd.decl.type.args.params: p.quals = []
     inl = [re.sub(r' \(with loops\)$', '', n[len('inlined '):]) for n in notes if n.startswith('inlined')]
@@ -1156,6 +1171,31 @@ def callee_summary_fn(path, depth):
     return fn
 
 
+def char_literals_to_int(fd, notes):
+    """the verifier front ends have no character constants: 'a' becomes its integer value (as in C, an int)"""
+    import ast as pyast
+    class V(c_ast.NodeVisitor):
+        n = 0
+        def generic_visit(self, node):
+            for name, child in list(node.children()):
+                if isinstance(child, c_ast.Constant) and child.type == 'char':
+                    v = pyast.literal_eval(child.value) if not child.value.startswith("L") else None
+                    if isinstance(v, str) and len(v) == 1:
+                        new = c_ast.Constant('int', str(ord(v)))
+                        # replace in parent
+                        for attr in node.__slots__:
+                            cur = getattr(node, attr, None)
+                            if cur is child: setattr(node, attr, new)
+                            elif isinstance(cur, list):
+                                for i, x in enumerate(cur):
+                                    if x is child: cur[i] = new
+                        V.n += 1
+                        continue
+                self.visit(child)
+    V().visit(fd)
+    if V.n: notes.add('character constants replaced by their integer values')
+
+
 def certify_memsafe(path, fn, includes, budget=120, bounds_override=None, _depth=0):
     """up to two attempts: without tracking of loaded pointers (v0.85 behaviour: pointers read from memory stay with the plain memory abstraction), then with it (fresh object per loaded pointer);
     the loaded-pointer attempt is made when the first one did not prove, or proved while leaving accesses unchecked (`argv[i][j]`); a proof that rests on loaded pointers is labelled as such"""
@@ -1172,7 +1212,7 @@ def certify_memsafe(path, fn, includes, budget=120, bounds_override=None, _depth
     if best is b:
         best['loaded_tracking'] = True
         if best['status'] == 'PROVED_MEMSAFE' and any('loaded pointer tracked' in n for n in best.get('notes', [])):
-            best['contract_strength'] = str(best.get('contract_strength')) + '; ALSO assumes every non-NULL loaded pointer points to a valid object with at least one element (not a proof about the data structure)'
+            best['contract_strength'] = str(best.get('contract_strength')) + '; ALSO assumes that every non-NULL pointer loaded from memory via these paths -- %s -- points to a valid object with at least one element: a well-formedness precondition on the data structure, which this proof does not establish' % ', '.join(best.get('loaded_paths') or ['?'])
     return best
 
 
@@ -1185,7 +1225,7 @@ def _certify_memsafe(path, fn, includes, budget=120, bounds_override=None, _dept
     finally: MS.SUMMARY_FN = None
     ms = info.ms
     if bounds_override: bounds = {**bounds, **{k: v for k, v in bounds_override.items() if k in bounds}}
-    res = {'status': 'NOT_PROVED', 'untracked_derefs': ms.untracked_derefs, 'untracked_exprs': ms.untracked_list[:8], 'checked_accesses': ms.checked, 'unchecked_call_args': ms.unchecked, 'bases': sorted(set(ms.base.values())), 'strings': sorted(b for b, s in ms.string.items() if s), 'len_params': ms.len_params, 'null_params': ms.null_params, 'libcall_checks': ms.libchecks, 'callee_checks': ms.callee_checks, 'summary_params': ms.orig_params, 'notes': [n for n in notes if n.startswith(('memory-safety', 'tracked', 'loaded pointer', 'heap object', 'pointer-element'))]}
+    res = {'status': 'NOT_PROVED', 'untracked_derefs': ms.untracked_derefs, 'untracked_exprs': ms.untracked_list[:8], 'loaded_paths': ms.loaded_paths[:12], 'checked_accesses': ms.checked, 'unchecked_call_args': ms.unchecked, 'bases': sorted(set(ms.base.values())), 'strings': sorted(b for b, s in ms.string.items() if s), 'len_params': ms.len_params, 'null_params': ms.null_params, 'libcall_checks': ms.libchecks, 'callee_checks': ms.callee_checks, 'summary_params': ms.orig_params, 'notes': [n for n in notes if n.startswith(('memory-safety', 'tracked', 'loaded pointer', 'heap object', 'pointer-element'))]}
     if ms.checked == 0: res['status'] = 'NO_CHECKED_ACCESSES'; return res
     for name, c in contract_candidates(info.fd, ms.len_params, ms.null_params, ms.disjoint):
         if c is None and not ms.len_params: pass
