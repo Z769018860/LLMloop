@@ -6,7 +6,7 @@ import json, sys, time, collections
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 ROOT = Path(__file__).resolve().parents[1]; sys.path.insert(0, str(ROOT))
-OUT = ROOT / 'experiments/v091_heldout'
+OUT = ROOT / 'experiments' / __import__('os').environ.get('HELDOUT_DIR', 'v091_heldout')
 
 
 def progs():
@@ -38,7 +38,7 @@ if __name__ == '__main__':
         import re
         inner = lambda src: re.sub(r'^(\s*)__a = 1 / (\(.*\));$', r'\1if (!\2) reach_error();', src, flags=re.M)      # in-body assertions become reach_error() calls for the tools
         pp = [dict(corpus='svcomp', name=r['dir'] + '/' + r['file'], source=inner(r['source']), parameter_bounds=r['parameter_bounds'], abi='ILP32', expected='valid' if r['expected_unreach'] == 'true' else 'violated') for r in ps]
-        with ThreadPoolExecutor(3) as ex: res = list(ex.map(one, pp))
+        with ThreadPoolExecutor(2) as ex: res = list(ex.map(one, pp))
         rows = [{'program': p['name'], 'expected': p['expected'], what: (x if isinstance(x, str) else str(x))} for p, x in zip(pp, res)]
         (OUT / (what + '.json')).write_text(json.dumps(rows, indent=1) + '\n')
         print(what, collections.Counter((r['expected'], r[what]) for r in rows))
