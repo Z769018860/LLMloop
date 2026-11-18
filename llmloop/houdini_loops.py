@@ -54,12 +54,28 @@ def _prio(a):
 CAP = 256        # invariant atoms per loop passed to the verifier (relational atoms come late in the list)
 
 
-def houdini_loops(source, bounds, abi='LP64', runs=60, max_rounds=60, solver_timeout_ms=5000, seed=1, integer_model='c'):
+def _lean(atoms):
+    """polynomial profile: drop moduli and unconditional value-set/implication noise (nonlinear queries are hard for the solver); keep equalities, bounds, differences and the flag-conditioned atoms"""
+    return [x for x in atoms if '%' not in x and not re.search(r'__\w+ (<|>)', x) and (' or ' not in x or ' - ' in x or ' == 0' in x)]
+
+
+def houdini_loops(source, bounds, abi='LP64', runs=60, max_rounds=60, solver_timeout_ms=5000, seed=1, integer_model='c', poly=False):
+    """poly=True (v0.91): the polynomial profile (degree-3 polynomial equalities, flag-conditioned relations, lean atom set); the default profile is the frozen pipeline."""
+    from . import houdini_while as _hw0
+    if poly:
+        saved = (_hw0.POLY_DEGREE, _hw0.COND_DIFF); _hw0.POLY_DEGREE, _hw0.COND_DIFF = 3, True
+        try: return _houdini_loops(source, bounds, abi, runs, max_rounds, solver_timeout_ms, seed, integer_model, True)
+        finally: _hw0.POLY_DEGREE, _hw0.COND_DIFF = saved
+    return _houdini_loops(source, bounds, abi, runs, max_rounds, solver_timeout_ms, seed, integer_model, False)
+
+
+def _houdini_loops(source, bounds, abi, runs, max_rounds, solver_timeout_ms, seed, integer_model, poly):
     bounds = {k: list(v) for k, v in bounds.items()}
     heads, nl = sample_heads(source, {k: tuple(v) for k, v in bounds.items()}, runs, seed, integer_model == 'mathematical')
     if nl == 0 or any(not heads.get(k) for k in range(nl)): return 'NO_SAMPLES', [], 0, []
     consts = {int(x) for x in re.findall(r'(?<![\w.])\d+', source)}; consts |= {c + d for c in list(consts) for d in (-1, 1)} | {0, 1, -1}
     cands = [atoms_from(heads[k], tuple(sorted(c for c in consts if abs(c) <= 10 ** 7)), valsets=True) for k in range(nl)]; log = []
+    if poly: cands = [_lean(c) for c in cands]
     cands = [sorted(c, key=_prio) if len(c) > CAP else c for c in cands]
     for rnd in range(max_rounds):
         from . import houdini_while as _hw

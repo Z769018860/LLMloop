@@ -83,6 +83,7 @@ def linear_equalities(rows, names, max_atoms=8):
     return out
 
 
+COND_DIFF = False       # v0.91: flag-conditioned difference atoms (off by default = frozen pipeline)
 POLY_DEGREE = 0        # v0.91: 0 = off (frozen pipeline); 2/3 = also mine polynomial equalities of that degree from the samples (untrusted, filtered by the verifier like every other atom)
 
 
@@ -181,6 +182,21 @@ def atoms_from(states, program_consts=(), valsets=False, deadline=None):
                     wa = [r[w] for r in ra]; wo = [r[w] for r in ro]
                     if max(wa) < min(wo): out += ['(%s != %d or %s <= %d)' % (v, a, w, max(wa)), '(%s == %d or %s >= %d)' % (v, a, w, min(wo))]
                     if min(wa) > max(wo): out += ['(%s != %d or %s >= %d)' % (v, a, w, min(wa)), '(%s == %d or %s <= %d)' % (v, a, w, max(wo))]
+    if valsets and COND_DIFF:   # v0.91: flag-conditioned relations. At a loop exit by `break`/`return` the flag (`__brk1`, ...) is 1 and the other variables satisfy extra relations (n - a >= 1): (flag != v or x - y >= m)
+        flags = [v for v in names if 2 <= len({r[v] for r in rows}) <= 2 and v.startswith('__')]
+        others = [n for n in pair_names if n not in flags and len({r[n] for r in rows}) > 1][:12]
+        for f in flags:
+            for fv in sorted({r[f] for r in rows}):
+                sub = [r for r in rows if r[f] == fv]
+                if len(sub) < 3: continue
+                if POLY_DEGREE >= 2:      # conditional polynomial equalities in two variables on the rows of this flag value (e.g. at a break: y == 3a^2 + 9a + 7)
+                    for a, b in itertools.combinations(others, 2):
+                        for eq in polynomial_equalities(sub, [a, b], POLY_DEGREE, max_atoms=3, max_cols=12):
+                            if eq not in out and not all(eval(eq.replace('==', '=='), {}, r) == 0 if False else True for r in []): out.append('(%s != %d or %s)' % (f, fv, eq))
+                for a, b in itertools.combinations(others, 2):
+                    dall = [r[a] - r[b] for r in rows]; dsub = [r[a] - r[b] for r in sub]
+                    if min(dsub) > min(dall): out.append('(%s != %d or %s - %s >= %d)' % (f, fv, a, b, min(dsub)))
+                    if max(dsub) < max(dall): out.append('(%s != %d or %s - %s <= %d)' % (f, fv, a, b, max(dsub)))
     seen = []; [seen.append(x) for x in out if x not in seen]
     return seen
 

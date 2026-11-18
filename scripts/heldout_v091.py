@@ -13,20 +13,24 @@ def progs():
     return [r for r in json.loads((OUT / 'translated.json').read_text()) if r['stage'].startswith('in_') and r.get('expected_unreach') in ('true', 'false')]
 
 
+POLY = '--poly' in sys.argv
+
+
 def go(a):
     from llmloop.houdini_loops import houdini_loops
     r, model = a; t = time.time()
-    try: st, inv, rounds, log = houdini_loops(r['source'], r['parameter_bounds'], abi='ILP32', integer_model=model, max_rounds=150, solver_timeout_ms=5000)
+    try: st, inv, rounds, log = houdini_loops(r['source'], r['parameter_bounds'], abi='ILP32', integer_model=model, max_rounds=150, solver_timeout_ms=20000 if POLY else 5000, poly=POLY)
     except Exception as e: st, inv, rounds, log = 'ERROR:' + str(e)[:60], [], 0, []
     return {'program': r['dir'] + '/' + r['file'], 'stage': r['stage'], 'expected_unreach': r['expected_unreach'], 'model': model, 'status': st.split(':')[0], 'detail': st[:80], 'invariant': inv if st == 'PROVED' else None, 'rounds': rounds, 'seconds': round(time.time() - t, 1)}
 
 
 if __name__ == '__main__':
     what = sys.argv[1]; ps = progs()
+    sys.argv = [a for a in sys.argv]
     if what == 'ours':
         with ProcessPoolExecutor(3) as ex: rows = list(ex.map(go, [(r, m) for r in ps for m in ('mathematical', 'c')]))
         bad = [r['program'] for r in rows if r['expected_unreach'] == 'false' and r['status'] == 'PROVED']
-        (OUT / 'ours.json').write_text(json.dumps({'rows': rows, 'unsafe_certified': bad}, indent=1) + '\n')
+        (OUT / ('ours_poly.json' if POLY else 'ours.json')).write_text(json.dumps({'rows': rows, 'unsafe_certified': bad}, indent=1) + '\n')
         for m in ('mathematical', 'c'):
             print(m, collections.Counter((r['expected_unreach'], r['status']) for r in rows if r['model'] == m))
         print('unsafe certified:', bad)
