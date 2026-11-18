@@ -87,11 +87,26 @@ COND_DIFF = False       # v0.91: flag-conditioned difference atoms (off by defau
 POLY_DEGREE = 0        # v0.91: 0 = off (frozen pipeline); 2/3 = also mine polynomial equalities of that degree from the samples (untrusted, filtered by the verifier like every other atom)
 
 
-def polynomial_equalities(rows, names, degree, max_atoms=12, max_cols=70):
+def polynomial_equalities(rows, names, degree, max_atoms=12, max_cols=90):
+    """all degrees 2..degree whose monomial basis fits (low degrees first); see _polynomial_equalities"""
+    from math import comb
+    out = []
+    nn = len({tuple(r[n] for r in rows) for n in names if len({r[n] for r in rows}) > 1 and not n.startswith('__')})
+    for d in range(2, degree + 1):
+        if comb(nn + d, d) > max_cols and d > 2: break
+        for a in _polynomial_equalities(rows, names, d, max_atoms, max_cols):
+            if a not in out: out.append(a)
+    return out
+
+
+def _polynomial_equalities(rows, names, degree, max_atoms=12, max_cols=90):
     """Integer polynomial relations over monomials of total degree <= `degree` (>= 2 somewhere) satisfied by ALL sampled states: nullspace over the rationals, small coefficients only."""
     from fractions import Fraction
     from math import gcd
-    names = [n for n in names if len({r[n] for r in rows}) > 1]
+    names = [n for n in names if len({r[n] for r in rows}) > 1 and not n.startswith('__')]       # flags are handled by the conditional atoms
+    uniq = {}
+    for n in names: uniq.setdefault(tuple(r[n] for r in rows), n)                                  # identical columns (c == y) only produce trivial relations
+    names = list(uniq.values())
     while True:                                                     # keep the monomial basis small
         mons = [()]
         for d in range(1, degree + 1): mons += list(itertools.combinations_with_replacement(names, d))

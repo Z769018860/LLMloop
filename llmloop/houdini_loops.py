@@ -63,7 +63,7 @@ def houdini_loops(source, bounds, abi='LP64', runs=60, max_rounds=60, solver_tim
     """poly=True (v0.91): the polynomial profile (degree-3 polynomial equalities, flag-conditioned relations, lean atom set); the default profile is the frozen pipeline."""
     from . import houdini_while as _hw0
     if poly:
-        saved = (_hw0.POLY_DEGREE, _hw0.COND_DIFF); _hw0.POLY_DEGREE, _hw0.COND_DIFF = 3, True
+        saved = (_hw0.POLY_DEGREE, _hw0.COND_DIFF); _hw0.POLY_DEGREE, _hw0.COND_DIFF = 5, True
         try: return _houdini_loops(source, bounds, abi, runs, max_rounds, solver_timeout_ms, seed, integer_model, True)
         finally: _hw0.POLY_DEGREE, _hw0.COND_DIFF = saved
     return _houdini_loops(source, bounds, abi, runs, max_rounds, solver_timeout_ms, seed, integer_model, False)
