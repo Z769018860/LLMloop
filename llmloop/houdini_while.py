@@ -87,19 +87,19 @@ COND_DIFF = False       # v0.91: flag-conditioned difference atoms (off by defau
 POLY_DEGREE = 0        # v0.91: 0 = off (frozen pipeline); 2/3 = also mine polynomial equalities of that degree from the samples (untrusted, filtered by the verifier like every other atom)
 
 
-def polynomial_equalities(rows, names, degree, max_atoms=12, max_cols=90):
+def polynomial_equalities(rows, names, degree, max_atoms=12, max_cols=90, drop_multiples=True):
     """all degrees 2..degree whose monomial basis fits (low degrees first); see _polynomial_equalities"""
     from math import comb
     out = []
     nn = len({tuple(r[n] for r in rows) for n in names if len({r[n] for r in rows}) > 1 and not n.startswith('__')})
     for d in range(2, degree + 1):
         if comb(nn + d, d) > max_cols and d > 2: break
-        for a in _polynomial_equalities(rows, names, d, max_atoms, max_cols):
+        for a in _polynomial_equalities(rows, names, d, max_atoms, max_cols, drop_multiples):
             if a not in out: out.append(a)
     return out
 
 
-def _polynomial_equalities(rows, names, degree, max_atoms=12, max_cols=90):
+def _polynomial_equalities(rows, names, degree, max_atoms=12, max_cols=90, drop_multiples=True):
     """Integer polynomial relations over monomials of total degree <= `degree` (>= 2 somewhere) satisfied by ALL sampled states: nullspace over the rationals, small coefficients only."""
     from fractions import Fraction
     from math import gcd
@@ -135,7 +135,7 @@ def _polynomial_equalities(rows, names, degree, max_atoms=12, max_cols=90):
         iv = [int(x * den) for x in vec]
         if max(abs(x) for x in iv) > 60 or all(len(m) < 2 for m, c in zip(mons, iv) if c): continue
         supp = [m for m, c in zip(mons, iv) if c]
-        if supp and all(m for m in supp) and set.intersection(*[set(m) for m in supp]): continue      # a multiple v*(lower-degree relation): redundant, and it makes the nonlinear queries much harder
+        if drop_multiples and supp and all(m for m in supp) and set.intersection(*[set(m) for m in supp]): continue      # a multiple v*(lower-degree relation): redundant, and it makes the nonlinear queries much harder
         terms = ['%d*%s' % (c, '*'.join(m)) if m else '%d' % c for c, m in zip(iv, mons) if c]
         out.append(' + '.join(terms) + ' == 0')
     return out
@@ -206,12 +206,24 @@ def atoms_from(states, program_consts=(), valsets=False, deadline=None):
                 if len(sub) < 3: continue
                 if POLY_DEGREE >= 2:      # conditional polynomial equalities in two variables on the rows of this flag value (e.g. at a break: y == 3a^2 + 9a + 7)
                     for a, b in itertools.combinations(others, 2):
-                        for eq in polynomial_equalities(sub, [a, b], POLY_DEGREE, max_atoms=3, max_cols=12):
+                        for eq in polynomial_equalities(sub, [a, b], POLY_DEGREE, max_atoms=3, max_cols=12, drop_multiples=False):
                             if eq not in out and not all(eval(eq.replace('==', '=='), {}, r) == 0 if False else True for r in []): out.append('(%s != %d or %s)' % (f, fv, eq))
                 for a, b in itertools.combinations(others, 2):
                     dall = [r[a] - r[b] for r in rows]; dsub = [r[a] - r[b] for r in sub]
                     if min(dsub) > min(dall): out.append('(%s != %d or %s - %s >= %d)' % (f, fv, a, b, min(dsub)))
                     if max(dsub) < max(dall): out.append('(%s != %d or %s - %s <= %d)' % (f, fv, a, b, max(dsub)))
+    if valsets and COND_DIFF:   # sign-conditioned relations of parameters (a counting loop `while (c < k)` behaves differently for k > 0 and k <= 0)
+        for pv in pn:
+            vals = [r[pv] for r in rows]
+            if min(vals) >= 0 or max(vals) <= 0: continue
+            others = [n for n in pair_names if n != pv and n not in pn and len({r[n] for r in rows}) > 1 and not n.startswith('__')][:10]
+            for guard, keep in (('%s <= 0' % pv, lambda r: r[pv] > 0), ('%s > 0' % pv, lambda r: r[pv] <= 0)):
+                sub = [r for r in rows if keep(r)]
+                if len(sub) < 3: continue
+                for a, b in itertools.combinations(others + [pv], 2):
+                    dall = [r[a] - r[b] for r in rows]; dsub = [r[a] - r[b] for r in sub]
+                    if min(dsub) > min(dall): out.append('(%s or %s - %s >= %d)' % (guard, a, b, min(dsub)))
+                    if max(dsub) < max(dall): out.append('(%s or %s - %s <= %d)' % (guard, a, b, max(dsub)))
     seen = []; [seen.append(x) for x in out if x not in seen]
     return seen
 
