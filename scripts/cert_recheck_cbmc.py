@@ -12,8 +12,13 @@ def pyternary(a):
     return '((%s) ? (%s) : (%s))' % (pyternary(m.group(2)), pyternary(m.group(1)), pyternary(m.group(3))) if m else a
 
 
+def pymod(a):
+    # the invariant language uses Python semantics for `%` (result in [0, m)), C's `%` truncates towards zero
+    return re.sub(r'(\([^()]*\)|[A-Za-z_]\w*)\s*%\s*(\d+)', lambda m: '((((%s) %% %s) + %s) %% %s)' % (m.group(1), m.group(2), m.group(2), m.group(2)), a)
+
+
 def wide(atom):
-    atom = pyternary(atom.replace('//', '/'))
+    atom = pyternary(pymod(atom.replace('//', '/')))
     atom = re.sub(r'\band\b', '&&', re.sub(r'\bor\b', '||', re.sub(r'\bnot\b', '!', atom)))
     return re.sub(r'(?<![\w.])([A-Za-z_]\w*)\b(?!\s*\()', lambda m: '((__int128)%s)' % m.group(1), atom)
 
