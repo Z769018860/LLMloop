@@ -179,7 +179,12 @@ def atoms_from(states, program_consts=(), valsets=False, deadline=None):
         if all(r[a] <= r[b] for r in rows): out.append('%s <= %s' % (a, b))
         if all(r[a] >= r[b] for r in rows): out.append('%s >= %s' % (a, b))
     out += linear_equalities(rows, pair_names if len(pair_names) <= 12 else pair_names[:12])
-    if POLY_DEGREE >= 2: out += polynomial_equalities(rows, pair_names, POLY_DEGREE)
+    if POLY_DEGREE >= 2:
+        out += polynomial_equalities(rows, pair_names, POLY_DEGREE)
+        mv = [n for n in pair_names if len({r[n] for r in rows}) > 1 and not n.startswith('__')][:5]       # bounds of quadratic monomials (termination-style loops: y*y <= 2*x0 + c)
+        for a, b in itertools.combinations_with_replacement(mv, 2):
+            vals = [r[a] * r[b] for r in rows]
+            if max(abs(v) for v in vals) < 10 ** 15: out += ['%s*%s >= %d' % (a, b, min(vals)), '%s*%s <= %d' % (a, b, max(vals))]
     for v in sn:  # bounds from program constants (Houdini needs them when sampling never reaches the extreme values)
         for k in sorted(set(program_consts)):
             out += ['%s <= %d' % (v, k), '%s >= %d' % (v, k)]
