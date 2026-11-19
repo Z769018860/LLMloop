@@ -103,17 +103,32 @@ def translate(path):
         tgt = [d for d in decls if d.name == prog[0].lvalue.name and d.init is None]
         if not tgt: break
         tgt[0].init = prog[0].rvalue; prog.pop(0)
-    # v0.91: `T z; ... z = e;` where the first mention of z is an unconditional top-level assignment whose right side does not read z: the value given to the declaration (0) is never observed
+    # v0.91/v0.93: `T z; ... z = e;` where the first mention of z is an assignment (or `for (z = e; ...)`) whose right side does not read z, and every other mention lies in the same statement list after it
+    # (descending through the single compound statement that contains all mentions): the value given to the declaration (0) is never observed
+    def mentions(x, nm): return any(isinstance(y, c_ast.ID) and y.name == nm for y in _walk(x))
+    def direct_assign(st, nm):
+        if isinstance(st, c_ast.Assignment): lv, rv = st.lvalue, st.rvalue; ok = st.op == '='
+        elif isinstance(st, c_ast.For) and isinstance(st.init, c_ast.Assignment): lv, rv = st.init.lvalue, st.init.rvalue; ok = st.init.op == '='
+        else: return False
+        return ok and isinstance(lv, c_ast.ID) and lv.name == nm and not mentions(rv, nm)
+    def child_lists(st):
+        if isinstance(st, c_ast.Compound): return [st.block_items or []]
+        out = []
+        for attr in ('stmt', 'iftrue', 'iffalse'):
+            c = getattr(st, attr, None)
+            if c is not None and isinstance(st, (c_ast.While, c_ast.For, c_ast.DoWhile, c_ast.If)): out.append(c.block_items or [] if isinstance(c, c_ast.Compound) else [c])
+        return out
+    def dominated(stmts, nm):
+        idx = [i for i, st in enumerate(stmts) if mentions(st, nm)]
+        if not idx: return False
+        st = stmts[idx[0]]
+        if direct_assign(st, nm): return True
+        if len(idx) == 1:
+            ch = [c for c in child_lists(st) if any(mentions(x, nm) for x in c)]
+            return len(ch) == 1 and dominated(ch[0], nm)
+        return False
     for d in decls:
-        if d.init is not None or d.name in params: continue
-        for st in prog:
-            names = {x.name for x in _walk(st) if isinstance(x, c_ast.ID)}
-            if d.name not in names: continue
-            if isinstance(st, c_ast.Assignment) and st.op == '=' and isinstance(st.lvalue, c_ast.ID) and st.lvalue.name == d.name and d.name not in {x.name for x in _walk(st.rvalue) if isinstance(x, c_ast.ID)}:
-                d.init = c_ast.Constant('int', '0')
-            elif isinstance(st, c_ast.For) and isinstance(st.init, c_ast.Assignment) and st.init.op == '=' and isinstance(st.init.lvalue, c_ast.ID) and st.init.lvalue.name == d.name and d.name not in {x.name for x in _walk(st.init.rvalue) if isinstance(x, c_ast.ID)}:
-                d.init = c_ast.Constant('int', '0')      # `T i; for (i = e; ...)`: the declaration value is never observed
-            break
+        if d.init is None and d.name not in params and dominated(prog, d.name): d.init = c_ast.Constant('int', '0')
     # assertions / reach_error() inside the program (loops, branches): turn each into `__a = 1/(cond);` (UB iff the assertion fails) using a dummy local
     n_inner = [0]
     def rewrite(stmts):
