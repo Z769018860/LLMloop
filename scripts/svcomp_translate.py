@@ -140,6 +140,7 @@ def translate(path):
                 calls = [getattr(x.name, 'name', '') for x in (body or []) if isinstance(x, c_ast.FuncCall)]
                 if body and calls and 'reach_error' in calls and all(c in ('reach_error', 'abort') for c in calls) and len(calls) == len(body):
                     a = c_ast.UnaryOp('!', s.cond)
+            if a is not None and NOOVF: continue      # v0.93: the property is no-overflow; assertions in the source are not part of it (and `1/cond` would add an obligation the property does not have)
             if a is not None:
                 n_inner[0] += 1; out.append(c_ast.Assignment('=', c_ast.ID('__a'), c_ast.BinaryOp('/', c_ast.Constant('int', '1'), a))); continue
             for attr in ('stmt', 'iftrue', 'iffalse'):
@@ -156,6 +157,7 @@ def translate(path):
         asserts.insert(0, assert_of(prog.pop()))
     if prog and isinstance(prog[-1], c_ast.Return): prog.pop()  # trailing `return 0;`
     while prog and assert_of(prog[-1]) is not None: asserts.insert(0, assert_of(prog.pop()))
+    if NOOVF: asserts = []
     prog = rewrite(prog)
     if n_inner[0]:
         decls = decls + [c_parser.CParser().parse('int __a = 0;').ext[0]]
