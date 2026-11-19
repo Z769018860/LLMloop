@@ -41,3 +41,15 @@ def test_study_ho_recorded():
     rc = json.load(open(E / 'v091_heldout/cert_recheck_cbmc.json'))
     assert len(rc) == 26 and sum(r['cbmc'] == 'VERIFIED' for r in rc) == 23 and not any(r['cbmc'] == 'FAILED' for r in rc)
     assert json.load(open(ROOT / 'experiments/protocols/v091_study_ho.json'))['study'] == 'v074_study_w'
+
+def test_v092_polynomial_profile_recorded_and_safe():
+    sc = json.load(open(E / 'v092_scaling/ours_poly.json')); po = json.load(open(E / 'v091_heldout_posthoc/ours_poly.json'))
+    assert sc['unsafe_certified'] == [] and po['unsafe_certified'] == []
+    ok = lambda rows, m: sum(r['status'] == 'PROVED' for r in rows if r['model'] == m and r['expected_unreach'] == 'true')
+    assert ok(sc['rows'], 'mathematical') == 46 and ok(sc['rows'], 'c') == 40
+    tools = {t: sum(r[t] == 'TRUE' for r in json.load(open(E / 'v092_scaling' / (t + '.json')))) for t in ('esbmc', 'ultimate', 'cpachecker')}
+    assert tools == {'esbmc': 45, 'ultimate': 34, 'cpachecker': 63}
+
+def test_polynomial_profile_is_off_by_default():
+    import llmloop.houdini_while as H
+    assert H.POLY_DEGREE == 0 and H.COND_DIFF is False and H.SIGN_COND is False

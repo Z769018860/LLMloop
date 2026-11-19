@@ -241,3 +241,6 @@ CBMC 独立复核 238/241;存量认证复核:C 286→282、数学 409→405(形�
 全量测试（v0.91）：3523 passed
 
 v0.91b 留出集 LLM(Study HO,协议冻结在前):不安全 0/25;安全 9/21 被认证(并 Houdini 12);CBMC 复核 23/26;同任务 15 程序 LLM 8 / Ultimate 7 / CPAchecker 4 / ESBMC 0。gemini 不可用,glm 缺 10 响应。
+
+## v0.92
+多项式/条件原子配置(默认关闭):scaling 集 13→46/63(CPAchecker 63、ESBMC 45、Ultimate 34,我们独有 0);集合 A 并集 12 对 Ultimate 8(该配置在 A 上已非留出)。证据不支持"优于最好工具"。报告 paper/report_v092_bilingual.md。

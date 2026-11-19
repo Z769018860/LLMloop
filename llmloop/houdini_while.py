@@ -83,6 +83,7 @@ def linear_equalities(rows, names, max_atoms=8):
     return out
 
 
+SIGN_COND = False        # sign-conditioned parameter relations: evaluated, did not help on the development set (more atoms, harder nonlinear queries) -> off
 COND_DIFF = False       # v0.91: flag-conditioned difference atoms (off by default = frozen pipeline)
 POLY_DEGREE = 0        # v0.91: 0 = off (frozen pipeline); 2/3 = also mine polynomial equalities of that degree from the samples (untrusted, filtered by the verifier like every other atom)
 
@@ -212,7 +213,7 @@ def atoms_from(states, program_consts=(), valsets=False, deadline=None):
                     dall = [r[a] - r[b] for r in rows]; dsub = [r[a] - r[b] for r in sub]
                     if min(dsub) > min(dall): out.append('(%s != %d or %s - %s >= %d)' % (f, fv, a, b, min(dsub)))
                     if max(dsub) < max(dall): out.append('(%s != %d or %s - %s <= %d)' % (f, fv, a, b, max(dsub)))
-    if valsets and COND_DIFF:   # sign-conditioned relations of parameters (a counting loop `while (c < k)` behaves differently for k > 0 and k <= 0)
+    if valsets and COND_DIFF and SIGN_COND:   # sign-conditioned relations of parameters (a counting loop `while (c < k)` behaves differently for k > 0 and k <= 0)
         for pv in pn:
             vals = [r[pv] for r in rows]
             if min(vals) >= 0 or max(vals) <= 0: continue
