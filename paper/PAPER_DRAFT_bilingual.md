@@ -57,6 +57,7 @@
 - **留出集（冻结工具链、无 LLM，`nla-digbench` + `loops-crafted-1`）：** 预期成立 22 个中，我方 2、Ultimate 8、CPAchecker 5、ESBMC 1；预期违反 7 个均未被我方认证；**我方在多项式不变式主导的留出集上明显较弱**。 Ours 2/22 vs Ultimate 8/22 on the held-out set: a real weakness.
 - **留出集 LLM 研究（协议冻结在前）：** 26 个单循环程序（21 成立/5 不安全）、5 个有效模型：不安全 0/25 被认证；21 个安全程序中 9 个被至少一个模型认证（并 Houdini 12）；认证不变式经 CBMC 复核 23/26，0 失败。与工具同任务（15 个程序）：LLM 8、Ultimate 7、CPAchecker 4、ESBMC 0，**5 个程序仅我们认证**；多项式程序仍是弱点。 Held-out LLM study: 9/21 safe certified, 0/25 unsafe; 8 vs Ultimate 7 on 15 shared programs; 5 programs proved by no tool.
 - **v0.92 多项式配置：** scaling 集（63 个成立程序，与开发集同族）默认 13 → 46；CPAchecker 63、ESBMC 45、Ultimate 34；集合 A 并集 12 对 Ultimate 8（多项式配置在该集合上已非留出）。**不能主张优于最好工具。** 见 `paper/report_v092_bilingual.md`。
+- **v0.93 NoOverflows（族不相交、冻结在前）：** 预期无溢出 61 个：Ultimate 52、我们 47、CPAchecker 41、CBMC 5、ESBMC 2；有溢出 91 个我们 0 被认证；证书 CBMC 复核 113/119、0 失败。**未超过 Ultimate。** 见 `paper/report_v093_bilingual.md`。
 详见 `paper/report_v091_bilingual.md`。
 
 ## 5. 更正与披露 / Corrections and disclosures

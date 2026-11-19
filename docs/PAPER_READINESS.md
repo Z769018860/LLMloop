@@ -244,3 +244,6 @@ v0.91b 留出集 LLM(Study HO,协议冻结在前):不安全 0/25;安全 9/21 被
 
 ## v0.92
 多项式/条件原子配置(默认关闭):scaling 集 13→46/63(CPAchecker 63、ESBMC 45、Ultimate 34,我们独有 0);集合 A 并集 12 对 Ultimate 8(该配置在 A 上已非留出)。证据不支持"优于最好工具"。报告 paper/report_v092_bilingual.md。
+
+## v0.93
+SV-COMP NoOverflows 族不相交留出集(冻结在前):预期无溢出 61 个 — Ultimate 52、我们 47(Houdini 34/多项式 29/LLM 44)、CPAchecker 41、CBMC 5、ESBMC 2;有溢出 91 个我们 0 被认证;证书 CBMC 复核 113/119 通过 0 失败。未超过 Ultimate。报告 paper/report_v093_bilingual.md。

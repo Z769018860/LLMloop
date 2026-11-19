@@ -53,3 +53,19 @@ def test_v092_polynomial_profile_recorded_and_safe():
 def test_polynomial_profile_is_off_by_default():
     import llmloop.houdini_while as H
     assert H.POLY_DEGREE == 0 and H.COND_DIFF is False and H.SIGN_COND is False
+
+def test_v093_nooverflow_recorded():
+    O = E / 'v093_nooverflow'
+    ours = json.load(open(O / 'ours.json')); poly = json.load(open(O / 'ours_poly.json'))
+    assert ours['unsafe_certified'] == [] and poly['unsafe_certified'] == []
+    v = [json.loads(l) for l in open(O / 'llm_w/verifications.jsonl')]
+    st = lambda r: (r.get('result') or {}).get('status', '')
+    assert len(v) == 524 and sum(st(r).startswith('PROVED') for r in v if r['role'] == 'unsafe_source_control') == 0
+    rc = json.load(open(O / 'cert_recheck_cbmc.json'))
+    assert len(rc) == 119 and sum(r['cbmc'] == 'VERIFIED' for r in rc) == 113 and not any(r['cbmc'] == 'FAILED' for r in rc)
+    t = {n: sum(r[n] == 'TRUE' and r['expected'] == 'true' for r in json.load(open(O / (n + '.json')))) for n in ('ultimate', 'esbmc', 'cpachecker', 'cbmc')}
+    assert t == {'ultimate': 52, 'esbmc': 2, 'cpachecker': 41, 'cbmc': 5}
+
+def test_python_modulo_translation_in_recheck_harness():
+    import scripts.cert_recheck_cbmc as C
+    assert '+ 2) % 2' in C.wide('z % 2 == 1')
