@@ -142,7 +142,7 @@ def translate(path):
     prog = rewrite(prog)
     if n_inner[0]:
         decls = decls + [c_parser.CParser().parse('int __a = 0;').ext[0]]
-    if not asserts and not n_inner[0]: raise Reject('no assertion')
+    if not asserts and not n_inner[0] and not NOOVF: raise Reject('no assertion')
     class Chk(c_ast.NodeVisitor):
         def visit_FuncCall(s, n):
             nm = getattr(n.name, 'name', '?')
@@ -209,10 +209,13 @@ def stage_of(code, ranges, abi):
     return 'structural:' + ' | '.join(why)
 
 
+NOOVF = '--prop' in sys.argv and sys.argv[sys.argv.index('--prop') + 1] == 'no-overflow'      # v0.92: the SV-COMP NoOverflows property (signed overflow = undefined behaviour); no assertion needed
+
+
 def verdict(path):
     y = path.with_suffix('.yml')
     if not y.exists(): return None
-    t = y.read_text(); m = re.search(r'unreach-call\.prp\s*\n\s*expected_verdict:\s*(true|false)', t)
+    t = y.read_text(); m = re.search(r'%s\.prp\s*\n\s*expected_verdict:\s*(true|false)' % ('no-overflow' if NOOVF else 'unreach-call'), t)
     return m.group(1) if m else None
 
 
