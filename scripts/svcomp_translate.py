@@ -111,6 +111,8 @@ def translate(path):
             if d.name not in names: continue
             if isinstance(st, c_ast.Assignment) and st.op == '=' and isinstance(st.lvalue, c_ast.ID) and st.lvalue.name == d.name and d.name not in {x.name for x in _walk(st.rvalue) if isinstance(x, c_ast.ID)}:
                 d.init = c_ast.Constant('int', '0')
+            elif isinstance(st, c_ast.For) and isinstance(st.init, c_ast.Assignment) and st.init.op == '=' and isinstance(st.init.lvalue, c_ast.ID) and st.init.lvalue.name == d.name and d.name not in {x.name for x in _walk(st.init.rvalue) if isinstance(x, c_ast.ID)}:
+                d.init = c_ast.Constant('int', '0')      # `T i; for (i = e; ...)`: the declaration value is never observed
             break
     # assertions / reach_error() inside the program (loops, branches): turn each into `__a = 1/(cond);` (UB iff the assertion fails) using a dummy local
     n_inner = [0]
@@ -155,6 +157,14 @@ def translate(path):
     for st in prog + decls: Chk().visit(st)
     for a in asserts: Chk().visit(a)
     if not [s for s in prog if any(isinstance(x, (c_ast.For, c_ast.While, c_ast.DoWhile)) for x in _walk(s))]: raise Reject('no loops')
+    # v0.93 (--ghost): a parameter that the body modifies keeps its entry value in `<p>__in` so that invariants can relate the running value to it (x0 - x == (y-23)(y+22)/2 ...)
+    if GHOST:
+        def modified(n):
+            return any((isinstance(x, c_ast.Assignment) and isinstance(x.lvalue, c_ast.ID) and x.lvalue.name == n) or (isinstance(x, c_ast.UnaryOp) and x.op in ('p++', 'p--', '++', '--') and isinstance(x.expr, c_ast.ID) and x.expr.name == n) for st in prog for x in _walk(st))
+        copies = [n for n in params if modified(n)]
+        for n in copies:
+            bounds[n + '__in'] = bounds.pop(n, []); params = {(k + '__in' if k == n else k): v for k, v in params.items()}
+            decls.insert(0, c_parser.CParser().parse('%s %s = %s__in;' % (params[n + '__in'], n, n)).ext[0])
     # bounds
     ranges = {}
     for n, t in params.items():
@@ -209,6 +219,7 @@ def stage_of(code, ranges, abi):
     return 'structural:' + ' | '.join(why)
 
 
+GHOST = '--ghost' in sys.argv      # v0.93: keep the entry value of modified parameters
 NOOVF = '--prop' in sys.argv and sys.argv[sys.argv.index('--prop') + 1] == 'no-overflow'      # v0.92: the SV-COMP NoOverflows property (signed overflow = undefined behaviour); no assertion needed
 
 
