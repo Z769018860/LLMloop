@@ -253,3 +253,6 @@ NoOverflows(翻译/性质对齐修正后,开发后数字):67 个无溢出 — �
 
 ## v0.97
 LLM 提议原子 + Houdini + 修复(Study HY,协议冻结在前):NoOverflows 692 次运行,有溢出 0/424 被认证;无溢出 57/67 至少一个模型(各模型 52–57),并集 59 对 Ultimate 56;修复轮仅 3/213 起作用。CBMC 复核脚手架改为忠实的语法树翻译,旧复核全部重跑:0 个矛盾 FAILED。报告 paper/report_v097_bilingual.md。
+
+## v0.98
+可重放的动态证伪器:有溢出 106 个中 100 个见证(全部重放确认),无溢出 67 个 0 见证;证明+见证合计我们 159/173、Ultimate 156/173(配对 9 对 6 持平)、ESBMC 105、CBMC 99、CPAchecker 42。报告 paper/report_v098_bilingual.md。

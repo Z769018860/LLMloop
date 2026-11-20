@@ -107,3 +107,19 @@ def test_extra_atoms_in_houdini_loops():
     src = "int f(int x__in){\nint x = x__in;\nint y = 23;\nwhile (x >= 0)\n{\n  x = x - y;\n  y = y + 1;\n}\n\nreturn 0;\n}\n"
     st = houdini_loops(src, {'x__in': [-2147483648, 2147483647]}, abi='LP64', integer_model='c', max_rounds=100, extra_atoms=['2*(x__in - x) == y*y - y - 506', 'y <= 65700', 'y >= 23'])[0]
     assert st == 'PROVED'
+
+def test_v098_falsifier_witnesses_and_decision_table():
+    O = E / 'v096_nooverflow_noassert'
+    f = json.load(open(O / 'falsifier.json'))
+    assert sum(r['result'] == 'OVERFLOW_WITNESS' and r['expected'] == 'false' for r in f) == 100
+    assert not [r for r in f if r['result'] == 'OVERFLOW_WITNESS' and r['expected'] == 'true']          # never a witness on an overflow-free program
+    d = json.load(open(E / 'v098/decision_table.json'))
+    assert d['programs'] == 173 and d['decided']['ours'] == {'proofs': 59, 'violations': 100} and d['decided']['ultimate'] == {'proofs': 56, 'violations': 100}
+
+def test_falsifier_finds_a_planted_overflow(tmp_path):
+    import os, scripts.falsify_v098 as F
+    src = tmp_path / 'p.c'; src.write_text("extern int __VERIFIER_nondet_int(void);\nint main(){ int x = __VERIFIER_nondet_int(); int y = x + 1; return y > 0; }\n")
+    r = F.falsify({'orig': str(src), 'name': 'planted', 'expected_unreach': 'false', 'abi': 'LP64'}, 10)
+    assert r['result'] == 'OVERFLOW_WITNESS'
+    safe = tmp_path / 'q.c'; safe.write_text("extern int __VERIFIER_nondet_int(void);\nint main(){ int x = __VERIFIER_nondet_int(); if (x > 100 || x < -100) return 0; return x + 1; }\n")
+    assert F.falsify({'orig': str(safe), 'name': 'safe', 'expected_unreach': 'true', 'abi': 'LP64'}, 3)['result'] == 'NO_WITNESS'
