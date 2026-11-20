@@ -247,3 +247,6 @@ v0.91b 留出集 LLM(Study HO,协议冻结在前):不安全 0/25;安全 9/21 被
 
 ## v0.93
 SV-COMP NoOverflows 族不相交留出集(冻结在前):预期无溢出 61 个 — Ultimate 52、我们 47(Houdini 34/多项式 29/LLM 44)、CPAchecker 41、CBMC 5、ESBMC 2;有溢出 91 个我们 0 被认证;证书 CBMC 复核 113/119 通过 0 失败。未超过 Ultimate。报告 paper/report_v093_bilingual.md。
+
+## v0.96
+NoOverflows(翻译/性质对齐修正后,开发后数字):67 个无溢出 — 我们 57(无 LLM 55)、Ultimate 56、CPAchecker 42、CBMC 7、ESBMC 4;配对 6 对 5 持平;有溢出 106 个我们 0 被认证;CBMC 复核 376 次 0 失败。Ultimate 超时 10,420 s 重跑只多证 1。报告 paper/report_v096_bilingual.md。

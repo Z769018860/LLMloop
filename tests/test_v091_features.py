@@ -69,3 +69,20 @@ def test_v093_nooverflow_recorded():
 def test_python_modulo_translation_in_recheck_harness():
     import scripts.cert_recheck_cbmc as C
     assert '+ 2) % 2' in C.wide('z % 2 == 1')
+
+def test_v096_noassert_run_recorded_and_safe():
+    O = E / 'v096_nooverflow_noassert'
+    d = json.load(open(O / 'ours.json')); p = json.load(open(O / 'ours_poly.json'))
+    assert d['unsafe_certified'] == [] and p['unsafe_certified'] == []
+    ok = lambda o: sum(r['status'] == 'PROVED' and r['expected'] == 'true' for r in o['rows'])
+    assert ok(d) == 53 and ok(p) == 55
+    for dd in ('v094_nooverflow_ghost', 'v096_nooverflow_noassert'):
+        assert not any(x['cbmc'] == 'FAILED' for x in json.load(open(E / dd / 'cert_recheck_cbmc.json')))
+
+def test_dominated_dead_initializer_keeps_read_before_write(tmp_path):
+    import scripts.svcomp_translate as T
+    hdr = "extern int __VERIFIER_nondet_int(void); extern void reach_error(void);\nvoid __VERIFIER_assert(int c){ if(!c) reach_error(); }\n"
+    ok = tmp_path / 'a.c'; ok.write_text(hdr + "int main(){ int n = __VERIFIER_nondet_int(); int i = 0; int j; while (i < 3) { j = n; while (j > 0) j--; i++; } __VERIFIER_assert(i == 3); return 0; }\n")
+    assert 'int j = 0;' in T.translate(ok)[0]
+    bad = tmp_path / 'b.c'; bad.write_text(hdr + "int main(){ int n = __VERIFIER_nondet_int(); int i = 0; int j; while (i < 3) { n = n + j; j = n; i++; } __VERIFIER_assert(i == 3); return 0; }\n")
+    assert 'int j;' in T.translate(bad)[0]
