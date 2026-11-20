@@ -6,15 +6,16 @@ import argparse, collections, hashlib, json, os, re, sys, time
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
 ROOT = Path(__file__).resolve().parents[1]; sys.path.insert(0, str(ROOT))
-OUT = ROOT / 'experiments/v097_hybrid'; PROTO = ROOT / 'experiments/protocols/v097_study_hybrid.json'
+OUT = ROOT / 'experiments' / os.environ.get('HYBRID_OUT', 'v097_hybrid'); PROTO = ROOT / 'experiments/protocols' / os.environ.get('HYBRID_PROTO', 'v097_study_hybrid.json')
+USE_CX = bool(os.environ.get('HYBRID_CX'))      # v0.99: repair prompts carry the verifier's concrete counterexample state
 MODELS = ['deepseek-v4.1-flash-ark', 'deepseek-v4.1-flash-itkk', 'gpt-4.1-mini', 'claude-dsflash-itkk']
 BENCH = Path('/home/user/sosy-lab/sv-benchmarks/c'); TEMP = 0.7; MAXTOK = 6000; REPAIRS = 2
 
 
 def progs():
     out = []
-    for r in json.loads((ROOT / 'experiments/v096_nooverflow_noassert/translated.json').read_text()):
-        if not r['stage'].startswith('in_') or r.get('expected_unreach') not in ('true', 'false'): continue
+    for r in json.loads((ROOT / 'experiments' / os.environ.get('HYBRID_IN', 'v096_nooverflow_noassert') / 'translated.json').read_text()):
+        if not r['stage'].startswith('in_') or r.get('expected_unreach') not in ('true', 'false', 'unknown'): continue
         y = (BENCH / r['dir'] / r['file']).with_suffix('.yml').read_text()
         out.append({'name': r['dir'] + '/' + r['file'], 'source': r['source'], 'bounds': r['parameter_bounds'], 'expected': r['expected_unreach'], 'abi': re.search(r'data_model:\s*(\w+)', y).group(1)})
     return out
@@ -30,7 +31,7 @@ def prompt(p, repair=None):
         'Formula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.',
         'Output schema (JSON only): {"atoms": ["<formula>", ...]}', '', 'Source: ' + p['source'], 'Parameter bounds: ' + json.dumps(p['bounds'])])
     if repair:
-        base += '\n\nA previous attempt with your atoms failed: the verifier got stuck at the obligation `%s`. Atoms that currently survive: %s\nPropose NEW atoms (different shapes: relations with entry values, polynomial relations, bounds on products) that would make this obligation provable. Output the same JSON schema.' % (repair['stuck'], json.dumps(repair['atoms'][:40]))
+        base += '\n\nA previous attempt with your atoms failed: the verifier got stuck at the obligation `%s`. Atoms that currently survive: %s%s\nPropose NEW atoms (different shapes: relations with entry values, polynomial relations, bounds on products) that would make this obligation provable. Output the same JSON schema.' % (repair['stuck'], json.dumps(repair['atoms'][:40]), repair.get('cx_text', ''))
     return base
 
 
@@ -54,8 +55,15 @@ def task(a):
     key = os.environ['LLM_API_KEY']; base = os.environ.get('LLM_BASE_URL', 'https://api.square16.org/v1'); rows = []
     for m in models:
         atoms = []; hist = []; status = 'NOT_RUN'; inv = None; usage = []
-        for rnd in range(REPAIRS + 1 if p['expected'] == 'true' else 1):
-            pr = prompt(p, None if rnd == 0 else {'stuck': status, 'atoms': (inv or cur)})
+        for rnd in range(REPAIRS + 1 if p['expected'] in ('true', 'unknown') else 1):
+            rep = None
+            if rnd > 0:
+                rep = {'stuck': status, 'atoms': (inv or cur)}
+                if USE_CX:
+                    from llmloop import houdini_loops as HL
+                    cx = {k: v for k, v in (HL.LAST_FAILURE.get('counterexample') or {}).items() if not k.startswith('post_') or True}
+                    if cx: rep['cx_text'] = "\nThe verifier found this concrete state (it satisfies every surviving atom of that loop and still breaks the obligation; `state_in_*` = loop-head state, `post_*` = states after the body, `a`-style names = parameters): %s\nYour new atoms must EXCLUDE such states (or relate the variables so that the obligation cannot fail)." % json.dumps(dict(list(cx.items())[:40]))
+            pr = prompt(p, rep)
             resp, att, body = E.call_provider(m, pr, base, key, temperature=TEMP, max_tokens=MAXTOK)
             new = parse_atoms(resp) if resp else []
             atoms += [x for x in new if x not in atoms]

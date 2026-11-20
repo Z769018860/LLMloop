@@ -54,6 +54,9 @@ def _prio(a):
 CAP = 256        # invariant atoms per loop passed to the verifier (relational atoms come late in the list)
 
 
+LAST_FAILURE = {}      # v0.99: obligation and verifier counterexample of the last STUCK return (feedback for an LLM repair round)
+
+
 def _lean(atoms):
     """polynomial profile: drop moduli and unconditional value-set/implication noise (nonlinear queries are hard for the solver); keep equalities, bounds, differences and the flag-conditioned atoms"""
     return [x for x in atoms if '%' not in x and not re.search(r'__\w+ (<|>)', x) and (' or ' not in x or ' - ' in x or ' == 0' in x)]
@@ -73,6 +76,10 @@ def _houdini_loops(source, bounds, abi, runs, max_rounds, solver_timeout_ms, see
     bounds = {k: list(v) for k, v in bounds.items()}
     heads, nl = sample_heads(source, {k: tuple(v) for k, v in bounds.items()}, runs, seed, integer_model == 'mathematical')
     if nl == 0 or any(not heads.get(k) for k in range(nl)): return 'NO_SAMPLES', [], 0, []
+    try:      # v0.99: the trivial invariant first. A program whose loop bodies contain no undefined behaviour is proved by `True`; sampled atoms can only get in the way (parity.c: bit tricks defeat the solver on non-inductive atoms)
+        r0 = analyze_request({'source': source, 'frontend': 'typed_invariant_loops', 'range_invariants': {'invariants': [['True']] * nl}, 'parameter_bounds': bounds, 'abi': abi, 'solver_timeout_ms': solver_timeout_ms, 'integer_model': integer_model})
+        if r0['status'].startswith('PROVED'): return 'PROVED', [['True']] * nl, 0, []
+    except Exception: pass
     consts = {int(x) for x in re.findall(r'(?<![\w.])\d+', source)}; consts |= {c + d for c in list(consts) for d in (-1, 1)} | {0, 1, -1}
     cands = [atoms_from(heads[k], tuple(sorted(c for c in consts if abs(c) <= 10 ** 7)), valsets=True) for k in range(nl)]; log = []
     if poly: cands = [_lean(c) for c in cands]
@@ -91,7 +98,9 @@ def _houdini_loops(source, bounds, abi, runs, max_rounds, solver_timeout_ms, see
         if r['status'].startswith('PROVED'): return 'PROVED', cands, rnd + 1, log
         fo = r.get('failed_obligation') or ''; cx = r.get('counterexample') or {}; log.append(fo or str(r.get('reason')))
         m = re.search(r'loop(\d+): invariant (at entry|preserved) \((?:body )?path (\d+)\)', fo)
-        if not m or not cx: return 'STUCK:' + (fo or str(r.get('reason'))), cands, rnd + 1, log
+        if not m or not cx:
+            LAST_FAILURE.clear(); LAST_FAILURE.update({'obligation': fo or str(r.get('reason')), 'counterexample': dict(cx), 'survivors': [list(c[:40]) for c in cands]})
+            return 'STUCK:' + (fo or str(r.get('reason'))), cands, rnd + 1, log
         k, kind, ph = int(m.group(1)), m.group(2), m.group(3); pref = ('entry_%d_%s_' if kind == 'at entry' else 'post_%d_%s_') % (k, ph)
         try: mp = {n: int(v) for n, v in cx.items() if n in bounds}; mp.update({n[len(pref):]: int(v) for n, v in cx.items() if n.startswith(pref)})
         except Exception: return 'NO_MODEL', cands, rnd + 1, log

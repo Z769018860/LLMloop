@@ -237,11 +237,13 @@ def stage_of(code, ranges, abi):
 
 
 GHOST = '--ghost' in sys.argv      # v0.93: keep the entry value of modified parameters
-NOOVF = '--prop' in sys.argv and sys.argv[sys.argv.index('--prop') + 1] == 'no-overflow'      # v0.92: the SV-COMP NoOverflows property (signed overflow = undefined behaviour); no assertion needed
+ANYPROP = '--prop' in sys.argv and sys.argv[sys.argv.index('--prop') + 1] == 'any'                # v0.99: no ground-truth label required (fresh families; cross-tool consistency instead)
+NOOVF = '--prop' in sys.argv and sys.argv[sys.argv.index('--prop') + 1] in ('no-overflow', 'any')      # v0.92: the SV-COMP NoOverflows property (signed overflow = undefined behaviour); no assertion needed
 
 
 def verdict(path):
     y = path.with_suffix('.yml')
+    if ANYPROP: return 'unknown'
     if not y.exists(): return None
     t = y.read_text(); m = re.search(r'%s\.prp\s*\n\s*expected_verdict:\s*(true|false)' % ('no-overflow' if NOOVF else 'unreach-call'), t)
     return m.group(1) if m else None

@@ -13,7 +13,7 @@ ULT = Path('/home/user/ext/ult_dl/UAutomizer-linux'); ESB = Path('/home/user/ext
 def progs():
     out = []
     for r in json.loads((OUT / 'translated.json').read_text()):
-        if not r['stage'].startswith('in_') or r.get('expected_unreach') not in ('true', 'false'): continue
+        if not r['stage'].startswith('in_') or r.get('expected_unreach') not in ('true', 'false', 'unknown'): continue
         y = (BENCH / r['dir'] / r['file']).with_suffix('.yml').read_text()
         dm = re.search(r'data_model:\s*(\w+)', y).group(1); inp = re.search(r"input_files:\s*'([^']+)'", y).group(1)
         out.append({**r, 'abi': dm, 'orig': str(BENCH / r['dir'] / inp), 'name': r['dir'] + '/' + r['file']})
