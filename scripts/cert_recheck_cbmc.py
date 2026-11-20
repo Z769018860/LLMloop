@@ -17,8 +17,53 @@ def pymod(a):
     return re.sub(r'(\([^()]*\)|[A-Za-z_]\w*)\s*%\s*(\d+)', lambda m: '((((%s) %% %s) + %s) %% %s)' % (m.group(1), m.group(2), m.group(2), m.group(2)), a)
 
 
+def chain(a):
+    # python chained comparisons `lo <= x <= hi` are two comparisons, C would evaluate (lo <= x) <= hi
+    return re.sub(r'(-?\w+)\s*(<=|<|>=|>)\s*(-?\w+)\s*(<=|<|>=|>)\s*(-?\w+)', lambda m: '(%s %s %s && %s %s %s)' % (m.group(1), m.group(2), m.group(3), m.group(3), m.group(4), m.group(5)), a)
+
+
+def to_c(atom):
+    """faithful translation of the invariant language (Python syntax, exact integers) into C over __int128: chained comparisons, Python `%` and `//` (floor) by positive literals, conditional expressions, min/max/abs, constants widened."""
+    import ast
+    def go(n):
+        if isinstance(n, ast.Expression): return go(n.body)
+        if isinstance(n, ast.BoolOp): return '(' + (' && ' if isinstance(n.op, ast.And) else ' || ').join(go(v) for v in n.values) + ')'
+        if isinstance(n, ast.UnaryOp):
+            if isinstance(n.op, ast.Not): return '(!%s)' % go(n.operand)
+            if isinstance(n.op, ast.USub): return '(-%s)' % go(n.operand)
+            if isinstance(n.op, ast.UAdd): return go(n.operand)
+        if isinstance(n, ast.Compare):
+            ops = {ast.Lt: '<', ast.LtE: '<=', ast.Gt: '>', ast.GtE: '>=', ast.Eq: '==', ast.NotEq: '!='}
+            terms = [n.left] + n.comparators
+            return '(' + ' && '.join('(%s %s %s)' % (go(terms[i]), ops[type(op)], go(terms[i + 1])) for i, op in enumerate(n.ops)) + ')'
+        if isinstance(n, ast.IfExp): return '(%s ? %s : %s)' % (go(n.test), go(n.body), go(n.orelse))
+        if isinstance(n, ast.BinOp):
+            a, b = go(n.left), go(n.right)
+            if isinstance(n.op, ast.Add): return '(%s + %s)' % (a, b)
+            if isinstance(n.op, ast.Sub): return '(%s - %s)' % (a, b)
+            if isinstance(n.op, ast.Mult): return '(%s * %s)' % (a, b)
+            if isinstance(n.op, ast.Mod): return '(((%s %% %s) + %s) %% %s)' % (a, b, b, b)
+            if isinstance(n.op, ast.FloorDiv): return '((%s - (((%s %% %s) + %s) %% %s)) / %s)' % (a, a, b, b, b, b)
+        if isinstance(n, ast.Call) and isinstance(n.func, ast.Name):
+            args = [go(x) for x in n.args]
+            if n.func.id == 'min' and len(args) == 2: return '((%s) < (%s) ? (%s) : (%s))' % (args[0], args[1], args[0], args[1])
+            if n.func.id == 'max' and len(args) == 2: return '((%s) > (%s) ? (%s) : (%s))' % (args[0], args[1], args[0], args[1])
+            if n.func.id == 'abs' and len(args) == 1: return '((%s) < 0 ? -(%s) : (%s))' % (args[0], args[0], args[0])
+        if isinstance(n, ast.Name): return '((__int128)%s)' % n.id
+        if isinstance(n, ast.Constant) and isinstance(n.value, bool): return '1' if n.value else '0'
+        if isinstance(n, ast.Constant) and isinstance(n.value, int): return '((__int128)%d)' % n.value
+        raise ValueError('unsupported node ' + type(n).__name__)
+    return go(ast.parse(atom.strip(), mode='eval'))
+
+
 def wide(atom):
-    atom = pyternary(pymod(atom.replace('//', '/')))
+    try: return to_c(atom)
+    except Exception: pass
+    return wide_old(atom)
+
+
+def wide_old(atom):
+    atom = pyternary(pymod(chain(atom.replace('//', '/'))))
     atom = re.sub(r'\band\b', '&&', re.sub(r'\bor\b', '||', re.sub(r'\bnot\b', '!', atom)))
     return re.sub(r'(?<![\w.])([A-Za-z_]\w*)\b(?!\s*\()', lambda m: '((__int128)%s)' % m.group(1), atom)
 
