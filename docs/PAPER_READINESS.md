@@ -262,3 +262,6 @@ LLM 提议原子 + Houdini + 修复(Study HY,协议冻结在前):NoOverflows 692
 
 ## v1.00
 多循环 CBMC 复核失败(46)根因:CBMC 契约机制对嵌套循环与我们的证明规则不等价;无契约复核(证明规则显式展开)586 个证书 556 VERIFIED/0 FAILED/29 超时;新集合 91 个证明程序中 90 个有独立复核证书。证伪器持久选择遍 +2;累计 4 个 SV-COMP 标签错误;开发集 63 无溢出/110 有溢出,我们判定 169 对 Ultimate 156。仍未解决:修复轮边缘、nla 幂和、nestedLoop-1/FMCAD2013-Fig1。报告 paper/report_v100_bilingual.md。
+
+## v1.01
+nla 幂和程序(ps4–ps6、hard、divbin)瓶颈定性:析取界原子无增益;LLM 混合(4 模型×3 轮,带反例)全部 STUCK;手工近乎完整的不变式交给未改动验证器仍 UNKNOWN → 瓶颈含验证器的非线性求解能力,保持未解决。报告 paper/report_v100_bilingual.md 补充节。

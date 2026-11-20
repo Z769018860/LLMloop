@@ -218,6 +218,12 @@ def atoms_from(states, program_consts=(), valsets=False, deadline=None):
                     dall = [r[a] - r[b] for r in rows]; dsub = [r[a] - r[b] for r in sub]
                     if min(dsub) > min(dall): out.append('(%s != %d or %s - %s >= %d)' % (f, fv, a, b, min(dsub)))
                     if max(dsub) < max(dall): out.append('(%s != %d or %s - %s <= %d)' % (f, fv, a, b, max(dsub)))
+    if valsets and COND_DIFF:   # v1.01: disjunctive bounds `v <= a or v <= b` (= v <= max(a, b)) that hold on every sample although neither disjunct does: loops bounded by the larger of two inputs
+        vv = [n for n in names if len({r[n] for r in rows}) > 1 and not n.startswith('__')][:8]
+        for v in vv:
+            for a, b in itertools.combinations([n for n in vv if n != v], 2):
+                if all(r[v] <= r[a] or r[v] <= r[b] for r in rows) and not all(r[v] <= r[a] for r in rows) and not all(r[v] <= r[b] for r in rows): out.append('(%s <= %s or %s <= %s)' % (v, a, v, b))
+                if all(r[v] >= r[a] or r[v] >= r[b] for r in rows) and not all(r[v] >= r[a] for r in rows) and not all(r[v] >= r[b] for r in rows): out.append('(%s >= %s or %s >= %s)' % (v, a, v, b))
     if valsets and COND_DIFF and SIGN_COND:   # sign-conditioned relations of parameters (a counting loop `while (c < k)` behaves differently for k > 0 and k <= 0)
         for pv in pn:
             vals = [r[pv] for r in rows]

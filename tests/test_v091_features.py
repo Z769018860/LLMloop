@@ -174,3 +174,20 @@ def test_v100_label_errors_and_decision_table_v3():
     d = json.load(open(E / 'v098/decision_table_v3.json'))
     assert d['valid'] == 63 and d['violating'] == 110 and d['decided']['ours'] == {'proofs': 61, 'violations': 108} and d['decided']['ultimate']['proofs'] == 56
     assert not [p for p in d['relabelled'] if p in d.get('ours_undecided_valid', [])]
+
+def test_v101_nla_programs_remain_unsolved_and_recorded():
+    r = [json.loads(l) for l in open(E / 'v101_nla_probe/results.jsonl')]
+    unsolved = {x['program'] for x in r if x['final'] != 'PROVED'}
+    assert {'nla-digbench/ps4-ll.c', 'nla-digbench/ps5-ll.c', 'nla-digbench/ps6-ll.c', 'nla-digbench/hard-ll.c', 'nla-digbench/divbin2.c'} <= unsolved
+
+def test_disjunctive_max_atoms_are_mined_only_in_the_polynomial_profile():
+    import llmloop.houdini_while as H
+    rows = [{'v': i, 'a': i + 3, 'b': 5} for i in range(0, 10)]
+    rows += [{'v': i, 'a': 2, 'b': 20} for i in range(0, 15)]
+    assert H.COND_DIFF is False
+    base = H.atoms_from([({'a': r['a'], 'b': r['b']}, {'v': r['v']}) for r in rows], (), valsets=True)
+    assert not [a for a in base if a.startswith('(v <= a or v <= b')]
+    H.COND_DIFF = True
+    try: poly = H.atoms_from([({'a': r['a'], 'b': r['b']}, {'v': r['v']}) for r in rows], (), valsets=True)
+    finally: H.COND_DIFF = False
+    assert '(v <= a or v <= b)' in poly
