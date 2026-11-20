@@ -38,7 +38,22 @@ def build(src, bounds, inv):
     per_loop = inv if inv and isinstance(inv[0], list) else [inv]
     ids = lambda a: set(re.findall(r'[A-Za-z_]\w*', a))
     known = declared | {'max', 'min', 'abs', 'True', 'False', 'and', 'or', 'not', 'if', 'else'}
-    cond = lambda atoms: ' && '.join('(%s)' % C.wide(a) for a in atoms if ids(a) <= known) or '1'
+    import ast as _ast
+    BITS = {'int': 31, 'unsigned int': 32, 'short': 15, 'unsigned short': 16, 'char': 7, 'unsigned char': 8, 'long': 63, 'unsigned long': 64, 'long long': 63, 'unsigned long long': 64}
+    def mag(n):            # upper bound (in bits) of |value| of an integer formula over the declared types
+        if isinstance(n, _ast.BinOp):
+            a, b = mag(n.left), mag(n.right)
+            return a + b if isinstance(n.op, _ast.Mult) else max(a, b) + 1
+        if isinstance(n, _ast.Name): return BITS.get(types.get(n.id, 'long'), 64)
+        if isinstance(n, _ast.Constant) and isinstance(n.value, int): return abs(n.value).bit_length()
+        return max([mag(c) for c in _ast.iter_child_nodes(n)] or [0])
+    widest = [128]
+    def evaluable(a):      # formulas are evaluated in a signed bit-vector wide enough for every intermediate value (CBMC __CPROVER_signedbv[W]); only absurdly large atoms are dropped
+        try: m = mag(_ast.parse(a.strip(), mode='eval'))
+        except Exception: return False
+        if m + 6 > 1024: return False
+        widest[0] = max(widest[0], m + 6); return True
+    cond = lambda atoms: ' && '.join('(%s)' % C.wide(a) for a in atoms if ids(a) <= known and evaluable(a)) or '1'
     loops = []
     def enum(n):
         if isinstance(n, (c_ast.While, c_ast.For)): loops.append(n)
@@ -46,6 +61,11 @@ def build(src, bounds, inv):
         for _, c in n.children(): enum(c)
     enum(fd.body)
     if len(per_loop) < len(loops): per_loop = per_loop + [[]] * (len(loops) - len(per_loop))
+    # the atoms are rendered after the widest needed width is known
+    for a in per_loop:
+        for x in a:
+            if ids(x) <= known: evaluable(x)
+    C.WIDE_T = 'bigt'
     ctx = {id(l): k for k, l in enumerate(loops)}; invs = [cond(a) for a in per_loop]
     def assigned(n, out):
         if isinstance(n, c_ast.Assignment) and isinstance(n.lvalue, c_ast.ID): out.add(n.lvalue.name)
@@ -72,8 +92,9 @@ def build(src, bounds, inv):
         step = (G.visit(l.next) + ';') if isinstance(l, c_ast.For) and l.next is not None else ''
         init = ''
         fn.append('void V%d(%s){ %s %s __CPROVER_assume(%s); __CPROVER_assume(%s); %s %s __CPROVER_assert(%s, "inv %d preserved"); }' % (k, sig, ''.join('%s %s;' % (t, n) for n, t in decls), pb, invs[k], loop_cond(l), body, step, invs[k], k))
+    C.WIDE_T = '__int128'
     sel = 'int main(void){ int s = nd_int(); ' + ' '.join('if (s == %d) { %s }' % (k + 1, 'V%d(%s);' % (k, ', '.join(('%s' % ND[t] + '()') for _, t in params))) for k in range(len(loops))) + ' if (s == 0) { M(%s); } return 0; }' % ', '.join(ND[t] + '()' for _, t in params)
-    return PRE + '\n'.join(fn) + '\n' + sel + '\n', len(loops)
+    return 'typedef signed __CPROVER_bitvector[%d] bigt;\n' % widest[0] + PRE + '\n'.join(fn) + '\n' + sel + '\n', len(loops)
 
 
 def recheck(src, bounds, inv, timeout=150):

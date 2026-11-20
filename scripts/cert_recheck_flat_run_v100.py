@@ -20,6 +20,6 @@ else:
         if r['final'] == 'PROVED' and r['program'] in ps: jobs.setdefault((r['program'], json.dumps(r['invariant'])[:600]), (r['program'], r['invariant']))
 def one(j):
     n, inv = j; p = ps[n]; return {'name': n, 'invariant_loops': len(inv) if inv and isinstance(inv[0], list) else 1, **F.recheck(p['source'], p['parameter_bounds'], inv)}
-with ThreadPoolExecutor(3) as ex: rows = list(ex.map(one, list(jobs.values())))
+with ThreadPoolExecutor(2) as ex: rows = list(ex.map(one, list(jobs.values())))
 (N.OUT / ('flat_recheck_%s.json' % what)).write_text(json.dumps(rows, indent=1) + '\n')
 print(what, len(rows), collections.Counter(r['result'] for r in rows))

@@ -22,6 +22,9 @@ def chain(a):
     return re.sub(r'(-?\w+)\s*(<=|<|>=|>)\s*(-?\w+)\s*(<=|<|>=|>)\s*(-?\w+)', lambda m: '(%s %s %s && %s %s %s)' % (m.group(1), m.group(2), m.group(3), m.group(3), m.group(4), m.group(5)), a)
 
 
+WIDE_T = '__int128'      # arithmetic type of formula evaluation (the flat checker widens it per certificate)
+
+
 def to_c(atom):
     """faithful translation of the invariant language (Python syntax, exact integers) into C over __int128: chained comparisons, Python `%` and `//` (floor) by positive literals, conditional expressions, min/max/abs, constants widened."""
     import ast
@@ -49,9 +52,9 @@ def to_c(atom):
             if n.func.id == 'min' and len(args) == 2: return '((%s) < (%s) ? (%s) : (%s))' % (args[0], args[1], args[0], args[1])
             if n.func.id == 'max' and len(args) == 2: return '((%s) > (%s) ? (%s) : (%s))' % (args[0], args[1], args[0], args[1])
             if n.func.id == 'abs' and len(args) == 1: return '((%s) < 0 ? -(%s) : (%s))' % (args[0], args[0], args[0])
-        if isinstance(n, ast.Name): return '((__int128)%s)' % n.id
+        if isinstance(n, ast.Name): return '((%s)%s)' % (WIDE_T, n.id)
         if isinstance(n, ast.Constant) and isinstance(n.value, bool): return '1' if n.value else '0'
-        if isinstance(n, ast.Constant) and isinstance(n.value, int): return '((__int128)%d)' % n.value
+        if isinstance(n, ast.Constant) and isinstance(n.value, int): return '((%s)%d)' % (WIDE_T, n.value)
         raise ValueError('unsupported node ' + type(n).__name__)
     return go(ast.parse(atom.strip(), mode='eval'))
 
