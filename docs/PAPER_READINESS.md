@@ -250,3 +250,6 @@ SV-COMP NoOverflows 族不相交留出集(冻结在前):预期无溢出 61 个 �
 
 ## v0.96
 NoOverflows(翻译/性质对齐修正后,开发后数字):67 个无溢出 — 我们 57(无 LLM 55)、Ultimate 56、CPAchecker 42、CBMC 7、ESBMC 4;配对 6 对 5 持平;有溢出 106 个我们 0 被认证;CBMC 复核 376 次 0 失败。Ultimate 超时 10,420 s 重跑只多证 1。报告 paper/report_v096_bilingual.md。
+
+## v0.97
+LLM 提议原子 + Houdini + 修复(Study HY,协议冻结在前):NoOverflows 692 次运行,有溢出 0/424 被认证;无溢出 57/67 至少一个模型(各模型 52–57),并集 59 对 Ultimate 56;修复轮仅 3/213 起作用。CBMC 复核脚手架改为忠实的语法树翻译,旧复核全部重跑:0 个矛盾 FAILED。报告 paper/report_v097_bilingual.md。

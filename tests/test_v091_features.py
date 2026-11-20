@@ -22,7 +22,7 @@ def test_declared_then_assigned_local_gets_a_dead_initializer(tmp_path):
 
 def test_certificate_recheck_and_stale_audit_recorded():
     rc = json.load(open(E / 'v091/cert_recheck_cbmc.json'))
-    assert len(rc) == 241 and sum(r['cbmc'] == 'VERIFIED' for r in rc) == 238
+    assert len(rc) == 241 and sum(r['cbmc'] == 'VERIFIED' for r in rc) == 239
     assert {r['name'] for r in rc if r['cbmc'] == 'FAILED'} == {'loop-zilu/benchmark51_polynomial.c', 'loop-zilu/benchmark20_conjunctive.c'}
     c = json.load(open(E / 'v091/reverify_stored.json')); m = json.load(open(E / 'v091/reverify_stored_math.json'))
     assert (c['n'], len(c['changed'])) == (286, 4) and (m['n'], len(m['changed'])) == (409, 4)
@@ -68,7 +68,7 @@ def test_v093_nooverflow_recorded():
 
 def test_python_modulo_translation_in_recheck_harness():
     import scripts.cert_recheck_cbmc as C
-    assert '+ 2) % 2' in C.wide('z % 2 == 1')
+    w = C.wide('z % 2 == 1'); assert '((__int128)z) % ((__int128)2)) + ((__int128)2)) % ((__int128)2)' in w
 
 def test_v096_noassert_run_recorded_and_safe():
     O = E / 'v096_nooverflow_noassert'
@@ -86,3 +86,24 @@ def test_dominated_dead_initializer_keeps_read_before_write(tmp_path):
     assert 'int j = 0;' in T.translate(ok)[0]
     bad = tmp_path / 'b.c'; bad.write_text(hdr + "int main(){ int n = __VERIFIER_nondet_int(); int i = 0; int j; while (i < 3) { n = n + j; j = n; i++; } __VERIFIER_assert(i == 3); return 0; }\n")
     assert 'int j;' in T.translate(bad)[0]
+
+
+def test_v097_hybrid_recorded_and_safe():
+    O = E / 'v097_hybrid'
+    r = [json.loads(l) for l in open(O / 'results.jsonl')]
+    assert len(r) == 692 and not [x for x in r if x['expected'] == 'false' and x['final'] == 'PROVED']
+    assert len({x['program'] for x in r if x['expected'] == 'true' and x['final'] == 'PROVED'}) == 57
+    rc = json.load(open(O / 'cert_recheck_cbmc.json'))
+    assert len(rc) == 190 and sum(x['cbmc'] == 'VERIFIED' for x in rc) == 155 and not any(x['cbmc'] == 'FAILED' for x in rc)
+
+def test_recheck_translation_is_faithful_to_the_invariant_language():
+    import scripts.cert_recheck_cbmc as C
+    assert C.wide('x - 1 < x <= x__in').count('&&') == 1                  # chained comparison
+    assert '((__int128)4)' in C.wide('4 * z % 16777216 == 0') and C.wide('4 * z % 16777216 == 0').index('% ((__int128)16777216)') > C.wide('4 * z % 16777216 == 0').index('((__int128)4)')   # (4*z) % m, not 4*(z % m)
+    assert '((__int128)2) * ((__int128)2147483647)' in C.wide('x >= x__in - 2*2147483647')    # constants widened
+
+def test_extra_atoms_in_houdini_loops():
+    from llmloop.houdini_loops import houdini_loops
+    src = "int f(int x__in){\nint x = x__in;\nint y = 23;\nwhile (x >= 0)\n{\n  x = x - y;\n  y = y + 1;\n}\n\nreturn 0;\n}\n"
+    st = houdini_loops(src, {'x__in': [-2147483648, 2147483647]}, abi='LP64', integer_model='c', max_rounds=100, extra_atoms=['2*(x__in - x) == y*y - y - 506', 'y <= 65700', 'y >= 23'])[0]
+    assert st == 'PROVED'
