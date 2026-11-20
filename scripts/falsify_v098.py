@@ -12,12 +12,13 @@ DRIVER = r'''
 #include <stdlib.h>
 #include <stdint.h>
 #include <limits.h>
-static unsigned long long S;
+static unsigned long long S; static int MODE = -1;
 static unsigned long long nx(void){ S ^= S << 13; S ^= S >> 7; S ^= S << 17; return S; }
 static void seed(void) __attribute__((constructor));
-static void seed(void){ const char *e = getenv("SEED"); S = 88172645463325252ULL ^ (e ? strtoull(e, 0, 10) * 2654435761ULL : 1); for (int i = 0; i < 8; i++) nx(); }
+static void seed(void){ const char *e = getenv("SEED"); unsigned long long sd = e ? strtoull(e, 0, 10) : 1; S = 88172645463325252ULL ^ (sd * 2654435761ULL); for (int i = 0; i < 8; i++) nx(); MODE = (getenv("PERSIST") && (int)(sd % 10) < 5) ? (int)(sd % 10) : -1; }
 static long long pick(int bits, int sgn){
-  unsigned long long r = nx(); int m = r % 12; unsigned long long full = bits == 64 ? ~0ULL : ((1ULL << bits) - 1);
+  unsigned long long r = nx(); int m = r % 12;
+  if (MODE >= 0) { unsigned long long full0 = bits == 64 ? ~0ULL : ((1ULL << bits) - 1); long long mx0 = sgn ? (long long)(full0 >> 1) : (long long)full0; long long mn0 = sgn ? -mx0 - 1 : 0; return MODE == 0 ? 0 : MODE == 1 ? 1 : MODE == 2 ? (sgn ? -1 : mx0) : MODE == 3 ? mx0 : mn0; }       /* persistent choices: long runs that always take the same branch */ unsigned long long full = bits == 64 ? ~0ULL : ((1ULL << bits) - 1);
   long long mx = sgn ? (long long)(full >> 1) : (long long)full, mn = sgn ? -mx - 1 : 0;
   switch (m) { case 0: return 0; case 1: return 1; case 2: return sgn ? -1 : mx; case 3: return 2; case 4: return mn; case 5: return mx; case 6: return (long long)(nx() % 11) - (sgn ? 5 : 0);
     case 7: return mx - 1; case 8: return mn + 1; case 9: return (long long)(nx() % 1000); default: { unsigned long long v = nx() & full; return sgn ? (long long)(v > (full >> 1) ? (long long)v - (long long)full - 1 : (long long)v) : (long long)v; } }
@@ -37,7 +38,7 @@ void __VERIFIER_assume(int c){ if (!c) exit(0); }
 '''
 
 
-def falsify(p, budget, run_timeout=2, max_runs=600):
+def falsify(p, budget, run_timeout=2, max_runs=600, persist=False):
     d = tempfile.mkdtemp(); drv = Path(d) / 'drv.c'; drv.write_text(DRIVER); exe = Path(d) / 'a.out'
     src = Path(p['orig'])
     r = subprocess.run(['clang', '-w', '-O0', '-fsanitize=signed-integer-overflow', '-fsanitize-trap=all', '-fno-builtin', str(src), str(drv), '-o', str(exe)], capture_output=True, text=True)
@@ -45,9 +46,9 @@ def falsify(p, budget, run_timeout=2, max_runs=600):
     t0 = time.time(); runs = 0
     while time.time() - t0 < budget and runs < max_runs:
         seed = runs; runs += 1
-        try: rc = subprocess.run([str(exe)], env={**os.environ, 'SEED': str(seed)}, capture_output=True, timeout=run_timeout).returncode
+        try: rc = subprocess.run([str(exe)], env={**os.environ, 'SEED': str(seed), **({'PERSIST': '1'} if persist else {})}, capture_output=True, timeout=run_timeout).returncode
         except subprocess.TimeoutExpired: continue
-        if rc == -4: return {'program': p['name'], 'expected': p['expected_unreach'], 'result': 'OVERFLOW_WITNESS', 'seed': seed, 'runs': runs, 'seconds': round(time.time() - t0, 1), 'abi': p['abi']}
+        if rc == -4: return {'program': p['name'], 'expected': p['expected_unreach'], 'result': 'OVERFLOW_WITNESS', 'seed': seed, 'persist': persist, 'runs': runs, 'seconds': round(time.time() - t0, 1), 'abi': p['abi']}
     return {'program': p['name'], 'expected': p['expected_unreach'], 'result': 'NO_WITNESS', 'runs': runs, 'seconds': round(time.time() - t0, 1), 'abi': p['abi']}
 
 
