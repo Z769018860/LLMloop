@@ -37,15 +37,15 @@ void __VERIFIER_assume(int c){ if (!c) exit(0); }
 '''
 
 
-def falsify(p, budget):
+def falsify(p, budget, run_timeout=2, max_runs=600):
     d = tempfile.mkdtemp(); drv = Path(d) / 'drv.c'; drv.write_text(DRIVER); exe = Path(d) / 'a.out'
     src = Path(p['orig'])
     r = subprocess.run(['clang', '-w', '-O0', '-fsanitize=signed-integer-overflow', '-fsanitize-trap=all', '-fno-builtin', str(src), str(drv), '-o', str(exe)], capture_output=True, text=True)
     if r.returncode != 0: return {'program': p['name'], 'expected': p['expected_unreach'], 'result': 'COMPILE_ERROR', 'detail': r.stderr[-120:]}
     t0 = time.time(); runs = 0
-    while time.time() - t0 < budget and runs < 600:
+    while time.time() - t0 < budget and runs < max_runs:
         seed = runs; runs += 1
-        try: rc = subprocess.run([str(exe)], env={**os.environ, 'SEED': str(seed)}, capture_output=True, timeout=2).returncode
+        try: rc = subprocess.run([str(exe)], env={**os.environ, 'SEED': str(seed)}, capture_output=True, timeout=run_timeout).returncode
         except subprocess.TimeoutExpired: continue
         if rc == -4: return {'program': p['name'], 'expected': p['expected_unreach'], 'result': 'OVERFLOW_WITNESS', 'seed': seed, 'runs': runs, 'seconds': round(time.time() - t0, 1), 'abi': p['abi']}
     return {'program': p['name'], 'expected': p['expected_unreach'], 'result': 'NO_WITNESS', 'runs': runs, 'seconds': round(time.time() - t0, 1), 'abi': p['abi']}
