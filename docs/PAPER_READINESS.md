@@ -256,3 +256,6 @@ LLM 提议原子 + Houdini + 修复(Study HY,协议冻结在前):NoOverflows 692
 
 ## v0.98
 可重放的动态证伪器:有溢出 106 个中 100 个见证(全部重放确认),无溢出 67 个 0 见证;证明+见证合计我们 159/173、Ultimate 156/173(配对 9 对 6 持平)、ESBMC 105、CBMC 99、CPAchecker 42。报告 paper/report_v098_bilingual.md。
+
+## v0.99
+族不相交新集合(termination-15、termination-restricted-15,冻结后未调):我们 91 证明+1 见证=92/93,Ultimate 83(10 超时),CPAchecker 67,ESBMC/CBMC 10;配对 9 对 1,p≈0.02,0 矛盾。Ultimate 见证经 CPAchecker 验证 51/52。两个 SV-COMP 标签错误(见证);parity 解决;修复轮仍边缘。单循环证书复核 149/149,多循环 46 FAILED 根因未明。报告 paper/report_v099_bilingual.md。

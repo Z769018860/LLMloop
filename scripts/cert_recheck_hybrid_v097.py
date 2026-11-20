@@ -9,9 +9,9 @@ if __name__ == '__main__':
     ps = {p['name']: p for p in H.progs()}; jobs = {}
     for line in open(H.OUT / 'results.jsonl'):
         r = json.loads(line)
-        if r['final'] != 'PROVED' or r['expected'] != 'true': continue
-        inv = r['invariant']; inv = inv[0] if inv and isinstance(inv[0], list) else inv
-        jobs.setdefault((r['program'], '&'.join(inv)[:300]), (r['program'], inv))
+        if r['final'] != 'PROVED' or r['expected'] not in ('true', 'unknown'): continue
+        inv = r['invariant']
+        jobs.setdefault((r['program'], json.dumps(inv)[:600]), (r['program'], inv))
     work = [(dict(corpus='hybrid', name=n, source=ps[n]['source'], parameter_bounds=ps[n]['bounds']), inv) for (n, _), (_, inv) in jobs.items()]
     with ThreadPoolExecutor(3) as ex: rows = list(ex.map(C.check, work))
     print(len(rows), collections.Counter(r['cbmc'].split(':')[0] for r in rows))

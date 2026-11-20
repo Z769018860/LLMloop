@@ -123,3 +123,27 @@ def test_falsifier_finds_a_planted_overflow(tmp_path):
     assert r['result'] == 'OVERFLOW_WITNESS'
     safe = tmp_path / 'q.c'; safe.write_text("extern int __VERIFIER_nondet_int(void);\nint main(){ int x = __VERIFIER_nondet_int(); if (x > 100 || x < -100) return 0; return x + 1; }\n")
     assert F.falsify({'orig': str(safe), 'name': 'safe', 'expected_unreach': 'true', 'abi': 'LP64'}, 3)['result'] == 'NO_WITNESS'
+
+def test_v099_fresh_family_summary_and_consistency():
+    s = json.load(open(E / 'v099_fresh/summary.json'))
+    assert s['programs'] == 93 and s['ours_proofs'] == 91 and s['ours_witnesses'] == 1 and s['ultimate_true'] == 83
+    assert s['contradictions'] == [] and s['ours_proof_and_witness'] == [] and s['ours_only_vs_ultimate'] == 9 and s['ultimate_only_vs_ours'] == 1
+    assert s['mcnemar_exact_two_sided_p'] < 0.05
+
+def test_ultimate_witness_validation_recorded():
+    r = json.load(open(E / 'v093_nooverflow/ultimate_witness_validation.json'))
+    assert len(r) == 52 and sum(x['validation'] == 'TRUE' for x in r) == 51
+    assert all(x['validation'] == 'TRUE' for x in r if x['cpachecker_standalone'] != 'TRUE')
+
+def test_benchmark_label_errors_have_replayable_witnesses():
+    f = json.load(open(E / 'v096_nooverflow_noassert/falsifier_long.json'))
+    names = {r['program'] for r in f if r['result'] == 'OVERFLOW_WITNESS' and r['expected'] == 'true'}
+    assert names == {'termination-crafted-lit/BrockschmidtCookFuhs-CAV2013-Fig9a.c', 'termination-crafted-lit/ChawdharyCookGulwaniSagivYang-ESOP2008-easy2.c'}
+    d = json.load(open(E / 'v098/decision_table_v2.json'))
+    assert d['valid'] == 65 and d['decided']['ours'] == {'proofs': 61, 'violations': 104} and d['decided']['ultimate'] == {'proofs': 56, 'violations': 100}
+
+def test_trivial_invariant_is_tried_first():
+    from llmloop.houdini_loops import houdini_loops
+    src = "int f(unsigned int v){\nunsigned int a = 0;\nwhile (v != 0)\n{\n  a = a + 1U;\n  v = v & (v - 1U);\n}\n\nreturn 0;\n}\n"
+    st, inv, rounds, log = houdini_loops(src, {'v': [0, 4294967295]}, abi='LP64', integer_model='c', max_rounds=20)
+    assert st == 'PROVED' and inv == [['True']]

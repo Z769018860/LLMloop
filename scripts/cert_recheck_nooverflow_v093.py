@@ -9,7 +9,7 @@ if __name__ == '__main__':
     ps = {p['name']: p for p in N.progs()}; jobs = {}
     for f in ('ours.json', 'ours_poly.json'):
         for r in json.load(open(N.OUT / f))['rows']:
-            if r['status'] == 'PROVED' and r['program'] in ps: jobs.setdefault((r['program'], '&'.join(r['invariant'][0] if r['invariant'] and isinstance(r['invariant'][0], list) else r['invariant'])[:300]), (r['program'], r['invariant'][0] if r['invariant'] and isinstance(r['invariant'][0], list) else r['invariant']))
+            if r['status'] == 'PROVED' and r['program'] in ps: jobs.setdefault((r['program'], json.dumps(r['invariant'])[:600]), (r['program'], r['invariant']))
     cs = {n.replace('/', '_'): n for n in ps}
     for line in (open(N.OUT / 'llm_w/verifications.jsonl') if (N.OUT / 'llm_w/verifications.jsonl').exists() else []):
         x = json.loads(line); res = x.get('result') or {}

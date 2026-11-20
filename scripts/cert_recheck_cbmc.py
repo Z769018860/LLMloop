@@ -69,9 +69,20 @@ def wide_old(atom):
 
 
 def harness(src, bounds, inv):
+    """inv: a flat list of atoms (single loop) or a list of per-loop atom lists (document order). Atoms that mention identifiers not declared in the source (flags introduced by jump elimination) are dropped."""
     m = re.search(r'int f\((.*?)\)\s*\{', src); params = [p.strip() for p in m.group(1).split(',') if p.strip()] if m else []
-    cond = ' && '.join('(%s)' % wide(a) for a in inv) or '1'
-    body = re.sub(r'(while\s*\(.*?\))\s*\{', lambda mm: mm.group(1) + '\n__CPROVER_loop_invariant(%s)\n{' % cond, src, count=1, flags=re.S)
+    per_loop = inv if inv and isinstance(inv[0], list) else [inv]
+    known = set(re.findall(r'[A-Za-z_]\w*', src)) | {'max', 'min', 'abs', 'True', 'False', 'and', 'or', 'not', 'if', 'else'}
+    def cond_of(atoms):
+        keep = [a for a in atoms if set(re.findall(r'[A-Za-z_]\w*', a)) <= known]
+        return ' && '.join('(%s)' % wide(a) for a in keep) or '1'
+    conds = iter([cond_of(a) for a in per_loop]); cnt = [0]
+    def put(mm):
+        c = next(conds, None)
+        return mm.group(1) + ('\n__CPROVER_loop_invariant(%s)\n{' % c if c is not None else ' {')
+    body = re.sub(r'((?:while|for)\s*\(.*?\))\s*\{', put, src, flags=re.S)
+    pre = '#define max(a, b) ((a) > (b) ? (a) : (b))\n#define min(a, b) ((a) < (b) ? (a) : (b))\n#define abs(a) ((a) < 0 ? -(a) : (a))\n'
+    pre += 'int __VERIFIER_nondet_bool(void){ int x; __CPROVER_assume(x == 0 || x == 1); return x; }\n' if '__VERIFIER_nondet_bool' in src else ''
     decl = ''
     for q in params:
         nm = q.split()[-1]; ty = q[:q.rfind(nm)].strip()
@@ -80,6 +91,12 @@ def harness(src, bounds, inv):
     pre = '#define max(a, b) ((a) > (b) ? (a) : (b))\n#define min(a, b) ((a) < (b) ? (a) : (b))\n#define abs(a) ((a) < 0 ? -(a) : (a))\n'
     pre += 'int __VERIFIER_nondet_bool(void){ int x; __CPROVER_assume(x == 0 || x == 1); return x; }\n' if '__VERIFIER_nondet_bool' in src else ''
     return pre + body + '\nint main(void){\n' + decl + 'f(%s);\nreturn 0;\n}\n' % call
+
+
+def dropped_atoms(src, inv):
+    per_loop = inv if inv and isinstance(inv[0], list) else [inv]
+    known = set(re.findall(r'[A-Za-z_]\w*', src)) | {'max', 'min', 'abs', 'True', 'False', 'and', 'or', 'not', 'if', 'else'}
+    return sum(1 for a in per_loop for x in a if not set(re.findall(r'[A-Za-z_]\w*', x)) <= known)
 
 
 def check(job):
@@ -94,7 +111,7 @@ def check(job):
             out = r.stdout + r.stderr
             res = 'VERIFIED' if 'VERIFICATION SUCCESSFUL' in out else 'FAILED' if 'VERIFICATION FAILED' in out else 'ERROR:' + (out.strip().splitlines() or [''])[-1][:80]
         except subprocess.TimeoutExpired: res = 'TIMEOUT'
-    return {'corpus': p['corpus'], 'name': p['name'], 'invariant': inv[:60], 'cbmc': res, 'seconds': round(time.time() - t, 1), 'atoms': len(inv)}
+    return {'corpus': p['corpus'], 'name': p['name'], 'invariant': inv[:60], 'dropped_atoms': dropped_atoms(p['source'], inv), 'cbmc': res, 'seconds': round(time.time() - t, 1), 'atoms': len(inv)}
 
 
 if __name__ == '__main__':
