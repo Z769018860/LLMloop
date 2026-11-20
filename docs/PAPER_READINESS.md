@@ -259,3 +259,6 @@ LLM 提议原子 + Houdini + 修复(Study HY,协议冻结在前):NoOverflows 692
 
 ## v0.99
 族不相交新集合(termination-15、termination-restricted-15,冻结后未调):我们 91 证明+1 见证=92/93,Ultimate 83(10 超时),CPAchecker 67,ESBMC/CBMC 10;配对 9 对 1,p≈0.02,0 矛盾。Ultimate 见证经 CPAchecker 验证 51/52。两个 SV-COMP 标签错误(见证);parity 解决;修复轮仍边缘。单循环证书复核 149/149,多循环 46 FAILED 根因未明。报告 paper/report_v099_bilingual.md。
+
+## v1.00
+多循环 CBMC 复核失败(46)根因:CBMC 契约机制对嵌套循环与我们的证明规则不等价;无契约复核(证明规则显式展开)586 个证书 556 VERIFIED/0 FAILED/29 超时;新集合 91 个证明程序中 90 个有独立复核证书。证伪器持久选择遍 +2;累计 4 个 SV-COMP 标签错误;开发集 63 无溢出/110 有溢出,我们判定 169 对 Ultimate 156。仍未解决:修复轮边缘、nla 幂和、nestedLoop-1/FMCAD2013-Fig1。报告 paper/report_v100_bilingual.md。

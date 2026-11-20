@@ -147,3 +147,30 @@ def test_trivial_invariant_is_tried_first():
     src = "int f(unsigned int v){\nunsigned int a = 0;\nwhile (v != 0)\n{\n  a = a + 1U;\n  v = v & (v - 1U);\n}\n\nreturn 0;\n}\n"
     st, inv, rounds, log = houdini_loops(src, {'v': [0, 4294967295]}, abi='LP64', integer_model='c', max_rounds=20)
     assert st == 'PROVED' and inv == [['True']]
+
+def test_v100_flat_recheck_recorded_without_failures():
+    import collections
+    rows = []
+    for d, f in (('v099_fresh', 'flat_recheck_fresh.json'), ('v099_fresh', 'flat_recheck_fresh_hybrid.json'), ('v096_nooverflow_noassert', 'flat_recheck_nooverflow.json'), ('v096_nooverflow_noassert', 'flat_recheck_hybrid.json')):
+        rows += json.load(open(E / d / f))
+    c = collections.Counter(r['result'] for r in rows)
+    assert len(rows) == 586 and c['VERIFIED'] == 556 and c['FAILED'] == 0
+    s = json.load(open(E / 'v099_fresh/flat_summary.json')); assert s['fresh']['proved'] == 91 and s['fresh']['verified_programs'] == 90
+
+def test_flat_recheck_is_sensitive_and_handles_nested_loops():
+    import scripts.cert_recheck_flat_v100 as F
+    src = "int f(int __z){\nint i = 0;\nint j = 3;\nwhile (i < 10)\n{\n  while (j < 12)\n  {\n    j = j - 1;\n    j = j + 2;\n  }\n\n  i = i + 1;\n}\n\nreturn 0;\n}\n"
+    good = [['i >= 0', 'i <= 10', 'j >= 3', 'j <= 12', '(j == 3 or j == 12)', '(j == 3 or i >= 1)', '(j == 12 or i <= 0)'], ['i >= 0', 'i <= 9', 'j >= 3', 'j <= 12']]
+    assert F.recheck(src, {'__z': [0, 0]}, good)['result'] == 'VERIFIED'
+    assert F.recheck(src, {'__z': [0, 0]}, [['i <= 5'], ['i <= 5']])['result'] == 'FAILED'
+    assert F.recheck(src, {'__z': [0, 0]}, [['True'], ['True']])['result'] == 'FAILED'          # the havocked state overflows j - 1
+
+def test_v100_label_errors_and_decision_table_v3():
+    O = E / 'v096_nooverflow_noassert'
+    names = set()
+    for f in ('falsifier_long.json', 'falsifier_persistent_valid_undecided.json'):
+        names |= {r['program'] for r in json.load(open(O / f)) if r['result'] == 'OVERFLOW_WITNESS' and r['expected'] == 'true'}
+    assert len(names) == 4
+    d = json.load(open(E / 'v098/decision_table_v3.json'))
+    assert d['valid'] == 63 and d['violating'] == 110 and d['decided']['ours'] == {'proofs': 61, 'violations': 108} and d['decided']['ultimate']['proofs'] == 56
+    assert not [p for p in d['relabelled'] if p in d.get('ours_undecided_valid', [])]
