@@ -28,7 +28,7 @@ sparse_at_pin () { # url dir pin paths...
   git -C "$dir" config core.sparseCheckout true
   : > "$dir/.git/info/sparse-checkout"
   for pat in "$@"; do printf '%s\n' "$pat" >> "$dir/.git/info/sparse-checkout"; done
-  git -C "$dir" fetch -q --depth 1 origin "$pin"
+  git -C "$dir" fetch -q --depth 1 --filter=blob:none origin "$pin"
   git -C "$dir" checkout -q FETCH_HEAD
   local got; got="$(git -C "$dir" rev-parse HEAD)"
   [ "$got" = "$pin" ] || { echo "FATAL: $dir at $got, expected $pin" >&2; exit 1; }
