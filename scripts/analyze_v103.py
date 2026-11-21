@@ -8,10 +8,11 @@ Inputs (produced by the frozen drivers, never edited by hand):
 Outputs: summary.json and summary.md next to each results.json.
 
 Rules enforced here:
-  * every scheduled unit is in the denominator, including UNSUPPORTED and resource stops;
+  * the denominator is the frozen case list (165 / 257), not the units the front end accepted;
+  * every case counts for every tool, including UNSUPPORTED and resource stops;
   * proof-only and decision-including-refutation counts are reported separately and never mixed;
-  * paired comparisons use the same 165 (or 257) units for both tools; unsupported counts as no decision;
-  * a paired difference is reported with an exact McNemar test and a paired bootstrap interval.
+  * a paired comparison uses the same case list for both tools;
+  * paired differences carry an exact McNemar test and a paired bootstrap interval.
 """
 import json, math, random, statistics, sys
 from pathlib import Path
@@ -32,19 +33,20 @@ def bucket(status):
     if status in UNDECIDED: return 'undecided'
     if status in STOPPED: return 'resource_stop'
     if status in BROKEN: return 'broken'
-    return 'unknown_status:' + str(status)
+    return 'other:' + str(status)
 
 
 def mcnemar_exact(b, c):
     n = b + c
     if n == 0: return 1.0
     k = min(b, c)
-    tail = sum(math.comb(n, i) for i in range(0, k + 1)) / 2 ** n
-    return min(1.0, 2 * tail)
+    return min(1.0, 2 * sum(math.comb(n, i) for i in range(0, k + 1)) / 2 ** n)
 
 
 def paired_bootstrap(first, second, reps=10000, seed=20261122):
-    rnd = random.Random(seed); diffs = []; n = len(first)
+    rnd = random.Random(seed); n = len(first)
+    if n == 0: return (0.0, 0.0)
+    diffs = []
     for _ in range(reps):
         idx = [rnd.randrange(n) for _ in range(n)]
         diffs.append(sum(first[i] for i in idx) / n - sum(second[i] for i in idx) / n)
@@ -56,8 +58,7 @@ def resources(rows):
     wall = [r['wall_seconds'] for r in rows]
     rss = [r.get('sampled_peak_group_rss_bytes') or 0 for r in rows]
     return {'n': len(rows), 'wall_median_s': round(statistics.median(wall), 3) if wall else None,
-            'wall_max_s': round(max(wall), 3) if wall else None,
-            'wall_sum_s': round(sum(wall), 1) if wall else None,
+            'wall_max_s': round(max(wall), 3) if wall else None, 'wall_sum_s': round(sum(wall), 1) if wall else None,
             'peak_rss_max_mib': round(max(rss) / 2 ** 20, 1) if rss else None}
 
 
@@ -67,152 +68,174 @@ def table_md(header, rows):
     return '\n'.join(out)
 
 
-def full165():
-    d = V103 / 'full165'
-    res = json.loads((d / 'results.json').read_text()); proto = json.loads((d / 'protocol.json').read_text())
+def load(study):
+    d = V103 / study
+    proto = json.loads((d / 'protocol.json').read_text())
     sched = json.loads((d / 'schedule.json').read_text())
-    cases = {i: t['case'] for i, t in enumerate(sched)}
-    rows = res['rows']; tools = proto['tools']
-    by = {(r['tool'], r['index']): r for r in rows}
-    assert len(by) == 495 == len(rows), (len(by), len(rows))
+    res = json.loads((d / 'results.json').read_text())
+    rows = {r['index']: r for r in res['rows']}
+    unit = {(t['tool'], t['case']['name']): i for i, t in enumerate(sched)}
+    assert len(unit) == len(sched) == len(rows), (len(unit), len(sched), len(rows))
+    for (tool, name), i in unit.items():
+        assert rows[i]['tool'] == tool and rows[i]['program'] == name, (tool, name, i)
+    return proto, sched, res, rows, unit
 
-    sector = {i: ('in_fragment' if c['historical_stage'].startswith('in_') else 'rejected') for i, c in cases.items()}
-    label = {i: ('upstream_true' if c['expected_nooverflow'] is True else 'unlabelled') for i, c in cases.items()}
 
-    def counts(tool, ids):
-        c = {'units': len(ids)}
-        for i in ids:
-            c[bucket(by[(tool, i)]['status'])] = c.get(bucket(by[(tool, i)]['status']), 0) + 1
-        return c
+def status(rows, unit, tool, name):
+    return rows[unit[(tool, name)]]['status']
 
-    sectors = {'all_165': list(cases), 'in_fragment_93': [i for i in cases if sector[i] == 'in_fragment'],
-               'rejected_72': [i for i in cases if sector[i] == 'rejected'],
-               'upstream_true_102': [i for i in cases if label[i] == 'upstream_true'],
-               'unlabelled_63': [i for i in cases if label[i] == 'unlabelled']}
-    per_sector = {name: {t: counts(t, ids) for t in tools} for name, ids in sectors.items()}
 
+def counts_for(rows, unit, tool, names):
+    c = {'units': len(names)}
+    for n in names:
+        b = bucket(status(rows, unit, tool, n)); c[b] = c.get(b, 0) + 1
+    return c
+
+
+def pair(rows, unit, a, b, names):
+    va = [1 if status(rows, unit, a, n) == PROVED else 0 for n in names]
+    vb = [1 if status(rows, unit, b, n) == PROVED else 0 for n in names]
+    nb = sum(1 for x, y in zip(va, vb) if x and not y); nc = sum(1 for x, y in zip(va, vb) if y and not x)
+    lo, hi = paired_bootstrap(va, vb)
+    return {'a': a, 'b': b, 'cases': len(names), 'a_only_proved': nb, 'b_only_proved': nc,
+            'both': sum(1 for x, y in zip(va, vb) if x and y), 'neither': sum(1 for x, y in zip(va, vb) if not x and not y),
+            'a_proved': sum(va), 'b_proved': sum(vb), 'mcnemar_exact_p': round(mcnemar_exact(nb, nc), 6),
+            'paired_diff_ci95': [round(lo, 4), round(hi, 4)]}
+
+
+def full165():
+    proto, sched, res, rows, unit = load('full165')
+    tools = proto['tools']
+    cases = [c['name'] for c in proto['cases']]
+    info = {c['name']: c for c in proto['cases']}
+    sectors = {'all_165': cases,
+               'in_fragment_93': [n for n in cases if info[n]['historical_stage'].startswith('in_')],
+               'rejected_72': [n for n in cases if not info[n]['historical_stage'].startswith('in_')],
+               'upstream_true_102': [n for n in cases if info[n]['expected_nooverflow'] is True],
+               'unlabelled_63': [n for n in cases if info[n]['expected_nooverflow'] is None]}
+    per_sector = {s: {t: counts_for(rows, unit, t, ids) for t in tools} for s, ids in sectors.items()}
     pairs = []
     for a in tools:
         for b in tools:
             if a >= b: continue
-            ids = list(cases)
-            va = {i: by[(a, i)]['status'] == PROVED for i in ids}
-            vb = {i: by[(b, i)]['status'] == PROVED for i in ids}
-            nb = sum(1 for i in ids if va[i] and not vb[i]); nc = sum(1 for i in ids if vb[i] and not va[i])
-            lo, hi = paired_bootstrap([1 if va[i] else 0 for i in ids], [1 if vb[i] else 0 for i in ids])
-            pairs.append({'a': a, 'b': b, 'a_only_proved': nb, 'b_only_proved': nc,
-                          'both': sum(1 for i in ids if va[i] and vb[i]), 'neither': sum(1 for i in ids if not va[i] and not vb[i]),
-                          'mcnemar_exact_p': round(mcnemar_exact(nb, nc), 6),
-                          'paired_diff_a_minus_b': round((sum(va.values()) - sum(vb.values())) / len(ids), 4),
-                          'paired_diff_ci95': [round(lo, 4), round(hi, 4)]})
+            pairs.append(pair(rows, unit, a, b, cases))
+    in_pairs = []
+    for a in tools:
+        for b in tools:
+            if a >= b: continue
+            in_pairs.append(pair(rows, unit, a, b, sectors['in_fragment_93']))
 
-    label_conflicts = {t: sorted(by[(t, i)]['program'] for i in cases
-                                 if label[i] == 'upstream_true' and by[(t, i)]['status'] == REFUTED) for t in tools}
-    union_proved = sum(1 for i in cases if any(by[(t, i)]['status'] == PROVED for t in tools))
-    llm_free = sum(1 for i in cases if any(by[(t, i)]['status'] == PROVED for t in tools if t != 'llmloop'))
-    summary = {'study': 'full165', 'schedule_units': 495, 'captured': len(rows),
-               'protocol_amendment': proto.get('protocol_amendment', {}).get('changed'),
-               'counts': per_sector, 'pairs': pairs, 'label_conflicts': label_conflicts,
-               'union_proved_all_tools': union_proved, 'union_proved_non_llm': llm_free,
-               'llm_only_proved': union_proved - llm_free,
-               'resources': {t: resources([by[(t, i)] for i in cases]) for t in tools},
-               'remote_model_calls': 0}
+    conflicts = {t: sorted(n for n in sectors['upstream_true_102'] if status(rows, unit, t, n) == REFUTED) for t in tools}
+    proved_any = [n for n in cases if any(status(rows, unit, t, n) == PROVED for t in tools)]
+    proved_nonllm = [n for n in cases if any(status(rows, unit, t, n) == PROVED for t in tools if t != 'llmloop')]
+    summary = {'study': 'full165', 'cases': len(cases), 'units': len(rows), 'captured': res.get('complete_capture'),
+               'counts': per_sector, 'pairs_all_165': pairs, 'pairs_in_fragment_93': in_pairs,
+               'label_conflicts': conflicts, 'union_proved_any_tool': len(proved_any),
+               'union_proved_non_llm': len(proved_nonllm), 'llmloop_only_proved': len(proved_any) - len(proved_nonllm),
+               'resources_all_units': {t: resources([rows[unit[(t, n)]] for n in cases]) for t in tools},
+               'remote_model_calls': 0, 'protocol_amendment': proto.get('protocol_amendment', {}).get('changed')}
 
-    md = ['# v1.03 full-165 comparison (all scheduled units in the denominator)', '',
-          f"Units: 495 = 165 cases x 3 tools. Captured: {len(rows)}. Evidence: `results.json`, `raw/`.", '',
-          '## Proof-only counts by sector', '']
-    head = ['sector', 'tool', 'units', 'proved', 'refuted', 'undecided', 'conditional', 'resource_stop', 'broken']
+    md = ['# v1.03 full-165 comparison / 全体 165 项分母比较', '',
+          f"分母 165 个冻结用例 × {len(tools)} 个工具 = {len(rows)} 次运行；完整捕获：{res.get('complete_capture')}。",
+          "Denominator: 165 frozen cases x " + str(len(tools)) + f" tools = {len(rows)} runs; complete capture: {res.get('complete_capture')}.", '',
+          '## 按分区统计（证明 = TRUE；FALSE 仅表示给出反例） / Counts by sector', '']
+    head = ['sector', 'tool', 'cases', 'proved', 'refuted', 'undecided', 'conditional', 'resource_stop', 'broken']
     body = []
-    for name, per_tool in per_sector.items():
+    for s, per in per_sector.items():
         for t in tools:
-            c = per_tool[t]
-            body.append([name, t, c['units'], c.get('proved', 0), c.get('refuted', 0), c.get('undecided', 0), c.get('conditional', 0), c.get('resource_stop', 0), c.get('broken', 0)])
+            c = per[t]
+            body.append([s, t, c['units'], c.get('proved', 0), c.get('refuted', 0), c.get('undecided', 0),
+                         c.get('conditional', 0), c.get('resource_stop', 0), c.get('broken', 0)])
     md.append(table_md(head, body))
-    md += ['', '## Paired proof comparison on the same 165 units', '']
-    md.append(table_md(['a', 'b', 'a only', 'b only', 'both', 'neither', 'McNemar p', 'diff a-b [95% CI]'],
-                       [[p['a'], p['b'], p['a_only_proved'], p['b_only_proved'], p['both'], p['neither'], p['mcnemar_exact_p'],
-                         f"{p['paired_diff_a_minus_b']:+.3f} [{p['paired_diff_ci95'][0]:+.3f},{p['paired_diff_ci95'][1]:+.3f}]"] for p in pairs]))
-    md += ['', '## Coverage-inclusive union', '',
-           f"- any tool proved: {union_proved}/165",
-           f"- non-LLM tools only: {llm_free}/165",
-           f"- programs where only the LLM-assisted tool proved: {union_proved - llm_free}",
-           '', '## Upstream label conflicts (upstream says no overflow, tool says overflow)', '']
-    for t in tools: md.append(f"- {t}: {len(label_conflicts[t])} {label_conflicts[t] if label_conflicts[t] else ''}")
-    md += ['', '## Resources (per-unit observations, concurrent shards; not a paired speedup study)', '']
-    md.append(table_md(['tool', 'n', 'median wall s', 'max wall s', 'sum wall s', 'max peak RSS MiB'],
-                       [[t, s['n'], s['wall_median_s'], s['wall_max_s'], s['wall_sum_s'], s['peak_rss_max_mib']] for t, s in summary['resources'].items()]))
-    (d / 'summary.json').write_text(json.dumps(summary, indent=2) + '\n')
-    (d / 'summary.md').write_text('\n'.join(md) + '\n')
-    print('full165 ->', (d / 'summary.md'))
+    md += ['', '## 同一 165 项上的配对证明比较 / Paired proof comparison, identical 165 cases', '']
+    md.append(table_md(['a', 'b', 'a proved', 'b proved', 'a only', 'b only', 'both', 'neither', 'McNemar p', 'diff 95% CI'],
+                       [[p['a'], p['b'], p['a_proved'], p['b_proved'], p['a_only_proved'], p['b_only_proved'], p['both'], p['neither'],
+                         p['mcnemar_exact_p'], f"[{p['paired_diff_ci95'][0]:+.3f},{p['paired_diff_ci95'][1]:+.3f}]"] for p in pairs]))
+    md += ['', '## 前端可翻译的 93 项子集（与旧数字可比） / Same comparison on the 93 in-fragment cases', '']
+    md.append(table_md(['a', 'b', 'a proved', 'b proved', 'a only', 'b only', 'McNemar p'],
+                       [[p['a'], p['b'], p['a_proved'], p['b_proved'], p['a_only_proved'], p['b_only_proved'], p['mcnemar_exact_p']] for p in in_pairs]))
+    md += ['', '## 覆盖包含的并集 / Coverage-inclusive union', '',
+           f"- 任一工具证明 / proved by some tool: {len(proved_any)}/165",
+           f"- 仅非 LLM 工具证明 / by non-LLM tools only: {len(proved_nonllm)}/165",
+           f"- 只有带 LLM 的工具证明 / only by the LLM-assisted tool: {len(proved_any) - len(proved_nonllm)}",
+           '', '## 上游标签冲突（上游标为无溢出、工具给出溢出反例） / Upstream label conflicts', '']
+    for t in tools: md.append(f"- {t}: {len(conflicts[t])}" + (f" -> {', '.join(conflicts[t])}" if conflicts[t] else ''))
+    md += ['', '## 资源（并发分片下的观测值，不是配对加速比） / Resources', '']
+    md.append(table_md(['tool', 'cases', 'median wall s', 'max wall s', 'sum wall s', 'max peak RSS MiB'],
+                       [[t, s['n'], s['wall_median_s'], s['wall_max_s'], s['wall_sum_s'], s['peak_rss_max_mib']]
+                        for t, s in summary['resources_all_units'].items()]))
+    (V103 / 'full165/summary.json').write_text(json.dumps(summary, indent=2) + '\n')
+    (V103 / 'full165/summary.md').write_text('\n'.join(md) + '\n')
+    print(json.dumps({'study': 'full165', 'cases': len(cases), 'union_any': len(proved_any),
+                      'union_non_llm': len(proved_nonllm), 'pairs': pairs}, indent=1))
 
 
 def independent():
-    d = V103 / 'independent'
-    res = json.loads((d / 'results.json').read_text()); proto = json.loads((d / 'protocol.json').read_text())
-    sched = json.loads((d / 'schedule.json').read_text())
-    cases = {i: t['case'] for i, t in enumerate(sched)}
-    rows = res['rows']; by = {(r['tool'], r['index']): r for r in rows}
-    assert len(by) == 514 == len(rows), (len(by), len(rows))
-    corpora = {'nist-int64': [i for i in cases if cases[i]['corpus'] == 'nist-int64'],
-               'tacle': [i for i in cases if cases[i]['corpus'] == 'tacle']}
-    counts = {}
-    for corpus, ids in corpora.items():
-        counts[corpus] = {}
-        for tool in proto['tools']:
-            c = {'units': len(ids)}
-            for i in ids: c[bucket(by[(tool, i)]['status'])] = c.get(bucket(by[(tool, i)]['status']), 0) + 1
-            counts[corpus][tool] = c
-    labelled = [i for i in corpora['nist-int64'] if cases[i]['upstream_label_nooverflow'] is not None]
+    proto, sched, res, rows, unit = load('independent')
+    tools = proto['tools']
+    by_corpus = {'nist-int64': [c['name'] for c in proto['cases'] if c['corpus'] == 'nist-int64'],
+                 'tacle': [c['name'] for c in proto['cases'] if c['corpus'] == 'tacle']}
+    info = {c['name']: c for c in proto['cases']}
+    counts = {c: {t: counts_for(rows, unit, t, ids) for t in tools} for c, ids in by_corpus.items()}
+    labelled = [n for n in by_corpus['nist-int64'] if info[n]['upstream_label_nooverflow'] is not None]
+    safe = [n for n in labelled if info[n]['upstream_label_nooverflow'] is True]
+    unsafe = [n for n in labelled if info[n]['upstream_label_nooverflow'] is False]
     agreement = {}
-    for i in labelled:
-        up = cases[i]['upstream_label_nooverflow']; ref = by[('reference_cbmc', i)]['status']; ours = by[('llmloop', i)]['status']
-        key = f'upstream_{up}_ref_{ref}_ours_{ours}'
+    for n in labelled:
+        key = f"upstream_{'no_overflow' if info[n]['upstream_label_nooverflow'] else 'overflow'}|cbmc_{status(rows, unit, 'reference_cbmc', n)}|llmloop_{status(rows, unit, 'llmloop', n)}"
         agreement[key] = agreement.get(key, 0) + 1
-    unsafe = [i for i in labelled if cases[i]['upstream_label_nooverflow'] is False]
-    safe = [i for i in labelled if cases[i]['upstream_label_nooverflow'] is True]
-    false_cert = sorted(by[('llmloop', i)]['program'] for i in unsafe if by[('llmloop', i)]['status'] == PROVED)
-    ref_miss = [i for i in labelled if by[('reference_cbmc', i)]['status'] not in (PROVED, REFUTED)]
-    va = [1 if by[('llmloop', i)]['status'] == PROVED else 0 for i in labelled]
-    vb = [1 if by[('reference_cbmc', i)]['status'] == PROVED else 0 for i in labelled]
-    nb = sum(1 for x, y in zip(va, vb) if x and not y); nc = sum(1 for x, y in zip(va, vb) if y and not x)
-    lo, hi = paired_bootstrap(va, vb)
-    summary = {'study': 'independent', 'captured': len(rows), 'counts': counts,
-               'labelled_nist_units': len(labelled), 'safe_units': len(safe), 'unsafe_units': len(unsafe),
-               'false_certifications_on_upstream_bad': false_cert,
-               'reference_cbmc_undecided_on_labelled': len(ref_miss),
-               'upstream_vs_reference_vs_ours': dict(sorted(agreement.items())),
-               'llmloop_vs_reference_cbmc_proof_paired': {'llmloop_only': nb, 'cbmc_only': nc, 'both': sum(1 for x, y in zip(va, vb) if x and y),
-                                                          'neither': sum(1 for x, y in zip(va, vb) if not x and not y),
-                                                          'mcnemar_exact_p': round(mcnemar_exact(nb, nc), 6),
-                                                          'diff_ci95': [round(lo, 4), round(hi, 4)]},
-               'resources': {t: resources([by[(t, i)] for i in cases]) for t in proto['tools']}, 'remote_model_calls': 0}
+    false_cert = sorted(n for n in unsafe if status(rows, unit, 'llmloop', n) == PROVED)
+    missed = sorted(n for n in safe if status(rows, unit, 'llmloop', n) == PROVED and status(rows, unit, 'reference_cbmc', n) != PROVED)
+    cbmc_undecided = sorted(n for n in labelled if status(rows, unit, 'reference_cbmc', n) not in (PROVED, REFUTED))
+    llmloop_refutes_on_safe = sorted(n for n in safe if status(rows, unit, 'llmloop', n) == REFUTED)
+    paired = pair(rows, unit, 'llmloop', 'reference_cbmc', labelled)
+    summary = {'study': 'independent', 'cases': len(by_corpus['nist-int64']) + len(by_corpus['tacle']), 'units': len(rows),
+               'captured': res.get('complete_capture'), 'counts': counts,
+               'labelled_units': len(labelled), 'safe_units': len(safe), 'unsafe_units': len(unsafe),
+               'false_certifications_on_upstream_overflow': false_cert,
+               'llmloop_proved_without_reference_proof': missed,
+               'reference_cbmc_undecided_on_labelled': cbmc_undecided[:40], 'reference_cbmc_undecided_count': len(cbmc_undecided),
+               'llmloop_refutations_on_upstream_safe': llmloop_refutes_on_safe,
+               'agreement': dict(sorted(agreement.items())), 'paired_llmloop_vs_cbmc': paired,
+               'resources': {t: resources([rows[unit[(t, n)]] for n in sum(by_corpus.values(), [])]) for t in tools},
+               'remote_model_calls': 0}
     tacle_ref = V103 / 'tacle_reference256/results.json'
     if tacle_ref.exists():
         tr = json.loads(tacle_ref.read_text())
-        summary['tacle_unwind256'] = {s: sum(1 for r in tr['rows'] if r['status'] == s) for s in sorted({r['status'] for r in tr['rows']})}
-    md = ['# v1.03 independent external benchmark (all scheduled units in the denominator)', '',
-          f"Units: 514 = (190 NIST + 67 TACLe) x 2 tools. Captured: {len(rows)}.", '',
-          '## Proof-only counts', '']
-    body = [[c, t, v['units'], v.get('proved', 0), v.get('refuted', 0), v.get('undecided', 0), v.get('conditional', 0), v.get('resource_stop', 0), v.get('broken', 0)]
-            for c, per in counts.items() for t, v in per.items()]
-    md.append(table_md(['corpus', 'tool', 'units', 'proved', 'refuted', 'undecided', 'conditional', 'resource_stop', 'broken'], body))
-    md += ['', '## Labels', '',
-           f"- labelled NIST units: {len(labelled)} (safe {len(safe)}, unsafe {len(unsafe)})",
-           f"- false certifications by llmloop on upstream-unsafe units: {len(false_cert)} {false_cert if false_cert else ''}",
-           f"- reference CBMC undecided on labelled units: {len(ref_miss)}",
-           '', '### upstream label x reference CBMC x llmloop', '']
+        st = {r['program']: r['status'] for r in tr['rows']}
+        summary['tacle_unwind256'] = {s: sum(1 for v in st.values() if v == s) for s in sorted(set(st.values()))}
+        shift = {n: [status(rows, unit, 'reference_cbmc', n), st[n]] for n in by_corpus['tacle'] if n in st and st[n] != status(rows, unit, 'reference_cbmc', n)}
+        summary['tacle_label_changes_16_to_256'] = shift
+
+    md = ['# v1.03 independent external benchmark / 独立外部基准', '',
+          f"分母 257 个外部用例（190 NIST + 67 TACLe）× {len(tools)} 个工具 = {len(rows)} 次运行；完整捕获：{res.get('complete_capture')}。",
+          'Denominator: 257 external cases (190 NIST + 67 TACLe) x ' + str(len(tools)) + f' tools = {len(rows)} runs; complete capture: {res.get("complete_capture")}.', '',
+          '## 按语料统计 / Counts by corpus', '']
+    body = [[c, t, v['units'], v.get('proved', 0), v.get('refuted', 0), v.get('undecided', 0), v.get('conditional', 0),
+             v.get('resource_stop', 0), v.get('broken', 0)] for c, per in counts.items() for t, v in per.items()]
+    md.append(table_md(['corpus', 'tool', 'cases', 'proved', 'refuted', 'undecided', 'conditional', 'resource_stop', 'broken'], body))
+    md += ['', '## 有真值的 190 个 NIST 单元 / Labelled NIST units', '',
+           f"- 上游标注无溢出 / upstream no-overflow: {len(safe)}；上游标注有溢出 / upstream overflow: {len(unsafe)}",
+           f"- llmloop 在上游“有溢出”项上的误认证 / false certifications on upstream-unsafe: {len(false_cert)}" + (f" -> {', '.join(false_cert)}" if false_cert else ''),
+           f"- llmloop 证明但参考 CBMC 未给出证明 / proved by us, not by reference CBMC: {len(missed)}" + (f" -> {', '.join(missed)}" if missed else ''),
+           f"- llmloop 在上游“无溢出”项上给出反例 / refutations on upstream-safe: {len(llmloop_refutes_on_safe)}",
+           f"- 参考 CBMC 在该批上未决 / reference CBMC undecided: {len(cbmc_undecided)}", '',
+           '### 上游标签 × 参考 CBMC × llmloop / agreement grid', '']
     md.append(table_md(['combination', 'count'], [[k, v] for k, v in sorted(agreement.items())]))
-    md += ['', '### Paired proof comparison, 190 labelled NIST units', '',
-           table_md(['llmloop only', 'CBMC only', 'both', 'neither', 'McNemar p', 'diff 95% CI'],
-                    [[nb, nc, summary['llmloop_vs_reference_cbmc_proof_paired']['both'],
-                      summary['llmloop_vs_reference_cbmc_proof_paired']['neither'],
-                      summary['llmloop_vs_reference_cbmc_proof_paired']['mcnemar_exact_p'],
-                      f"[{lo:+.3f},{hi:+.3f}]"]])]
+    md += ['', '## 190 个有标签单元上的配对证明 / Paired proofs on the labelled units', '',
+           table_md(['llmloop proved', 'CBMC proved', 'llmloop only', 'CBMC only', 'both', 'McNemar p', 'diff 95% CI'],
+                    [[paired['a_proved'], paired['b_proved'], paired['a_only_proved'], paired['b_only_proved'], paired['both'],
+                      paired['mcnemar_exact_p'], f"[{paired['paired_diff_ci95'][0]:+.3f},{paired['paired_diff_ci95'][1]:+.3f}]"]])]
     if 'tacle_unwind256' in summary:
-        md += ['', f"TACLe independent re-labelling at unwind 256: {summary['tacle_unwind256']}"]
-    (d / 'summary.json').write_text(json.dumps(summary, indent=2) + '\n')
-    (d / 'summary.md').write_text('\n'.join(md) + '\n')
-    print('independent ->', (d / 'summary.md'))
+        md += ['', '## TACLe 独立重标定（unwind 256） / TACLe re-labelling at unwind 256', '',
+               f"- 状态分布 / status counts: {summary['tacle_unwind256']}",
+               f"- 与 unwind 16 结论不同的条目 / entries whose verdict changes: {len(summary['tacle_label_changes_16_to_256'])}"]
+        for n, (a, b) in list(summary['tacle_label_changes_16_to_256'].items())[:20]:
+            md.append(f"  - {n}: unwind16 {a} -> unwind256 {b}")
+    (V103 / 'independent/summary.json').write_text(json.dumps(summary, indent=2) + '\n')
+    (V103 / 'independent/summary.md').write_text('\n'.join(md) + '\n')
+    print(json.dumps({'study': 'independent', 'cases': summary['cases'], 'false_cert': len(false_cert),
+                      'paired': paired}, indent=1))
 
 
 if __name__ == '__main__':

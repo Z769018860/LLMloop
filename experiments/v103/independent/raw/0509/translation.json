@@ -1,0 +1,22 @@
+{
+  "original_function": "void CWE190_Integer_Overflow__int64_t_max_preinc_05_bad() {\n    long data;\n    data = 0LL;\n    if (staticTrue) {\n        data = 9223372036854775807LL;\n    }\n    if (staticTrue) {\n        {\n            ++data;\n            long result = data;\n            printLongLongLine(result);\n        }\n    }\n}",
+  "source": "int f(int staticTrue)\n{\n  long result = 0;\n  long data = 0;\n  data = 0LL;\n  if (staticTrue)\n  {\n    data = 9223372036854775807LL;\n  }\n  if (staticTrue)\n  {\n    ++data;\n    result = data;\n  }\n  return 0;\n}\n\n",
+  "bounds": {
+    "staticTrue": [
+      -2147483648,
+      2147483647
+    ]
+  },
+  "notes": [
+    "dead trailing return",
+    "flattened blocks",
+    "global as parameter: staticTrue",
+    "hoisted loop-body declaration",
+    "memory abstraction (memory safety assumed)",
+    "opaque void call dropped: printLongLongLine",
+    "void -> int",
+    "zero-initialized locals"
+  ],
+  "extra": "['staticTrue']",
+  "nondet": "False"
+}

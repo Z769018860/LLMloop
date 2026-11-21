@@ -1,0 +1,23 @@
+{
+  "original_function": "void CWE190_Integer_Overflow__int64_t_max_preinc_12_bad() {\n    long data;\n    data = 0LL;\n    if (globalReturnsTrueOrFalse()) {\n        data = 9223372036854775807LL;\n    } else {\n        data = 2;\n    }\n    if (globalReturnsTrueOrFalse()) {\n        {\n            ++data;\n            long result = data;\n            printLongLongLine(result);\n        }\n    } else {\n        if (data < 9223372036854775807LL) {\n            ++data;\n            long result = data;\n            printLongLongLine(result);\n        } else {\n            printLine(\"data value is too large to perform arithmetic safely.\");\n        }\n    }\n}",
+  "source": "int f(int __z)\n{\n  long result = 0;\n  long result__u1 = 0;\n  long data = 0;\n  data = 0LL;\n  if (unknown())\n  {\n    data = 9223372036854775807LL;\n  }\n  else\n  {\n    data = 2;\n  }\n  if (unknown())\n  {\n    ++data;\n    result = data;\n  }\n  else\n  {\n    if (data < 9223372036854775807LL)\n    {\n      ++data;\n      result__u1 = data;\n    }\n    else\n    {\n    }\n  }\n  return 0;\n}\n\n",
+  "bounds": {
+    "__z": [
+      0,
+      0
+    ]
+  },
+  "notes": [
+    "dead trailing return",
+    "flattened blocks",
+    "hoisted loop-body declaration",
+    "memory abstraction (memory safety assumed)",
+    "nondeterministic result for globalReturnsTrueOrFalse",
+    "opaque void call dropped: printLine",
+    "opaque void call dropped: printLongLongLine",
+    "void -> int",
+    "zero-initialized locals"
+  ],
+  "extra": "[]",
+  "nondet": "True"
+}

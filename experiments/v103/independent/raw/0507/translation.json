@@ -1,0 +1,23 @@
+{
+  "original_function": "int main(void) {\n    iir_init();\n    iir_main();\n    return (iir_return() - 400 != 0);\n}",
+  "source": "int f(int __z)\n{\n  return (unknown() - 400) != 0;\n}\n\n",
+  "bounds": {
+    "__z": [
+      0,
+      0
+    ]
+  },
+  "notes": [
+    "callee iir_init not inlinable (pointers/arrays/structs): treated as an opaque call",
+    "callee iir_main not inlinable (non-integer type float): treated as an opaque call",
+    "callee iir_return not inlinable (non-integer type float): treated as an opaque call",
+    "for -> while",
+    "memory abstraction (memory safety assumed)",
+    "nondeterministic result for iir_return",
+    "opaque void call dropped: iir_init",
+    "opaque void call dropped: iir_main",
+    "void -> int"
+  ],
+  "extra": "[]",
+  "nondet": "True"
+}
