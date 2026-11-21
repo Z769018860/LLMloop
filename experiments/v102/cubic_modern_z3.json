@@ -1,0 +1,133 @@
+{
+  "z3_version": "4.15.4",
+  "result": {
+    "schema_version": 1,
+    "abi": "LP64",
+    "function": "phase_cubic",
+    "domain_smt2": "(and (>= typed_loop_n!0 0)\n     (<= typed_loop_n!0 1000)\n     (>= typed_loop_t!1 (- 1000))\n     (<= typed_loop_t!1 1000))",
+    "parameter_types": {
+      "n": "signed int",
+      "t": "signed int"
+    },
+    "semantics": "typed C integer semantics with explicit implementation choices",
+    "implementation_choices": {
+      "signed_cast": "two-complement modular",
+      "signed_right_shift": "arithmetic"
+    },
+    "summary_synthesis": [
+      {
+        "index": "i",
+        "candidates": {
+          "x": "((((i)**2 * ((-1 + i))**2) + entry(\"x\")) if (i <= Max(0,t)) else ((-1 * ((-1 + Max(0,t)))**2 * (Max(0,t))**2) + (2 * (i)**2 * ((-1 + i))**2) + entry(\"x\")))"
+        },
+        "candidate_only": true,
+        "requires_separate_source_proof": true,
+        "mathematical_derivations": [
+          {
+            "method": "counter-threshold additive polynomial candidate",
+            "counter": "i",
+            "split_count": "Min(i, Max(0, t))",
+            "increment_degree_limit": 3,
+            "prefix_base_and_successor_identities": true,
+            "distinct_increment_polynomials": 2,
+            "candidate_only": true,
+            "original_branch_proof_required": true
+          }
+        ],
+        "limitations": "candidate extraction approximates casts, intermediate safety and memory initialization/lifetimes; typed source proof is mandatory"
+      }
+    ],
+    "certificate": {
+      "method": "compositional nested trajectory induction",
+      "obligations": [
+        {
+          "obligation": "i entry and bound defined",
+          "proved": true
+        },
+        {
+          "obligation": "i counter representable",
+          "proved": true
+        },
+        {
+          "obligation": "i x range",
+          "proved": true,
+          "certificate": {
+            "method": "exact rational interval enclosure",
+            "bounds": {
+              "typed_nested_i!2": [
+                "0",
+                "1000"
+              ],
+              "typed_loop_t!1": [
+                "-1000",
+                "1000"
+              ],
+              "typed_loop_n!0": [
+                "0",
+                "1000"
+              ]
+            }
+          }
+        },
+        {
+          "obligation": "i x base",
+          "proved": true
+        },
+        {
+          "obligation": "i condition and exit",
+          "proved": true
+        },
+        {
+          "obligation": "i executed operations defined",
+          "proved": true
+        },
+        {
+          "obligation": "i step paths cover domain",
+          "proved": true
+        },
+        {
+          "obligation": "i path 0 successor",
+          "proved": true
+        },
+        {
+          "obligation": "i path 1 successor",
+          "proved": true
+        },
+        {
+          "obligation": "function prefix and conditions defined",
+          "proved": true
+        },
+        {
+          "obligation": "function paths cover domain",
+          "proved": true
+        },
+        {
+          "obligation": "function return 0 defined",
+          "proved": true
+        }
+      ],
+      "loops": [
+        {
+          "index": "i",
+          "nesting_depth": 1,
+          "formulas": {
+            "x": "((((i)**2 * ((-1 + i))**2) + entry(\"x\")) if (i <= Max(0,t)) else ((-1 * ((-1 + Max(0,t)))**2 * (Max(0,t))**2) + (2 * (i)**2 * ((-1 + i))**2) + entry(\"x\")))"
+          },
+          "entry_domain_smt2": "(and (>= typed_loop_n!0 0)\n     (<= typed_loop_n!0 1000)\n     (>= typed_loop_t!1 (- 1000))\n     (<= typed_loop_t!1 1000)\n     true)",
+          "iterations_smt2": "(ite (<= typed_loop_n!0 0) 0 typed_loop_n!0)",
+          "step_obligations_including_children": 4,
+          "definedness_proved": true,
+          "termination_proved": true
+        }
+      ]
+    },
+    "scope": "canonical scalar for loops at nesting depth up to 16, with supplied entry-relative state formulas; no memory or general loop exits",
+    "status": "PROVED_DEFINED_TYPED_C_NESTED",
+    "c_overflow_verified": true,
+    "termination_proved": true,
+    "return_smt2": "(let ((a!1 (* (+ (- 1) (ite (<= typed_loop_n!0 0) 0 typed_loop_n!0))\n              (+ (- 1) (ite (<= typed_loop_n!0 0) 0 typed_loop_n!0))\n              (ite (<= typed_loop_n!0 0) 0 typed_loop_n!0)\n              (ite (<= typed_loop_n!0 0) 0 typed_loop_n!0)))\n      (a!2 (* (- 1)\n              (+ (- 1) (ite (>= 0 typed_loop_t!1) 0 typed_loop_t!1))\n              (+ (- 1) (ite (>= 0 typed_loop_t!1) 0 typed_loop_t!1))\n              (ite (>= 0 typed_loop_t!1) 0 typed_loop_t!1)\n              (ite (>= 0 typed_loop_t!1) 0 typed_loop_t!1))))\n(let ((a!3 (ite (<= (ite (<= typed_loop_n!0 0) 0 typed_loop_n!0)\n                    (ite (>= 0 typed_loop_t!1) 0 typed_loop_t!1))\n                a!1\n                (+ a!2 (* 2 a!1)))))\n  (+ (- 9223372036854775808)\n     (mod (+ 9223372036854775808 a!3) 18446744073709551616))))",
+    "evaluation": {
+      "value": 16164
+    }
+  }
+}
