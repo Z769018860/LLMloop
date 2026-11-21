@@ -19,7 +19,8 @@ def main():
            'cbmc': subprocess.run([str(ext / 'native/usr/bin/cbmc'), '--version'], capture_output=True, text=True).stdout.strip()}
     print(json.dumps(env, indent=1), flush=True)
     src = Path(__file__).resolve().parents[1] / 'experiments/v103/full165'
-    out = Path(tempfile.mkdtemp(prefix='smoke-', dir=str(ext)))
+    out = Path(os.environ.get('SMOKE_DIR') or tempfile.mkdtemp(prefix='smoke-', dir=str(ext)))
+    out.mkdir(parents=True, exist_ok=True)
     for n in ['protocol.json', 'schedule.json', 'no-overflow.prp']:
         shutil.copy(src / n, out / n)
     plan = json.loads((out / 'protocol.json').read_text())

@@ -5,7 +5,7 @@
   "host_seconds": 60,
   "memory_bytes": 536870912,
   "reference": "CBMC6.11.0,64bit,signed-overflow,unwinding-assertions",
-  "driver_sha256": "a7fda7d0fe37e379ec3d8de042307e9887a4c29dae1ecb69344690e86c1abec0",
+  "driver_sha256": "52af994a6b0b3b49729334900a3559ed76b4fe8e2d281681dee7868ab5ee3be4",
   "cases": [
     {
       "corpus": "tacle",
@@ -1291,5 +1291,22 @@
       },
       "family": "test"
     }
-  ]
+  ],
+  "protocol_amendment": {
+    "date": "2026-11-22",
+    "applied_before_any_run": true,
+    "reason": "the freeze wrote protocol.json before the first capture, so a plain re-entry aborted on an existing directory; the driver now resumes into an existing output directory and asserts that the frozen plan is identical",
+    "changed": [
+      "directory creation is idempotent and the existing protocol is required to equal the frozen plan exactly"
+    ],
+    "unchanged": [
+      "67 cases",
+      "unwind 256",
+      "60 s / 512 MiB caps",
+      "CBMC command line",
+      "outcome derivation"
+    ],
+    "driver_previous_sha256": "a7fda7d0fe37e379ec3d8de042307e9887a4c29dae1ecb69344690e86c1abec0",
+    "driver_new_sha256": "52af994a6b0b3b49729334900a3559ed76b4fe8e2d281681dee7868ab5ee3be4"
+  }
 }

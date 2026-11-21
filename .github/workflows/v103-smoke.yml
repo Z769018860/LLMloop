@@ -23,22 +23,24 @@ jobs:
       - name: Cache pinned external inputs
         uses: actions/cache@v4
         with:
-          path: ${{ github.workspace }}/../ext
+          path: ${{ runner.temp }}/ext
           key: ext-v103-${{ hashFiles('scripts/ci_setup_v103.sh') }}
       - name: Install package
-        run: python -m pip install -q -e '.[test,smt]'
+        run: python -m pip install -q -e '.[test,smt]' pyyaml
       - name: Prepare pinned inputs
         run: |
           chmod +x scripts/ci_setup_v103.sh
-          EXT="${{ github.workspace }}/../ext"
+          EXT="${{ runner.temp }}/ext"
           scripts/ci_setup_v103.sh "$EXT" svbench
           scripts/ci_setup_v103.sh "$EXT" tools
       - name: Three-path smoke run
-        run: python -u scripts/smoke_v103.py "${{ github.workspace }}/../ext"
+        env:
+          SMOKE_DIR: ${{ runner.temp }}/smoke-out
+        run: python -u scripts/smoke_v103.py "${{ runner.temp }}/ext"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: v103-smoke
-          path: ${{ github.workspace }}/../ext/smoke-*
+          path: ${{ runner.temp }}/smoke-out
           if-no-files-found: warn
           retention-days: 7
