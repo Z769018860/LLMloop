@@ -1,6 +1,15 @@
 import json, pathlib, sys
+import shutil
+import pytest
 ROOT = pathlib.Path(__file__).resolve().parent.parent; sys.path.insert(0, str(ROOT))
 E = ROOT / 'experiments'
+
+
+def _skip_without_cbmc():
+    """The re-check shells out to the CBMC toolchain; skip rather than fail when it is absent."""
+    missing = [b for b in ('cbmc', 'goto-cc', 'goto-instrument') if shutil.which(b) is None]
+    if missing:
+        pytest.skip('external CBMC toolchain not installed: ' + ', '.join(missing))
 
 def test_polynomial_equalities_mined_from_samples():
     from llmloop.houdini_while import polynomial_equalities
@@ -158,6 +167,7 @@ def test_v100_flat_recheck_recorded_without_failures():
     s = json.load(open(E / 'v099_fresh/flat_summary.json')); assert s['fresh']['proved'] == 91 and s['fresh']['verified_programs'] == 90
 
 def test_flat_recheck_is_sensitive_and_handles_nested_loops():
+    _skip_without_cbmc()
     import scripts.cert_recheck_flat_v100 as F
     src = "int f(int __z){\nint i = 0;\nint j = 3;\nwhile (i < 10)\n{\n  while (j < 12)\n  {\n    j = j - 1;\n    j = j + 2;\n  }\n\n  i = i + 1;\n}\n\nreturn 0;\n}\n"
     good = [['i >= 0', 'i <= 10', 'j >= 3', 'j <= 12', '(j == 3 or j == 12)', '(j == 3 or i >= 1)', '(j == 12 or i <= 0)'], ['i >= 0', 'i <= 9', 'j >= 3', 'j <= 12']]
