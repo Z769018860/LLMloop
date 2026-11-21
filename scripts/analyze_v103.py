@@ -19,7 +19,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 V103 = ROOT / 'experiments/v103'
 
-PROVED, REFUTED = 'TRUE', 'FALSE'
+PROVED, REFUTED, CONDITIONAL = 'TRUE', 'FALSE', 'CONDITIONAL_TRUE'
 UNDECIDED = {'UNKNOWN', 'UNSUPPORTED'}
 STOPPED = {'HOST_TIMEOUT', 'MEMORY_LIMIT'}
 BROKEN = {'PROCESS_ERROR', 'MALFORMED_OUTPUT', 'ERROR', 'NO_RESULT'}
@@ -28,6 +28,7 @@ BROKEN = {'PROCESS_ERROR', 'MALFORMED_OUTPUT', 'ERROR', 'NO_RESULT'}
 def bucket(status):
     if status == PROVED: return 'proved'
     if status == REFUTED: return 'refuted'
+    if status == CONDITIONAL: return 'conditional'
     if status in UNDECIDED: return 'undecided'
     if status in STOPPED: return 'resource_stop'
     if status in BROKEN: return 'broken'
@@ -120,12 +121,12 @@ def full165():
     md = ['# v1.03 full-165 comparison (all scheduled units in the denominator)', '',
           f"Units: 495 = 165 cases x 3 tools. Captured: {len(rows)}. Evidence: `results.json`, `raw/`.", '',
           '## Proof-only counts by sector', '']
-    head = ['sector', 'tool', 'units', 'proved', 'refuted', 'undecided', 'resource_stop', 'broken']
+    head = ['sector', 'tool', 'units', 'proved', 'refuted', 'undecided', 'conditional', 'resource_stop', 'broken']
     body = []
     for name, per_tool in per_sector.items():
         for t in tools:
             c = per_tool[t]
-            body.append([name, t, c['units'], c.get('proved', 0), c.get('refuted', 0), c.get('undecided', 0), c.get('resource_stop', 0), c.get('broken', 0)])
+            body.append([name, t, c['units'], c.get('proved', 0), c.get('refuted', 0), c.get('undecided', 0), c.get('conditional', 0), c.get('resource_stop', 0), c.get('broken', 0)])
     md.append(table_md(head, body))
     md += ['', '## Paired proof comparison on the same 165 units', '']
     md.append(table_md(['a', 'b', 'a only', 'b only', 'both', 'neither', 'McNemar p', 'diff a-b [95% CI]'],
@@ -192,9 +193,9 @@ def independent():
     md = ['# v1.03 independent external benchmark (all scheduled units in the denominator)', '',
           f"Units: 514 = (190 NIST + 67 TACLe) x 2 tools. Captured: {len(rows)}.", '',
           '## Proof-only counts', '']
-    body = [[c, t, v['units'], v.get('proved', 0), v.get('refuted', 0), v.get('undecided', 0), v.get('resource_stop', 0), v.get('broken', 0)]
+    body = [[c, t, v['units'], v.get('proved', 0), v.get('refuted', 0), v.get('undecided', 0), v.get('conditional', 0), v.get('resource_stop', 0), v.get('broken', 0)]
             for c, per in counts.items() for t, v in per.items()]
-    md.append(table_md(['corpus', 'tool', 'units', 'proved', 'refuted', 'undecided', 'resource_stop', 'broken'], body))
+    md.append(table_md(['corpus', 'tool', 'units', 'proved', 'refuted', 'undecided', 'conditional', 'resource_stop', 'broken'], body))
     md += ['', '## Labels', '',
            f"- labelled NIST units: {len(labelled)} (safe {len(safe)}, unsafe {len(unsafe)})",
            f"- false certifications by llmloop on upstream-unsafe units: {len(false_cert)} {false_cert if false_cert else ''}",
