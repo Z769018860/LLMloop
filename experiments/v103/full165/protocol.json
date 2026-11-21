@@ -1542,7 +1542,7 @@
   "timing": "concurrent throughput observations, not cross-tool speedup; wait4 CPU, sampled group RSS, stdout/stderr, actual commands retained",
   "pilot_disclosure": "GCD3 original inspected and Ultimate setup piloted before freeze; all165 selected before outcomes; no case removal",
   "frozen_source_sha256": {
-    "scripts/fairness_v103.py": "11c0ef0a2e1ddea5daeb9797612c4df898d9e035808ca43bb308ba846e8c77ba",
+    "scripts/fairness_v103.py": "3cf953af5d2607af5827fd9d2bc03ac10518934476eb4ea879afd49f458528be",
     "scripts/resource_capture.py": "53bb121bee8c601f9133a0d89d43976486d6416fccdda36de903ed32807b02e2",
     "scripts/ultimate_adapter_v103.py": "973ffd7a8280bd1e36f70858e38cfc89cb71b2d00366fa5dd07536013faac608",
     "scripts/svcomp_translate.py": "c4916068feffb68c33576e542ce8c6d453cda495b84dd8d6ef9f3926a6289b90",
@@ -1639,5 +1639,28 @@
     "llmloop/typed_recurrence.py": "3a9d942f8e97a0922c6fbd3e793548cc2ae12061efe7563a64221b0af25a8ab5",
     "llmloop/unbounded_memory.py": "1e316db2e4fecd2266be2052dee97d37f9eb9dabfd1b8270c766201b7684f9c5"
   },
-  "remote_model_calls": 0
+  "remote_model_calls": 0,
+  "protocol_amendment": {
+    "date": "2026-11-22",
+    "applied_before_any_run": true,
+    "reason": "the Linux host used to freeze v1.03 is not available in the continuation session; execution moves to the repository's established GitHub Actions substrate, whose 6 h job cap requires splitting the unchanged schedule across jobs",
+    "changed": [
+      "driver only: trial() hoisted to module scope with an identical body; optional --shard/--shards stride selection over the unchanged global schedule; per-shard result file; merge action requiring complete coverage and unique indices"
+    ],
+    "unchanged": [
+      "cases",
+      "schedule",
+      "tools and their command lines",
+      "600 s / 2 GiB (full-165) and 60 s / 512 MiB (external) caps",
+      "workers",
+      "seed",
+      "outcome derivation",
+      "remote_model_calls=0"
+    ],
+    "driver_previous_sha256": "11c0ef0a2e1ddea5daeb9797612c4df898d9e035808ca43bb308ba846e8c77ba",
+    "driver_new_sha256": "3cf953af5d2607af5827fd9d2bc03ac10518934476eb4ea879afd49f458528be",
+    "schedule_sha256_before_and_after": "6dc8143bf29897bc05be166b3ae879850a12f34ef254b9bf863c99962f0e4de5",
+    "expected_units": 495,
+    "note": "no outcome existed when the amendment was written; shard boundaries only choose which job runs a scheduled unit, they cannot change a unit's command, cap or recorded outcome"
+  }
 }

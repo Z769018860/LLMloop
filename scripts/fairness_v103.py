@@ -48,38 +48,63 @@ def worker(external,out,index):
         phases.append({'poly':poly,'status':status,'invariant':inv,'rounds':rounds,'log':log});save(d/'phases.json',phases)
         if status=='PROVED':save(d/'result.json',{'status':'TRUE','phases':phases});return
     save(d/'result.json',{'status':'UNKNOWN','phases':phases})
-def run(external,out):
-    plan=json.loads((out/'protocol.json').read_text());assert all(sha(ROOT/p)==v for p,v in plan['frozen_source_sha256'].items())
-    ult=external/'ultimate-v0.3.2/UAutomizer-linux';cbmc=external/'native/usr/bin/cbmc';tasks=json.loads((out/'schedule.json').read_text())
-    def trial(i,t):
-        d=out/'raw'/f'{i:04d}'
-        if(d/'outcome.json').exists():return json.loads((d/'outcome.json').read_text())
-        d.mkdir(parents=True,exist_ok=True);c=t['case'];p=external/'svbench/c'/c['name'];assert sha(p)==c['source_sha256'];save(d/'request.json',t);work=d/'work';work.mkdir(exist_ok=True);env=os.environ.copy()
+def trial(external,out,plan,i,t):
+    ult=external/'ultimate-v0.3.2/UAutomizer-linux';cbmc=external/'native/usr/bin/cbmc'
+    d=out/'raw'/f'{i:04d}'
+    if(d/'outcome.json').exists():return json.loads((d/'outcome.json').read_text())
+    d.mkdir(parents=True,exist_ok=True);c=t['case'];p=external/'svbench/c'/c['name'];assert sha(p)==c['source_sha256'];save(d/'request.json',t);work=d/'work';work.mkdir(exist_ok=True);env=os.environ.copy()
+    if t['tool']=='ultimate':
+        env['V103_ULTIMATE']=str(ult);argv=[sys.executable,'-u',str(ROOT/'scripts/ultimate_adapter_v103.py'),'--spec',str(out/'no-overflow.prp'),'--file',str(p),'--architecture','32bit'if c['abi']=='ILP32'else'64bit','--full-output','--witness-dir',str(work),'--core.toolchain.timeout.in.seconds','600']
+    elif t['tool']=='cbmc':argv=[str(cbmc),str(p),'--32'if c['abi']=='ILP32'else'--64','--no-standard-checks','--signed-overflow-check','--unwind','64','--unwinding-assertions','--json-ui']
+    else:argv=[sys.executable,'-u',str(Path(__file__).resolve()),'worker','--external',str(external),'--output',str(out),'--index',str(i)]
+    res=capture(argv,d,cwd=work,env=env,wall_seconds=plan['host_seconds'],memory_bytes=plan['memory_bytes']);status=res['stop_reason']or'ERROR'
+    if not res['stop_reason']:
         if t['tool']=='ultimate':
-            env['V103_ULTIMATE']=str(ult);argv=[sys.executable,'-u',str(ROOT/'scripts/ultimate_adapter_v103.py'),'--spec',str(out/'no-overflow.prp'),'--file',str(p),'--architecture','32bit'if c['abi']=='ILP32'else'64bit','--full-output','--witness-dir',str(work),'--core.toolchain.timeout.in.seconds','600']
-        elif t['tool']=='cbmc':argv=[str(cbmc),str(p),'--32'if c['abi']=='ILP32'else'--64','--no-standard-checks','--signed-overflow-check','--unwind','64','--unwinding-assertions','--json-ui']
-        else:argv=[sys.executable,'-u',str(Path(__file__).resolve()),'worker','--external',str(external),'--output',str(out),'--index',str(i)]
-        res=capture(argv,d,cwd=work,env=env,wall_seconds=plan['host_seconds'],memory_bytes=plan['memory_bytes']);status=res['stop_reason']or'ERROR'
-        if not res['stop_reason']:
-            if t['tool']=='ultimate':
-                m=re.search(r'Result:\s*\n\s*(TRUE|FALSE|UNKNOWN|ERROR|TIMEOUT)',(d/'stdout.txt').read_text(errors='replace'));status=m.group(1)if m else'NO_RESULT'
-            elif t['tool']=='cbmc':
-                try:
-                    blocks=json.loads((d/'stdout.txt').read_text());props=[p for b in blocks for p in b.get('result',[])];failed=[p for p in props if p['status']=='FAILURE'];save(d/'properties.json',[{k:v for k,v in p.items()if k!='trace'}for p in props])
-                    if res['exit_code']==10 and any(p.get('sourceLocation',{}).get('propertyClass')=='overflow'for p in failed):status='FALSE'
-                    elif res['exit_code']==0 and any(b.get('cProverStatus')=='success'for b in blocks):status='TRUE'
-                    else:status='UNKNOWN'
-                except ValueError:status='MALFORMED_OUTPUT'
-            elif(d/'result.json').exists():status=json.loads((d/'result.json').read_text())['status']
-        result={'index':i,'program':c['name'],'tool':t['tool'],'expected_nooverflow':c['expected_nooverflow'],'status':status,'upstream_label_conflict':c['expected_nooverflow']is True and status=='FALSE',**res};save(d/'outcome.json',result);return result
+            m=re.search(r'Result:\s*\n\s*(TRUE|FALSE|UNKNOWN|ERROR|TIMEOUT)',(d/'stdout.txt').read_text(errors='replace'));status=m.group(1)if m else'NO_RESULT'
+        elif t['tool']=='cbmc':
+            try:
+                blocks=json.loads((d/'stdout.txt').read_text());props=[p for b in blocks for p in b.get('result',[])];failed=[p for p in props if p['status']=='FAILURE'];save(d/'properties.json',[{k:v for k,v in p.items()if k!='trace'}for p in props])
+                if res['exit_code']==10 and any(p.get('sourceLocation',{}).get('propertyClass')=='overflow'for p in failed):status='FALSE'
+                elif res['exit_code']==0 and any(b.get('cProverStatus')=='success'for b in blocks):status='TRUE'
+                else:status='UNKNOWN'
+            except ValueError:status='MALFORMED_OUTPUT'
+        elif(d/'result.json').exists():status=json.loads((d/'result.json').read_text())['status']
+    result={'index':i,'program':c['name'],'tool':t['tool'],'expected_nooverflow':c['expected_nooverflow'],'status':status,'upstream_label_conflict':c['expected_nooverflow']is True and status=='FALSE',**res};save(d/'outcome.json',result);return result
+def run(external,out,shard=None,shards=None):
+    plan=json.loads((out/'protocol.json').read_text());assert all(sha(ROOT/p)==v for p,v in plan['frozen_source_sha256'].items())
+    tasks=json.loads((out/'schedule.json').read_text());assert len(tasks)==495
+    selected=[(i,t)for i,t in enumerate(tasks)if shards is None or i%shards==shard]
     rows=[]
     with ThreadPoolExecutor(plan['workers'])as pool:
-        for f in as_completed([pool.submit(trial,i,t)for i,t in enumerate(tasks)]):
+        for f in as_completed([pool.submit(trial,external,out,plan,i,t)for i,t in selected]):
             rows.append(f.result())
-            if len(rows)%10==0:print(json.dumps({'captured':len(rows),'planned':len(tasks),'counts':dict(collections.Counter(r['tool']+':'+r['status']for r in rows))}),flush=True)
-    unchanged=all(sha(ROOT/p)==v for p,v in plan['frozen_source_sha256'].items());save(out/'results.json',{'complete_capture':len(rows)==495,'source_unchanged':unchanged,'rows':sorted(rows,key=lambda r:r['index']),'counts':dict(collections.Counter(r['tool']+':'+r['status']for r in rows)),'remote_model_calls':0});assert unchanged
+            if len(rows)%10==0:print(json.dumps({'captured':len(rows),'planned':len(selected),'counts':dict(collections.Counter(r['tool']+':'+r['status']for r in rows))}),flush=True)
+    unchanged=all(sha(ROOT/p)==v for p,v in plan['frozen_source_sha256'].items())
+    payload={'complete_capture':len(rows)==len(selected),'source_unchanged':unchanged,'rows':sorted(rows,key=lambda r:r['index']),'counts':dict(collections.Counter(r['tool']+':'+r['status']for r in rows)),'remote_model_calls':0,
+             'shard':shard,'shards':shards,'planned':len(selected),'protocol_sha256':sha(out/'protocol.json'),'schedule_sha256':sha(out/'schedule.json')}
+    if shards is None:save(out/'results.json',payload)
+    else:(out/'shards').mkdir(exist_ok=True);save(out/'shards'/f'shard_{shard:02d}.json',payload)
+    assert unchanged
+def merge(out):
+    plan=json.loads((out/'protocol.json').read_text());tasks=json.loads((out/'schedule.json').read_text())
+    files=sorted((out/'shards').glob('shard_*.json'));assert files,'no shard results'
+    by_index={};per_shard={}
+    for f in files:
+        d=json.loads(f.read_text());assert d['protocol_sha256']==sha(out/'protocol.json')and d['schedule_sha256']==sha(out/'schedule.json')
+        assert d['complete_capture'],f'incomplete shard {f}'
+        per_shard[f.name]={'rows':len(d['rows']),'counts':d['counts']}
+        for r in d['rows']:
+            assert r['index']not in by_index,f'duplicate index {r["index"]}'
+            by_index[r['index']]=r
+    assert len(by_index)==len(tasks)==495,f'{len(by_index)} of {len(tasks)}'
+    rows=[by_index[i]for i in range(len(tasks))]
+    save(out/'results.json',{'complete_capture':True,'source_unchanged':all(sha(ROOT/p)==v for p,v in plan['frozen_source_sha256'].items()),'rows':rows,
+        'counts':dict(collections.Counter(r['tool']+':'+r['status']for r in rows)),'remote_model_calls':0,'merged_from_shards':per_shard,'schedule_sha256':sha(out/'schedule.json')})
+    print(json.dumps({'merged':len(rows),'shards':len(files),'counts':dict(collections.Counter(r['tool']+':'+r['status']for r in rows))},indent=1))
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=['freeze','run','worker']);p.add_argument('--external',type=Path,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument('--index',type=int);a=p.parse_args();a.external=a.external.resolve();a.output=a.output.resolve()
-    if a.action=='freeze':freeze(a.external,a.output)
-    elif a.action=='worker':worker(a.external,a.output,a.index)
-    else:run(a.external,a.output)
+    p=argparse.ArgumentParser();p.add_argument('action',choices=['freeze','run','worker','merge']);p.add_argument('--external',type=Path);p.add_argument('--output',type=Path,required=True);p.add_argument('--index',type=int);p.add_argument('--shard',type=int);p.add_argument('--shards',type=int);a=p.parse_args();a.output=a.output.resolve()
+    if a.action=='freeze':a.external=a.external.resolve();freeze(a.external,a.output)
+    elif a.action=='worker':a.external=a.external.resolve();worker(a.external,a.output,a.index)
+    elif a.action=='merge':merge(a.output)
+    else:
+        a.external=a.external.resolve();assert (a.shard is None)==(a.shards is None);run(a.external,a.output,a.shard,a.shards)
