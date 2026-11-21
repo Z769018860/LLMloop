@@ -6,6 +6,7 @@ on:
   push:
     branches: [research/v103-exec]
     paths: ['.github/workflows/v103-full.yml']
+  workflow_dispatch:
 permissions:
   contents: write
 concurrency:
@@ -26,7 +27,7 @@ jobs:
       - uses: actions/setup-java@v4
         with: {distribution: temurin, java-version: '21'}
       - name: Install package
-        run: python -m pip install -q -e '.[test,smt]' pyyaml
+        run: python -m pip install -q -e '.[test,smt,exp]'
       - name: Prepare pinned inputs
         run: |
           chmod +x scripts/ci_setup_v103.sh
@@ -62,7 +63,7 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
       - name: Install package
-        run: python -m pip install -q -e '.[test,smt]' pyyaml
+        run: python -m pip install -q -e '.[test,smt,exp]'
       - name: Prepare pinned inputs
         run: |
           chmod +x scripts/ci_setup_v103.sh
@@ -95,7 +96,7 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
       - name: Install package
-        run: python -m pip install -q -e '.[test,smt]' pyyaml
+        run: python -m pip install -q -e '.[test,smt,exp]'
       - name: Prepare pinned inputs
         run: |
           chmod +x scripts/ci_setup_v103.sh
@@ -117,8 +118,33 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
+  regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install package, tests and Clang
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y clang-18
+          python -m pip install -q -e '.[test,smt,exp]'
+          mkdir -p "$RUNNER_TEMP/bin"
+          ln -sf "$(command -v clang-18)" "$RUNNER_TEMP/bin/clang"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+      - name: Full regression
+        run: python -u scripts/regression_v103.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v103-regression
+          path: experiments/v103/regression
+          if-no-files-found: warn
+          retention-days: 30
+
   merge:
-    needs: [full165, independent, tacle-labels]
+    needs: [full165, independent, tacle-labels, regression]
     if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 60
@@ -127,13 +153,15 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
       - name: Install package
-        run: python -m pip install -q -e '.[test,smt]' pyyaml
+        run: python -m pip install -q -e '.[test,smt,exp]'
       - uses: actions/download-artifact@v4
-        with: {pattern: 'full165-shard-*', path: 'incoming'}
+        with: {pattern: 'full165-shard-*', path: 'incoming/full165', merge-multiple: true}
       - uses: actions/download-artifact@v4
-        with: {pattern: 'independent-shard-*', path: 'incoming'}
+        with: {pattern: 'independent-shard-*', path: 'incoming/independent', merge-multiple: true}
       - uses: actions/download-artifact@v4
-        with: {pattern: 'tacle-reference256', path: 'incoming'}
+        with: {pattern: 'tacle-reference256', path: 'incoming/tacle_reference256', merge-multiple: true}
+      - uses: actions/download-artifact@v4
+        with: {pattern: 'v103-regression', path: 'incoming/regression', merge-multiple: true}
       - name: Overlay shard outputs
         run: python -u scripts/overlay_v103.py incoming experiments/v103
       - name: Merge and analyse

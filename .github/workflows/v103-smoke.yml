@@ -5,6 +5,7 @@ on:
   push:
     branches: [research/v103-exec]
     paths: ['.github/workflows/v103-smoke.yml', 'scripts/smoke_v103.py']
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
@@ -26,7 +27,7 @@ jobs:
           path: ${{ runner.temp }}/ext
           key: ext-v103-${{ hashFiles('scripts/ci_setup_v103.sh') }}
       - name: Install package
-        run: python -m pip install -q -e '.[test,smt]' pyyaml
+        run: python -m pip install -q -e '.[test,smt,exp]'
       - name: Prepare pinned inputs
         run: |
           chmod +x scripts/ci_setup_v103.sh

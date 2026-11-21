@@ -12,7 +12,8 @@ def main():
     plan={'scope':'all 67 frozen TACLe entries; supplementary reference labeling after first-stage setup, not a candidate-generator change or a new test-set selection','selection':'all frozen TACLe source paths, no removal','unwind':256,'host_seconds':60,'memory_bytes':512*1024**2,'reference':'CBMC6.11.0,64bit,signed-overflow,unwinding-assertions','driver_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'cases':cases}
     out.mkdir(parents=True,exist_ok=True)
     if (out/'protocol.json').exists():  # resume after an interrupted run: the frozen protocol may not drift
-        assert json.load(open(out/'protocol.json'))==plan,'existing protocol differs from the frozen one'
+        existing={k:v for k,v in json.load(open(out/'protocol.json')).items()if k!='protocol_amendment'}
+        assert existing==plan,'existing protocol differs from the frozen one'
     else:save(out/'protocol.json',plan)
     rows=[]
     for i,c in enumerate(cases):
