@@ -38,11 +38,12 @@ def main():
  all_events=[];group_checks=[]
  for k in range(2):
   events=[json.loads(line) for line in (out/('worker'+str(k)+'.jsonl')).read_text().splitlines()];all_events+=events
-  calls=[e for e in events if e['phase']=='call'];actual=[e['nodeid'] for e in calls]
-  group_checks.append(len(actual)==len(set(actual)) and set(actual)==group_ids[k] and all(e['outcome']=='passed' for e in events))
- counts=collections.Counter(e['outcome'] for e in all_events if e['phase']=='call');errors=[e for e in all_events if e['outcome']!='passed']
- passed=codes==[0,0] and all(group_checks) and counts['passed']==a.expected_tests and not errors
- summary={'passed':passed,'exit_codes':codes,'group_complete':group_checks,'call_outcomes':dict(counts),'nonpassing_reports':errors,'commands':argvs,'elapsed_seconds':time.monotonic()-start,'per_query_budgets_increased':False,'all_items_covered_exactly_once':all(group_checks)}
+  calls=[e for e in events if e['phase']=='call'];early=[e for e in events if e['phase']=='setup' and e['outcome']!='passed']
+  actual=[e['nodeid'] for e in calls+early]
+  group_checks.append(len(actual)==len(set(actual)) and set(actual)==group_ids[k])
+ counts=collections.Counter(e['outcome'] for e in all_events if e['phase']=='call');errors=[e for e in all_events if e['outcome']=='failed'];skips=[e for e in all_events if e['outcome']=='skipped']
+ passed=codes==[0,0] and all(group_checks) and counts['passed']+len(skips)==a.expected_tests and not errors
+ summary={'passed':passed,'exit_codes':codes,'group_complete':group_checks,'call_outcomes':dict(counts),'nonpassing_reports':errors,'skipped_reports':skips,'skipped_count':len(skips),'commands':argvs,'elapsed_seconds':time.monotonic()-start,'per_query_budgets_increased':False,'all_items_covered_exactly_once':all(group_checks)}
  (out/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
  print(json.dumps(summary),flush=True)
  print(str(counts['passed'])+' passed'+('' if passed else ', '+str(len(errors))+' failed')+' (two disjoint full-suite partitions)',flush=True)

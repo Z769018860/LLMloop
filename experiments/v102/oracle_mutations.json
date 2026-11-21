@@ -1,0 +1,104 @@
+{
+  "scope": "three targeted oracle semantic mutants; no complete verifier/translator mutation score",
+  "all_detected": true,
+  "rows": [
+    {
+      "mutation": "correlated_calls",
+      "baseline_expected": "OVERFLOW",
+      "baseline": "OVERFLOW",
+      "mutant": "SAFE",
+      "detected": true,
+      "mutant_sha256": "df5b2f710a40b3d3acd55dceb0d51095fd23576e52f688770ef0e15afc3ffb82",
+      "replaced": "value = next(it); used.append(value); return value",
+      "replacement": "value = next(it); value = sequence[0]; used.append(value); return value",
+      "spec": {
+        "inputs": [
+          "a"
+        ],
+        "loc": [
+          "x",
+          "y"
+        ],
+        "lo": 0,
+        "hi": 0,
+        "inits": {
+          "x": "0",
+          "y": "0"
+        },
+        "cond": "nd",
+        "body": [
+          [
+            "if",
+            "nd",
+            "x = 0;",
+            "x = 2147483647 + 1;"
+          ]
+        ]
+      }
+    },
+    {
+      "mutation": "ignore_intermediate_overflow",
+      "baseline_expected": "OVERFLOW",
+      "baseline": "OVERFLOW",
+      "mutant": "SAFE",
+      "detected": true,
+      "mutant_sha256": "186e42d2c03da9030bedbf86df7ccce36fde0eabd9f5ccb65ed067bbfbfb4973",
+      "replaced": "if not INT_MIN <= r <= INT_MAX: raise Ovf()",
+      "replacement": "if False: raise Ovf()",
+      "spec": {
+        "inputs": [
+          "a"
+        ],
+        "loc": [
+          "x",
+          "y"
+        ],
+        "lo": 0,
+        "hi": 0,
+        "inits": {
+          "x": "0",
+          "y": "0"
+        },
+        "cond": "x < 1",
+        "body": [
+          [
+            "asg",
+            "x = (2147483647 + 1) - 1;"
+          ]
+        ]
+      }
+    },
+    {
+      "mutation": "lose_short_circuit",
+      "baseline_expected": "SAFE",
+      "baseline": "SAFE",
+      "mutant": "OVERFLOW",
+      "detected": true,
+      "mutant_sha256": "33f0409c7d204b5fef8740d1bceaca0c15f130b9773772006feede659df5189f",
+      "replaced": "r = bool(ev(v, env, choose))",
+      "replacement": "r = bool(ev(v, env, choose)); extra = [ev(w, env, choose) for w in n.values]",
+      "spec": {
+        "inputs": [
+          "a"
+        ],
+        "loc": [
+          "x",
+          "y"
+        ],
+        "lo": 0,
+        "hi": 0,
+        "inits": {
+          "x": "0",
+          "y": "0"
+        },
+        "cond": "x < 0 && 2147483647 + 1 > 0",
+        "body": [
+          [
+            "asg",
+            "x = 1;"
+          ]
+        ]
+      }
+    }
+  ]
+}
