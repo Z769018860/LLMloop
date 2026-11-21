@@ -1,6 +1,6 @@
 # 由不受信的提案生成并经未改动验证器认证的循环安全不变式 / Certified loop-safety invariants from untrusted proposals checked by an unchanged verifier（论文草稿 / paper draft, 中英文）
 
-> 状态 / status（v1.01）: 整合草稿；§4d 与 §5b 为最新（含能力边界）。整合草稿，数字取自仓库内各版本报告与 `experiments/`；每个数字都给出来源文件。Code2Inv 数字使用 v0.76 更正后的合并结果。 Consolidated draft; every number is taken from the per-version reports and `experiments/`; Code2Inv numbers are the corrected v0.76 merged ones.
+> 状态 / status（v1.02）: 整合草稿；§4e 新增真值审计与压力实验；§5b 能力边界保留。整合草稿，数字取自仓库内各版本报告与 `experiments/`；每个数字都给出来源文件。Code2Inv 数字使用 v0.76 更正后的合并结果。 Consolidated draft; every number is taken from the per-version reports and `experiments/`; Code2Inv numbers are the corrected v0.76 merged ones.
 
 ## 摘要 / Abstract
 **中文。** 我们研究 C 循环程序的“无未定义行为”证明：LLM、轨迹拟合器和 Houdini 只提出**不受信的候选**（区间/关系/谓词不变式、可选排名函数），由同一个**未改动的 Z3 验证器**在任意类型化状态上检查入口、归纳与出口义务；候选从不被信任。我们给出七种验证模式（精确轨迹、区间树、关系 `@rel`、分支内循环、单循环谓词模式（含 `unknown()` 非确定性与状态驱动）、多循环组合式、数学整数语义）、受信的规范化（C89 索引、`while`→`for`、循环后索引退出值）、终止性（排名函数）。在合成语料、自动译写的 SV-COMP（264 个循环程序）与 Code2Inv（134 个）上：数学整数语义下 Code2Inv 的 69 个 while 模式程序中 64 个被某个模型认证（Houdini 单独 53 个），期望违反断言的程序在所有阶段 **0 次被认证**；级联（生成器 → LLM → 反馈修复）省约 77% 的 LLM 调用。我们同时报告了否定结果（提示规则无益甚至有害、反馈修复收益很小）、CPAchecker 的更高决断率、真实代码覆盖几乎为零，以及三次自我更正（译写缺陷、提示覆盖、解释器缺陷）。
@@ -68,6 +68,18 @@
 **证书复核 / re-check.** 586 个证书：556 VERIFIED、0 FAILED、29 超时、1 错误；新集合 91 个被证明程序中 90 个有被独立复核的证书。Ultimate 的见证用 CPAchecker 验证器验证 51/52 通过——**证书可复核不是我们独有的**。
 **LLM 的真实贡献 / what the LLM really contributes.** 改为"LLM 只提原子"后每个模型证出 52–57/67（旧方案十几个），但默认 Houdini 已有 53；LLM 净增量约 0–4 个程序；回溯修复仅在 3/213（开发）与 3/350（新集合）个证明中起作用。
 **基准噪声 / benchmark noise.** SV-COMP 有 4 个 NoOverflows 预期标签错误（均有可重放的溢出见证，无工具对其给 TRUE）。
+
+## 4e. 真值标签审计与独立压力控制 / Oracle audit and independent pressure controls (v1.02)
+
+我们修正了一个合成基准真值缺陷：原生成器把同轮循环中各次 nondet 调用相关化，遗漏合法 C 执行。历史 `synth_0010.c` 的 SAFE 标签被输入 a=40 的溢出见证反驳，GCC O0 与 Clang O0/O2 均在原始源码上重放成功。历史文件保留并标注失效；这不是验证器误认证。另修复了 `nd` 子串替换破坏 Python `and` 的生成器问题。
+
+新协议在证明实验前冻结了 160 个随机生成的 int32 程序（181 次尝试，预算不足的 21 次保留），穷举入口与独立布尔选择的闭合状态图给出 114 SAFE、46 OVERFLOW。SAFE 允许循环不终止。两个模式 × 三个种子共 960 次完整记录：每轮 Houdini 证明 105/160、仅 True 不变式证明 13/160；两个模式分别对有溢出程序的 138 次运行均无误认证。该集合来自同一个自有生成器，不能替代独立外部基准，亦不证明一般前端覆盖。
+
+CBMC 6.11.0 对 160 个原始程序进行独立位精确检查（unwind 64、保留 unwinding assertions、10 秒宿主上限）：31 SAFE、38 OVERFLOW、82 UNKNOWN、9 超时，无确定结论矛盾。对全部 46 个正见证，GCC O0 与 Clang O0/O2 在原始及自动翻译源码上均全部检出；GCC O2 有 21/46 原始、24/46 翻译观察未检出（含死运算消除与超时），原始输出保留，不能据此认作 SAFE。这仅是正见证的翻译差分证据，不是普遍等价证明。完整表格、描述性程序级 bootstrap 和限制见 [v1.02 报告](report_v102_bilingual.md)。
+
+对 9 个默认未证明 SAFE 程序的事后多项式配置跟进（27 次）另在两个程序上取得额外证明，存在种子差异和 3 次宿主超时；不能把事后并集写成稳定重复的结果。全量工程回归完整覆盖 3552 项，但仍有 9 项失败和 13 项外部夹具缺失跳过，详见报告，当前不声称全绿。
+
+**English.** We repaired correlated nondeterministic choices in a synthetic ground-truth oracle, invalidating one historical SAFE label with independently replayed original-C overflow witnesses. A separately frozen, single-generator corpus contains 114 exhaustively SAFE and 46 OVERFLOW signed-int32 controls. Across three seeds, Houdini proves 105/160 per seed versus 13/160 for True-only invariants; neither mode certifies any overflow control. Bounded CBMC independently checks all original sources with no contradictory definite outcome (31 safe, 38 overflow, 82 unknown, 9 host timeouts). Native replay corroborates every positive witness with GCC O0 and Clang O0/O2 on both original and translated sources. Missed GCC O2 traps remain explicit failures of replay. These are synthetic robustness and positive differential controls, not external-benchmark generalization, universal translator equivalence or a state-of-the-art comparison.
 
 ## 5. 更正与披露 / Corrections and disclosures
 1. **译写缺陷（v0.76）**：Code2Inv 译写丢弃声明初始值，28 个程序结果无效，已更正并只重跑受影响部分后合并。 2. **提示覆盖（v0.74）**：Study W 首次运行因旧提示函数覆盖而无效，已重跑。 3. **解释器缺陷（v0.74）**：负数操作数中止采样；修复后拟合器结果不变。 4. **portfolio 信封缺陷（v0.68）**：`@rel` 被拒，已修复并对同批生成重验。 5. **CBMC 基线缺陷（v0.70/v0.73）**：常量边界循环展开不足，已修复。 6. 拟合器基函数（含 min/max）和 Houdini 候选空间在看过 Code2Inv 的失败后加入，**不是纯留出**；新增 min/max 基后在全新种子的合成语料上无回退（循环树 16/27、关系型 16/22、if-循环 6/19）。 8. **存量认证失效（v0.91）：** 695 条存量认证中 8 条在当前验证器下不再成立（形参修改缺陷）；留出集首轮 Ultimate/CPAchecker 因内存耗尽作废并重跑。 7. 每个 LLM 研究每程序 1 次采样（WM 另有 2 次重复，见 v0.77 报告）；无多重比较校正；无加速声明。

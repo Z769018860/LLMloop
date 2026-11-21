@@ -1,0 +1,42 @@
+{
+  "status": "UNKNOWN",
+  "c_overflow_verified": false,
+  "memory_safety_verified": false,
+  "termination_proved": false,
+  "reason": "List fold source proof failed",
+  "source_proof": {
+    "abi": "ILP32",
+    "function": "__list_fold_check",
+    "domain_smt2": "(and (>= typed_loop_n!27 0)\n     (<= typed_loop_n!27 100)\n     (>= typed_loop_delta!28 (- 2147483648))\n     (<= typed_loop_delta!28 2147483647)\n     (>= typed_loop___list_length!29 0)\n     (<= typed_loop___list_length!29 100))",
+    "parameter_types": {
+      "n": "signed int",
+      "delta": "signed int",
+      "__list_length": "signed int"
+    },
+    "semantics": "typed C integer semantics with explicit implementation choices",
+    "implementation_choices": {
+      "signed_cast": "two-complement modular",
+      "signed_right_shift": "arithmetic"
+    },
+    "summary_synthesis": [],
+    "certificate": {
+      "method": "compositional nested trajectory induction",
+      "obligations": [
+        {
+          "obligation": "__list_scan entry and bound defined",
+          "proved": true
+        },
+        {
+          "obligation": "__list_scan counter representable",
+          "proved": true
+        }
+      ],
+      "loops": []
+    },
+    "scope": "canonical scalar for loops at nesting depth up to 16, with supplied entry-relative state formulas; no memory or general loop exits",
+    "status": "UNKNOWN",
+    "c_overflow_verified": false,
+    "failed_obligation": "__list_scan __list_call_total range",
+    "reason": "timeout"
+  }
+}

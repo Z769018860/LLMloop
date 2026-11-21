@@ -19,6 +19,14 @@ void __VERIFIER_assume(int c){ __CPROVER_assume(c); }
 '''
 
 
+# Recent CBMC versions assert on calls with no body. Model our harness inputs
+# explicitly as arbitrary values, retaining every assertion and arithmetic check.
+PRE += '\n' + ''.join(
+    typ + ' ' + name + '(void){' + typ +
+    ' value; __CPROVER_havoc_object(&value); return value;}\n'
+    for typ, name in ND.items()
+)
+
 class Unsupported(Exception): pass
 
 

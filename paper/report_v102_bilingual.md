@@ -26,6 +26,9 @@ This is one self-authored generator family, not the missing independent external
 
 配对 bootstrap 以程序为抽样单位（三个种子保持在同一程序内），仅对 114 个 SAFE 程序：Houdini 减 trivial 的平均证明率差 0.807，描述性 95% percentile 区间 [0.737, 0.877]。Only one comparison is made; no multiple-comparison significance claim. Shared-host timing is not a general speedup claim. A failure to prove is not an overflow verdict.
 
+## 事后多项式配置 / Post-hoc existing polynomial profile
+All nine default-unproved SAFE programs were selected after observing the frozen study and tested with the existing `poly=True` candidate profile, unchanged verifier and query/host budgets. This is a selected follow-up, not a new holdout or part of the 960-run denominator. Across seeds 1/2/3 it proves 2 / 0 / 1 of nine; 2 distinct additional programs (`synth_0088.c`, `synth_0131.c`) are proved by at least one seed, while 3 runs hit the host deadline. No unsafe controls were included in this selected follow-up, so it supplies no separate poly-mode false-certification-rate estimate. The frozen default result remains 105/114 safe programs per seed; the post-hoc best-seed union is 107/114, not a uniformly repeated 107/114 result.
+
 ## 原始 C 的独立核验 / Independent original-source audit
 CBMC 6.11.0, signed-overflow checks, ILP32, unwind 64 with unwinding assertions, 10 s host deadline, two workers. All 160 original C files are included. A failed unwinding assertion alone is UNKNOWN. Full JSON output and property classes are retained.
 
@@ -37,7 +40,7 @@ CBMC 6.11.0, signed-overflow checks, ILP32, unwind 64 with unwinding assertions,
 Contradictions: 0. This bounded audit corroborates only definite outcomes; UNKNOWN and timeout do not validate labels and do not refute them. This is not a CBMC portfolio or SOTA comparison.
 
 ## 见证与翻译差分 / Witness and translation replay
-All 46 overflow witnesses are replayed on original and automatically translated source with GCC14 and Clang19 at O0/O2: 368 compiler/source observations, 323 detected overflows. Native nondet streams include the oracle inputs and independent choices. Full build/run output is retained.
+All 46 overflow witnesses are replayed on original and automatically translated source with GCC14 and Clang19 at O0/O2: 368 compiler/source observations, 323 detected overflows. Native nondet streams include the oracle inputs and independent choices. Build output and completed-run output are retained; timeout outcomes are retained without a completed-run output.
 
 | Compiler | Original overflow detected | Translated overflow detected |
 |---|---:|---:|
@@ -49,7 +52,7 @@ All 46 overflow witnesses are replayed on original and automatically translated 
 GCC O2 sometimes eliminates dead arithmetic before sanitizer instrumentation: 21 original and 24 translated observations did not replay an overflow. Missing traps/timeouts are retained, not converted to SAFE. A representative assembly diagnostic is archived. GCC O0 and Clang O0/O2 detect all 46 witnesses on both sources. This differential replay covers positive witnesses only; it is not universal translator equivalence or a native proof of the SAFE cases.
 
 ## 验证与复现 / Validation and reproduction
-Full regression not completed; see raw progress, with no full-pass claim.
+Complete suite: {'passed': 3530, 'failed': 9, 'skipped': 1}; total skipped reports 13; exit codes [1, 1]; full acceptance = False. Every collected item was covered exactly once: True. The 9 failures include 8 UNKNOWN proof results and one missing CBMC executable in that run; there are 13 skipped tests because optional external fixtures are absent. This is NOT a full-pass result. See regression_modern/summary.json. Separate follow-up of all nine failures after fixing CBMC helper modelling: {'passed': 2, 'failed': 7}, exit 1. These outcomes do not replace full-suite failures. The independent flat rechecker now defines typed arbitrary-value helpers via __CPROVER_havoc_object, retaining every assertion and arithmetic check; CBMC 6.11 had flagged bodyless helpers as no-body failures. The good nested-loop certificate and two false controls are retained in recheck_diagnostic/. No changes to llmloop/ or solver-query budgets.
 
 Synthetic runs use Python 3.12, SymPy 1.12.1, Z3 4.13.0.0 and pycparser 2.22 (the generated grammar is C11). The full repository also exercises C23 label/declaration parsing, so its modern dependency regression uses isolated pycparser 3.0 and Z3 4.15.4. The cubic-prefix obligation that returns UNKNOWN under Z3 4.13 is proved under 4.15.4 at the unchanged query limit (cubic_modern_z3.json). The interrupted old-parser full-suite attempt is archived separately; it is not counted as a complete regression. The initially misconfigured reach-safety translator attempt is also retained and excluded from experiment denominators.
 

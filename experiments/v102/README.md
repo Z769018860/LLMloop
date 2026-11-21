@@ -7,6 +7,7 @@ Read [the generated report](../../paper/report_v102_bilingual.md) before using c
 - `cbmc/`: 160 independent checks of original inputs; bounded unwinding failures are UNKNOWN. No contradictions.
 - `legacy_label_audit.json`, `legacy_witness/`: invalidation of the historical `v102_synth/synth_0010.c` SAFE label, with original-source native replay.
 - `oracle_mutations.json`: three deliberately broken oracle variants detected by semantic controls.
+- `posthoc_poly/`: 27 separately frozen follow-ups on all nine default-unproved SAFE cases; two distinct additional proofs across seeds and three host timeouts. Selected after observing default failures, not part of the core denominator.
 - `statistics.json`: program-level paired bootstrap, with all three seeds held together per program.
 - `unproved_safe_cases.json`: all nine safe programs not proved by the default Houdini configuration.
 

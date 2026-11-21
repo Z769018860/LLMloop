@@ -1,0 +1,66 @@
+{
+  "exit_code": 1,
+  "calls": [
+    {
+      "nodeid": "tests/test_counter_phases.py::test_multiple_coordinates_missing_else_and_cubic_prefix[long phase_cubic(int n,int t){long x=0;for(int i=0;i<n;i++){if(i<t){x+=1L*i*i*i;}else{x+=2L*i*i*i;}}return x;}-4041]",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 7.082227193000108
+    },
+    {
+      "nodeid": "tests/test_proof_normalization.py::test_source_renaming_and_counter_names_do_not_destabilize_fractional_prefix",
+      "phase": "call",
+      "outcome": "failed",
+      "duration": 5.573042299999997,
+      "longrepr": "def test_source_renaming_and_counter_names_do_not_destabilize_fractional_prefix():\n        for source in [RAW_CUBIC,RAW_CUBIC.replace('int n','int count').replace('i<n','i<count').replace('int t','int threshold').replace('i<t','i<threshold')]:\n            names={'count':[0,1000],'threshold':[-1000,1000]} if 'int count' in source else {'n':[0,1000],'t':[-1000,1000]}\n            r=analyze_request({'source':source,'frontend':'typed_nested','loop_summaries':'auto','parameter_bounds':names})\n>           assert r['status']=='PROVED_DEFINED_TYPED_C_NESTED',r\nE           AssertionError: {'schema_version': 1, 'abi': 'LP64', 'function': 'phase_cubic', 'domain_smt2': '(and (>= typed_loop_n!0 0)\nE                  (<= typed_loop_n!0 1000)\nE                  (>= typed_loop_t!1 (- 1000))\nE                  (<= typed_loop_t!1 1000))', ...}\nE           assert 'UNKNOWN' == 'PROVED_DEFIN...YPED_C_NESTED'\nE             \nE             - PROVED_DEFINED_TYPED_C_NESTED\nE             + UNKNOWN\n\ntests/test_proof_normalization.py:35: AssertionError"
+    },
+    {
+      "nodeid": "tests/test_typed_nested.py::test_three_levels_of_modular_state",
+      "phase": "call",
+      "outcome": "failed",
+      "duration": 5.103116047999947,
+      "longrepr": "def test_three_levels_of_modular_state():\n        source='''int f(int n,int m,int p){unsigned char x=0;\n            for(int i=0;i<n;i++){for(int j=0;j<m;j++){for(int k=0;k<p;k++){x++;}}}return x;}'''\n        obj={'source':source,'frontend':'typed_nested','parameter_bounds':{'n':[0,100],'m':[0,100],'p':[0,100]},\n             'loop_summaries':{'i':{'x':'i*m*p%256'},'j':{'x':'(entry(\"x\")+j*p)%256'},'k':{'x':'(entry(\"x\")+k)%256'}},\n             'inputs':{'n':5,'m':7,'p':9}}\n        report=analyze_request(obj)\n>       assert report['status']=='PROVED_DEFINED_TYPED_C_NESTED',report\nE       AssertionError: {'schema_version': 1, 'abi': 'LP64', 'function': 'f', 'domain_smt2': '(and (>= typed_loop_n!0 0)\nE              (<= typed_loop_...  (>= typed_loop_m!1 0)\nE              (<= typed_loop_m!1 100)\nE              (>= typed_loop_p!2 0)\nE              (<= typed_loop_p!2 100))', ...}\nE       assert 'UNKNOWN' == 'PROVED_DEFIN...YPED_C_NESTED'\nE         \nE         - PROVED_DEFINED_TYPED_C_NESTED\nE         + UNKNOWN\n\ntests/test_typed_nested.py:51: AssertionError"
+    },
+    {
+      "nodeid": "tests/test_typed_nested.py::test_polynomial_modular_successor_is_invariant_under_source_renaming",
+      "phase": "call",
+      "outcome": "failed",
+      "duration": 5.089943931000107,
+      "longrepr": "def test_polynomial_modular_successor_is_invariant_under_source_renaming():\n        for n,m,p,i,j,k in [('height','width','depth','row','col','inner'),('a','b','c','u','v','w')]:\n            source=f'''int f(int {n},int {m},int {p}){{unsigned char x=0;\n                for(int {i}=0;{i}<{n};{i}++){{for(int {j}=0;{j}<{m};{j}++){{\n                for(int {k}=0;{k}<{p};{k}++){{x++;}}}}}}return x;}}'''\n            report=analyze_request({'source':source,'frontend':'typed_nested',\n                'parameter_bounds':{n:[0,100],m:[0,100],p:[0,100]},\n                'loop_summaries':{i:{'x':f'{i}*{m}*{p}%256'},j:{'x':f'(entry(\"x\")+{j}*{p})%256'},k:{'x':f'(entry(\"x\")+{k})%256'}},\n                'inputs':{n:5,m:7,p:9}})\n>           assert report['status']=='PROVED_DEFINED_TYPED_C_NESTED',report\nE           AssertionError: {'schema_version': 1, 'abi': 'LP64', 'function': 'f', 'domain_smt2': '(and (>= typed_loop_height!0 0)\nE                  (<= typed_..._width!1 0)\nE                  (<= typed_loop_width!1 100)\nE                  (>= typed_loop_depth!2 0)\nE                  (<= typed_loop_depth!2 100))', ...}\nE           assert 'UNKNOWN' == 'PROVED_DEFIN...YPED_C_NESTED'\nE             \nE             - PROVED_DEFINED_TYPED_C_NESTED\nE             + UNKNOWN\n\ntests/test_typed_nested.py:176: AssertionError"
+    },
+    {
+      "nodeid": "tests/test_v091_features.py::test_flat_recheck_is_sensitive_and_handles_nested_loops",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.21253200299997843
+    },
+    {
+      "nodeid": "tests/test_list_consumer_arguments.py::test_long_consumer_conversion_uses_primary_abi_width[ILP32-1]",
+      "phase": "call",
+      "outcome": "failed",
+      "duration": 5.379883451999831,
+      "longrepr": "abi = 'ILP32', value = 1\n\n    @pytest.mark.parametrize('abi,value',[('LP64',4294967297),('ILP32',1),('LLP64',1)])\n    def test_long_consumer_conversion_uses_primary_abi_width(abi,value):\n        result=ListHeapCallsProgram(program('4294967297LL','long'),function='entry',abi=abi,parameter_bounds={'n':[0,100]},loop_summaries=summary(str(value))).report({'n':100,'delta':0},17)\n>       assert result['status']=='PROVED_DEFINED_TYPED_C_LIST_CALLS',result\nE       AssertionError: {'status': 'UNKNOWN', 'c_overflow_verified': False, 'memory_safety_verified': False, 'termination_proved': False, ...}\nE       assert 'UNKNOWN' == 'PROVED_DEFIN..._C_LIST_CALLS'\nE         \nE         - PROVED_DEFINED_TYPED_C_LIST_CALLS\nE         + UNKNOWN\n\ntests/test_list_consumer_arguments.py:92: AssertionError"
+    },
+    {
+      "nodeid": "tests/test_list_consumer_arguments.py::test_long_consumer_conversion_uses_primary_abi_width[LLP64-1]",
+      "phase": "call",
+      "outcome": "failed",
+      "duration": 5.404673733999971,
+      "longrepr": "abi = 'LLP64', value = 1\n\n    @pytest.mark.parametrize('abi,value',[('LP64',4294967297),('ILP32',1),('LLP64',1)])\n    def test_long_consumer_conversion_uses_primary_abi_width(abi,value):\n        result=ListHeapCallsProgram(program('4294967297LL','long'),function='entry',abi=abi,parameter_bounds={'n':[0,100]},loop_summaries=summary(str(value))).report({'n':100,'delta':0},17)\n>       assert result['status']=='PROVED_DEFINED_TYPED_C_LIST_CALLS',result\nE       AssertionError: {'status': 'UNKNOWN', 'c_overflow_verified': False, 'memory_safety_verified': False, 'termination_proved': False, ...}\nE       assert 'UNKNOWN' == 'PROVED_DEFIN..._C_LIST_CALLS'\nE         \nE         - PROVED_DEFINED_TYPED_C_LIST_CALLS\nE         + UNKNOWN\n\ntests/test_list_consumer_arguments.py:92: AssertionError"
+    },
+    {
+      "nodeid": "tests/test_list_consumer_arguments.py::test_guarded_payload_expression_preserves_short_circuit_definedness",
+      "phase": "call",
+      "outcome": "failed",
+      "duration": 6.038994574000071,
+      "longrepr": "def test_guarded_payload_expression_preserves_short_circuit_definedness():\n        source=program('delta','int',step='scale ? q->value/scale : 0',returned='total')\n        summaries=summary('0 if delta==0 else 1')\n        result=ListHeapCallsProgram(source,function='entry',parameter_bounds={'n':[0,100],'delta':[0,1]},loop_summaries=summaries).report({'n':100,'delta':0},17)\n>       assert result['status']=='PROVED_DEFINED_TYPED_C_LIST_CALLS',result\nE       AssertionError: {'status': 'UNKNOWN', 'c_overflow_verified': False, 'memory_safety_verified': False, 'termination_proved': False, ...}\nE       assert 'UNKNOWN' == 'PROVED_DEFIN..._C_LIST_CALLS'\nE         \nE         - PROVED_DEFINED_TYPED_C_LIST_CALLS\nE         + UNKNOWN\n\ntests/test_list_consumer_arguments.py:163: AssertionError"
+    },
+    {
+      "nodeid": "tests/test_llvm_benchmarks.py::test_independent_bit_reference_is_separate_from_safety_and_replayable[union_parity64]",
+      "phase": "call",
+      "outcome": "failed",
+      "duration": 5.545973328999935,
+      "longrepr": "case = {'name': 'union_parity64', 'function': '__paritydi2', 'file': 'paritydi2.c', 'types': {'a': (64, True)}, ...}\ndatabase = PosixPath('/tmp/pytest-of-agent/pytest-787/test_independent_bit_reference0/compile_commands.json')\n\n    @pytest.mark.parametrize('case',[c for c in CASES if c['expected_safety']!='UNKNOWN'],ids=[c['name'] for c in CASES if c['expected_safety']!='UNKNOWN'])\n    def test_independent_bit_reference_is_separate_from_safety_and_replayable(case,database):\n        unused,report,unused=analyze_case(case,database)\n        query,model=functional_proof(case,report['normalization']['source'])\n        if case['name']=='popcount64':\n            assert query['status']=='PROVED_FUNCTIONAL_BV_CUTS',query\n            assert query['total_timeout_ms']==5000\n            for step in query['steps']:\n                solver=z3.SolverFor(step['logic']);solver.set(timeout=5000);solver.from_string(step['refutation_smt2'])\n                assert step['result']=='unsat' and solver.check()==z3.unsat\n        else:\n>           assert query['status']=='PROVED_FUNCTIONAL_QF_BV',query\nE           AssertionError: {'status': 'UNKNOWN', 'query_result': 'unknown', 'timeout_ms': 4994, 'total_timeout_ms': 5000, ...}\nE           assert 'UNKNOWN' == 'PROVED_FUNCTIONAL_QF_BV'\nE             \nE             - PROVED_FUNCTIONAL_QF_BV\nE             + UNKNOWN\n\ntests/test_llvm_benchmarks.py:120: AssertionError"
+    }
+  ]
+}

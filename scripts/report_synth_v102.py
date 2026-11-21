@@ -24,10 +24,15 @@ def main():
     nc=collections.Counter((r['kind'],r['compiler'],r['optimization'])for r in native['rows']if r['replayed'])
     nt='\n'.join(f'| {cc} {opt} | {nc[("original",cc,opt)]}/46 | {nc[("translated",cc,opt)]}/46 |'for cc in ['gcc','clang']for opt in ['-O0','-O2'])
     bc=cbmc['counts'];bt='\n'.join(f'| {label} | {bc.get(label+":SAFE",0)} | {bc.get(label+":OVERFLOW",0)} | {bc.get(label+":UNKNOWN",0)} | {bc.get(label+":HOST_TIMEOUT",0)} |'for label in ['SAFE','OVERFLOW'])
+    poly=read('posthoc_poly/results.json');poly_counts=[sum(r['status']=='PROVED'for r in poly['rows']if r['seed']==seed)for seed in seeds]
     reg=D/'regression_modern/summary.json'
     regression='Full regression not completed; see raw progress, with no full-pass claim.'
     if reg.exists():
-        rr=json.loads(reg.read_text());regression=f"Complete suite: {rr.get('call_outcomes')}; exit codes {rr.get('exit_codes')}; full acceptance = {rr.get('passed')}. See regression_modern/summary.json."
+        rr=json.loads(reg.read_text());regression=f"Complete suite: {rr.get('call_outcomes')}; total skipped reports {rr.get('skipped_count')}; exit codes {rr.get('exit_codes')}; full acceptance = {rr.get('passed')}. Every collected item was covered exactly once: {rr.get('all_items_covered_exactly_once')}. The 9 failures include 8 UNKNOWN proof results and one missing CBMC executable in that run; there are 13 skipped tests because optional external fixtures are absent. This is NOT a full-pass result. See regression_modern/summary.json."
+    focused=D/'focused_recheck/summary.json'
+    if focused.exists():
+        fs=json.loads(focused.read_text());fc=collections.Counter(r['outcome']for r in fs['calls'])
+        regression+=f" Separate follow-up of all nine failures after fixing CBMC helper modelling: {dict(fc)}, exit {fs['exit_code']}. These outcomes do not replace full-suite failures. The independent flat rechecker now defines typed arbitrary-value helpers via __CPROVER_havoc_object, retaining every assertion and arithmetic check; CBMC 6.11 had flagged bodyless helpers as no-body failures. The good nested-loop certificate and two false controls are retained in recheck_diagnostic/. No changes to llmloop/ or solver-query budgets."
     report=f'''# v1.02：修正真值标签与独立压力实验 / Oracle repair and independent stress controls
 
 Base: `18d66724bfe94094afc5148ab2bac3dfaef3085d` on the latest experimental branch. No changes to `llmloop/` verifier code. No model calls or GitHub Actions.
@@ -55,6 +60,9 @@ This is one self-authored generator family, not the missing independent external
 
 配对 bootstrap 以程序为抽样单位（三个种子保持在同一程序内），仅对 114 个 SAFE 程序：Houdini 减 trivial 的平均证明率差 {gain:.3f}，描述性 95% percentile 区间 [{boots[249]:.3f}, {boots[9749]:.3f}]。Only one comparison is made; no multiple-comparison significance claim. Shared-host timing is not a general speedup claim. A failure to prove is not an overflow verdict.
 
+## 事后多项式配置 / Post-hoc existing polynomial profile
+All nine default-unproved SAFE programs were selected after observing the frozen study and tested with the existing `poly=True` candidate profile, unchanged verifier and query/host budgets. This is a selected follow-up, not a new holdout or part of the 960-run denominator. Across seeds 1/2/3 it proves {' / '.join(map(str,poly_counts))} of nine; {len(poly['newly_proved_programs'])} distinct additional programs (`synth_0088.c`, `synth_0131.c`) are proved by at least one seed, while {sum(r['status']=='HOST_TIMEOUT'for r in poly['rows'])} runs hit the host deadline. No unsafe controls were included in this selected follow-up, so it supplies no separate poly-mode false-certification-rate estimate. The frozen default result remains 105/114 safe programs per seed; the post-hoc best-seed union is 107/114, not a uniformly repeated 107/114 result.
+
 ## 原始 C 的独立核验 / Independent original-source audit
 CBMC 6.11.0, signed-overflow checks, ILP32, unwind 64 with unwinding assertions, 10 s host deadline, two workers. All 160 original C files are included. A failed unwinding assertion alone is UNKNOWN. Full JSON output and property classes are retained.
 
@@ -65,7 +73,7 @@ CBMC 6.11.0, signed-overflow checks, ILP32, unwind 64 with unwinding assertions,
 Contradictions: {len(cbmc['contradictions'])}. This bounded audit corroborates only definite outcomes; UNKNOWN and timeout do not validate labels and do not refute them. This is not a CBMC portfolio or SOTA comparison.
 
 ## 见证与翻译差分 / Witness and translation replay
-All 46 overflow witnesses are replayed on original and automatically translated source with GCC14 and Clang19 at O0/O2: {native['runs']} compiler/source observations, {sum(r['replayed']for r in native['rows'])} detected overflows. Native nondet streams include the oracle inputs and independent choices. Full build/run output is retained.
+All 46 overflow witnesses are replayed on original and automatically translated source with GCC14 and Clang19 at O0/O2: {native['runs']} compiler/source observations, {sum(r['replayed']for r in native['rows'])} detected overflows. Native nondet streams include the oracle inputs and independent choices. Build output and completed-run output are retained; timeout outcomes are retained without a completed-run output.
 
 | Compiler | Original overflow detected | Translated overflow detected |
 |---|---:|---:|
