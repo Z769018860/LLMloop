@@ -156,8 +156,14 @@ def full165():
                        [[p['a'], p['b'], p['a_proved'], p['b_proved'], p['a_only_proved'], p['b_only_proved'], p['mcnemar_exact_p']] for p in in_pairs]))
     md += ['', '## 覆盖包含的并集 / Coverage-inclusive union', '',
            f"- 任一工具证明 / proved by some tool: {len(proved_any)}/165",
-           f"- 仅非 LLM 工具证明 / by non-LLM tools only: {len(proved_nonllm)}/165",
-           f"- 只有带 LLM 的工具证明 / only by the LLM-assisted tool: {len(proved_any) - len(proved_nonllm)}",
+           f"- 仅非 llmloop 工具证明 / by a non-llmloop tool only: {len(proved_nonllm)}/165",
+           f"- 只有 llmloop 证明 / only by llmloop: {len(proved_any) - len(proved_nonllm)}",
+           '',
+           f"- 本次 llmloop 运行共发起远程模型调用 {summary['remote_model_calls']} 次：该臂是**确定性组合**"
+           "（默认配置；默认未证明时才启用既有多项式剖面），**不含 LLM**。因此上表的差值不是 LLM 的净贡献。 / "
+           f"llmloop made {summary['remote_model_calls']} remote model calls: this arm is the "
+           "**deterministic portfolio** (default configuration, falling back to the existing polynomial "
+           "profile), with **no LLM**. The union gap above is therefore not an LLM contribution.",
            '', '## 上游标签冲突（上游标为无溢出、工具给出溢出反例） / Upstream label conflicts', '']
     for t in tools: md.append(f"- {t}: {len(conflicts[t])}" + (f" -> {', '.join(conflicts[t])}" if conflicts[t] else ''))
     md += ['', '## 资源（并发分片下的观测值，不是配对加速比） / Resources', '']

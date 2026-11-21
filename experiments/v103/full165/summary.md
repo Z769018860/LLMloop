@@ -42,8 +42,10 @@ Denominator: 165 frozen cases x 3 tools = 495 runs; complete capture: True.
 ## 覆盖包含的并集 / Coverage-inclusive union
 
 - 任一工具证明 / proved by some tool: 143/165
-- 仅非 LLM 工具证明 / by non-LLM tools only: 135/165
-- 只有带 LLM 的工具证明 / only by the LLM-assisted tool: 8
+- 仅非 llmloop 工具证明 / by a non-llmloop tool only: 135/165
+- 只有 llmloop 证明 / only by llmloop: 8
+
+- 本次 llmloop 运行共发起远程模型调用 0 次：该臂是**确定性组合**（默认配置；默认未证明时才启用既有多项式剖面），**不含 LLM**。因此上表的差值不是 LLM 的净贡献。 / llmloop made 0 remote model calls: this arm is the **deterministic portfolio** (default configuration, falling back to the existing polynomial profile), with **no LLM**. The union gap above is therefore not an LLM contribution.
 
 ## 上游标签冲突（上游标为无溢出、工具给出溢出反例） / Upstream label conflicts
 

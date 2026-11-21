@@ -37,3 +37,28 @@ Denominator: 257 external cases (190 NIST + 67 TACLe) x 2 tools = 514 runs; comp
 | llmloop proved | CBMC proved | llmloop only | CBMC only | both | McNemar p | diff 95% CI |
 |---|---|---|---|---|---|---|
 | 0 | 80 | 0 | 80 | 0 | 0.0 | [-0.489,-0.353] |
+
+## TACLe 独立重标定（unwind 256） / TACLe re-labelling at unwind 256
+
+- 状态分布 / status counts: {'FALSE': 3, 'HOST_TIMEOUT': 2, 'MEMORY_LIMIT': 9, 'PROCESS_ERROR': 11, 'TRUE': 21, 'UNKNOWN': 21}
+- 与 unwind 16 结论不同的条目 / entries whose verdict changes: 27
+  - bench/kernel/bitonic/bitonic.c: unwind16 UNKNOWN -> unwind256 TRUE
+  - bench/kernel/bsort/bsort.c: unwind16 UNKNOWN -> unwind256 TRUE
+  - bench/kernel/complex_updates/complex_updates.c: unwind16 UNKNOWN -> unwind256 TRUE
+  - bench/kernel/cosf/cosf.c: unwind16 UNKNOWN -> unwind256 TRUE
+  - bench/kernel/countnegative/countnegative.c: unwind16 UNKNOWN -> unwind256 TRUE
+  - bench/kernel/cubic/cubic.c: unwind16 UNKNOWN -> unwind256 MEMORY_LIMIT
+  - bench/kernel/fft/fft.c: unwind16 UNKNOWN -> unwind256 PROCESS_ERROR
+  - bench/kernel/fir2dim/fir2dim.c: unwind16 UNKNOWN -> unwind256 TRUE
+  - bench/kernel/iir/iir.c: unwind16 UNKNOWN -> unwind256 TRUE
+  - bench/kernel/isqrt/isqrt.c: unwind16 UNKNOWN -> unwind256 PROCESS_ERROR
+  - bench/kernel/jfdctint/jfdctint.c: unwind16 UNKNOWN -> unwind256 FALSE
+  - bench/kernel/lms/lms.c: unwind16 UNKNOWN -> unwind256 TRUE
+  - bench/kernel/matrix1/matrix1.c: unwind16 UNKNOWN -> unwind256 TRUE
+  - bench/kernel/md5/md5.c: unwind16 UNKNOWN -> unwind256 MEMORY_LIMIT
+  - bench/parallel/rosace/thread2/ros_th2.c: unwind16 UNKNOWN -> unwind256 MEMORY_LIMIT
+  - bench/parallel/rosace/thread3/ros_th3.c: unwind16 UNKNOWN -> unwind256 PROCESS_ERROR
+  - bench/sequential/adpcm_enc/adpcm_enc.c: unwind16 UNKNOWN -> unwind256 FALSE
+  - bench/sequential/ammunition/ammunition.c: unwind16 UNKNOWN -> unwind256 MEMORY_LIMIT
+  - bench/sequential/dijkstra/dijkstra.c: unwind16 UNKNOWN -> unwind256 HOST_TIMEOUT
+  - bench/sequential/fmref/fmref.c: unwind16 UNKNOWN -> unwind256 TRUE
