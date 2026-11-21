@@ -15,6 +15,8 @@ concurrency:
 jobs:
   full165:
     runs-on: ubuntu-24.04
+    env:
+      PYTHONPATH: ${{ github.workspace }}
     timeout-minutes: 360
     strategy:
       fail-fast: false
@@ -53,6 +55,8 @@ jobs:
 
   independent:
     runs-on: ubuntu-24.04
+    env:
+      PYTHONPATH: ${{ github.workspace }}
     timeout-minutes: 360
     strategy:
       fail-fast: false
@@ -90,6 +94,8 @@ jobs:
 
   tacle-labels:
     runs-on: ubuntu-24.04
+    env:
+      PYTHONPATH: ${{ github.workspace }}
     timeout-minutes: 180
     steps:
       - uses: actions/checkout@v4
@@ -120,6 +126,8 @@ jobs:
 
   regression:
     runs-on: ubuntu-24.04
+    env:
+      PYTHONPATH: ${{ github.workspace }}
     timeout-minutes: 240
     steps:
       - uses: actions/checkout@v4
@@ -147,6 +155,8 @@ jobs:
     needs: [full165, independent, tacle-labels, regression]
     if: always()
     runs-on: ubuntu-24.04
+    env:
+      PYTHONPATH: ${{ github.workspace }}
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
