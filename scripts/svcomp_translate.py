@@ -6,7 +6,7 @@ import collections, json, re, subprocess, sys
 sys.setrecursionlimit(20000)
 from pathlib import Path
 from pycparser import c_parser, c_ast, c_generator
-ROOT = Path(__file__).resolve().parents[1]; BENCH = Path('/home/user/sosy-lab/sv-benchmarks/c'); sys.path.insert(0, str(ROOT))
+ROOT = Path(__file__).resolve().parents[1]; BENCH = __import__('os').environ.get('LLMLOOP_SVBENCH') and Path(__import__('os').environ['LLMLOOP_SVBENCH']) or Path('/home/user/sosy-lab/sv-benchmarks/c'); sys.path.insert(0, str(ROOT))
 DIRS = ['loops', 'loop-lit', 'loop-invariants', 'loop-simple', 'loop-acceleration', 'loop-new', 'loop-invgen', 'loop-zilu', 'loop-crafted', 'loop-industry-pattern']
 NONDET = {'bool': 'int', 'int': 'int', 'uint': 'unsigned int', 'short': 'short', 'ushort': 'unsigned short', 'char': 'char', 'uchar': 'unsigned char', 'long': 'long', 'ulong': 'unsigned long', 'longlong': 'long long', 'ulonglong': 'unsigned long long', 'unsigned': 'unsigned int'}
 LARGE = {'LARGE_INT': 1000000}

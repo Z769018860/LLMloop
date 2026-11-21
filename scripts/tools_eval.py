@@ -6,7 +6,8 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 ROOT = Path(__file__).resolve().parents[1]; sys.path.insert(0, str(ROOT))
 from scripts.cpachecker_eval import harness
-ULT = Path('/home/user/ext/ult_dl/UAutomizer-linux'); ESB = Path('/home/user/ext/esbmc_dl/release/bin/esbmc')
+from scripts import paths as P
+ULT = P.ULTIMATE; ESB = P.ESBMC
 PRP = 'CHECK( init(main()), LTL(G ! call(reach_error())) )\n'
 
 

@@ -9,7 +9,8 @@ import scripts.llm_study_w as W
 SET = os.environ.get('HO_SET', 'v091')
 HO = ROOT / {'v091': 'experiments/v091_heldout_posthoc/translated.json', 'v092': 'experiments/v092_scaling/translated.json', 'v093': 'experiments/v093_nooverflow/translated.json', 'v094': 'experiments/v094_nooverflow_ghost/translated.json'}[SET]
 import re
-BENCH = Path('/home/user/sosy-lab/sv-benchmarks/c')
+from scripts import paths as P
+BENCH = P.SVBENCH
 
 
 def abi_of(r):

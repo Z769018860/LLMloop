@@ -6,7 +6,8 @@ import collections, json, re, subprocess, sys, tempfile
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 ROOT = Path(__file__).resolve().parents[1]; sys.path.insert(0, str(ROOT))
-CPA = Path('/home/user/ext/cpachecker_dl/CPAchecker-4.2.2-unix')
+from scripts import paths as P
+CPA = P.CPACHECKER
 NONDET = {'int': '__VERIFIER_nondet_int', 'unsigned int': '__VERIFIER_nondet_uint', 'short': '__VERIFIER_nondet_short', 'unsigned short': '__VERIFIER_nondet_ushort', 'char': '__VERIFIER_nondet_char', 'unsigned char': '__VERIFIER_nondet_uchar', 'long': '__VERIFIER_nondet_long', 'unsigned long': '__VERIFIER_nondet_ulong'}
 HEAD = '''extern void abort(void);
 extern void __assert_fail(const char *, const char *, unsigned int, const char *) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__noreturn__));

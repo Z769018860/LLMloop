@@ -9,7 +9,8 @@ ROOT = Path(__file__).resolve().parents[1]; sys.path.insert(0, str(ROOT))
 OUT = ROOT / 'experiments' / os.environ.get('HYBRID_OUT', 'v097_hybrid'); PROTO = ROOT / 'experiments/protocols' / os.environ.get('HYBRID_PROTO', 'v097_study_hybrid.json')
 USE_CX = bool(os.environ.get('HYBRID_CX'))      # v0.99: repair prompts carry the verifier's concrete counterexample state
 MODELS = ['deepseek-v4.1-flash-ark', 'deepseek-v4.1-flash-itkk', 'gpt-4.1-mini', 'claude-dsflash-itkk']
-BENCH = Path('/home/user/sosy-lab/sv-benchmarks/c'); TEMP = 0.7; MAXTOK = 6000; REPAIRS = 2
+from scripts import paths as P
+BENCH = P.SVBENCH; TEMP = 0.7; MAXTOK = 6000; REPAIRS = 2
 
 
 def progs():

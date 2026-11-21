@@ -14,7 +14,7 @@ sys.setrecursionlimit(10000)
 ROOT = Path(__file__).resolve().parents[1]; sys.path.insert(0, str(ROOT))
 from scripts.memabs import Env, MemAbs
 from scripts.memsafe import MemSafe
-CU = Path('/tmp/cu'); G = c_generator.CGenerator()
+CU = Path(__import__('os').environ.get('LLMLOOP_CU', '/tmp/cu')); G = c_generator.CGenerator()
 EXITS = {'exit', '_exit', 'abort', 'usage_exit'}
 OUTPUT_ONLY = {'printf_unlocked', 'fprintf_unlocked', 'fputs_unlocked', 'putchar_unlocked', 'emit_try_help', 'emit_mandatory_arg_note', 'emit_size_note', 'emit_stdin_note', 'emit_bug_reporting_address', 'version_etc', 'fputs_unlocked', 'printf', 'fprintf', 'puts', 'putchar', 'fputs', 'fputc', 'putc', 'fwrite', 'fflush', 'perror', 'vfprintf', 'oputs_', 'emit_ancillary_info'}
 FORCED = {}
@@ -1360,7 +1360,7 @@ def run_file(args):
 
 def memsafe_one(args):
     row, = args
-    path = '/tmp/cu/' + ('gnulib/lib/' if (row.get('suite') or '').startswith('gnulib') else 'coreutils/src/') + row['file']
+    path = str(CU) + '/' + ('gnulib/lib/' if (row.get('suite') or '').startswith('gnulib') else 'coreutils/src/') + row['file']
     import multiprocessing as mp
     q = mp.get_context('fork').Queue()
     def work():

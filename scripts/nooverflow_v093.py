@@ -6,8 +6,9 @@ import collections, json, re, subprocess, sys, tempfile, time
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 ROOT = Path(__file__).resolve().parents[1]; sys.path.insert(0, str(ROOT))
-OUT = ROOT / 'experiments' / __import__('os').environ.get('NOOVF_DIR', 'v093_nooverflow'); BENCH = Path('/home/user/sosy-lab/sv-benchmarks/c')
-ULT = Path('/home/user/ext/ult_dl/UAutomizer-linux'); ESB = Path('/home/user/ext/esbmc_dl/release/bin/esbmc'); CPA = Path('/home/user/ext/cpachecker_dl/CPAchecker-4.2.2-unix')
+from scripts import paths as P
+OUT = ROOT / 'experiments' / __import__('os').environ.get('NOOVF_DIR', 'v093_nooverflow'); BENCH = P.SVBENCH
+ULT = P.ULTIMATE; ESB = P.ESBMC; CPA = P.CPACHECKER
 
 
 def progs():
