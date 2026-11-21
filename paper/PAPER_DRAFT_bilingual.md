@@ -1,16 +1,17 @@
 # 由不受信的提案生成并经未改动验证器认证的循环安全不变式 / Certified loop-safety invariants from untrusted proposals checked by an unchanged verifier（论文草稿 / paper draft, 中英文）
 
-> 状态 / status: 整合草稿，数字取自仓库内各版本报告与 `experiments/`；每个数字都给出来源文件。Code2Inv 数字使用 v0.76 更正后的合并结果。 Consolidated draft; every number is taken from the per-version reports and `experiments/`; Code2Inv numbers are the corrected v0.76 merged ones.
+> 状态 / status（v1.01）: 整合草稿；§4d 与 §5b 为最新（含能力边界）。整合草稿，数字取自仓库内各版本报告与 `experiments/`；每个数字都给出来源文件。Code2Inv 数字使用 v0.76 更正后的合并结果。 Consolidated draft; every number is taken from the per-version reports and `experiments/`; Code2Inv numbers are the corrected v0.76 merged ones.
 
 ## 摘要 / Abstract
 **中文。** 我们研究 C 循环程序的“无未定义行为”证明：LLM、轨迹拟合器和 Houdini 只提出**不受信的候选**（区间/关系/谓词不变式、可选排名函数），由同一个**未改动的 Z3 验证器**在任意类型化状态上检查入口、归纳与出口义务；候选从不被信任。我们给出七种验证模式（精确轨迹、区间树、关系 `@rel`、分支内循环、单循环谓词模式（含 `unknown()` 非确定性与状态驱动）、多循环组合式、数学整数语义）、受信的规范化（C89 索引、`while`→`for`、循环后索引退出值）、终止性（排名函数）。在合成语料、自动译写的 SV-COMP（264 个循环程序）与 Code2Inv（134 个）上：数学整数语义下 Code2Inv 的 69 个 while 模式程序中 64 个被某个模型认证（Houdini 单独 53 个），期望违反断言的程序在所有阶段 **0 次被认证**；级联（生成器 → LLM → 反馈修复）省约 77% 的 LLM 调用。我们同时报告了否定结果（提示规则无益甚至有害、反馈修复收益很小）、CPAchecker 的更高决断率、真实代码覆盖几乎为零，以及三次自我更正（译写缺陷、提示覆盖、解释器缺陷）。
+**更新(v1.01)。** 在 SV-COMP NoOverflows 上，结合 LLM 提议的原子、Houdini 弱化与未改动验证器，并配以可重放的证伪见证与 CBMC 独立复核：族不相交的新集合上我们证明 91/93、Ultimate 83/93（p≈0.02）；开发集判定 169 对 156；明确的能力边界是非线性多项式不变式（见 §5b）。 **Update (v1.01).** On SV-COMP NoOverflows, combining LLM-proposed atoms, Houdini weakening and the unchanged verifier with replayable falsification witnesses and independent CBMC re-checks: on a family-disjoint set we prove 91/93 vs Ultimate's 83/93 (p≈0.02); development set 169 vs 156 decided; the explicit capability boundary is nonlinear polynomial invariants (§5b).
 **English.** We study proving absence of undefined behaviour for C loop programs: LLMs, a trajectory fitter and Houdini only produce **untrusted candidates** (interval/relational/predicate invariants, optional ranking functions), which the **same unchanged Z3 verifier** checks on ANY typed state (entry, induction, exit); candidates are never trusted. We present seven verification modes (exact trajectory, interval trees, relational `@rel`, loops in branches, a single-loop predicate mode incl. `unknown()` nondeterminism and state-driven loops, compositional multi-loop, mathematical-integer semantics), trusted normalizations (C89 indices, `while`→`for`, post-loop index exit values) and termination via ranking functions. On synthetic corpora and automatically translated SV-COMP (264 loop programs) and Code2Inv (134): under mathematical integers 64 of Code2Inv's 69 while-mode programs are certified by some model (Houdini alone 53) and programs whose assertion fails are **never certified** at any stage; the cascade (generator → LLM → feedback repair) saves ~77% of LLM calls. We also report negative results (prompt rules neutral or harmful, little repair gain), CPAchecker's higher decision rate, near-zero coverage of real code, and three self-corrections (translator, prompt override, interpreter).
 
 ## 1. 方法 / Method
 - **信任基 / trust base.** 候选只是字符串；验证器（Z3 + 类型化 C 整数语义引擎）对任意满足候选的类型化状态检查：入口、归纳（一次迭代无未定义行为且保持）、出口（后续代码与返回表达式有定义）。规范化器（`llmloop/loop_index_normalize.py`）属于受信流程，均配原生 UBSan 差分测试。 Candidates are strings; the verifier (Z3 + typed C integer engine) checks entry, preservation (defined iteration) and exit for ANY typed state satisfying them; normalizers are part of the trusted pipeline and have native UBSan differential tests.
 - **模式 / modes.** `typed_invariant_tree`（计数循环树，区间 + `@rel` + 分支内循环）；`typed_invariant_while`（单循环谓词合取，`unknown()`/nondet 被改写为全称量化输入，可选 `ranking`，`integer_model` ∈ {c, mathematical}）；`typed_invariant_loops`（多个顺序/嵌套循环的组合式检查）。
 - **生成器 / generators.** LLM（6 个模型，其中 `claude-dsflash-itkk` 是 DeepSeek V4.1 Flash 别名）；轨迹拟合器（精确有理线性代数 + floor/ceil/min/max/指示项基，不受信）；采样 + Houdini（用验证器反例削弱）；LLM 候选原子 + Houdini 的混合方案；级联与反馈修复。
-- **可靠性证据 / soundness evidence.** 3518 项测试（全量，v0.90）；对小程序的穷举探索（认证 ⇒ 无可达未定义行为）；原生 UBSan 差分；**违例见证**：被找到具体违例的程序（C 语义 Code2Inv 34 个等）从未被任何生成器认证。 3405 tests; exhaustive exploration of small programs; native differentials; programs with a concrete violation witness were never certified.
+- **可靠性证据 / soundness evidence.** 全量测试（见 `docs/PAPER_READINESS.md` 最新条目）；对小程序的穷举探索（认证 ⇒ 无可达未定义行为）；原生 UBSan 差分；**违例见证**：被找到具体违例的程序（C 语义 Code2Inv 34 个等）从未被任何生成器认证。 3405 tests; exhaustive exploration of small programs; native differentials; programs with a concrete violation witness were never certified.
 
 ## 2. 基准 / Benchmarks
 | 语料 / corpus | 规模 / size | 来源 / source |
@@ -60,11 +61,30 @@
 - **v0.93 NoOverflows（族不相交、冻结在前）：** 预期无溢出 61 个：Ultimate 52、我们 47、CPAchecker 41、CBMC 5、ESBMC 2；有溢出 91 个我们 0 被认证；证书 CBMC 复核 113/119、0 失败。**未超过 Ultimate。** 见 `paper/report_v093_bilingual.md`。
 详见 `paper/report_v091_bilingual.md`。
 
+## 4d. UB 自由对比、族不相交评估与证书复核 / UB-freedom comparison, family-disjoint evaluation, certificate re-check (v0.93–v1.00)
+**设置 / setup.** SV-COMP NoOverflows（有符号溢出 = C 未定义行为）。翻译器与性质对齐（不翻译源码断言）、被修改参数保留入口副本 `p__in`、支配式死初始化；证明由 Houdini（默认/多项式配置）与 LLM 提议的**原子**（Houdini 弱化、未改动验证器验证）给出；**证伪**由原始文件本地编译 + 溢出陷阱 + 偏向边界的（可选持久选择）随机 nondet 给出，每个见证可重放；**证书**由 CBMC 独立复核（无契约、证明规则显式展开）。 
+**开发集（用于开发，数字为开发后）/ development set.** 63 个无溢出、110 个有溢出（4 个基准标签错误已按见证改标）：我们判定 169（61 证明 + 108 见证），Ultimate 156（56 + 100），ESBMC 105，CBMC 99，CPAchecker 42；配对 16 对 3。
+**族不相交集（`termination-15`、`termination-restricted-15`，冻结后未调整，无标签，用交叉一致性检验）/ family-disjoint set.** 93 个程序：我们 91 个证明 + 1 个见证 = 92，Ultimate 83（10 超时），CPAchecker 67，ESBMC/CBMC 各 10；配对 9 对 1，精确检验 p ≈ 0.02，0 矛盾。
+**证书复核 / re-check.** 586 个证书：556 VERIFIED、0 FAILED、29 超时、1 错误；新集合 91 个被证明程序中 90 个有被独立复核的证书。Ultimate 的见证用 CPAchecker 验证器验证 51/52 通过——**证书可复核不是我们独有的**。
+**LLM 的真实贡献 / what the LLM really contributes.** 改为"LLM 只提原子"后每个模型证出 52–57/67（旧方案十几个），但默认 Houdini 已有 53；LLM 净增量约 0–4 个程序；回溯修复仅在 3/213（开发）与 3/350（新集合）个证明中起作用。
+**基准噪声 / benchmark noise.** SV-COMP 有 4 个 NoOverflows 预期标签错误（均有可重放的溢出见证，无工具对其给 TRUE）。
+
 ## 5. 更正与披露 / Corrections and disclosures
 1. **译写缺陷（v0.76）**：Code2Inv 译写丢弃声明初始值，28 个程序结果无效，已更正并只重跑受影响部分后合并。 2. **提示覆盖（v0.74）**：Study W 首次运行因旧提示函数覆盖而无效，已重跑。 3. **解释器缺陷（v0.74）**：负数操作数中止采样；修复后拟合器结果不变。 4. **portfolio 信封缺陷（v0.68）**：`@rel` 被拒，已修复并对同批生成重验。 5. **CBMC 基线缺陷（v0.70/v0.73）**：常量边界循环展开不足，已修复。 6. 拟合器基函数（含 min/max）和 Houdini 候选空间在看过 Code2Inv 的失败后加入，**不是纯留出**；新增 min/max 基后在全新种子的合成语料上无回退（循环树 16/27、关系型 16/22、if-循环 6/19）。 8. **存量认证失效（v0.91）：** 695 条存量认证中 8 条在当前验证器下不再成立（形参修改缺陷）；留出集首轮 Ultimate/CPAchecker 因内存耗尽作废并重跑。 7. 每个 LLM 研究每程序 1 次采样（WM 另有 2 次重复，见 v0.77 报告）；无多重比较校正；无加速声明。
+
+## 5b. 能力边界（明确不声称的）/ Capability boundary (explicitly NOT claimed)
+以下是**当前方法的已知边界**，不是待办的"小问题"；论文把它们作为结果的一部分报告。 / These are **known limits of the current method**, reported as part of the results, not left as minor TODOs.
+1. **非线性多项式不变式。** `ps4–ps6`、`hard`、`divbin` 等（次数 ≥4 的幂和、二进制除法循环）**未认证**。我们区分了瓶颈：LLM 混合（4 模型 × 3 轮，带具体反例）全部卡住；对 `ps4` 手工给出几乎完整的不变式，**未改动的验证器**仍返回 UNKNOWN（四次多项式 + 符号分情形的出口义务）。故瓶颈**包含验证器的非线性求解能力**，验证器与其求解配置是约定的信任基，**未为提高数字而修改**。 Nonlinear polynomial invariants (power sums of degree ≥ 4, binary division loops) are **not certified**; the bottleneck includes the verifier's nonlinear solving, not only the generator; the verifier was **not modified** to improve numbers.
+2. **找违例是随机测试。** 证伪器不保证找到违例（`counterex1b`、`PodelskiRybalchenko-LICS2004-Fig2` 未找到）；不能证明"无违例"。 The falsifier is random testing; it cannot prove absence.
+3. **未判定的无溢出程序。** `nestedLoop-1`（Ultimate 证出）、`FMCAD2013-Fig1`（无工具判定）。 Undecided: `nestedLoop-1` (Ultimate proves it), `FMCAD2013-Fig1` (no tool decides it).
+4. **复核的性质。** CBMC 复核是我们对证明规则的再实现（位精确引擎），检验验证器实现与算术，**不检验证明规则本身**；含 `break/continue/return/goto` 的循环不支持；29 个证书复核超时。 The re-check is our re-implementation of the proof rule on a bit-precise engine; it does not test the rule itself; loops with jumps unsupported; 29 timeouts.
+5. **新集合没有真值标签。** 用交叉一致性（证明与可重放见证不可能并存）+ 独立复核替代；这不能发现"所有方法都错"的情形。 No ground-truth labels on the fresh set; consistency + re-check cannot reveal a case where every method is wrong.
+6. **LLM 的作用有限且不稳定。** 净增量约 0–4 个程序；修复轮边缘；单次采样（温度 0.7）；4 个有效模型（gemini 不可用、glm 不稳定）；可能见过公开基准。
+7. **性质差异。** 我们验证"无任何 UB（含除零等）"，比 no-overflow 更严格；工具检查回绕语义下的断言可达性或溢出。
+8. **范围。** 标量整数循环程序（单/嵌套/多循环、非确定性）；不含一般堆、数组/指针算术（内存安全仅为独立的弱契约结果，见 4b）、浮点、并发。 Scope: scalar-integer loop programs only.
 
 ## 6. 威胁有效性 / Threats to validity
 合成语料由生成器构造；译写改变性质表述；数学整数结论 ≠ C 语义结论；基准程序小；模型家族数量有限；LLM 输出随机；CPAchecker 比较的性质不同；真实代码覆盖近 0（Juliet 90–95% 函数无循环，其余带 I/O/指针；LIG-MM 为堆结构）。 Synthetic corpora are generator-built; translation changes the property statement; mathematical-integer conclusions are not C-semantics conclusions; benchmarks are small; limited model families; stochastic LLMs; CPAchecker compares a different property; real-code coverage is near zero.
 
 ## 7. 复现 / Reproducibility
-`python3 -m pytest -q`（3518 项，v0.90）；各研究：`scripts/llm_study_*.py {freeze,generate,verify}`，`scripts/llm_repair_cascade.py`，`scripts/cascade_report.py --merged`，`scripts/final_summary_v076.py`；数据与协议在 `experiments/` 与 `experiments/protocols/`（协议在生成前冻结并提交）。API 密钥仅经环境变量传入，未入库。
+`python3 -m pytest -q`（见 `docs/PAPER_READINESS.md` 最新条目）；各研究：`scripts/llm_study_*.py {freeze,generate,verify}`，`scripts/llm_repair_cascade.py`，`scripts/cascade_report.py --merged`，`scripts/final_summary_v076.py`；数据与协议在 `experiments/` 与 `experiments/protocols/`（协议在生成前冻结并提交）。API 密钥仅经环境变量传入，未入库。

@@ -265,3 +265,6 @@ LLM 提议原子 + Houdini + 修复(Study HY,协议冻结在前):NoOverflows 692
 
 ## v1.01
 nla 幂和程序(ps4–ps6、hard、divbin)瓶颈定性:析取界原子无增益;LLM 混合(4 模型×3 轮,带反例)全部 STUCK;手工近乎完整的不变式交给未改动验证器仍 UNKNOWN → 瓶颈含验证器的非线性求解能力,保持未解决。报告 paper/report_v100_bilingual.md 补充节。
+
+## 能力边界(v1.01 决定)
+非线性多项式不变式(ps4–ps6、hard、divbin)、nestedLoop-1、FMCAD2013-Fig1 作为明确能力边界写入论文草稿 §5b;不修改验证器。
