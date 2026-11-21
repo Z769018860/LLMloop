@@ -1,5 +1,7 @@
 # LLMloop 论文工作稿
 
+当前主稿：[PAPER_DRAFT_bilingual.md](PAPER_DRAFT_bilingual.md)，主线为标量整数循环的安全证明与可重放见证。最新证据边界和所需实验见 [Claude 分支审计](CLAUDE_BRANCH_AUDIT_20261122.md)。[draft.md](draft.md) 是较早的轨迹加速英文稿，尚未与当前主线同步；下文保留为早期研究阶段说明。
+
 现在可以写完整的**研究草稿**，还不能把它描述为“实证结论齐全、可直接投稿”的版本。
 本目录已提供 [英文正文](draft.md)、[证据清单](evidence.json)；
 [中文缺口与投稿准备度](../docs/PAPER_READINESS.md) 给出下一步优先级。
