@@ -1,0 +1,142 @@
+name: v1.04 hold-out witnesses
+
+# Independent validation of the proofs made on the 41 pre-registered exclusions.
+#
+# The hold-out run answers "how many of these unseen cases do we prove". This answers the question
+# that matters more: are the answers right? Each proof is exported as an SV-COMP correctness witness
+# and re-checked by CPAchecker 4.2.2 and Ultimate 0.3.2, exactly as the 165-case study did, but on
+# programs no earlier experiment translated.
+#
+# The exporter re-proves each case itself (`prove` inside `make`), so this is not reading the hold-out
+# run's verdicts: it is an independent pass through the same pipeline, and the witnesses are what the
+# two validators see.
+on:
+  push:
+    branches: [research/v103-exec]
+    paths: ['.github/workflows/v104-holdout-witness.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '21'}
+      - name: Install package
+        run: python -m pip install -q -e '.[test,smt,exp]'
+      - name: Prepare pinned inputs
+        run: |
+          chmod +x scripts/ci_setup_v103.sh
+          EXT="${{ runner.temp }}/ext"
+          scripts/ci_setup_v103.sh "$EXT" scale
+          scripts/ci_setup_v103.sh "$EXT" tools
+      - name: Export witnesses for shard ${{ matrix.shard }}
+        timeout-minutes: 90
+        continue-on-error: true
+        run: |
+          EXT="${{ runner.temp }}/ext"
+          python -u scripts/witness_v104.py make --external "$EXT" \
+            --output experiments/v104/witness/holdout41 \
+            --protocol experiments/v104/holdout41/protocol.json --svbench svbench-scale \
+            --shard ${{ matrix.shard }}/4 --column-base 1 --dialect set-20
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: holdout41-witness-${{ matrix.shard }}
+          path: experiments/v104/witness/holdout41
+          if-no-files-found: error
+          retention-days: 30
+
+  validate:
+    needs: export
+    if: always()
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        validator: [cpachecker, ultimate]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '21'}
+      - name: Install package
+        run: python -m pip install -q -e '.[test,smt,exp]'
+      - name: Prepare pinned inputs
+        run: |
+          chmod +x scripts/ci_setup_v103.sh
+          EXT="${{ runner.temp }}/ext"
+          scripts/ci_setup_v103.sh "$EXT" scale
+          scripts/ci_setup_v103.sh "$EXT" tools
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: holdout41-witness-*
+          merge-multiple: true
+          path: experiments/v104/witness/holdout41
+      - name: Validate with ${{ matrix.validator }}
+        timeout-minutes: 260
+        continue-on-error: true
+        run: |
+          EXT="${{ runner.temp }}/ext"
+          python -u scripts/witness_v104.py validate --external "$EXT" \
+            --output experiments/v104/witness/holdout41 \
+            --validator ${{ matrix.validator }} --timeout 600 --workers 2
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: holdout41-validated-${{ matrix.validator }}
+          path: experiments/v104/witness/holdout41
+          if-no-files-found: error
+          retention-days: 30
+
+  merge:
+    needs: validate
+    if: always()
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install package
+        run: python -m pip install -q -e '.[test,smt,exp]'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: holdout41-validated-*
+          merge-multiple: true
+          path: incoming
+      - name: Fold the results in
+        run: |
+          set -e
+          cp -a incoming/. experiments/v104/witness/holdout41/
+          python -u scripts/witness_v104.py merge --output experiments/v104/witness/holdout41
+          cat experiments/v104/witness/holdout41/summary.md
+      - name: Record evidence and push
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A experiments/v104/witness/holdout41
+          if git diff --cached --quiet; then echo 'no change'; exit 0; fi
+          git commit -q -m "v1.04: hold-out witnesses, checked by both validators [skip ci]"
+          for i in 1 2 3; do
+            git pull --rebase --quiet --autostash origin research/v103-exec \
+              && git push -q origin HEAD:refs/heads/research/v103-exec && break
+            sleep 5
+          done

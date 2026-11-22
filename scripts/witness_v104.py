@@ -533,9 +533,15 @@ def cpa_validate(external, program, witness, abi, log=None, timeout=300):
 
 # --------------------------------------------------------------------------- the frozen case set
 
-def case_set(external):
-    plan = json.loads(CASE_SET.read_text())
-    sv = external / 'svbench'
+def case_set(external, protocol=None, svbench='svbench'):
+    """The frozen case list and the checkout it is read from.
+
+    `protocol` and `svbench` exist because a second study (the hold-out of pre-registered exclusions)
+    needs the same exporter against a different frozen list and a different sparse checkout. The
+    defaults are the v1.03 165 so the witness batch is unaffected.
+    """
+    plan = json.loads(Path(protocol or CASE_SET).read_text())
+    sv = external / svbench
     got = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=sv, text=True).strip()
     if got != plan['svbench_pin']:
         raise SystemExit('svbench is at %s, expected the pin %s' % (got, plan['svbench_pin']))
@@ -556,8 +562,8 @@ def prove(source, bounds, abi):
 
 
 def make(external, out, only=(), limit=None, created=None, dialect='set-20', shard=None,
-         column_base=COLUMN_BASE):
-    plan, sv = case_set(external)
+         column_base=COLUMN_BASE, protocol=None, svbench='svbench'):
+    plan, sv = case_set(external, protocol, svbench)
     out.mkdir(parents=True, exist_ok=True)
     created = created or FREEZE_TIME
     import scripts.svcomp_translate as T
@@ -575,7 +581,10 @@ def make(external, out, only=(), limit=None, created=None, dialect='set-20', sha
     rows = []
     for c in cases:
         i = pos[c['name']]
-        p = sv / 'c' / c['name']
+        # The 165 protocol names a case by its `c/`-relative path with the extension
+        # (`termination-restricted-15/NO_24.c`); the hold-out protocol carries an explicit `path` and
+        # a label name without one. Take the path when it is there and fall back otherwise.
+        p = sv / 'c' / c.get('path', c['name']).replace('c/', '', 1)
         rec = {'index': i, 'name': c['name'], 'expected': c.get('expected_nooverflow')}
         try:
             source, bounds = T.translate(p)
@@ -885,6 +894,8 @@ if __name__ == '__main__':
                     help='merge only: comma-separated shard directories (default: --output)')
     ap.add_argument('--timeout', type=int, default=300, help='seconds per validation')
     ap.add_argument('--workers', type=int, default=2, help='concurrent validations')
+    ap.add_argument('--protocol', default='', help='frozen case list (default: the v1.03 165)')
+    ap.add_argument('--svbench', default='svbench', help='sparse checkout inside --external')
     a = ap.parse_args()
     out = Path(a.output).resolve()
     shard = None
@@ -893,7 +904,8 @@ if __name__ == '__main__':
         shard = (k, n)
     if a.action == 'make':
         make(Path(a.external), out, only={x for x in a.cases.split(',') if x}, limit=a.limit,
-             dialect=a.dialect, shard=shard, column_base=a.column_base)
+             dialect=a.dialect, shard=shard, column_base=a.column_base,
+             protocol=a.protocol or None, svbench=a.svbench)
     elif a.action == 'validate':
         validate(Path(a.external), out, limit=a.limit, validator=a.validator,
                  timeout=a.timeout, workers=a.workers)
