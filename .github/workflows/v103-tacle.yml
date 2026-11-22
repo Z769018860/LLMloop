@@ -29,9 +29,26 @@ jobs:
           scripts/ci_setup_v103.sh "$EXT" tacle
           scripts/ci_setup_v103.sh "$EXT" tools
       - name: Label TACLe at unwind 256
+        # The driver writes one directory per scheduled unit and refuses to reuse an existing one, so
+        # re-running it over committed evidence fails by design. The 67 runs are already in the tree;
+        # this job only re-runs when the record is incomplete, and never overwrites it.
+        env:
+          EXT: ${{ runner.temp }}/ext
         run: |
-          EXT="${{ runner.temp }}/ext"
-          python -u scripts/label_tacle_v103.py --external "$EXT" --output experiments/v103/tacle_reference256
+          python - <<'PY'
+          import json, os, subprocess, sys
+          from pathlib import Path
+          p = Path('experiments/v103/tacle_reference256/results.json')
+          done = json.loads(p.read_text()) if p.exists() else {}
+          if done.get('complete_capture') and len(done.get('rows', [])) == 67:
+              print('complete capture with 67 runs already recorded; nothing to re-run')
+              print(json.dumps(done.get('counts'), sort_keys=True))
+              sys.exit(0)
+          print('record incomplete; running the frozen schedule')
+          sys.exit(subprocess.call([sys.executable, '-u', 'scripts/label_tacle_v103.py',
+                                    '--external', os.environ['EXT'],
+                                    '--output', 'experiments/v103/tacle_reference256']))
+          PY
       - name: Pack artefacts
         if: always()
         run: python -u scripts/pack_v103.py experiments/v103/tacle_reference256/raw
