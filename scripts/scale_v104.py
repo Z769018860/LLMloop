@@ -79,7 +79,7 @@ def freeze(external, out, cap):
                          'property': 'no-overflow', 'expected': label,
                          'abi': doc['options']['data_model'],
                          'stratum': 'v103-165' if (d, y.stem) in frozen else 'added',
-                         'source_sha256': H.sha(src), 'yaml_sha256': H.sha(y)})
+                         'source_sha256': H.sha_source(src), 'yaml_sha256': H.sha_source(y)})
 
     # the frozen 165 by identity, then everything from termination-crafted, then the hash-ordered
     # prefix of termination-crafted-lit that lands the total on `cap`

@@ -60,6 +60,18 @@ def sha(p):
     return hashlib.sha256(Path(p).read_bytes()).hexdigest()
 
 
+def sha_source(p):
+    """Hash of a benchmark input, with CRLF folded to LF.
+
+    The corpora come from a git checkout, and the same revision is materialised with LF on a Linux
+    runner and with CRLF on the Windows box these protocols are frozen on, so `sha` alone makes the
+    freeze disagree with the run for a reason that has nothing to do with the corpus (run
+    45006927799 died on exactly this, first case, first shard). The revision's bytes are the ones
+    that matter, so both the freeze and the run fold line endings first.
+    """
+    return hashlib.sha256(Path(p).read_bytes().replace(b'\r\n', b'\n')).hexdigest()
+
+
 def repo_path(p):
     """Resolve a frozen source key back to a file.
 
@@ -146,7 +158,7 @@ def freeze(external, out):
                           'property': prop, 'expected': label.get('expected_verdict'),
                           'abi': doc['options']['data_model'],
                           'stratum': 'never-translated' if (d, src.name) not in parsed else 'seen-in-development',
-                          'source_sha256': sha(src), 'yaml_sha256': sha(y)})
+                          'source_sha256': sha_source(src), 'yaml_sha256': sha_source(y)})
     assert cases, 'no cases'
     assert sum(1 for c in cases if c['expected'] is None) == 0, 'unlabelled case in a frozen set'
     out.mkdir(parents=True, exist_ok=False)
@@ -205,7 +217,7 @@ def worker(external, out, index):
     c = task['case']
     d = out / 'raw' / ('%04d' % index)
     p = external / plan_dir(out) / c['path']
-    assert sha(p) == c['source_sha256']
+    assert sha_source(p) == c['source_sha256']
     import scripts.svcomp_translate as T
     from llmloop.houdini_loops import houdini_loops
     T.NOOVF = c['property'] == 'no-overflow'
@@ -241,7 +253,7 @@ def trial(external, out, plan, i, t):
     d.mkdir(parents=True, exist_ok=True)
     c = t['case']
     p = external / plan_dir(out) / c['path']
-    assert sha(p) == c['source_sha256']
+    assert sha_source(p) == c['source_sha256']
     save(d / 'request.json', t)
     env = os.environ.copy()
     env['V104_ULTIMATE'] = str(external / 'ultimate-v0.3.2/UAutomizer-linux')

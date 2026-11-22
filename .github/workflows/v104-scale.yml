@@ -5,7 +5,7 @@ name: v1.04 scale-up, 400 cases
 # the additions are termination-crafted and a hash-ordered prefix of termination-crafted-lit, so the
 # set is the same population with more samples -- a precision increase, not a change of task.
 #
-# Two failed attempts, both before the first case:
+# Three failed attempts, all before the first case:
 #   * 45005886487 -- the protocol was frozen on Windows, so its source-hash keys were
 #     `scripts\scale_v104.py`, and `Path / 'scripts\x.py'` is one odd file name on Linux rather than
 #     a directory traversal. Keys are now POSIX; the check folds both spellings either way.
@@ -13,6 +13,9 @@ name: v1.04 scale-up, 400 cases
 #     termination-restricted-15, so the first termination-crafted case was missing. The study now
 #     has its own checkout (`scale`) rather than widening the one the v1.03 protocols were frozen
 #     against.
+#   * 45006927799 -- the frozen source hashes were taken over CRLF bytes (a Windows checkout) while
+#     the runner materialises the same revision with LF. Benchmark inputs are now hashed with CRLF
+#     folded to LF, in the freeze and in the run.
 on:
   push:
     branches: [research/v103-exec]
