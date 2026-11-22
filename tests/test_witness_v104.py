@@ -262,18 +262,14 @@ def test_a_rejection_keeps_the_validator_s_own_sentence_and_drops_the_config_dum
     # instead of the finding.
     from scripts import witness_v104 as W
 
-    class Done:
-        returncode = 0
-        stdout = ('witness.validation.correctness.config = VALUE\n'
-                  'cpa.arg.proofWitness = true\n'
-                  'Invariant (i >= 0) does not hold at line 4\n'
-                  'Verification result: FALSE\n')
-        stderr = ''
-
     cpa = tmp_path / W.CPA_DIR / 'scripts'
     cpa.mkdir(parents=True)
     (cpa / 'cpa.sh').write_text('#!/bin/sh\n')
-    monkeypatch.setattr(W.subprocess, 'run', lambda *a, **k: Done())
+    monkeypatch.setattr(W, 'run_capture', lambda *a, **k: (
+        'witness.validation.correctness.config = VALUE\n'
+        'cpa.arg.proofWitness = true\n'
+        'Invariant (i >= 0) does not hold at line 4\n'
+        'Verification result: FALSE\n', 0, 1.0))
     res = W.cpa_validate(tmp_path, tmp_path / 'p.c', tmp_path / 'w.yml', 'LP64',
                          log=tmp_path / 'logs' / 'p.out.txt')
     assert res['result'] == 'FALSE'
@@ -285,15 +281,11 @@ def test_a_rejection_keeps_the_counterexample_the_run_deletes(tmp_path, monkeypa
     # artifact is kept, so copying it out is the only way a rejection stays explainable.
     from scripts import witness_v104 as W
 
-    class Done:
-        returncode = 0
-        stdout = 'Verification result: FALSE. Property violation (invalid invariant) found.\n'
-        stderr = ''
-
     cpa = tmp_path / W.CPA_DIR / 'scripts'
     cpa.mkdir(parents=True)
     (cpa / 'cpa.sh').write_text('#!/bin/sh\n')
-    monkeypatch.setattr(W.subprocess, 'run', lambda *a, **k: Done())
+    monkeypatch.setattr(W, 'run_capture', lambda *a, **k: (
+        'Verification result: FALSE. Property violation (invalid invariant) found.\n', 0, 1.0))
     log = tmp_path / 'logs' / '0007.cpachecker.out.txt'
     outdir = tmp_path / 'cpa' / '0007.cpachecker.out'
     outdir.mkdir(parents=True)
@@ -303,3 +295,69 @@ def test_a_rejection_keeps_the_counterexample_the_run_deletes(tmp_path, monkeypa
     kept = tmp_path / 'counterexamples' / '0007.cpachecker.out.txt'
     assert kept.exists() and 'invariant false' in kept.read_text()
     assert len(kept.read_text().splitlines()) <= 60
+
+
+def test_a_sum_of_two_variables_is_computed_in_a_wide_type():
+    # The atoms are facts about the integers, so a sum that leaves the int range is still true there.
+    # Written as C it would be computed in `int`, and under a no-overflow specification the invariant
+    # expression itself then violates the property: CPAchecker answered "Property violation (invalid
+    # invariant)" for termination-restricted-15/PastaB16.c, where the refutation state has
+    # y = 2147483646 and five of the twenty atoms compute a sum outside the int range.
+    assert atom_to_c('x__in + y <= 4294967294') == '((long long)x__in + (long long)y) <= 4294967294'
+    assert atom_to_c('y - x <= 4294967295') == '((long long)y - (long long)x) <= 4294967295'
+    # a single variable against a wide constant needs no cast: the comparison promotes on its own
+    assert atom_to_c('y <= 4294967294') == 'y <= 4294967294'
+    assert atom_to_c('x__in >= x') == 'x__in >= x'
+
+
+def test_a_timed_out_validator_is_killed_with_its_children(monkeypatch):
+    # `subprocess.run(timeout=...)` kills the wrapper, not the JVM it started. The JVM kept 4 GB and
+    # kept analysing, and three shards of run 45014235382 stalled for 40 minutes inside a step whose
+    # per-case budget is 150 s.
+    from scripts import witness_v104 as W
+    import subprocess as sp
+
+    killed = {}
+
+    class Fake:
+        pid = 4242
+
+        def communicate(self, timeout=None):
+            if not killed.get('first'):
+                killed['first'] = True
+                raise sp.TimeoutExpired('cpa.sh', timeout)
+            return '', ''
+
+        def kill(self):
+            killed['kill'] = True
+
+    class Posix:
+        # a stand-in for the os module that has the POSIX calls, since the test host may not
+        def getpgid(self, pid):
+            killed['pid'] = pid
+            return 4243
+
+        def killpg(self, pgid, sig):
+            killed['group'] = (pgid, sig)
+
+    monkeypatch.setattr(W.subprocess, 'Popen', lambda *a, **k: Fake())
+    monkeypatch.setattr(W, 'os', Posix())
+    with pytest.raises(sp.TimeoutExpired):
+        W.run_capture(['cpa.sh', 'x'], pathlib.Path('.'), 5)
+    assert killed['pid'] == 4242
+    assert killed['group'] == (4243, W.KILL_SIGNAL)
+
+
+def test_a_validator_that_answers_in_time_is_not_killed(monkeypatch):
+    from scripts import witness_v104 as W
+
+    class Fake:
+        pid = 1
+        returncode = 7
+
+        def communicate(self, timeout=None):
+            return 'Verification result: TRUE\n', ''
+
+    monkeypatch.setattr(W.subprocess, 'Popen', lambda *a, **k: Fake())
+    out, code, secs = W.run_capture(['cpa.sh'], pathlib.Path('.'), 5)
+    assert code == 7 and 'TRUE' in out and secs >= 0

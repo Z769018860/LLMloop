@@ -39,7 +39,9 @@ import argparse
 import collections
 import hashlib
 import json
+import os
 import re
+import signal
 import subprocess
 import sys
 import time
@@ -94,18 +96,30 @@ def dump(p, obj):
 # --------------------------------------------------------------------------- invariants -> C
 
 MOD_ATOM = re.compile(r'^(?P<lhs>\(?[\w\- +*]+\)?)\s*%\s*(?P<m>\d+)\s*==\s*(?P<r>-?\d+)$')
+# `a + b <= 4294967294` and `a - b >= -4294967295` are facts about the *integers*, and the atoms were
+# derived and evaluated that way. Written as C they are computed in `int`, and the intermediate sum
+# leaves the int range long before the comparison does -- at the very states where the bound is
+# tightest. Under a no-overflow specification such an invariant expression *is* the violation it is
+# meant to rule out: CPAchecker answers "Property violation (invalid invariant)".
+#
+# Run 45014235382, case termination-restricted-15/PastaB16.c: the refutation state is
+# x = 2, x__in = 2, y = y__in = 2147483646. All 20 atoms are true in Z there, and five of them
+# compute a sum outside the int range (x__in + y = 2147483648; y__in + y = 4294967292). The
+# invariants were never wrong; their transcription was.
+BIN_ATOM = re.compile(r'^(?P<a>[A-Za-z_]\w*)\s*(?P<op>[+-])\s*(?P<b>[A-Za-z_]\w*)\s*'
+                      r'(?P<rel><=|>=|<|>)\s*(?P<c>-?\d+)$')
+WIDE = 'long long'
+# SIGKILL is POSIX-only; the fallback only matters when this module is imported on Windows.
+KILL_SIGNAL = getattr(signal, 'SIGKILL', signal.SIGTERM)   # 64-bit on LP64 and on ILP32, unlike `long`
 
 
 def atom_to_c(atom):
     """One sampling atom, in the syntax the verifier evaluates, as a C expression with the same meaning.
 
-    The atoms are `eval`ed as Python (`houdini_while._holds`), so four things have to be said in C:
-    `True`/`False` are `1`/`0`, `or`/`and`/`not` are `||`/`&&`/`!`, and `%` is *floor* modulo. C's
-    `%` truncates towards zero, so for a negative left operand the two disagree; `((v % m) + m) % m`
-    is floor modulo for every integer (C result lies in (-m, m), adding m lands in (0, 2m), and the
-    outer % folds it back into [0, m)). Without that rewrite an atom like `x % 2 == 1` would be false
-    in C exactly on the negative odd values for which the verifier believed it true -- which a
-    validator would then report as a rejected witness, for a reason that is our transcription's.
+    The atoms are `eval`ed as Python (`houdini_while._holds`), so five things have to be said in C:
+    `True`/`False` are `1`/`0`, `or`/`and`/`not` are `||`/`&&`/`!`, `%` is *floor* modulo, a sum or
+    difference of two variables must not be *computed* in `int` (see `BIN_ATOM`), and the comparison
+    against an out-of-range constant must not be done in `int` either.
     """
     a = atom.strip()
     if a in ('True', 'true'):
@@ -114,6 +128,10 @@ def atom_to_c(atom):
         return '0'
     a = re.sub(r'\bnot\b', '!', a)
     a = a.replace(' or ', ' || ').replace(' and ', ' && ')
+    m = BIN_ATOM.match(a)
+    if m:
+        return '((%s)%s %s (%s)%s) %s %s' % (WIDE, m.group('a'), m.group('op'), WIDE, m.group('b'),
+                                             m.group('rel'), m.group('c'))
     m = MOD_ATOM.match(a)
     if m:
         lhs, mod, want = m.group('lhs').strip(), m.group('m'), m.group('r')
@@ -386,18 +404,14 @@ def ultimate_validate(external, program, witness, abi, log=None, timeout=300):
     cmd = ['python3', str(ult), '--spec', str(prp), '--file', Path(program).name,
            '--architecture', '32bit' if abi == 'ILP32' else '64bit',
            '--validate', str(Path(witness).name)]
-    t = time.time()
     try:
-        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout,
-                           cwd=str(Path(program).parent))
-        o = r.stdout + r.stderr
-        code = r.returncode
+        o, code, secs = run_capture(cmd, Path(program).parent, timeout)
     except subprocess.TimeoutExpired:
-        return {'result': 'TIMEOUT', 'seconds': round(time.time() - t, 1), 'cmd': cmd}
+        return {'result': 'TIMEOUT', 'seconds': timeout, 'cmd': cmd}
     if log:
         save(Path(log), '$ %s\n\nexit %s\n\n%s' % (' '.join(cmd), code, o))
     m = re.search(r'Result:\s*\n?\s*(TRUE|FALSE|UNKNOWN|ERROR|TIMEOUT)', o)
-    return {'result': m.group(1) if m else 'NO_RESULT', 'seconds': round(time.time() - t, 1),
+    return {'result': m.group(1) if m else 'NO_RESULT', 'seconds': secs,
             'exit': code, 'tail': [x for x in o.strip().splitlines() if x.strip()][-8:],
             'log': str(log) if log else None}
 
@@ -406,6 +420,37 @@ def validate_with(validator, external, program, witness, abi, log=None, timeout=
     if validator == 'ultimate':
         return ultimate_validate(external, program, witness, abi, log, timeout)
     return cpa_validate(external, program, witness, abi, log, timeout)
+
+
+def run_capture(cmd, cwd, timeout):
+    """Run a validator and kill its whole process group on timeout.
+
+    `subprocess.run(timeout=...)` kills the process it started. Both validators are shell or Python
+    wrappers that launch a JVM, so the JVM survives the kill, keeps 4 GB of heap and keeps analysing
+    -- and the next case competes with it. That is what turned three shards of run 45014235382 into
+    40-minute stalls inside a step whose per-case budget is 150 s: the pool waiting for the wrapper,
+    the wrapper already dead, the verifier still running. `start_new_session` puts the wrapper in its
+    own group so the group can be killed as a unit.
+    """
+    t = time.time()
+    p = subprocess.Popen(cmd, cwd=str(cwd), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                         text=True, start_new_session=True)
+    try:
+        out, err = p.communicate(timeout=timeout)
+        return out + err, p.returncode, round(time.time() - t, 1)
+    except subprocess.TimeoutExpired:
+        try:
+            if hasattr(os, 'killpg'):          # POSIX: kill the wrapper and the JVM it started
+                os.killpg(os.getpgid(p.pid), KILL_SIGNAL)
+            else:                              # Windows: no session groups, best effort
+                p.kill()
+        except OSError:
+            p.kill()
+        try:
+            p.communicate(timeout=30)
+        except subprocess.TimeoutExpired:
+            pass
+        raise
 
 
 def cpa_validate(external, program, witness, abi, log=None, timeout=300):
@@ -441,18 +486,14 @@ def cpa_validate(external, program, witness, abi, log=None, timeout=300):
            '--witness', str(witness), '--spec', str(prp),
            '--32' if abi == 'ILP32' else '--64', '--timelimit', '%ds' % (timeout - 30),
            '--output-path', str(outdir), Path(program).name]
-    t = time.time()
     try:
-        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout,
-                           cwd=str(Path(program).parent))
-        o = r.stdout + r.stderr
-        code = r.returncode
+        o, code, secs = run_capture(cmd, Path(program).parent, timeout)
     except subprocess.TimeoutExpired:
-        return {'result': 'TIMEOUT', 'seconds': round(time.time() - t, 1), 'cmd': cmd}
+        return {'result': 'TIMEOUT', 'seconds': timeout, 'cmd': cmd}
     if log:
         save(Path(log), '$ %s\n\nexit %s\n\n%s' % (' '.join(cmd), code, o))
     m = re.search(r'Verification result:\s*(TRUE|FALSE|UNKNOWN)', o)
-    res = {'result': m.group(1) if m else 'NO_RESULT', 'seconds': round(time.time() - t, 1),
+    res = {'result': m.group(1) if m else 'NO_RESULT', 'seconds': secs,
            'exit': code, 'tail': [x for x in o.strip().splitlines() if x.strip()][-8:],
            'log': str(log) if log else None}
     if res['result'] != 'TRUE':

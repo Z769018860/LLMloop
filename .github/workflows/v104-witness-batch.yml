@@ -24,6 +24,11 @@ on:
   push:
     paths: ['.github/workflows/v104-witness-batch.yml']
   workflow_dispatch:
+    inputs:
+      cases:
+        description: 'comma-separated case names; empty = all 165'
+        required: false
+        default: ''
 permissions:
   contents: write
 concurrency:
@@ -120,10 +125,15 @@ jobs:
           scripts/ci_setup_v103.sh "$EXT" tools
       - name: Export shard ${{ matrix.shard }}
         timeout-minutes: 140
+        env:
+          CASES: ${{ inputs.cases }}
         run: |
+          # With --cases, nine of the ten shards come out empty on purpose: the point of that mode is
+          # to ask a specific question about a named witness, not to measure a rate.
           python -u scripts/witness_v104.py make --external "${{ runner.temp }}/ext" \
             --output "experiments/v104/witness/full165/shard${{ matrix.shard }}" \
-            --shard ${{ matrix.shard }}/10 --column-base 1 --dialect set-20
+            --shard ${{ matrix.shard }}/10 --column-base 1 --dialect set-20 \
+            --cases "$CASES"
       - name: Validate with CPAchecker
         timeout-minutes: 90
         continue-on-error: true
