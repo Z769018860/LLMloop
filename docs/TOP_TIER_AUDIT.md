@@ -147,6 +147,39 @@ invariant witness，交给 CPAchecker 的 `correctness-witness-validation` 跑�
 
 ---
 
+### 4.6 七次"看起来是工具结论"的 harness 故障
+
+E1/E4 这一轮补实验里，**每一次跑出来的异常结果都是我们自己的 bug，没有一次是工具的能力**。
+按发生顺序记下来，因为这类错误的共同点是：它们出现在结果表里，而不出现在报错里。
+
+| # | 症状（结果表里看到的） | 真实原因 | 谁抓住了它 |
+| --- | --- | --- | --- |
+| 1 | CBMC 把 154 个上游标 `true` 的用例判 FALSE，像 55% 误报率 | 把 `main.unwind.0` 的**截断**当成反驳；309 次"反驳"里 204 次只是没展开够 | 复算存下的 `properties.json` |
+| 2 | Ultimate 400 格 0.12 s 全 `MALFORMED_OUTPUT` | 适配器读 `V103_ULTIMATE`，驱动只设了 `V104_ULTIMATE` | 看耗时（0.12 s 不可能是分析） |
+| 3 | Ultimate 400 格 0.23 s 全 `MALFORMED_OUTPUT`，而 merge 照旧给出 "143 vs 0，p=1.8e-43" | `--witness-dir` 指向一个**从未创建**的目录 | 看退出码 2 + 认领"这个 p 值是在说一个坏掉的子进程" |
+| 4 | 六个探针连续报"见证格式不支持" | harness 在 `main` 里 `__VERIFIER_assume(n >= 0)`，而 `n` 只是 `f` 的形参 → 校验器拒绝的是**程序**，不是见证 | 修好后同一批探针立刻全绿 |
+| 5 | 多循环用例的见证会被判"拒绝" | `entry_type: invariant_set` 每个循环发一个列表项、只在第一项打开 `content:` → **不是合法 YAML**；单循环、selftest、六例探针全都正常 | 写离线单测时 `yaml.safe_load` 直接炸 |
+| 6 | 每次 FALSE 都没有理由 | 两个校验器写同一个 `logs/0030.out.txt`，后者覆盖前者 | 对比两个 `validation-*.json` 与日志内容 |
+| 7 | 10 个分片里 6 个"导出成功后失败" | 未证明的行只写了 `verdict` 没写 `status`，最后的 `Counter` KeyError；**活干完了才死** | `finish_plan` 现在点名缺字段的用例 |
+
+还有一次是把**通过的闸门报成失败**：`grep -q MISMATCH f && { ...; exit 1; }` 在 grep 没命中时
+以 1 退出，于是"两个校验器都能区分真假不变式"的控制步把 job 判红（run 45010561925）。
+
+**因此新增的、必须长期保留的四道闸门 / the four gates this produced:**
+
+1. **非空洞性控制（non-vacuity control）**：任何通过率之前，先用同一命令行验证一个**真**不变式
+   （期望 TRUE）和一个**假**不变式（期望 FALSE）。两个校验器在 run 45009866409 上都通过这一关
+   （CPAchecker 在 0 基和 1 基列都通过，Ultimate 只有 1 基）。没有这一关，通过率是"我的转写对不对"，
+   不是"不变式对不对"。
+2. **死列检测（dead column）**：某工具在所有单元上都没有判定时，`heldout_v104.py merge` 打双语警告，
+   并且**拒绝**为任何含它的配对给出 p 值。
+3. **每校验器一份日志 + 保留反例**：`validation-<validator>.json`、`logs/NNNN.<validator>.out.txt`、
+   `counterexamples/NNNN.<validator>.txt`；`cpa/` 可以删，理由不能删。
+4. **分片按协议位置编号**：`--shard I/N` 用用例在冻结协议里的位置，而不是分片内的位置；merge 报告
+   `duplicate_indices`，重复比缺失更危险。
+
+---
+
 ## 5. 事实问题 vs 表述问题
 
 | 问题 | 类型 | 能不能靠改写解决 |
