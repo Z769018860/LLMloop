@@ -1,0 +1,63 @@
+[
+  {
+    "model_requested": "gpt-4.1-mini",
+    "request": {
+      "model": "gpt-4.1-mini",
+      "temperature": 0.7,
+      "max_tokens": 6000,
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a loop-summary hypothesis generator. You only PROPOSE candidates; a separate verifier checks them against the real C semantics and rejects wrong ones. Reply with one JSON object and nothing else."
+        },
+        {
+          "role": "user",
+          "content": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nint c = 0;\nwhile ((x > y) && (x < 2147483647))\n{\n  x = x + 1;\n  y = y + 2;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"x__in\": [-2147483648, 2147483647], \"y__in\": [-2147483648, 2147483647]}"
+        }
+      ]
+    },
+    "started_utc": "2026-11-22T00:39:22Z",
+    "endpoint": "https://api.square16.org/v1",
+    "attempts": [
+      {
+        "attempt": 0,
+        "ok": true,
+        "http_status": 200,
+        "seconds": 3.46
+      }
+    ],
+    "seconds": 3.46,
+    "response_text": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"logprobs\":null,\"message\":{\"annotations\":[],\"content\":\"{\\\"atoms\\\": [\\\"x \\u003e= x__in\\\", \\\"y \\u003e= y__in\\\", \\\"x \\u003c= 2147483647\\\", \\\"y \\u003c= y__in + 2 * c\\\", \\\"c \\u003e= 0\\\", \\\"x - y \\u003c= x__in - y__in\\\", \\\"x - y \\u003e= 1\\\", \\\"c \\u003c= (2147483647 - x__in)\\\", \\\"c \\u003c= (y__in - x__in) // -1 if y__in \\u003c x__in else 0\\\", \\\"x \\u003c= 2147483646\\\", \\\"y \\u003c= 2147483647\\\", \\\"x + 1 \\u003c= 2147483647\\\", \\\"y + 2 \\u003c= 2147483647\\\", \\\"c == (x - x__in)\\\", \\\"c * 2 == y - y__in\\\", \\\"not (x \\u003e y and x \\u003c 2147483647) or (x == x__in + c and y == y__in + 2 * c)\\\", \\\"x \\u003e y\\\", \\\"x \\u003c 2147483647\\\", \\\"c \\u003c= 2147483647\\\", \\\"x - y == (x__in - y__in) + c * (-1)\\\", \\\"x - y \\u003e 0\\\"]}\",\"refusal\":null,\"role\":\"assistant\"}}],\"created\":1795307964,\"id\":\"chatcmpl-Empu0TnNBL4R4K7LhSbMVs71u5rrX\",\"model\":\"gpt-4.1-mini-2025-04-14\",\"object\":\"chat.completion\",\"routing\":{\"serving_pipereplica\":\"d20261107065220-116812aa-default-r1-dp0-default\"},\"service_tier\":\"default\",\"system_fingerprint\":\"fp_8ebcb6c932\",\"usage\":{\"completion_tokens\":257,\"completion_tokens_details\":{\"accepted_prediction_tokens\":0,\"audio_tokens\":0,\"reasoning_tokens\":0,\"rejected_prediction_tokens\":0},\"latency_checkpoint\":{\"engine_tbt_ms\":6,\"engine_ttft_ms\":28,\"engine_ttlt_ms\":1521,\"pre_inference_ms\":74,\"service_tbt_ms\":6,\"service_ttft_ms\":131,\"service_ttlt_ms\":1622,\"user_visible_ttft_ms\":57},\"prompt_tokens\":573,\"prompt_tokens_details\":{\"audio_tokens\":0,\"cached_tokens\":0},\"total_tokens\":830}}\n",
+    "served_model": "gpt-4.1-mini-2025-04-14",
+    "usage": {
+      "completion_tokens": 257,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "latency_checkpoint": {
+        "engine_tbt_ms": 6,
+        "engine_ttft_ms": 28,
+        "engine_ttlt_ms": 1521,
+        "pre_inference_ms": 74,
+        "service_tbt_ms": 6,
+        "service_ttft_ms": 131,
+        "service_ttlt_ms": 1622,
+        "user_visible_ttft_ms": 57
+      },
+      "prompt_tokens": 573,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0
+      },
+      "total_tokens": 830
+    },
+    "content": "{\"atoms\": [\"x >= x__in\", \"y >= y__in\", \"x <= 2147483647\", \"y <= y__in + 2 * c\", \"c >= 0\", \"x - y <= x__in - y__in\", \"x - y >= 1\", \"c <= (2147483647 - x__in)\", \"c <= (y__in - x__in) // -1 if y__in < x__in else 0\", \"x <= 2147483646\", \"y <= 2147483647\", \"x + 1 <= 2147483647\", \"y + 2 <= 2147483647\", \"c == (x - x__in)\", \"c * 2 == y - y__in\", \"not (x > y and x < 2147483647) or (x == x__in + c and y == y__in + 2 * c)\", \"x > y\", \"x < 2147483647\", \"c <= 2147483647\", \"x - y == (x__in - y__in) + c * (-1)\", \"x - y > 0\"]}",
+    "finish_reason": "stop",
+    "round": 0,
+    "prompt_sha256": "e63468a4e23121f080f082079df22e64ba539d94031f2f96a3acf312a6348c9e",
+    "prompt_text": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nint c = 0;\nwhile ((x > y) && (x < 2147483647))\n{\n  x = x + 1;\n  y = y + 2;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"x__in\": [-2147483648, 2147483647], \"y__in\": [-2147483648, 2147483647]}"
+  }
+]

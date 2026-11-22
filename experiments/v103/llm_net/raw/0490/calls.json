@@ -1,0 +1,221 @@
+[
+  {
+    "model_requested": "claude-sonnet-4-5-20250929",
+    "request": {
+      "model": "claude-sonnet-4-5-20250929",
+      "temperature": 0.7,
+      "max_tokens": 6000,
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a loop-summary hypothesis generator. You only PROPOSE candidates; a separate verifier checks them against the real C semantics and rejects wrong ones. Reply with one JSON object and nothing else."
+        },
+        {
+          "role": "user",
+          "content": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nint tmp = 0;\nint xtmp = 0;\nwhile (y != 0)\n{\n  tmp = y;\n  xtmp = x;\n  if ((x <= 0) || (y <= 0))\n  {\n    y = 0;\n  }\n  else\n  {\n    if (x == y)\n    {\n      y = 0;\n    }\n    else\n    {\n      while (xtmp > y)\n      {\n        xtmp = xtmp - y;\n      }\n\n    }\n  }\n  y = xtmp;\n  x = tmp;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"x__in\": [-2147483648, 2147483647], \"y__in\": [-2147483648, 2147483647]}"
+        }
+      ]
+    },
+    "started_utc": "2026-11-22T00:36:29Z",
+    "endpoint": "https://api.square16.org/v1",
+    "attempts": [
+      {
+        "attempt": 0,
+        "ok": true,
+        "http_status": 200,
+        "seconds": 8.344
+      }
+    ],
+    "seconds": 8.344,
+    "response_text": "{\"id\":\"msg_011CgxbAq1a4VYNdTZd4w2s0\",\"model\":\"claude-sonnet-4-5-20250929\",\"object\":\"chat.completion\",\"created\":1795307797,\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"```json\\n{\\\"atoms\\\": [\\n  \\\"y == 0 or (y \\u003e= 1 and y \\u003c= 2147483647)\\\",\\n  \\\"x \\u003e= -2147483648 and x \\u003c= 2147483647\\\",\\n  \\\"y \\u003e= -2147483648 and y \\u003c= 2147483647\\\",\\n  \\\"xtmp \\u003e= -2147483648 and xtmp \\u003c= 2147483647\\\",\\n  \\\"tmp \\u003e= -2147483648 and tmp \\u003c= 2147483647\\\",\\n  \\\"y == 0 or y == tmp\\\",\\n  \\\"xtmp == x or xtmp \\u003c= x\\\",\\n  \\\"tmp == y or tmp == 0\\\",\\n  \\\"x == tmp or x == xtmp\\\",\\n  \\\"xtmp \\u003e= 0 or y == 0\\\",\\n  \\\"xtmp \\u003c= xtmp + y or y \\u003e= 0\\\",\\n  \\\"y \\u003e 0 or y == 0\\\",\\n  \\\"xtmp \\u003e= 0 and xtmp \\u003c= x__in or not (x__in \\u003e 0 and y__in \\u003e 0)\\\",\\n  \\\"y \\u003e= 0 and y \\u003c= 2147483647 or y == 0\\\",\\n  \\\"xtmp \\u003e= 0 and xtmp \\u003c y or xtmp \\u003e= y or y == 0\\\",\\n  \\\"xtmp % y == x % y if (y \\u003e 0) else xtmp == x\\\",\\n  \\\"xtmp \\u003c= x and xtmp \\u003e= 0 if (x \\u003e 0 and y \\u003e 0) else True\\\",\\n  \\\"xtmp \\u003e= 1 and xtmp \\u003c= y if (y \\u003e 0 and xtmp \\u003e 0 and xtmp \\u003c= y) else xtmp \\u003e= 0 or y \\u003c= 0\\\",\\n  \\\"x \\u003e 0 and y \\u003e 0 or y == 0 or x \\u003c= 0\\\",\\n  \\\"tmp == y\\\",\\n  \\\"xtmp == x\\\",\\n  \\\"xtmp - y \\u003e= 0 or xtmp \\u003c= y\\\",\\n  \\\"xtmp \\u003e= 0 and y \\u003e= 1 or not (x \\u003e 0 and y \\u003e 0)\\\",\\n  \\\"xtmp \\u003c= x__in and xtmp \\u003e= 0 or x__in \\u003c= 0 or y__in \\u003c= 0\\\",\\n  \\\"y \\u003c= tmp and y \\u003e= 0 or y == 0\\\",\\n  \\\"x == tmp and y == xtmp or y == 0\\\",\\n  \\\"xtmp \\u003e= 0 and xtmp \\u003c= 2147483647\\\",\\n  \\\"y \\u003e= 0 and y \\u003c= tmp if tmp \\u003e 0 else y == 0\\\",\\n  \\\"xtmp % y == xtmp - (xtmp // y) * y if y \\u003e 0 else xtmp == x\\\"\\n]}\\n```\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":778,\"completion_tokens\":862,\"total_tokens\":1640,\"usage_semantic\":\"openai\",\"usage_source\":\"anthropic\",\"billing_usage\":{\"source\":\"claude_messages\",\"semantic\":\"anthropic\",\"claude_usage\":{\"input_tokens\":778,\"cache_creation_input_tokens\":0,\"cache_read_input_tokens\":0,\"output_tokens\":862,\"cache_creation\":{},\"claude_cache_creation_5_m_tokens\":0,\"claude_cache_creation_1_h_tokens\":0}},\"prompt_tokens_details\":{\"cached_tokens\":0,\"text_tokens\":0,\"audio_tokens\":0,\"image_tokens\":0},\"completion_tokens_details\":{\"text_tokens\":0,\"audio_tokens\":0,\"image_tokens\":0,\"reasoning_tokens\":0},\"input_tokens\":778,\"output_tokens\":0,\"input_tokens_details\":null,\"claude_cache_creation_5_m_tokens\":0,\"claude_cache_creation_1_h_tokens\":0}}",
+    "served_model": "claude-sonnet-4-5-20250929",
+    "usage": {
+      "prompt_tokens": 778,
+      "completion_tokens": 862,
+      "total_tokens": 1640,
+      "usage_semantic": "openai",
+      "usage_source": "anthropic",
+      "billing_usage": {
+        "source": "claude_messages",
+        "semantic": "anthropic",
+        "claude_usage": {
+          "input_tokens": 778,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 0,
+          "output_tokens": 862,
+          "cache_creation": {},
+          "claude_cache_creation_5_m_tokens": 0,
+          "claude_cache_creation_1_h_tokens": 0
+        }
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "text_tokens": 0,
+        "audio_tokens": 0,
+        "image_tokens": 0
+      },
+      "completion_tokens_details": {
+        "text_tokens": 0,
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0
+      },
+      "input_tokens": 778,
+      "output_tokens": 0,
+      "input_tokens_details": null,
+      "claude_cache_creation_5_m_tokens": 0,
+      "claude_cache_creation_1_h_tokens": 0
+    },
+    "content": "```json\n{\"atoms\": [\n  \"y == 0 or (y >= 1 and y <= 2147483647)\",\n  \"x >= -2147483648 and x <= 2147483647\",\n  \"y >= -2147483648 and y <= 2147483647\",\n  \"xtmp >= -2147483648 and xtmp <= 2147483647\",\n  \"tmp >= -2147483648 and tmp <= 2147483647\",\n  \"y == 0 or y == tmp\",\n  \"xtmp == x or xtmp <= x\",\n  \"tmp == y or tmp == 0\",\n  \"x == tmp or x == xtmp\",\n  \"xtmp >= 0 or y == 0\",\n  \"xtmp <= xtmp + y or y >= 0\",\n  \"y > 0 or y == 0\",\n  \"xtmp >= 0 and xtmp <= x__in or not (x__in > 0 and y__in > 0)\",\n  \"y >= 0 and y <= 2147483647 or y == 0\",\n  \"xtmp >= 0 and xtmp < y or xtmp >= y or y == 0\",\n  \"xtmp % y == x % y if (y > 0) else xtmp == x\",\n  \"xtmp <= x and xtmp >= 0 if (x > 0 and y > 0) else True\",\n  \"xtmp >= 1 and xtmp <= y if (y > 0 and xtmp > 0 and xtmp <= y) else xtmp >= 0 or y <= 0\",\n  \"x > 0 and y > 0 or y == 0 or x <= 0\",\n  \"tmp == y\",\n  \"xtmp == x\",\n  \"xtmp - y >= 0 or xtmp <= y\",\n  \"xtmp >= 0 and y >= 1 or not (x > 0 and y > 0)\",\n  \"xtmp <= x__in and xtmp >= 0 or x__in <= 0 or y__in <= 0\",\n  \"y <= tmp and y >= 0 or y == 0\",\n  \"x == tmp and y == xtmp or y == 0\",\n  \"xtmp >= 0 and xtmp <= 2147483647\",\n  \"y >= 0 and y <= tmp if tmp > 0 else y == 0\",\n  \"xtmp % y == xtmp - (xtmp // y) * y if y > 0 else xtmp == x\"\n]}\n```",
+    "finish_reason": "stop",
+    "round": 0,
+    "prompt_sha256": "e275770b04fdf9be895b10b0a40966bdcf8316a6be4b1ff8623a11b0d516259e",
+    "prompt_text": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nint tmp = 0;\nint xtmp = 0;\nwhile (y != 0)\n{\n  tmp = y;\n  xtmp = x;\n  if ((x <= 0) || (y <= 0))\n  {\n    y = 0;\n  }\n  else\n  {\n    if (x == y)\n    {\n      y = 0;\n    }\n    else\n    {\n      while (xtmp > y)\n      {\n        xtmp = xtmp - y;\n      }\n\n    }\n  }\n  y = xtmp;\n  x = tmp;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"x__in\": [-2147483648, 2147483647], \"y__in\": [-2147483648, 2147483647]}"
+  },
+  {
+    "model_requested": "claude-sonnet-4-5-20250929",
+    "request": {
+      "model": "claude-sonnet-4-5-20250929",
+      "temperature": 0.7,
+      "max_tokens": 6000,
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a loop-summary hypothesis generator. You only PROPOSE candidates; a separate verifier checks them against the real C semantics and rejects wrong ones. Reply with one JSON object and nothing else."
+        },
+        {
+          "role": "user",
+          "content": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nint tmp = 0;\nint xtmp = 0;\nwhile (y != 0)\n{\n  tmp = y;\n  xtmp = x;\n  if ((x <= 0) || (y <= 0))\n  {\n    y = 0;\n  }\n  else\n  {\n    if (x == y)\n    {\n      y = 0;\n    }\n    else\n    {\n      while (xtmp > y)\n      {\n        xtmp = xtmp - y;\n      }\n\n    }\n  }\n  y = xtmp;\n  x = tmp;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"x__in\": [-2147483648, 2147483647], \"y__in\": [-2147483648, 2147483647]}\n\nA previous attempt with your atoms failed: the verifier got stuck at the obligation `STUCK:Division/modulo requires a positive integer literal divisor`. Atoms that currently survive: [\"y == 0 or (y >= 1 and y <= 2147483647)\", \"x >= -2147483648 and x <= 2147483647\", \"y >= -2147483648 and y <= 2147483647\", \"xtmp >= -2147483648 and xtmp <= 2147483647\", \"tmp >= -2147483648 and tmp <= 2147483647\", \"y == 0 or y == tmp\", \"xtmp == x or xtmp <= x\", \"tmp == y or tmp == 0\", \"x == tmp or x == xtmp\", \"xtmp >= 0 or y == 0\", \"xtmp <= xtmp + y or y >= 0\", \"y > 0 or y == 0\", \"xtmp >= 0 and xtmp <= x__in or not (x__in > 0 and y__in > 0)\", \"y >= 0 and y <= 2147483647 or y == 0\", \"xtmp >= 0 and xtmp < y or xtmp >= y or y == 0\", \"xtmp % y == x % y if (y > 0) else xtmp == x\", \"xtmp <= x and xtmp >= 0 if (x > 0 and y > 0) else True\", \"xtmp >= 1 and xtmp <= y if (y > 0 and xtmp > 0 and xtmp <= y) else xtmp >= 0 or y <= 0\", \"x > 0 and y > 0 or y == 0 or x <= 0\", \"tmp == y\", \"xtmp == x\", \"xtmp - y >= 0 or xtmp <= y\", \"xtmp >= 0 and y >= 1 or not (x > 0 and y > 0)\", \"xtmp <= x__in and xtmp >= 0 or x__in <= 0 or y__in <= 0\", \"y <= tmp and y >= 0 or y == 0\", \"x == tmp and y == xtmp or y == 0\", \"xtmp >= 0 and xtmp <= 2147483647\", \"y >= 0 and y <= tmp if tmp > 0 else y == 0\", \"xtmp % y == xtmp - (xtmp // y) * y if y > 0 else xtmp == x\"]\nPropose NEW atoms (different shapes: relations with entry values, polynomial relations, bounds on products) that would make this obligation provable. Output the same JSON schema."
+        }
+      ]
+    },
+    "started_utc": "2026-11-22T00:37:39Z",
+    "endpoint": "https://api.square16.org/v1",
+    "attempts": [
+      {
+        "attempt": 0,
+        "ok": true,
+        "http_status": 200,
+        "seconds": 22.876
+      }
+    ],
+    "seconds": 22.876,
+    "response_text": "{\"id\":\"msg_011CgxbHUFuc7fjmgVC3y2ux\",\"model\":\"claude-sonnet-4-5-20250929\",\"object\":\"chat.completion\",\"created\":1795307881,\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"atoms\\\": [\\\"x \\u003e= 0 and y \\u003e= 0 or not (x__in \\u003e 0 and y__in \\u003e 0)\\\", \\\"x + y \\u003c= x__in + y__in or not (x__in \\u003e 0 and y__in \\u003e 0)\\\", \\\"x * y \\u003c= x__in * y__in or not (x__in \\u003e 0 and y__in \\u003e 0)\\\", \\\"x * y \\u003c x__in * y__in or x * y == 0 or not (x__in \\u003e 0 and y__in \\u003e 0)\\\", \\\"x \\u003c= max(x__in, y__in) or not (x__in \\u003e 0 and y__in \\u003e 0)\\\", \\\"y \\u003c= min(x__in, y__in) or y == 0 or not (x__in \\u003e 0 and y__in \\u003e 0)\\\", \\\"x \\u003c= y__in or y \\u003c= 0 or not (x__in \\u003e 0 and y__in \\u003e 0)\\\", \\\"y \\u003c= x or y == 0 or not (x__in \\u003e 0 and y__in \\u003e 0)\\\", \\\"y \\u003e= 1 and x \\u003e= y or y == 0\\\", \\\"x \\u003e= y and x \\u003e= 0 or y == 0 or x \\u003c 0\\\", \\\"x + y \\u003c 2 * max(x__in, y__in) or y == 0 or not (x__in \\u003e 0 and y__in \\u003e 0)\\\", \\\"x + 2 * y \\u003c= 2 * max(x__in, y__in) or y == 0 or not (x__in \\u003e 0 and y__in \\u003e 0)\\\", \\\"2 * x + y \\u003c= 2 * max(x__in, y__in) or y == 0 or not (x__in \\u003e 0 and y__in \\u003e 0)\\\", \\\"x + y \\u003c= x__in + y__in and x \\u003e= 0 and y \\u003e= 0 or y == 0\\\", \\\"min(x, y) \\u003e= 0 and max(x, y) \\u003c= max(x__in, y__in) or not (x__in \\u003e 0 and y__in \\u003e 0)\\\", \\\"x \\u003e= 0 and x \\u003c= 2147483647 and y \\u003c= x or y == 0\\\", \\\"xtmp \\u003e= 1 and xtmp \\u003c= x or not (x \\u003e 0 and y \\u003e 0)\\\", \\\"xtmp \\u003e= 1 and y \\u003e= 1 and xtmp - y \\u003e= 1 or xtmp \\u003c= y\\\", \\\"xtmp \\u003e y and xtmp - y \\u003e= 1 or xtmp \\u003c= y\\\", \\\"xtmp \\u003e= 1 and xtmp \\u003c= y or y \\u003c= 0 or xtmp \\u003e y\\\", \\\"tmp == y and (xtmp == x or (xtmp \\u003e= 1 and xtmp \\u003c x))\\\", \\\"xtmp == x or xtmp + y \\u003c= x\\\", \\\"x \\u003e 0 and y \\u003e 0 implies x \\u003e= y\\\", \\\"x \\u003e 0 and y \\u003e 0 and x \\u003e= y or y == 0 or x \\u003c= 0\\\", \\\"x == y__in or x \\u003c= max(x__in, y__in) or not (x__in \\u003e 0 and y__in \\u003e 0)\\\", \\\"y \\u003e= 0 and x \\u003e= y and x + y \\u003c= x__in + y__in or not (x__in \\u003e 0 and y__in \\u003e 0)\\\", \\\"x \\u003e= y and y \\u003e= 0 and x \\u003c= y__in or y == 0 or not (x__in \\u003e 0 and y__in \\u003e 0)\\\", \\\"xtmp \\u003e= 1 and y \\u003e= 1 and xtmp \\u003c= x and x \\u003e= y or not (x \\u003e 0 and y \\u003e 0)\\\", \\\"x \\u003e= 1 and y \\u003e= 1 and x \\u003e= y or y == 0\\\", \\\"x + y \\u003c= abs(x__in) + abs(y__in) or y == 0\\\", \\\"x \\u003e= 0 and y \\u003e= 0 and x * y \\u003c= x__in * y__in and x \\u003e= y or y == 0 or not (x__in \\u003e 0 and y__in \\u003e 0)\\\"]}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":1402,\"completion_tokens\":4809,\"total_tokens\":6211,\"usage_semantic\":\"openai\",\"usage_source\":\"anthropic\",\"billing_usage\":{\"source\":\"claude_messages\",\"semantic\":\"anthropic\",\"claude_usage\":{\"input_tokens\":1402,\"cache_creation_input_tokens\":0,\"cache_read_input_tokens\":0,\"output_tokens\":4809,\"cache_creation\":{},\"claude_cache_creation_5_m_tokens\":0,\"claude_cache_creation_1_h_tokens\":0}},\"prompt_tokens_details\":{\"cached_tokens\":0,\"text_tokens\":0,\"audio_tokens\":0,\"image_tokens\":0},\"completion_tokens_details\":{\"text_tokens\":0,\"audio_tokens\":0,\"image_tokens\":0,\"reasoning_tokens\":0},\"input_tokens\":1402,\"output_tokens\":0,\"input_tokens_details\":null,\"claude_cache_creation_5_m_tokens\":0,\"claude_cache_creation_1_h_tokens\":0}}",
+    "served_model": "claude-sonnet-4-5-20250929",
+    "usage": {
+      "prompt_tokens": 1402,
+      "completion_tokens": 4809,
+      "total_tokens": 6211,
+      "usage_semantic": "openai",
+      "usage_source": "anthropic",
+      "billing_usage": {
+        "source": "claude_messages",
+        "semantic": "anthropic",
+        "claude_usage": {
+          "input_tokens": 1402,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 0,
+          "output_tokens": 4809,
+          "cache_creation": {},
+          "claude_cache_creation_5_m_tokens": 0,
+          "claude_cache_creation_1_h_tokens": 0
+        }
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "text_tokens": 0,
+        "audio_tokens": 0,
+        "image_tokens": 0
+      },
+      "completion_tokens_details": {
+        "text_tokens": 0,
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0
+      },
+      "input_tokens": 1402,
+      "output_tokens": 0,
+      "input_tokens_details": null,
+      "claude_cache_creation_5_m_tokens": 0,
+      "claude_cache_creation_1_h_tokens": 0
+    },
+    "content": "{\"atoms\": [\"x >= 0 and y >= 0 or not (x__in > 0 and y__in > 0)\", \"x + y <= x__in + y__in or not (x__in > 0 and y__in > 0)\", \"x * y <= x__in * y__in or not (x__in > 0 and y__in > 0)\", \"x * y < x__in * y__in or x * y == 0 or not (x__in > 0 and y__in > 0)\", \"x <= max(x__in, y__in) or not (x__in > 0 and y__in > 0)\", \"y <= min(x__in, y__in) or y == 0 or not (x__in > 0 and y__in > 0)\", \"x <= y__in or y <= 0 or not (x__in > 0 and y__in > 0)\", \"y <= x or y == 0 or not (x__in > 0 and y__in > 0)\", \"y >= 1 and x >= y or y == 0\", \"x >= y and x >= 0 or y == 0 or x < 0\", \"x + y < 2 * max(x__in, y__in) or y == 0 or not (x__in > 0 and y__in > 0)\", \"x + 2 * y <= 2 * max(x__in, y__in) or y == 0 or not (x__in > 0 and y__in > 0)\", \"2 * x + y <= 2 * max(x__in, y__in) or y == 0 or not (x__in > 0 and y__in > 0)\", \"x + y <= x__in + y__in and x >= 0 and y >= 0 or y == 0\", \"min(x, y) >= 0 and max(x, y) <= max(x__in, y__in) or not (x__in > 0 and y__in > 0)\", \"x >= 0 and x <= 2147483647 and y <= x or y == 0\", \"xtmp >= 1 and xtmp <= x or not (x > 0 and y > 0)\", \"xtmp >= 1 and y >= 1 and xtmp - y >= 1 or xtmp <= y\", \"xtmp > y and xtmp - y >= 1 or xtmp <= y\", \"xtmp >= 1 and xtmp <= y or y <= 0 or xtmp > y\", \"tmp == y and (xtmp == x or (xtmp >= 1 and xtmp < x))\", \"xtmp == x or xtmp + y <= x\", \"x > 0 and y > 0 implies x >= y\", \"x > 0 and y > 0 and x >= y or y == 0 or x <= 0\", \"x == y__in or x <= max(x__in, y__in) or not (x__in > 0 and y__in > 0)\", \"y >= 0 and x >= y and x + y <= x__in + y__in or not (x__in > 0 and y__in > 0)\", \"x >= y and y >= 0 and x <= y__in or y == 0 or not (x__in > 0 and y__in > 0)\", \"xtmp >= 1 and y >= 1 and xtmp <= x and x >= y or not (x > 0 and y > 0)\", \"x >= 1 and y >= 1 and x >= y or y == 0\", \"x + y <= abs(x__in) + abs(y__in) or y == 0\", \"x >= 0 and y >= 0 and x * y <= x__in * y__in and x >= y or y == 0 or not (x__in > 0 and y__in > 0)\"]}",
+    "finish_reason": "stop",
+    "round": 1,
+    "prompt_sha256": "fffa52733e5e862e220c1d8f45cc97e0ab589cdd48660066140454b0bac303b8",
+    "prompt_text": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nint tmp = 0;\nint xtmp = 0;\nwhile (y != 0)\n{\n  tmp = y;\n  xtmp = x;\n  if ((x <= 0) || (y <= 0))\n  {\n    y = 0;\n  }\n  else\n  {\n    if (x == y)\n    {\n      y = 0;\n    }\n    else\n    {\n      while (xtmp > y)\n      {\n        xtmp = xtmp - y;\n      }\n\n    }\n  }\n  y = xtmp;\n  x = tmp;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"x__in\": [-2147483648, 2147483647], \"y__in\": [-2147483648, 2147483647]}\n\nA previous attempt with your atoms failed: the verifier got stuck at the obligation `STUCK:Division/modulo requires a positive integer literal divisor`. Atoms that currently survive: [\"y == 0 or (y >= 1 and y <= 2147483647)\", \"x >= -2147483648 and x <= 2147483647\", \"y >= -2147483648 and y <= 2147483647\", \"xtmp >= -2147483648 and xtmp <= 2147483647\", \"tmp >= -2147483648 and tmp <= 2147483647\", \"y == 0 or y == tmp\", \"xtmp == x or xtmp <= x\", \"tmp == y or tmp == 0\", \"x == tmp or x == xtmp\", \"xtmp >= 0 or y == 0\", \"xtmp <= xtmp + y or y >= 0\", \"y > 0 or y == 0\", \"xtmp >= 0 and xtmp <= x__in or not (x__in > 0 and y__in > 0)\", \"y >= 0 and y <= 2147483647 or y == 0\", \"xtmp >= 0 and xtmp < y or xtmp >= y or y == 0\", \"xtmp % y == x % y if (y > 0) else xtmp == x\", \"xtmp <= x and xtmp >= 0 if (x > 0 and y > 0) else True\", \"xtmp >= 1 and xtmp <= y if (y > 0 and xtmp > 0 and xtmp <= y) else xtmp >= 0 or y <= 0\", \"x > 0 and y > 0 or y == 0 or x <= 0\", \"tmp == y\", \"xtmp == x\", \"xtmp - y >= 0 or xtmp <= y\", \"xtmp >= 0 and y >= 1 or not (x > 0 and y > 0)\", \"xtmp <= x__in and xtmp >= 0 or x__in <= 0 or y__in <= 0\", \"y <= tmp and y >= 0 or y == 0\", \"x == tmp and y == xtmp or y == 0\", \"xtmp >= 0 and xtmp <= 2147483647\", \"y >= 0 and y <= tmp if tmp > 0 else y == 0\", \"xtmp % y == xtmp - (xtmp // y) * y if y > 0 else xtmp == x\"]\nPropose NEW atoms (different shapes: relations with entry values, polynomial relations, bounds on products) that would make this obligation provable. Output the same JSON schema."
+  },
+  {
+    "model_requested": "claude-sonnet-4-5-20250929",
+    "request": {
+      "model": "claude-sonnet-4-5-20250929",
+      "temperature": 0.7,
+      "max_tokens": 6000,
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a loop-summary hypothesis generator. You only PROPOSE candidates; a separate verifier checks them against the real C semantics and rejects wrong ones. Reply with one JSON object and nothing else."
+        },
+        {
+          "role": "user",
+          "content": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nint tmp = 0;\nint xtmp = 0;\nwhile (y != 0)\n{\n  tmp = y;\n  xtmp = x;\n  if ((x <= 0) || (y <= 0))\n  {\n    y = 0;\n  }\n  else\n  {\n    if (x == y)\n    {\n      y = 0;\n    }\n    else\n    {\n      while (xtmp > y)\n      {\n        xtmp = xtmp - y;\n      }\n\n    }\n  }\n  y = xtmp;\n  x = tmp;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"x__in\": [-2147483648, 2147483647], \"y__in\": [-2147483648, 2147483647]}\n\nA previous attempt with your atoms failed: the verifier got stuck at the obligation `STUCK:Division/modulo requires a positive integer literal divisor`. Atoms that currently survive: [\"y == 0 or (y >= 1 and y <= 2147483647)\", \"x >= -2147483648 and x <= 2147483647\", \"y >= -2147483648 and y <= 2147483647\", \"xtmp >= -2147483648 and xtmp <= 2147483647\", \"tmp >= -2147483648 and tmp <= 2147483647\", \"y == 0 or y == tmp\", \"xtmp == x or xtmp <= x\", \"tmp == y or tmp == 0\", \"x == tmp or x == xtmp\", \"xtmp >= 0 or y == 0\", \"xtmp <= xtmp + y or y >= 0\", \"y > 0 or y == 0\", \"xtmp >= 0 and xtmp <= x__in or not (x__in > 0 and y__in > 0)\", \"y >= 0 and y <= 2147483647 or y == 0\", \"xtmp >= 0 and xtmp < y or xtmp >= y or y == 0\", \"xtmp % y == x % y if (y > 0) else xtmp == x\", \"xtmp <= x and xtmp >= 0 if (x > 0 and y > 0) else True\", \"xtmp >= 1 and xtmp <= y if (y > 0 and xtmp > 0 and xtmp <= y) else xtmp >= 0 or y <= 0\", \"x > 0 and y > 0 or y == 0 or x <= 0\", \"tmp == y\", \"xtmp == x\", \"xtmp - y >= 0 or xtmp <= y\", \"xtmp >= 0 and y >= 1 or not (x > 0 and y > 0)\", \"xtmp <= x__in and xtmp >= 0 or x__in <= 0 or y__in <= 0\", \"y <= tmp and y >= 0 or y == 0\", \"x == tmp and y == xtmp or y == 0\", \"xtmp >= 0 and xtmp <= 2147483647\", \"y >= 0 and y <= tmp if tmp > 0 else y == 0\", \"xtmp % y == xtmp - (xtmp // y) * y if y > 0 else xtmp == x\", \"x >= 0 and y >= 0 or not (x__in > 0 and y__in > 0)\", \"x + y <= x__in + y__in or not (x__in > 0 and y__in > 0)\", \"x * y <= x__in * y__in or not (x__in > 0 and y__in > 0)\", \"x * y < x__in * y__in or x * y == 0 or not (x__in > 0 and y__in > 0)\", \"x <= max(x__in, y__in) or not (x__in > 0 and y__in > 0)\", \"y <= min(x__in, y__in) or y == 0 or not (x__in > 0 and y__in > 0)\", \"x <= y__in or y <= 0 or not (x__in > 0 and y__in > 0)\", \"y <= x or y == 0 or not (x__in > 0 and y__in > 0)\", \"y >= 1 and x >= y or y == 0\", \"x >= y and x >= 0 or y == 0 or x < 0\", \"x + y < 2 * max(x__in, y__in) or y == 0 or not (x__in > 0 and y__in > 0)\"]\nPropose NEW atoms (different shapes: relations with entry values, polynomial relations, bounds on products) that would make this obligation provable. Output the same JSON schema."
+        }
+      ]
+    },
+    "started_utc": "2026-11-22T00:39:06Z",
+    "endpoint": "https://api.square16.org/v1",
+    "attempts": [
+      {
+        "attempt": 0,
+        "ok": true,
+        "http_status": 200,
+        "seconds": 7.265
+      }
+    ],
+    "seconds": 7.265,
+    "response_text": "{\"id\":\"msg_011CgxbN8TspOIil19Lb0iGg\",\"model\":\"claude-sonnet-4-5-20250929\",\"object\":\"chat.completion\",\"created\":1795307953,\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"```json\\n{\\\"atoms\\\": [\\\"xtmp \\u003e= 0 and xtmp \\u003c y if y \\u003e= 1 else xtmp == 0 or y \\u003c= 0\\\", \\\"y \\u003e= 1 and xtmp \\u003e= 1 and xtmp \\u003c= y or y == 0\\\", \\\"x \\u003e= 1 and y \\u003e= 1 or y == 0\\\", \\\"tmp \\u003e= 1 or y == 0\\\", \\\"xtmp \\u003c= tmp or y == 0\\\", \\\"xtmp \\u003e= 0 and xtmp \\u003c= tmp or y == 0\\\", \\\"y \\u003c= tmp or y == 0\\\", \\\"y \\u003e= 1 and y \\u003c= x__in or y == 0 or x__in \\u003c= 0 or y__in \\u003c= 0\\\", \\\"xtmp \\u003e= 0 and xtmp \\u003c= x__in or y == 0 or x__in \\u003c= 0\\\", \\\"y \\u003e= 1 and y \\u003c= y__in or y == 0 or y__in \\u003c= 0\\\", \\\"xtmp \\u003e= 0 and xtmp \\u003c= y__in or y == 0 or y__in \\u003c= 0\\\", \\\"x \\u003e= 1 and x \\u003c= x__in or y == 0 or x__in \\u003c= 0\\\", \\\"y \\u003e= 1 and x \\u003e= y or y == 0\\\", \\\"xtmp \\u003e= 0 and xtmp \\u003c y if y \\u003e= 1 else y == 0\\\", \\\"xtmp \\u003e= 0 and y \\u003e= 1 and xtmp \\u003c= x or y == 0 or x \\u003c= 0\\\", \\\"not (x \\u003e= 1 and y \\u003e= 1) or xtmp \\u003e= 0\\\", \\\"not (x \\u003e= 1 and y \\u003e= 1) or xtmp \\u003c y\\\", \\\"not (x \\u003e= 1 and y \\u003e= 1) or y \\u003c= x\\\", \\\"not (x \\u003e= 1 and y \\u003e= 1) or x \\u003c= x__in\\\", \\\"not (x \\u003e= 1 and y \\u003e= 1) or y \\u003c= y__in\\\", \\\"not (x \\u003e= 1 and y \\u003e= 1) or xtmp \\u003c= x__in\\\", \\\"not (x \\u003e= 1 and y \\u003e= 1) or y \\u003e= 1\\\", \\\"not (x \\u003e= 1 and y \\u003e= 1) or tmp \\u003e= 1\\\", \\\"not (x \\u003e= 1 and y \\u003e= 1) or xtmp \\u003c= x\\\", \\\"not (x \\u003e= 1 and y \\u003e= 1) or x \\u003c= max(x__in, y__in)\\\", \\\"not (x \\u003e= 1 and y \\u003e= 1) or y \\u003c= max(x__in, y__in)\\\", \\\"y == 0 or (x \\u003e= 1 and y \\u003e= 1 and xtmp \\u003e= 0 and xtmp \\u003c= x)\\\", \\\"y == 0 or tmp \\u003e= 1\\\", \\\"y == 0 or (xtmp \\u003e= 0 and xtmp \\u003c y)\\\", \\\"y == 0 or (y \\u003e= 1 and x \\u003e= 1 and tmp \\u003e= 1 and xtmp \\u003e= 0)\\\"]}\\n```\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":1706,\"completion_tokens\":942,\"total_tokens\":2648,\"usage_semantic\":\"openai\",\"usage_source\":\"anthropic\",\"billing_usage\":{\"source\":\"claude_messages\",\"semantic\":\"anthropic\",\"claude_usage\":{\"input_tokens\":1706,\"cache_creation_input_tokens\":0,\"cache_read_input_tokens\":0,\"output_tokens\":942,\"cache_creation\":{},\"claude_cache_creation_5_m_tokens\":0,\"claude_cache_creation_1_h_tokens\":0}},\"prompt_tokens_details\":{\"cached_tokens\":0,\"text_tokens\":0,\"audio_tokens\":0,\"image_tokens\":0},\"completion_tokens_details\":{\"text_tokens\":0,\"audio_tokens\":0,\"image_tokens\":0,\"reasoning_tokens\":0},\"input_tokens\":1706,\"output_tokens\":0,\"input_tokens_details\":null,\"claude_cache_creation_5_m_tokens\":0,\"claude_cache_creation_1_h_tokens\":0}}",
+    "served_model": "claude-sonnet-4-5-20250929",
+    "usage": {
+      "prompt_tokens": 1706,
+      "completion_tokens": 942,
+      "total_tokens": 2648,
+      "usage_semantic": "openai",
+      "usage_source": "anthropic",
+      "billing_usage": {
+        "source": "claude_messages",
+        "semantic": "anthropic",
+        "claude_usage": {
+          "input_tokens": 1706,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 0,
+          "output_tokens": 942,
+          "cache_creation": {},
+          "claude_cache_creation_5_m_tokens": 0,
+          "claude_cache_creation_1_h_tokens": 0
+        }
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "text_tokens": 0,
+        "audio_tokens": 0,
+        "image_tokens": 0
+      },
+      "completion_tokens_details": {
+        "text_tokens": 0,
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0
+      },
+      "input_tokens": 1706,
+      "output_tokens": 0,
+      "input_tokens_details": null,
+      "claude_cache_creation_5_m_tokens": 0,
+      "claude_cache_creation_1_h_tokens": 0
+    },
+    "content": "```json\n{\"atoms\": [\"xtmp >= 0 and xtmp < y if y >= 1 else xtmp == 0 or y <= 0\", \"y >= 1 and xtmp >= 1 and xtmp <= y or y == 0\", \"x >= 1 and y >= 1 or y == 0\", \"tmp >= 1 or y == 0\", \"xtmp <= tmp or y == 0\", \"xtmp >= 0 and xtmp <= tmp or y == 0\", \"y <= tmp or y == 0\", \"y >= 1 and y <= x__in or y == 0 or x__in <= 0 or y__in <= 0\", \"xtmp >= 0 and xtmp <= x__in or y == 0 or x__in <= 0\", \"y >= 1 and y <= y__in or y == 0 or y__in <= 0\", \"xtmp >= 0 and xtmp <= y__in or y == 0 or y__in <= 0\", \"x >= 1 and x <= x__in or y == 0 or x__in <= 0\", \"y >= 1 and x >= y or y == 0\", \"xtmp >= 0 and xtmp < y if y >= 1 else y == 0\", \"xtmp >= 0 and y >= 1 and xtmp <= x or y == 0 or x <= 0\", \"not (x >= 1 and y >= 1) or xtmp >= 0\", \"not (x >= 1 and y >= 1) or xtmp < y\", \"not (x >= 1 and y >= 1) or y <= x\", \"not (x >= 1 and y >= 1) or x <= x__in\", \"not (x >= 1 and y >= 1) or y <= y__in\", \"not (x >= 1 and y >= 1) or xtmp <= x__in\", \"not (x >= 1 and y >= 1) or y >= 1\", \"not (x >= 1 and y >= 1) or tmp >= 1\", \"not (x >= 1 and y >= 1) or xtmp <= x\", \"not (x >= 1 and y >= 1) or x <= max(x__in, y__in)\", \"not (x >= 1 and y >= 1) or y <= max(x__in, y__in)\", \"y == 0 or (x >= 1 and y >= 1 and xtmp >= 0 and xtmp <= x)\", \"y == 0 or tmp >= 1\", \"y == 0 or (xtmp >= 0 and xtmp < y)\", \"y == 0 or (y >= 1 and x >= 1 and tmp >= 1 and xtmp >= 0)\"]}\n```",
+    "finish_reason": "stop",
+    "round": 2,
+    "prompt_sha256": "71ba928cb5bafb9aef678db2c064adc07531778714504b55f3a41d4661d8ed00",
+    "prompt_text": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nint tmp = 0;\nint xtmp = 0;\nwhile (y != 0)\n{\n  tmp = y;\n  xtmp = x;\n  if ((x <= 0) || (y <= 0))\n  {\n    y = 0;\n  }\n  else\n  {\n    if (x == y)\n    {\n      y = 0;\n    }\n    else\n    {\n      while (xtmp > y)\n      {\n        xtmp = xtmp - y;\n      }\n\n    }\n  }\n  y = xtmp;\n  x = tmp;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"x__in\": [-2147483648, 2147483647], \"y__in\": [-2147483648, 2147483647]}\n\nA previous attempt with your atoms failed: the verifier got stuck at the obligation `STUCK:Division/modulo requires a positive integer literal divisor`. Atoms that currently survive: [\"y == 0 or (y >= 1 and y <= 2147483647)\", \"x >= -2147483648 and x <= 2147483647\", \"y >= -2147483648 and y <= 2147483647\", \"xtmp >= -2147483648 and xtmp <= 2147483647\", \"tmp >= -2147483648 and tmp <= 2147483647\", \"y == 0 or y == tmp\", \"xtmp == x or xtmp <= x\", \"tmp == y or tmp == 0\", \"x == tmp or x == xtmp\", \"xtmp >= 0 or y == 0\", \"xtmp <= xtmp + y or y >= 0\", \"y > 0 or y == 0\", \"xtmp >= 0 and xtmp <= x__in or not (x__in > 0 and y__in > 0)\", \"y >= 0 and y <= 2147483647 or y == 0\", \"xtmp >= 0 and xtmp < y or xtmp >= y or y == 0\", \"xtmp % y == x % y if (y > 0) else xtmp == x\", \"xtmp <= x and xtmp >= 0 if (x > 0 and y > 0) else True\", \"xtmp >= 1 and xtmp <= y if (y > 0 and xtmp > 0 and xtmp <= y) else xtmp >= 0 or y <= 0\", \"x > 0 and y > 0 or y == 0 or x <= 0\", \"tmp == y\", \"xtmp == x\", \"xtmp - y >= 0 or xtmp <= y\", \"xtmp >= 0 and y >= 1 or not (x > 0 and y > 0)\", \"xtmp <= x__in and xtmp >= 0 or x__in <= 0 or y__in <= 0\", \"y <= tmp and y >= 0 or y == 0\", \"x == tmp and y == xtmp or y == 0\", \"xtmp >= 0 and xtmp <= 2147483647\", \"y >= 0 and y <= tmp if tmp > 0 else y == 0\", \"xtmp % y == xtmp - (xtmp // y) * y if y > 0 else xtmp == x\", \"x >= 0 and y >= 0 or not (x__in > 0 and y__in > 0)\", \"x + y <= x__in + y__in or not (x__in > 0 and y__in > 0)\", \"x * y <= x__in * y__in or not (x__in > 0 and y__in > 0)\", \"x * y < x__in * y__in or x * y == 0 or not (x__in > 0 and y__in > 0)\", \"x <= max(x__in, y__in) or not (x__in > 0 and y__in > 0)\", \"y <= min(x__in, y__in) or y == 0 or not (x__in > 0 and y__in > 0)\", \"x <= y__in or y <= 0 or not (x__in > 0 and y__in > 0)\", \"y <= x or y == 0 or not (x__in > 0 and y__in > 0)\", \"y >= 1 and x >= y or y == 0\", \"x >= y and x >= 0 or y == 0 or x < 0\", \"x + y < 2 * max(x__in, y__in) or y == 0 or not (x__in > 0 and y__in > 0)\"]\nPropose NEW atoms (different shapes: relations with entry values, polynomial relations, bounds on products) that would make this obligation provable. Output the same JSON schema."
+  }
+]

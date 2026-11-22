@@ -1,0 +1,63 @@
+[
+  {
+    "model_requested": "gpt-4.1-mini",
+    "request": {
+      "model": "gpt-4.1-mini",
+      "temperature": 0.7,
+      "max_tokens": 6000,
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a loop-summary hypothesis generator. You only PROPOSE candidates; a separate verifier checks them against the real C semantics and rejects wrong ones. Reply with one JSON object and nothing else."
+        },
+        {
+          "role": "user",
+          "content": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int x__in, int y){\nint x = x__in;\nwhile (x > y)\n{\n  x = x - 1;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"x__in\": [-2147483648, 2147483647], \"y\": [-2147483648, 2147483647]}"
+        }
+      ]
+    },
+    "started_utc": "2026-11-22T00:30:15Z",
+    "endpoint": "https://api.square16.org/v1",
+    "attempts": [
+      {
+        "attempt": 0,
+        "ok": true,
+        "http_status": 200,
+        "seconds": 3.527
+      }
+    ],
+    "seconds": 3.527,
+    "response_text": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"logprobs\":null,\"message\":{\"annotations\":[],\"content\":\"{\\\"atoms\\\": [\\\"x \\u003e= y\\\", \\\"x \\u003c= x__in\\\", \\\"x__in \\u003e= y\\\", \\\"x \\u003e y\\\", \\\"x \\u003e= -2147483648\\\", \\\"x \\u003c= 2147483647\\\", \\\"y \\u003e= -2147483648\\\", \\\"y \\u003c= 2147483647\\\", \\\"x - y \\u003c= x__in - y\\\", \\\"x - y \\u003e= 0\\\", \\\"x == x__in - n where n \\u003e= 0\\\", \\\"x \\u003e= y implies x \\u003e= y\\\", \\\"not (x \\u003e y) or (x - 1 \\u003e= y)\\\", \\\"x == x__in - loop_iterations\\\", \\\"loop_iterations \\u003e= 0\\\", \\\"loop_iterations \\u003c= x__in - y if x__in \\u003e= y else 0\\\", \\\"x__in - y \\u003e= 0 implies loop_iterations \\u003c= x__in - y\\\", \\\"x \\u003e= y implies (x - y) \\u003c= (x__in - y)\\\", \\\"x \\u003e= y implies x - y \\u003e= 0\\\", \\\"x - y == loop_iterations\\\", \\\"loop_iterations \\u003e= 0\\\", \\\"x \\u003e= y or x == y\\\", \\\"x \\u003e= y implies x - y \\u003e= 0\\\", \\\"x \\u003e= y implies x \\u003c= x__in\\\", \\\"x \\u003e= y and x \\u003c= x__in\\\", \\\"x \\u003e= y and x \\u003c= x__in and y \\u003c= x__in\\\", \\\"x \\u003e= y and x \\u003c= x__in and y \\u003c= x__in and x__in \\u003e= y\\\"]}\",\"refusal\":null,\"role\":\"assistant\"}}],\"created\":1795307416,\"id\":\"chatcmpl-EmplAIjcDiSQRA6lZsj11t5FwQdJr\",\"model\":\"gpt-4.1-mini-2025-04-14\",\"object\":\"chat.completion\",\"routing\":{\"serving_pipereplica\":\"d20261105052007-a1fdc8f6-default-r2-dp0-default\"},\"service_tier\":\"default\",\"system_fingerprint\":\"fp_8ebcb6c932\",\"usage\":{\"completion_tokens\":305,\"completion_tokens_details\":{\"accepted_prediction_tokens\":0,\"audio_tokens\":0,\"reasoning_tokens\":0,\"rejected_prediction_tokens\":0},\"latency_checkpoint\":{\"engine_tbt_ms\":6,\"engine_ttft_ms\":25,\"engine_ttlt_ms\":1959,\"pre_inference_ms\":89,\"service_tbt_ms\":6,\"service_ttft_ms\":192,\"service_ttlt_ms\":2112,\"user_visible_ttft_ms\":103},\"prompt_tokens\":538,\"prompt_tokens_details\":{\"audio_tokens\":0,\"cached_tokens\":0},\"total_tokens\":843}}\n",
+    "served_model": "gpt-4.1-mini-2025-04-14",
+    "usage": {
+      "completion_tokens": 305,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "latency_checkpoint": {
+        "engine_tbt_ms": 6,
+        "engine_ttft_ms": 25,
+        "engine_ttlt_ms": 1959,
+        "pre_inference_ms": 89,
+        "service_tbt_ms": 6,
+        "service_ttft_ms": 192,
+        "service_ttlt_ms": 2112,
+        "user_visible_ttft_ms": 103
+      },
+      "prompt_tokens": 538,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0
+      },
+      "total_tokens": 843
+    },
+    "content": "{\"atoms\": [\"x >= y\", \"x <= x__in\", \"x__in >= y\", \"x > y\", \"x >= -2147483648\", \"x <= 2147483647\", \"y >= -2147483648\", \"y <= 2147483647\", \"x - y <= x__in - y\", \"x - y >= 0\", \"x == x__in - n where n >= 0\", \"x >= y implies x >= y\", \"not (x > y) or (x - 1 >= y)\", \"x == x__in - loop_iterations\", \"loop_iterations >= 0\", \"loop_iterations <= x__in - y if x__in >= y else 0\", \"x__in - y >= 0 implies loop_iterations <= x__in - y\", \"x >= y implies (x - y) <= (x__in - y)\", \"x >= y implies x - y >= 0\", \"x - y == loop_iterations\", \"loop_iterations >= 0\", \"x >= y or x == y\", \"x >= y implies x - y >= 0\", \"x >= y implies x <= x__in\", \"x >= y and x <= x__in\", \"x >= y and x <= x__in and y <= x__in\", \"x >= y and x <= x__in and y <= x__in and x__in >= y\"]}",
+    "finish_reason": "stop",
+    "round": 0,
+    "prompt_sha256": "e621f1aaa929b8a5247d39f1f9f6ad8c20a7b091d8343c1fefd82c842d838b6f",
+    "prompt_text": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int x__in, int y){\nint x = x__in;\nwhile (x > y)\n{\n  x = x - 1;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"x__in\": [-2147483648, 2147483647], \"y\": [-2147483648, 2147483647]}"
+  }
+]

@@ -1,0 +1,63 @@
+[
+  {
+    "model_requested": "gpt-4.1-mini",
+    "request": {
+      "model": "gpt-4.1-mini",
+      "temperature": 0.7,
+      "max_tokens": 6000,
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a loop-summary hypothesis generator. You only PROPOSE candidates; a separate verifier checks them against the real C semantics and rejects wrong ones. Reply with one JSON object and nothing else."
+        },
+        {
+          "role": "user",
+          "content": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int i__in){\nint i = i__in;\nwhile (i < 10)\n{\n  if (i != 3)\n  {\n    i = i + 1;\n  }\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"i__in\": [-2147483648, 2147483647]}"
+        }
+      ]
+    },
+    "started_utc": "2026-11-22T00:29:50Z",
+    "endpoint": "https://api.square16.org/v1",
+    "attempts": [
+      {
+        "attempt": 0,
+        "ok": true,
+        "http_status": 200,
+        "seconds": 4.581
+      }
+    ],
+    "seconds": 4.581,
+    "response_text": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"logprobs\":null,\"message\":{\"annotations\":[],\"content\":\"{\\\"atoms\\\": [\\\"-2147483648 \\u003c= i \\u003c= 2147483647\\\", \\\"i == i__in + k for some k \\u003e= 0 (implicit from loop increments)\\\", \\\"i \\u003c= 10\\\", \\\"i \\u003c 10 implies i + 1 \\u003c= 10 or i == 9\\\", \\\"i != 3 implies i + 1 != 3 or i == 2\\\", \\\"i \\u003e= i__in\\\", \\\"if i \\u003e= 10 then loop exits\\\", \\\"no subtraction or multiplication overflow occurs (only i + 1)\\\", \\\"i + 1 \\u003c= 10 when i \\u003c 9\\\", \\\"i == 3 never increments, so i remains 3 only if it starts at 3\\\", \\\"i cannot decrease\\\", \\\"i increments by 1 when i != 3\\\", \\\"loop guarded by i \\u003c 10\\\", \\\"i always integer in range\\\", \\\"no division or modulo operations\\\", \\\"no shift operations\\\", \\\"increments bounded by 10 - i__in\\\", \\\"i != 3 guards increment\\\", \\\"if i == 3, no increment, so loop does not terminate immediately\\\", \\\"loop terminates eventually because i increments unless i == 3\\\", \\\"no signed overflow in i + 1 because i \\u003c 10\\\", \\\"i + 1 \\u003c= 10 \\u003c= 2147483647\\\", \\\"i \\u003e= -2147483648 always\\\", \\\"i != 3 or i == 3 cases\\\", \\\"no undefined behavior from addition\\\", \\\"i + 1 fits in int range\\\", \\\"no division by zero\\\", \\\"no shifts\\\", \\\"no other arithmetic operations\\\"]}\",\"refusal\":null,\"role\":\"assistant\"}}],\"created\":1795307391,\"id\":\"chatcmpl-EmpklIuUybhN85jiZEzw33JdZEWGm\",\"model\":\"gpt-4.1-mini-2025-04-14\",\"object\":\"chat.completion\",\"routing\":{\"serving_pipereplica\":\"d20261105070911-72966ec3-default-r2-dp0-default\"},\"service_tier\":\"default\",\"system_fingerprint\":\"fp_36de3d5958\",\"usage\":{\"completion_tokens\":329,\"completion_tokens_details\":{\"accepted_prediction_tokens\":0,\"audio_tokens\":0,\"reasoning_tokens\":0,\"rejected_prediction_tokens\":0},\"latency_checkpoint\":{\"engine_tbt_ms\":9,\"engine_ttft_ms\":27,\"engine_ttlt_ms\":2845,\"pre_inference_ms\":98,\"service_tbt_ms\":9,\"service_ttft_ms\":157,\"service_ttlt_ms\":2971,\"user_visible_ttft_ms\":59},\"prompt_tokens\":533,\"prompt_tokens_details\":{\"audio_tokens\":0,\"cached_tokens\":0},\"total_tokens\":862}}\n",
+    "served_model": "gpt-4.1-mini-2025-04-14",
+    "usage": {
+      "completion_tokens": 329,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "latency_checkpoint": {
+        "engine_tbt_ms": 9,
+        "engine_ttft_ms": 27,
+        "engine_ttlt_ms": 2845,
+        "pre_inference_ms": 98,
+        "service_tbt_ms": 9,
+        "service_ttft_ms": 157,
+        "service_ttlt_ms": 2971,
+        "user_visible_ttft_ms": 59
+      },
+      "prompt_tokens": 533,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0
+      },
+      "total_tokens": 862
+    },
+    "content": "{\"atoms\": [\"-2147483648 <= i <= 2147483647\", \"i == i__in + k for some k >= 0 (implicit from loop increments)\", \"i <= 10\", \"i < 10 implies i + 1 <= 10 or i == 9\", \"i != 3 implies i + 1 != 3 or i == 2\", \"i >= i__in\", \"if i >= 10 then loop exits\", \"no subtraction or multiplication overflow occurs (only i + 1)\", \"i + 1 <= 10 when i < 9\", \"i == 3 never increments, so i remains 3 only if it starts at 3\", \"i cannot decrease\", \"i increments by 1 when i != 3\", \"loop guarded by i < 10\", \"i always integer in range\", \"no division or modulo operations\", \"no shift operations\", \"increments bounded by 10 - i__in\", \"i != 3 guards increment\", \"if i == 3, no increment, so loop does not terminate immediately\", \"loop terminates eventually because i increments unless i == 3\", \"no signed overflow in i + 1 because i < 10\", \"i + 1 <= 10 <= 2147483647\", \"i >= -2147483648 always\", \"i != 3 or i == 3 cases\", \"no undefined behavior from addition\", \"i + 1 fits in int range\", \"no division by zero\", \"no shifts\", \"no other arithmetic operations\"]}",
+    "finish_reason": "stop",
+    "round": 0,
+    "prompt_sha256": "6569c6961455ad03e5093daf75d393b7fbf4d51433e5f4c5a04c599420844267",
+    "prompt_text": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int i__in){\nint i = i__in;\nwhile (i < 10)\n{\n  if (i != 3)\n  {\n    i = i + 1;\n  }\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"i__in\": [-2147483648, 2147483647]}"
+  }
+]
