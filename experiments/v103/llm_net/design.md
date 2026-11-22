@@ -1,6 +1,6 @@
 # v1.04 LLM 净收益与成本：冻结前的设计 / Net benefit and cost of the LLM arm: design, not yet frozen
 
-状态 / status: **设计稿，未冻结**。没有驱动、没有凭据、没有任何结果。按本项目惯例，协议必须在第一次调用模型之前冻结，因此这里只登记设计与预注册的分析口径；驱动与 `protocol.json`（含驱动哈希）在拿到凭据后再冻结。 Design only: no driver, no credentials, no results. As elsewhere in this project the protocol must be frozen before the first call, so only the design and the pre-registered analysis are recorded here.
+状态 / status: **已冻结 / frozen**。协议 `protocol.json`（含 93 个用例的提示哈希、三个模型串与端点上实际服务的版本、采样参数、预算与分析口径）在任何一次真实调用之前提交，冻结提交 `3f1dbfb`；驱动 `scripts/llm_net_v104.py`，分析 `scripts/analyze_llm_net_v104.py`。 Frozen before the first real call; the protocol commit carries no results. Design below is the text that was written before the credentials existed and is kept unchanged.
 
 ## 为什么需要这个研究 / why this study is needed
 
