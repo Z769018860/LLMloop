@@ -256,7 +256,11 @@ def trial(external, out, plan, i, t):
     assert sha_source(p) == c['source_sha256']
     save(d / 'request.json', t)
     env = os.environ.copy()
-    env['V104_ULTIMATE'] = str(external / 'ultimate-v0.3.2/UAutomizer-linux')
+    # The adapter reads V103_ULTIMATE by that name (scripts/ultimate_adapter_v103.py, line 6); setting
+    # only V104_ULTIMATE left every one of the 400 Ultimate cells dead in 0.12 s with a KeyError,
+    # recorded as MALFORMED_OUTPUT. Both names are set here so the two v1.0x drivers agree.
+    env['V103_ULTIMATE'] = str(external / 'ultimate-v0.3.2/UAutomizer-linux')
+    env['V104_ULTIMATE'] = env['V103_ULTIMATE']
     spec = out / (c['property'] + '.prp')
     arch = '32bit' if c['abi'] == 'ILP32' else '64bit'
     if t['tool'] == 'ultimate':
@@ -284,13 +288,22 @@ def trial(external, out, plan, i, t):
                 blocks = json.loads((d / 'stdout.txt').read_text())
                 props = [q for b in blocks for q in b.get('result', [])]
                 save(d / 'properties.json', [{k: v for k, v in q.items() if k != 'trace'} for q in props])
-                failed = [q for q in props if q.get('status') == 'FAILURE']
+                # A failing unwinding assertion is not a refutation: it says the loop was not unrolled
+                # far enough, which the protocol defines as UNKNOWN. Reading it as FALSE turned 154
+                # cases with an upstream `true` label into CBMC refutations in run 45007189312 --
+                # a whole column of the comparison that looked like a 55 % error rate and was an
+                # artefact of counting `main.unwind.0` next to `main.overflow.1`.
+                is_unwind = lambda q: '.unwind.' in (q.get('property') or '')
+                failed = [q for q in props if q.get('status') == 'FAILURE' and not is_unwind(q)]
+                truncated = any(q.get('status') == 'FAILURE' and is_unwind(q) for q in props)
                 if res['exit_code'] == 10 and failed:
                     status = 'FALSE'
                 elif res['exit_code'] in (0, 10):
                     status = 'TRUE' if any(b.get('cProverStatus') == 'success' for b in blocks) else 'UNKNOWN'
                 else:
                     status = 'PROCESS_ERROR'
+                if status == 'TRUE' and truncated:
+                    status = 'UNKNOWN'      # cannot happen with --unwinding-assertions, kept as a guard
             except ValueError:
                 status = 'MALFORMED_OUTPUT'
         elif (d / 'result.json').exists():
@@ -389,12 +402,12 @@ def merge(out):
     tools = plan['tools']
     by = {(r['program'], r['property'], r['tool']): r for r in rows}
     units = [(c['name'], c['property']) for c in plan['cases']]
-    md = ['# v1.04 held-out study: the c/loop-* suites of sv-benchmarks', '',
+    md = ['# v1.04 frozen study', '',
           '分母 %d 个 (程序, 性质) 单元 %d 个，%d 个工具 = %d 次运行；完整捕获：%s。'
           % (len(units), len(units), len(tools), len(tasks), True), '',
-          'These are the standard SV-COMP loop suites, taken whole, none of them used by any earlier '
-          'protocol in this repository. `%d` files were excluded at freeze time because their `.yml` '
-          'declares neither property in scope; they stay in the census in `protocol.json`.' % len(plan['excluded']), '']
+          plan.get('selection', ''), '',
+          'Excluded at freeze time: %d' % len(plan['excluded']),
+          json.dumps(plan['excluded'][:6], ensure_ascii=False), '']
 
     md += ['## 判定分布 / verdicts', '', '| 工具 | proved | refuted | undecided | resource_stop | broken |',
            '| --- | --- | --- | --- | --- | --- |']

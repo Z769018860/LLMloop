@@ -16,6 +16,14 @@ name: v1.04 scale-up, 400 cases
 #   * 45006927799 -- the frozen source hashes were taken over CRLF bytes (a Windows checkout) while
 #     the runner materialises the same revision with LF. Benchmark inputs are now hashed with CRLF
 #     folded to LF, in the freeze and in the run.
+#
+# Run 45007189312 completed, and two of its three columns were artefacts rather than results:
+#   * every Ultimate cell died in 0.12 s with KeyError: 'V103_ULTIMATE' -- the adapter reads that
+#     name, the driver set V104_ULTIMATE. All 400 were recorded as MALFORMED_OUTPUT.
+#   * CBMC was counted as refuting 154 cases that carry an upstream `true` label, because a failing
+#     unwinding assertion (`main.unwind.0`) was read as a property violation. The protocol says
+#     incomplete unrolling is UNKNOWN; 204 of its 309 refutations were only that.
+# Both are fixed, the raw cells of that run are removed, and this run regenerates them.
 on:
   push:
     branches: [research/v103-exec]
