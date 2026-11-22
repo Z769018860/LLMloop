@@ -179,11 +179,16 @@ def freeze(external, out):
                                                            for c in cases))}, indent=1))
 
 
+def plan_dir(out):
+    """Which pinned checkout the protocol reads its sources from (the checkout name is part of the plan)."""
+    return json.loads((out / 'protocol.json').read_text()).get('svbench_dir', 'svbench-loop')
+
+
 def worker(external, out, index):
     task = json.loads((out / 'schedule.json').read_text())[index]
     c = task['case']
     d = out / 'raw' / ('%04d' % index)
-    p = external / 'svbench-loop' / c['path']
+    p = external / plan_dir(out) / c['path']
     assert sha(p) == c['source_sha256']
     import scripts.svcomp_translate as T
     from llmloop.houdini_loops import houdini_loops
@@ -219,7 +224,7 @@ def trial(external, out, plan, i, t):
         return json.loads((d / 'outcome.json').read_text())
     d.mkdir(parents=True, exist_ok=True)
     c = t['case']
-    p = external / 'svbench-loop' / c['path']
+    p = external / plan_dir(out) / c['path']
     assert sha(p) == c['source_sha256']
     save(d / 'request.json', t)
     env = os.environ.copy()
@@ -405,7 +410,7 @@ def merge(out):
 
     md += ['## 按语料 / by corpus', '', '| 语料 | 单元 | llmloop proved | ultimate proved | cbmc proved |',
            '| --- | --- | --- | --- | --- |']
-    for d in DIRS:
+    for d in sorted({c['corpus'] for c in plan['cases']}):
         ns = [(n, p) for n, p in units if n.split('/')[0] == d]
         if not ns:
             continue
