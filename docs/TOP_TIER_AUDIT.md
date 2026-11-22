@@ -225,7 +225,13 @@ E2 若拿不到外部语料，就必须在论文里明确写"没有留出集，�
 ## 8. 本次审计新增的可复用资产
 
 - `scripts/equivalence_v104.py` + `experiments/v104/equivalence/`：把"不可区分"换成"排除了 >10pp"，
-  附带 McNemar 与自助区间，可复现。
+  附带 McNemar 与自助区间，可复现。对 v1.03 的 165 例复算与已发表数字逐行相同（89 vs 91、
+  风险差 −0.020、CI [−0.098, +0.059]、p = 0.815），故换 `--source` 就能对 400 例跑同一套分析。
+- `scripts/witness_v104.py` + `tests/test_witness_v104.py`：SV-COMP 正确性见证的导出与第三方验证。
+  三种 YAML 方言 × 两个校验器都可调用；**列基准 1**、`invariant_set` + `format_version 2.0` 是
+  两个校验器都接受的唯一组合（探测器 run 45009866409）。`selftest` 是非空洞性控制。
+- `.github/workflows/v104-witness-batch.yml`：10 分片导出 + 双校验器 + 合并，前置 control 作业
+  **必须**通过才放行。**注意**：派发要用数字 workflow id，按文件名派发对新文件不生效。
 - `scripts/heldout_v104.py` + `experiments/v104/loopbench/protocol.json`：`c/loop-*` 全族
   （203 用例 / 609 单元 / 3 工具）的**预注册协议**，已在字段里写明"196 个是开发数据、
   7 个从未翻译"，可随时开跑。**不要**把它当留出集用。
