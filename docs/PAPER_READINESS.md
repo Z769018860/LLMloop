@@ -278,7 +278,7 @@ nla 幂和程序(ps4–ps6、hard、divbin)瓶颈定性:析取界原子无增益
 | `full165` | 165 用例 × 3 工具 = 495 单元，600 s / 2 GiB | Ultimate 135、llmloop 90、CBMC 12；配对 8 对 53，p≈3.0e-09；93 子集 88 对 85（p=0.51）；72 个被拒程序 2 对 50 |
 | `independent` | 257 程序 × 2 工具 = 514 单元，60 s / 512 MiB | NIST 190：参考 CBMC 80 证明/95 反驳/15 宿主超时；llmloop 无条件 0、条件性 10、UNKNOWN 180、误认证 0 |
 | `tacle_reference256` | 67 个 TACLe，unwind 256 | TRUE 21、FALSE 3、UNKNOWN 21、内存上限 9、进程错误 11、宿主超时 2；27 个结论相对 unwind 16 改变 |
-| `regression` | 全量 pytest | 见 `experiments/v103/regression/summary.json`（缺 CBMC 工具链的复核测试已改为 skip） |
+| `regression` | 全量 pytest | **3533 passed、14 skipped、0 failed**（816.6 s，`experiments/v103/regression/summary.json`）；唯一的失败项（缺 CBMC 工具链的证书复核测试）已改为 skip |
 
 **三项必须写进论文的判断**
 
@@ -293,6 +293,6 @@ nla 幂和程序(ps4–ps6、hard、divbin)瓶颈定性:析取界原子无增益
 | 1 全体分母与公平比较 | **已完成**：165 全量、同预算、资源与原始日志留存；结论已改为主稿 §4e |
 | 2 独立且有真值的新基准 | **部分完成**：190 个 NIST 有真值、误认证 0，但覆盖 0；TACLe 参考标签不稳定。仍缺真正的第三方 held-out（非本仓库译写）覆盖率证据 |
 | 3 LLM 净收益与成本 | **未开始**：`full165`/`independent` 均为 `remote_model_calls=0`。需要 `LLM_BASE_URL`/凭据后按“冻结在前”跑同预算对照与重复采样，记录响应、重试、tokens、延迟 |
-| 4 正确性与工程验证 | **部分完成**：回归仅剩工具链缺失项（已 skip）。仍缺翻译差分、完整组件消融、29 个证书复核超时与含跳转循环 UNSUPPORTED 的处置说明 |
+| 4 正确性与工程验证 | **部分完成**：回归全绿（3533 passed / 14 skipped / 0 failed），证书未决项的复跑已发出（`scripts/cert_recheck_unresolved_v103.py`，22 个程序的 30 个证书，600 s/证书）。仍缺翻译差分、完整组件消融，以及含跳转循环 UNSUPPORTED 的处置说明 |
 
 **仍未解决 / still open**：LLM 臂的同预算对照（P0）、第三方 held-out 覆盖、证书未决项与翻译差分。在上述补齐前，**不得**出现“总体优于现有工具”的表述。
