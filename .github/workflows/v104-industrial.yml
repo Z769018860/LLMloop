@@ -14,6 +14,13 @@ name: v1.04 E3 industrial coverage boundary
 # A configure step that fails is recorded rather than fatal: the files then fail to parse, the
 # summary says so per project, and that is a result about the project, not a crash to hide.
 on:
+  push:
+    # Only this file: a run costs 892 clang parses across four bases, so touching the driver must not
+    # start one. `workflow_dispatch` cannot be used yet -- GitHub resolves that endpoint against the
+    # default branch, and every research workflow in this repository lives on this branch only
+    # (run 45054089607 was an accidental dispatch of the *witness* workflow: id 426701346).
+    branches: [research/v103-exec]
+    paths: ['.github/workflows/v104-industrial.yml']
   workflow_dispatch:
     inputs:
       limit:
@@ -50,7 +57,7 @@ jobs:
       - name: Scan ${{ matrix.project }}
         continue-on-error: true
         env:
-          LIMIT: ${{ inputs.limit }}
+          LIMIT: '6'
         run: |
           args=""
           if [ -n "$LIMIT" ]; then args="--limit $LIMIT"; fi
@@ -59,8 +66,8 @@ jobs:
       - name: Prove ${{ matrix.project }}
         continue-on-error: true
         env:
-          LIMIT: ${{ inputs.limit }}
-          SECONDS_PER_PROOF: ${{ inputs.seconds }}
+          LIMIT: '6'
+          SECONDS_PER_PROOF: '25'
         run: |
           args=""
           if [ -n "$LIMIT" ]; then args="--limit $LIMIT"; fi
@@ -101,8 +108,11 @@ jobs:
           python -u scripts/industrial_v104.py merge --output experiments/v104/industrial
           cat experiments/v104/industrial/summary.md
       - name: Record evidence and push
-        if: inputs.limit == ''
         run: |
+          # A probe run (`limit` smaller than the frozen list) must not become evidence: the summary
+          # would look like a result about four code bases while covering twelve files.
+          python -c "import json,sys; s=json.load(open('experiments/v104/industrial/summary.json')); print('%d of %d protocol files' % (s['totals']['files'], s['protocol_files'])); sys.exit(0 if s['totals']['files'] == s['protocol_files'] else 7)" \
+            || { echo 'partial run: the evidence is not recorded'; exit 0; }
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A experiments/v104/industrial
