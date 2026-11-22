@@ -1,0 +1,1398 @@
+[
+  {
+    "name": "termination-restricted-15/ComplInterv2.c",
+    "source": "int f(int i__in){\nint i = i__in;\nwhile (i != 0)\n{\n  if ((i > (-5)) && (i < 5))\n  {\n    if (i < 0)\n    {\n      i = i + 1;\n    }\n    if (i > 0)\n    {\n      i = i - 1;\n    }\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "i__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/ConvLower.c",
+    "source": "int f(int i__in){\nint i = i__in;\nwhile (i > 5)\n{\n  if (i != 10)\n  {\n    i = i - 1;\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "i__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/DivMinus.c",
+    "source": "int f(int x__in, int y){\nint x = x__in;\nint res = 0;\nwhile ((x >= y) && (y > 0))\n{\n  x = x - y;\n  res = res + 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/DivMinus2.c",
+    "source": "int f(int x__in, int y){\nint x = x__in;\nint ytmp = 0;\nint res = 0;\nwhile ((x >= y) && (y > 0))\n{\n  ytmp = y;\n  while (ytmp != 0)\n  {\n    if (ytmp > 0)\n    {\n      ytmp = ytmp - 1;\n      x = x - 1;\n    }\n    else\n    {\n      ytmp = ytmp + 1;\n      x = x + 1;\n    }\n  }\n\n  res = res + 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/Ex02.c",
+    "source": "int f(int i__in){\nint i = i__in;\nwhile (i > 0)\n{\n  if (i != 5)\n  {\n    i = i - 1;\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "i__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/Ex03.c",
+    "source": "int f(int i__in){\nint i = i__in;\nwhile (i < 0)\n{\n  if (i != (-5))\n  {\n    i = i + 1;\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "i__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/Ex06.c",
+    "source": "int f(int i__in){\nint i = i__in;\nwhile ((i >= (-5)) && (i <= 5))\n{\n  if (i > 0)\n  {\n    i = i - 1;\n  }\n  if (i < 0)\n  {\n    i = i + 1;\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "i__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/Ex08.c",
+    "source": "int f(int i__in){\nint i = i__in;\nint up = 0;\nwhile (i > 0)\n{\n  if (i == 1)\n  {\n    up = 1;\n  }\n  if (i == 10)\n  {\n    up = 0;\n  }\n  if (up == 1)\n  {\n    i = i + 1;\n  }\n  else\n  {\n    i = i - 1;\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "i__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/Flip.c",
+    "source": "int f(int i__in, int j__in){\nint j = j__in;\nint i = i__in;\nint t = 0;\nwhile ((i != 0) && (j != 0))\n{\n  t = i;\n  i = j;\n  j = t;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "i__in": [
+        -2147483648,
+        2147483647
+      ],
+      "j__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/Flip2.c",
+    "source": "int f(int i__in, int j__in){\nint j = j__in;\nint i = i__in;\nint t = 0;\nwhile ((i > 0) && (j > 0))\n{\n  if (i < j)\n  {\n    t = i;\n    i = j;\n    j = t;\n  }\n  else\n  {\n    if (i > j)\n    {\n      j = i;\n    }\n    else\n    {\n      i = i - 1;\n    }\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "i__in": [
+        -2147483648,
+        2147483647
+      ],
+      "j__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/GCD-1.c",
+    "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nint tmp = 0;\nint xtmp = 0;\nwhile (y != 0)\n{\n  tmp = y;\n  xtmp = x;\n  if ((x <= 0) || (y <= 0))\n  {\n    y = 0;\n  }\n  else\n  {\n    if (x == y)\n    {\n      y = 0;\n    }\n    else\n    {\n      while (xtmp > y)\n      {\n        xtmp = xtmp - y;\n      }\n\n    }\n  }\n  y = xtmp;\n  x = tmp;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/GCD2.c",
+    "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nint tmp = 0;\nint xtmp = 0;\nwhile (((y != 0) && (x >= 0)) && (y >= 0))\n{\n  tmp = y;\n  xtmp = x;\n  if (x == y)\n  {\n    y = 0;\n  }\n  else\n  {\n    while (xtmp > y)\n    {\n      xtmp = xtmp - y;\n    }\n\n  }\n  y = xtmp;\n  x = tmp;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/GCD3.c",
+    "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nint tmp = 0;\nint xtmp = 0;\nwhile ((y > 0) && (x > 0))\n{\n  tmp = y;\n  xtmp = x;\n  if (y == 0)\n  {\n    y = y;\n  }\n  else\n  {\n    if (y < 0)\n    {\n      xtmp = -xtmp;\n    }\n  }\n  if (xtmp > 0)\n  {\n    while (xtmp >= y)\n    {\n      xtmp = xtmp - y;\n    }\n\n    y = xtmp;\n  }\n  else\n  {\n    while (xtmp < 0)\n    {\n      xtmp = xtmp - y;\n    }\n\n    y = xtmp;\n  }\n  x = tmp;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/GCD4.c",
+    "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nint tmp = 0;\nint xtmp = 0;\nwhile ((y > 0) && (x > 0))\n{\n  tmp = y;\n  xtmp = x;\n  while ((xtmp >= y) && (y > 0))\n  {\n    xtmp = xtmp - y;\n  }\n\n  y = xtmp;\n  x = tmp;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/IntPath.c",
+    "source": "int f(int i){\nint x = 0;\nint y = 0;\nif (i > 10)\n{\n  x = 1;\n}\nelse\n{\n  y = 1;\n}\n\nwhile (x == y)\n{\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "i": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/Log.c",
+    "source": "int f(int x__in){\nint x = x__in;\nint xtmp = 0;\nint res = 0;\nint restmp = 0;\nwhile (x > 1)\n{\n  xtmp = x;\n  restmp = 0;\n  while (xtmp > 1)\n  {\n    xtmp = xtmp - 2;\n    restmp = restmp + 1;\n  }\n\n  x = xtmp;\n  res = res + 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/LogAG.c",
+    "source": "int f(int x__in){\nint x = x__in;\nint xtmp = 0;\nint res = 0;\nint restmp = 0;\nwhile (x > 1)\n{\n  xtmp = x - 2;\n  restmp = 0;\n  while (xtmp > 1)\n  {\n    xtmp = xtmp - 2;\n    restmp = restmp + 1;\n  }\n\n  x = xtmp + 1;\n  res = res + 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/Loop-2.c",
+    "source": "int f(int __z){\nint a = 5;\nint b = 3;\nint i = 0;\nwhile (i < 10)\n{\n  i = i + 0;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "__z": [
+        0,
+        0
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/McCarthyIterative.c",
+    "source": "int f(int x__in){\nint x = x__in;\nint c = 1;\nwhile (c > 0)\n{\n  if (x > 100)\n  {\n    x = x - 10;\n    c = c - 1;\n  }\n  else\n  {\n    x = x + 11;\n    c = c + 1;\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/MinusBuiltIn.c",
+    "source": "int f(int x, int y__in){\nint y = y__in;\nint res = 0;\nwhile (x > y)\n{\n  y = x + 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x": [
+        -2147483648,
+        2147483646
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/MinusUserDefined.c",
+    "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nint res = 0;\nwhile ((x > 0) && (y > 0))\n{\n  x = x - 1;\n  y = y - 1;\n}\n\nwhile (x > 0)\n{\n  y = y + 1;\n  res = res + 1;\n  while ((x > 0) && (y > 0))\n  {\n    x = x - 1;\n    y = y - 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/MirrorIntervSim.c",
+    "source": "int f(int i__in){\nint i = i__in;\nwhile (i != 0)\n{\n  if (((-5) <= i) && (i <= 35))\n  {\n    if (i < 0)\n    {\n      i = -5;\n    }\n    else\n    {\n      if (i > 30)\n      {\n        i = 35;\n      }\n      else\n      {\n        i = i - 1;\n      }\n    }\n  }\n  else\n  {\n    i = 0;\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "i__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/NO_00.c",
+    "source": "int f(int __z){\nint i = 0;\nwhile (i < 100)\n{\n  i = i + 0;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "__z": [
+        0,
+        0
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/NO_02.c",
+    "source": "int f(int __z){\nint i = 0;\nint j = 0;\nwhile (i < 100)\n{\n  j = 0;\n  while (j < 1)\n  {\n    j = j + 0;\n  }\n\n  i = i + 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "__z": [
+        0,
+        0
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/NO_03.c",
+    "source": "int f(int __z){\nint i = 0;\nint j = 0;\nwhile (i < 100)\n{\n  j = 0;\n  while (j < 1)\n  {\n    j = j + 1;\n  }\n\n  i = i + 0;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "__z": [
+        0,
+        0
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/NO_04.c",
+    "source": "int f(int __z){\nint i = 0;\nint j = 0;\nint k = 0;\nint l = 0;\nint m = 0;\nint a = 0;\nint b = 0;\nwhile (i < 100)\n{\n  a = i + 2;\n  j = 0;\n  while (j < a)\n  {\n    k = (i + j) + 3;\n    while (k >= 0)\n    {\n      b = ((i + j) + k) + 4;\n      l = 0;\n      while (l < b)\n      {\n        m = (((i + j) + k) + l) + 1000;\n        while (m >= 0)\n        {\n          m = m - 0;\n        }\n\n        l = l + 1;\n      }\n\n      k = k - 1;\n    }\n\n    j = j + 1;\n  }\n\n  i = i + 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "__z": [
+        0,
+        0
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/NO_13.c",
+    "source": "int f(int __z){\nint i = 0;\nint j = 100;\nwhile (i < j)\n{\n  if (51 < j)\n  {\n    i = i + 1;\n    j = j - 1;\n  }\n  else\n  {\n    i = i - 1;\n    j = j + 1;\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "__z": [
+        0,
+        0
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/NO_21.c",
+    "source": "int f(int __z){\nint i = 0;\nwhile (i < 100)\n{\n  i = i + 1;\n  i = i - 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "__z": [
+        0,
+        0
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/NO_22.c",
+    "source": "int f(int __z){\nint i = 0;\nwhile (i < 100)\n{\n  if (i < 50)\n  {\n    i = i + 1;\n  }\n  else\n  {\n    i = i - 1;\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "__z": [
+        0,
+        0
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/NO_23.c",
+    "source": "int f(int __z){\nint i = 0;\nwhile (i < 100)\n{\n  if (i < 50)\n  {\n    i = 51;\n  }\n  else\n  {\n    i = 49;\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "__z": [
+        0,
+        0
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/NO_24.c",
+    "source": "int f(int __z){\nint a = 1;\nint b = 2;\nwhile ((a + b) < 5)\n{\n  a = a - b;\n  b = a + b;\n  a = b - a;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "__z": [
+        0,
+        0
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/NarrowKonv.c",
+    "source": "int f(int i__in){\nint i = i__in;\nint range = 20;\nwhile ((0 <= i) && (i <= range))\n{\n  if (!((0 == i) && (i == range)))\n  {\n    if (i == range)\n    {\n      i = 0;\n      range = range - 1;\n    }\n    else\n    {\n      i = i + 1;\n    }\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "i__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/Narrowing.c",
+    "source": "int f(int i__in){\nint i = i__in;\nint range = 20;\nint up = 0;\nwhile ((0 <= i) && (i <= range))\n{\n  if (i == 0)\n  {\n    up = 1;\n  }\n  if (i == range)\n  {\n    up = 0;\n  }\n  if (up == 1)\n  {\n    i = i + 1;\n  }\n  if (up == 0)\n  {\n    i = i - 1;\n  }\n  if (i == (range - 2))\n  {\n    range = range - 1;\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "i__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/Nested-2.c",
+    "source": "int f(int __z){\nint i = 0;\nint j = 3;\nwhile (i < 10)\n{\n  while (j < 12)\n  {\n    j = j - 1;\n    j = j + 2;\n  }\n\n  i = i + 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "__z": [
+        0,
+        0
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/PastaA1.c",
+    "source": "int f(int x__in){\nint x = x__in;\nint y = 0;\nwhile (x > 0)\n{\n  y = 0;\n  while (y < x)\n  {\n    y = y + 1;\n  }\n\n  x = x - 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/PastaA10.c",
+    "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nwhile (x != y)\n{\n  if (x > y)\n  {\n    y = y + 1;\n  }\n  else\n  {\n    x = x + 1;\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/PastaA4.c",
+    "source": "int f(int x, int y__in){\nint y = y__in;\nwhile (x > y)\n{\n  y = y + 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/PastaA7.c",
+    "source": "int f(int x, int y__in, int z__in){\nint z = z__in;\nint y = y__in;\nwhile ((x > y) && (x > z))\n{\n  y = y + 1;\n  z = z + 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ],
+      "z__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/PastaB1.c",
+    "source": "int f(int x__in, int y){\nint x = x__in;\nwhile (x > y)\n{\n  x = x - 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/PastaB14.c",
+    "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nwhile ((x == y) && (x > 0))\n{\n  while (y > 0)\n  {\n    x = x - 1;\n    y = y - 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/PastaB15.c",
+    "source": "int f(int x__in, int y__in, int z){\nint y = y__in;\nint x = x__in;\nwhile ((x == y) && (x > z))\n{\n  while (y > z)\n  {\n    x = x - 1;\n    y = y - 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ],
+      "z": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/PastaB16.c",
+    "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nwhile (x > 0)\n{\n  while (y > 0)\n  {\n    y = y - 1;\n  }\n\n  x = x - 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/PastaB17.c",
+    "source": "int f(int x__in, int y__in, int z){\nint y = y__in;\nint x = x__in;\nwhile (x > z)\n{\n  while (y > z)\n  {\n    y = y - 1;\n  }\n\n  x = x - 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ],
+      "z": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/PastaB2.c",
+    "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nwhile (x > y)\n{\n  x = x - 1;\n  y = y + 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/PastaB4.c",
+    "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nint t = 0;\nwhile (x > y)\n{\n  t = x;\n  x = y;\n  y = t;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/PastaB6.c",
+    "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nwhile ((x > 0) && (y > 0))\n{\n  x = x - 1;\n  y = y - 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/PastaB7.c",
+    "source": "int f(int x__in, int y__in, int z){\nint y = y__in;\nint x = x__in;\nwhile ((x > z) && (y > z))\n{\n  x = x - 1;\n  y = y - 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ],
+      "z": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/PastaC3.c",
+    "source": "int f(int x__in, int y, int z__in){\nint z = z__in;\nint x = x__in;\nwhile (x < y)\n{\n  if (x < z)\n  {\n    x = x + 1;\n  }\n  else\n  {\n    z = z + 1;\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y": [
+        -2147483648,
+        2147483647
+      ],
+      "z__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/PastaC9.c",
+    "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nint random = 0;\nwhile ((x > 0) && (y > 0))\n{\n  random = __VERIFIER_nondet_int();\n  if (random < 42)\n  {\n    x = x - 1;\n    random = __VERIFIER_nondet_int();\n    y = random;\n  }\n  else\n  {\n    y = y - 1;\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/Sequence.c",
+    "source": "int f(int __z){\nint i = 0;\nint j = 5;\nwhile (i < 100)\n{\n  i = i + 1;\n}\n\nwhile (j < 21)\n{\n  j = j + 3;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "__z": [
+        0,
+        0
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/Sunset.c",
+    "source": "int f(int i__in){\nint i = i__in;\nwhile (i > 10)\n{\n  if (i == 25)\n  {\n    i = 30;\n  }\n  if (i <= 30)\n  {\n    i = i - 1;\n  }\n  else\n  {\n    i = 20;\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "i__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/Swingers.c",
+    "source": "int f(int __z){\nint bob = 13;\nint samantha = 17;\nint temp = 0;\nwhile ((bob + samantha) < 100)\n{\n  temp = bob;\n  bob = samantha;\n  samantha = temp;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "__z": [
+        0,
+        0
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/TwoFloatInterv.c",
+    "source": "int f(int i__in){\nint i = i__in;\nwhile ((i > 0) && (i < 50))\n{\n  if (i < 20)\n  {\n    i = i - 1;\n  }\n  if (i > 10)\n  {\n    i = i + 1;\n  }\n  if ((30 <= i) && (i <= 40))\n  {\n    i = i - 1;\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "i__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/UpAndDown.c",
+    "source": "int f(int i__in){\nint i = i__in;\nint up = 0;\nwhile ((0 <= i) && (i <= 10))\n{\n  if (i == 10)\n  {\n    up = 0;\n  }\n  if (i == 0)\n  {\n    up = 1;\n  }\n  if (up == 1)\n  {\n    i = i + 1;\n  }\n  else\n  {\n    i = i - 1;\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "i__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/UpAndDownIneq.c",
+    "source": "int f(int i__in){\nint i = i__in;\nint up = 0;\nwhile ((0 <= i) && (i <= 10))\n{\n  if (i >= 10)\n  {\n    up = 0;\n  }\n  if (i <= 0)\n  {\n    up = 1;\n  }\n  if (up >= 1)\n  {\n    i = i + 1;\n  }\n  else\n  {\n    i = i - 1;\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "i__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/WhileDecr.c",
+    "source": "int f(int i__in){\nint i = i__in;\nwhile (i > 5)\n{\n  i = i - 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "i__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/WhilePart.c",
+    "source": "int f(int i__in){\nint i = i__in;\nwhile (i > 5)\n{\n  if (i < 10)\n  {\n    i = i - 1;\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "i__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/WhileSingle.c",
+    "source": "int f(int i__in){\nint i = i__in;\nwhile (i < 10)\n{\n  if (i != 3)\n  {\n    i = i + 1;\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "i__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/a.01.c",
+    "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nint c = 0;\nwhile (x > 0)\n{\n  y = 0;\n  while (y < x)\n  {\n    y = y + 1;\n  }\n\n  x = x - 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/a.04.c",
+    "source": "int f(int x, int y__in){\nint y = y__in;\nint c = 0;\nwhile (x > y)\n{\n  y = y + 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/a.05.c",
+    "source": "int f(int x, int y__in){\nint y = y__in;\nint c = 0;\nwhile ((y < 2147483647) && (x >= (y + 1)))\n{\n  y = y + 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/a.06.c",
+    "source": "int f(int x, int y__in, int z__in){\nint z = z__in;\nint y = y__in;\nint c = 0;\nwhile ((((((y >= 0) && (z < (2147483647 - y))) || ((y < 0) && (z > ((-2147483648) - y)))) && (x > (y + z))) && (y < 2147483647)) && (z < 2147483647))\n{\n  y = y + 1;\n  z = z + 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ],
+      "z__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/a.07.c",
+    "source": "int f(int x, int y__in, int z__in){\nint z = z__in;\nint y = y__in;\nint c = 0;\nwhile ((x > y) && (x > z))\n{\n  y = y + 1;\n  z = z + 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ],
+      "z__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/a.08.c",
+    "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nint c = 0;\nwhile ((x > y) && (x < 2147483647))\n{\n  x = x + 1;\n  y = y + 2;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/a.09_assume.c",
+    "source": "int f(int x, int y, int z__in){\nint z = z__in;\nwhile (((y > 0) && (x >= z)) && (z <= (2147483647 - y)))\n{\n  z = z + y;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x": [
+        -2147483648,
+        2147483647
+      ],
+      "y": [
+        -2147483648,
+        2147483647
+      ],
+      "z__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/a.10.c",
+    "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nint c = 0;\nwhile (!(x == y))\n{\n  if (x > y)\n  {\n    y = y + 1;\n  }\n  else\n  {\n    x = x + 1;\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": null
+  },
+  {
+    "name": "termination-restricted-15/b.01.c",
+    "source": "int f(int x__in, int y){\nint x = x__in;\nint c = 0;\nwhile (x > y)\n{\n  x = x - 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/b.02.c",
+    "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nint c = 0;\nwhile (x > y)\n{\n  x = x - 1;\n  y = y + 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/b.03_assume.c",
+    "source": "int f(int x, int y__in){\nint y = y__in;\nwhile (((x > 0) && (x > y)) && (y <= (2147483647 - x)))\n{\n  y = y + x;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/b.04.c",
+    "source": "int f(int x__in, int y__in, int tmp__in){\nint tmp = tmp__in;\nint y = y__in;\nint x = x__in;\nwhile (x > y)\n{\n  tmp = x;\n  x = y;\n  y = tmp;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ],
+      "tmp__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/b.05.c",
+    "source": "int f(int x__in, int tmp__in){\nint tmp = tmp__in;\nint x = x__in;\nwhile ((((x > 0) && (tmp < 1073741824)) && ((-1073741824) < tmp)) && (x == (2 * tmp)))\n{\n  x = x - 1;\n  tmp = __VERIFIER_nondet_int();\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "tmp__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/b.06.c",
+    "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nint c = 0;\nwhile ((x > 0) && (y > 0))\n{\n  x = x - 1;\n  y = y - 1;\n  c = c + 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/b.07.c",
+    "source": "int f(int x__in, int y__in, int z){\nint y = y__in;\nint x = x__in;\nint c = 0;\nwhile ((x > z) && (y > z))\n{\n  x = x - 1;\n  y = y - 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ],
+      "z": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/b.10.c",
+    "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nint c = 0;\nwhile ((((x >= 0) && (y < (2147483647 - x))) || ((x < 0) && (y > ((-2147483648) - x)))) && ((x + y) > 0))\n{\n  if (x > 0)\n  {\n    x = x - 1;\n  }\n  else\n  {\n    if (y > 0)\n    {\n      y = y - 1;\n    }\n    else\n    {\n    }\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/b.11.c",
+    "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nint c = 0;\nwhile ((((x >= 0) && (y < (2147483647 - x))) || ((x < 0) && (y > ((-2147483648) - x)))) && ((x + y) > 0))\n{\n  if (x > y)\n  {\n    x = x - 1;\n  }\n  else\n  {\n    if (x == y)\n    {\n      x = x - 1;\n    }\n    else\n    {\n      y = y - 1;\n    }\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/b.12.c",
+    "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nint c = 0;\nwhile ((x > 0) || (y > 0))\n{\n  if (x > 0)\n  {\n    x = x - 1;\n  }\n  else\n  {\n    if (y > 0)\n    {\n      y = y - 1;\n    }\n    else\n    {\n    }\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/b.13.c",
+    "source": "int f(int x__in, int y__in, int z){\nint y = y__in;\nint x = x__in;\nint c = 0;\nwhile ((x > z) || (y > z))\n{\n  if (x > z)\n  {\n    x = x - 1;\n  }\n  else\n  {\n    if (y > z)\n    {\n      y = y - 1;\n    }\n    else\n    {\n    }\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ],
+      "z": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/b.14.c",
+    "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nint c = 0;\nwhile ((x == y) && (x > 0))\n{\n  while (y > 0)\n  {\n    x = x - 1;\n    y = y - 1;\n    c = c + 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/b.15.c",
+    "source": "int f(int x__in, int y__in, int z){\nint y = y__in;\nint x = x__in;\nint c = 0;\nwhile ((x == y) && (x > z))\n{\n  while (y > z)\n  {\n    x = x - 1;\n    y = y - 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ],
+      "z": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/b.16.c",
+    "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nint c = 0;\nwhile (x > 0)\n{\n  while (y > 0)\n  {\n    y = y - 1;\n  }\n\n  x = x - 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/b.17.c",
+    "source": "int f(int x__in, int y__in, int z){\nint y = y__in;\nint x = x__in;\nint c = 0;\nwhile (x > z)\n{\n  while (y > z)\n  {\n    y = y - 1;\n  }\n\n  x = x - 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ],
+      "z": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/b.18.c",
+    "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nwhile ((x > 0) && (y > 0))\n{\n  if (x > y)\n  {\n    while (x > 0)\n    {\n      x = x - 1;\n    }\n\n  }\n  else\n  {\n    while (y > 0)\n    {\n      y = y - 1;\n    }\n\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/c.01-no-inv.c",
+    "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nint c = 0;\nwhile (x >= 0)\n{\n  y = 1;\n  while ((x > y) && (y < 1073741824))\n  {\n    y = 2 * y;\n  }\n\n  x = x - 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/c.01_assume.c",
+    "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nwhile ((x >= 0) && (y > 0))\n{\n  y = 1;\n  while (((x > y) && (y > 0)) && (y < 1073741824))\n  {\n    y = 2 * y;\n  }\n\n  x = x - 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/c.02.c",
+    "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nint c = 0;\nwhile ((x >= 0) && (x < 2147483647))\n{\n  x = x + 1;\n  y = 1;\n  while (x > y)\n  {\n    y = y + 1;\n  }\n\n  x = x - 2;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/c.03.c",
+    "source": "int f(int x__in, int y, int z__in){\nint z = z__in;\nint x = x__in;\nint c = 0;\nwhile ((x < y) && (z < 2147483647))\n{\n  if (x < z)\n  {\n    x = x + 1;\n  }\n  else\n  {\n    z = z + 1;\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ],
+      "y": [
+        -2147483648,
+        2147483647
+      ],
+      "z__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/c.07.c",
+    "source": "int f(int i__in, int j__in, int k__in, int tmp__in){\nint tmp = tmp__in;\nint k = k__in;\nint j = j__in;\nint i = i__in;\nint c = 0;\nwhile (((i <= 100) && (j <= k)) && (k > (-2147483648)))\n{\n  tmp = i;\n  i = j;\n  j = tmp + 1;\n  k = k - 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "i__in": [
+        -2147483648,
+        2147483647
+      ],
+      "j__in": [
+        -2147483648,
+        2147483647
+      ],
+      "k__in": [
+        -2147483648,
+        2147483647
+      ],
+      "tmp__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/c.08.c",
+    "source": "int f(int i__in, int j__in){\nint j = j__in;\nint i = i__in;\nint c = 0;\nwhile (i >= 0)\n{\n  j = 0;\n  while (j <= (i - 1))\n  {\n    j = j + 1;\n  }\n\n  i = i - 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "i__in": [
+        -2147483648,
+        2147483647
+      ],
+      "j__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/ex3a.c",
+    "source": "int f(int x__in){\nint x = x__in;\nint c = 0;\nwhile ((x > 1) && (x < 100))\n{\n  x = x * x;\n  c = c + 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/java_Break.c",
+    "source": "int f(int __z){\nint i = 0;\nint c = 0;\nwhile (i <= 10)\n{\n  i = i + 1;\n  c = c + 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "__z": [
+        0,
+        0
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/java_Continue1.c",
+    "source": "int f(int __z){\nint i = 0;\nint c = 0;\nwhile (i < 20)\n{\n  i = i + 1;\n  if (i <= 10)\n  {\n  }\n  else\n  {\n    c = c + 1;\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "__z": [
+        0,
+        0
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/java_Nested.c",
+    "source": "int f(int __z){\nint i = 0;\nint j = 0;\nint c = 0;\nwhile (i < 10)\n{\n  j = 3;\n  while (j < 12)\n  {\n    j = j - 1;\n    c = c + 1;\n    j = j + 2;\n  }\n\n  i = i + 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "__z": [
+        0,
+        0
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  },
+  {
+    "name": "termination-restricted-15/java_Sequence.c",
+    "source": "int f(int __z){\nint i = 0;\nint j = 0;\nint c = 0;\nwhile (i < 100)\n{\n  c = c + 1;\n  i = i + 1;\n}\n\nj = 5;\nwhile (j < 21)\n{\n  c = c + 1;\n  j = j + 3;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "__z": [
+        0,
+        0
+      ]
+    },
+    "abi": "LP64",
+    "expected_nooverflow": true
+  }
+]
