@@ -47,7 +47,13 @@ jobs:
         run: |
           EXT="${{ runner.temp }}/ext"
           mkdir -p "$EXT"
-          curl -fsSL --retry 3 -o "$EXT/cpa.zip" https://cpachecker.sosy-lab.org/CPAchecker-4.2.2-unix.zip
+          # sosy-lab answered 403 to one runner (run 45013718717) and curl does not retry a 403 by
+          # default, so the job died before it started. --retry-all-errors also retries that.
+          for i in 1 2 3 4 5; do
+            curl -fsSL --retry 3 --retry-delay 5 --retry-all-errors --max-time 600 \
+              -o "$EXT/cpa.zip" https://cpachecker.sosy-lab.org/CPAchecker-4.2.2-unix.zip && break
+            echo "attempt $i failed, waiting" >&2; sleep 15
+          done
           echo "183adce15ced2641784dd16dd1dda3c4d88bb463674d8adb688fb28c3656525f  $EXT/cpa.zip" | sha256sum -c -
           unzip -q -o "$EXT/cpa.zip" -d "$EXT"
           chmod +x scripts/ci_setup_v103.sh
@@ -100,7 +106,13 @@ jobs:
         run: |
           EXT="${{ runner.temp }}/ext"
           mkdir -p "$EXT"
-          curl -fsSL --retry 3 -o "$EXT/cpa.zip" https://cpachecker.sosy-lab.org/CPAchecker-4.2.2-unix.zip
+          # sosy-lab answered 403 to one runner (run 45013718717) and curl does not retry a 403 by
+          # default, so the job died before it started. --retry-all-errors also retries that.
+          for i in 1 2 3 4 5; do
+            curl -fsSL --retry 3 --retry-delay 5 --retry-all-errors --max-time 600 \
+              -o "$EXT/cpa.zip" https://cpachecker.sosy-lab.org/CPAchecker-4.2.2-unix.zip && break
+            echo "attempt $i failed, waiting" >&2; sleep 15
+          done
           echo "183adce15ced2641784dd16dd1dda3c4d88bb463674d8adb688fb28c3656525f  $EXT/cpa.zip" | sha256sum -c -
           unzip -q -o "$EXT/cpa.zip" -d "$EXT"
           chmod +x scripts/ci_setup_v103.sh
