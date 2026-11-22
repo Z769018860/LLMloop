@@ -11,6 +11,11 @@ name: v1.04 loop-suite study, 203 cases
 # driver: the 203 cases, their properties, labels, ABI, stratum and both hashes compare equal to the
 # first freeze, so the selection is untouched and only the code that runs has changed.
 #
+# The first rerun after installing gcc-multilib finished in two minutes: `trial` returns a cached
+# `outcome.json`, so every cell was reused and the CBMC column came back exactly as broken. Resumable
+# by design, and the wrong behaviour for an environment fix -- the 196 CBMC cells were deleted from
+# the evidence tree, which is the only way this driver re-runs a unit.
+#
 # Honesty note carried into the paper: 196 of these 203 were parsed by an earlier experiment, so this
 # is the community's benchmark population, not a clean hold-out. Only the seven
 # loop-floats-scientific-comp cases were never translated before. `held_out` in the protocol records
