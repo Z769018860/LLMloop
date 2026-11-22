@@ -55,7 +55,7 @@ jobs:
         if: always()
         with:
           name: loopbench-shard-${{ matrix.shard }}
-          path: experiments/v104/loopbench/shards
+          path: experiments/v104/loopbench
           if-no-files-found: error
           retention-days: 30
 
@@ -80,16 +80,16 @@ jobs:
       - name: Fold the shards in
         run: |
           set -e
-          n=$(ls -1 incoming/shard_*.json 2>/dev/null | wc -l)
+          # The whole output directory is uploaded, not just the shard summary: a rate without the
+          # per-unit command lines and stderr is not evidence, and the first attempt at this workflow
+          # uploaded `shards/` alone -- a PROCESS_ERROR in the CBMC column with nothing to read.
+          cp -a incoming/. experiments/v104/loopbench/
+          n=$(ls -1 experiments/v104/loopbench/shards/shard_*.json 2>/dev/null | wc -l)
           echo "$n shard result(s) of 20"
           if [ "$n" -ne 20 ]; then
-            # merge() refuses anything but a complete capture, so a missing shard is reported here
-            # rather than folded into a rate that silently changes its own denominator.
             echo "incomplete: $n of 20 shards survived; nothing is recorded" >&2
             exit 1
           fi
-          mkdir -p experiments/v104/loopbench/shards
-          cp -a incoming/shard_*.json experiments/v104/loopbench/shards/
           python -u scripts/heldout_v104.py merge --output experiments/v104/loopbench
           cat experiments/v104/loopbench/summary.md
       - name: Record evidence and push

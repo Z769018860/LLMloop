@@ -52,7 +52,7 @@ jobs:
         if: always()
         with:
           name: holdout41-shard-${{ matrix.shard }}
-          path: experiments/v104/holdout41/shards
+          path: experiments/v104/holdout41
           if-no-files-found: error
           retention-days: 30
 
@@ -77,11 +77,12 @@ jobs:
       - name: Fold the shards in
         run: |
           set -e
-          n=$(ls -1 incoming/shard_*.json 2>/dev/null | wc -l)
+          # Upload the whole output directory: a status without the per-unit command line and stderr
+          # is not evidence (the first attempt at the loop-suite workflow uploaded `shards/` alone).
+          cp -a incoming/. experiments/v104/holdout41/
+          n=$(ls -1 experiments/v104/holdout41/shards/shard_*.json 2>/dev/null | wc -l)
           echo "$n shard result(s) of 5"
           if [ "$n" -ne 5 ]; then echo "incomplete: $n of 5; nothing is recorded" >&2; exit 1; fi
-          mkdir -p experiments/v104/holdout41/shards
-          cp -a incoming/shard_*.json experiments/v104/holdout41/shards/
           python -u scripts/heldout_v104.py merge --output experiments/v104/holdout41
           cat experiments/v104/holdout41/summary.md
       - name: Record evidence and push
