@@ -62,8 +62,14 @@ jobs:
             python -u scripts/witness_v104.py selftest --external "$EXT" \
               --output "experiments/v104/witness/control/$v" --validator $v --column-base 1 \
               | tee "control-$v.txt"
-            grep -q MISMATCH "control-$v.txt" && { echo "$v cannot separate true from false" >&2; exit 1; }
+            # `grep -q X && { ...; exit 1; }` would end the step with grep's status when grep finds
+            # nothing, which is 1 -- the control passed and the job failed anyway. Use if/then.
+            if grep -q MISMATCH "control-$v.txt"; then
+              echo "$v cannot separate a true invariant from a false one" >&2
+              exit 1
+            fi
           done
+          echo "both validators confirmed the true invariant and rejected the false one"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
