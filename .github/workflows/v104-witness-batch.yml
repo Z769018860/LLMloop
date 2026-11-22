@@ -31,9 +31,10 @@ on:
         default: ''
 permissions:
   contents: write
-concurrency:
-  group: v104-witness-batch
-  cancel-in-progress: false
+# No concurrency group. It was there to stop two batches colliding on the git push, which the retry
+# loop in `collect` already handles, and it had a worse failure mode: run 45014235382 left three jobs
+# wedged behind a JVM that outlived its wrapper, could not be cancelled, and held the group so the
+# replacement run sat pending instead of running.
 jobs:
   control:
     runs-on: ubuntu-24.04
