@@ -20,7 +20,7 @@ import json
 import os
 import subprocess
 import sys
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -79,19 +79,37 @@ def run_study(what, timeout, workers):
         name, inv = job
         p = ps[name]
         loops = len(inv) if inv and isinstance(inv[0], list) else 1
-        return {'name': name, 'invariant_loops': loops,
-                **F.recheck(p['source'], p['parameter_bounds'], inv, timeout=timeout)}
-
-    with ThreadPoolExecutor(workers) as ex:
-        rows = list(ex.map(one, jobs))
+        try:
+            return {'name': name, 'invariant_loops': loops,
+                    **F.recheck(p['source'], p['parameter_bounds'], inv, timeout=timeout)}
+        except Exception as exc:  # one certificate must never take the whole study down
+            return {'name': name, 'invariant_loops': loops, 'result': 'ERROR',
+                    'detail': type(exc).__name__ + ': ' + str(exc)[:300]}
 
     OUT.mkdir(parents=True, exist_ok=True)
-    payload = {'study': what, 'previous_file': previous, 'previous_counts': dict(prev_counts),
-               'unresolved_programs': len(names), 'per_certificate_timeout_s': timeout,
-               'workers': workers, 'cbmc': cbmc_version(),
-               'certificates_rerun': len(rows), 'counts': dict(collections.Counter(r['result'] for r in rows)),
-               'rows': sorted(rows, key=lambda r: (r['name'], r['invariant_loops']))}
-    (OUT / (what + '.json')).write_text(json.dumps(payload, indent=1) + '\n')
+    target = OUT / (what + '.json')
+
+    def snapshot(rows):
+        payload = {'study': what, 'previous_file': previous, 'previous_counts': dict(prev_counts),
+                   'unresolved_programs': len(names), 'per_certificate_timeout_s': timeout,
+                   'workers': workers, 'cbmc': cbmc_version(),
+                   'certificates_rerun': len(rows), 'certificates_planned': len(jobs),
+                   'complete': len(rows) == len(jobs),
+                   'counts': dict(collections.Counter(r['result'] for r in rows)),
+                   'rows': sorted(rows, key=lambda r: (r['name'], r['invariant_loops']))}
+        target.write_text(json.dumps(payload, indent=1) + '\n')
+        return payload
+
+    # incremental: a runner that dies mid-study must not lose the certificates already decided
+    rows = []
+    with ThreadPoolExecutor(workers) as ex:
+        futures = [ex.submit(one, job) for job in jobs]
+        for i, f in enumerate(as_completed(futures), 1):
+            rows.append(f.result())
+            if i % 5 == 0 or i == len(futures):
+                snapshot(rows)
+                print(what, i, 'of', len(futures), flush=True)
+    payload = snapshot(rows)
     print(what, len(names), 'programs', len(rows), 'certificates', payload['counts'])
     return payload
 
