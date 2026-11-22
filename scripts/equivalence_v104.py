@@ -11,7 +11,12 @@ run after the numbers were known, so it is descriptive -- "the interval excludes
 than 10 percentage points in either direction" -- and not a confirmatory equivalence test. The
 interval is the claim; the margin is only a way of reading it.
 
-usage: equivalence_v104.py [--out DIR] [--reps N]
+usage: equivalence_v104.py [--source DIR] [--out DIR] [--reps N]
+
+`--source` is any frozen study directory holding `protocol.json` and `results.json`, so the same
+analysis runs on the 165 cases of v1.03 and on the 400 of the v1.04 scale-up. The subsets adapt: the
+"in fragment" split only exists where the protocol recorded each case's translation stage, and on the
+scale-up the comparable read is the accepted subset.
 """
 
 import argparse
@@ -21,13 +26,12 @@ import random
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / 'experiments' / 'v103' / 'full165'
 SEED = 20261122
 
 
-def load():
-    plan = json.loads((SRC / 'protocol.json').read_text())
-    res = json.loads((SRC / 'results.json').read_text())
+def load(src):
+    plan = json.loads((src / 'protocol.json').read_text())
+    res = json.loads((src / 'results.json').read_text())
     by = collections.defaultdict(dict)
     for r in res['rows']:
         by[r['program']][r['tool']] = r['status']
@@ -57,11 +61,13 @@ def interval(a, b, reps, seed=SEED):
 
 def subset(plan, by, name):
     if name == 'in_fragment':
-        names = [c['name'] for c in plan['cases'] if c['historical_stage'].startswith('in_')]
+        names = [c['name'] for c in plan['cases'] if c.get('historical_stage', '').startswith('in_')]
+    elif name == 'v103_core':
+        names = [c['name'] for c in plan['cases'] if c.get('stratum') == 'v103-165']
     elif name == 'accepted_now':
         names = [p for p in by if by[p]['llmloop'] != 'UNSUPPORTED']
     elif name == 'labelled_no_overflow':
-        names = [c['name'] for c in plan['cases'] if c['expected_nooverflow'] is True]
+        names = [c['name'] for c in plan['cases'] if c.get('expected_nooverflow') is True]
     else:
         names = sorted(by)
     names = [n for n in names if 'llmloop' in by[n] and 'ultimate' in by[n]]
@@ -70,14 +76,28 @@ def subset(plan, by, name):
     return names, a, b
 
 
+def subset_names(plan):
+    """Which splits this protocol supports, in report order."""
+    cases = plan['cases'] or [{}]
+    names = ['all_165' if 'historical_stage' in cases[0] else 'all']
+    if 'historical_stage' in cases[0]:
+        names.append('in_fragment')
+    if any(c.get('stratum') == 'v103-165' for c in plan['cases']):
+        names.append('v103_core')
+    return names + ['accepted_now', 'labelled_no_overflow']
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--out', type=Path, default=ROOT / 'experiments' / 'v104' / 'equivalence')
+    ap.add_argument('--source', type=Path, default=ROOT / 'experiments' / 'v103' / 'full165')
+    ap.add_argument('--out', type=Path,
+                    default=ROOT / 'experiments' / 'v104' / 'equivalence')
     ap.add_argument('--reps', type=int, default=20000)
     a = ap.parse_args()
-    plan, by = load()
+    src = a.source if a.source.is_absolute() else ROOT / a.source
+    plan, by = load(src)
     rows = []
-    for name in ('all_165', 'in_fragment', 'accepted_now', 'labelled_no_overflow'):
+    for name in subset_names(plan):
         names, x, y = subset(plan, by, name)
         diff = (sum(x) - sum(y)) / len(names)
         lo, hi = interval(x, y, a.reps)
@@ -93,7 +113,8 @@ def main():
               % (name, len(names), sum(x), sum(y), diff, lo, hi, rows[-1]['mcnemar_exact_p']), flush=True)
 
     a.out.mkdir(parents=True, exist_ok=True)
-    payload = {'source': str(SRC.relative_to(ROOT)), 'reps': a.reps, 'seed': SEED,
+    payload = {'source': str(src.relative_to(ROOT)) if src.is_relative_to(ROOT) else str(src),
+               'reps': a.reps, 'seed': SEED,
                'framing': 'post-hoc and descriptive: the bootstrap interval is the claim, the 5 %/10 % '
                           'margins are only a way of reading it; nothing here was pre-registered',
                'comparison': 'llmloop (deterministic portfolio, 0 model calls) vs Ultimate 0.3.2, '
@@ -102,6 +123,7 @@ def main():
     (a.out / 'summary.json').write_text(json.dumps(payload, indent=2) + '\n')
     md = ['# v1.04 差异有多大 / how large a difference the data rule out', '',
           '同一批冻结用例、同一 600 s / 2 GiB 上限下，llmloop（确定性组合，0 次模型调用）对 Ultimate 0.3.2。',
+          '来源 / source: `%s`。' % payload['source'],
           '配对风险差 = (仅 llmloop 证明 − 仅 Ultimate 证明)/n；区间是 20000 次配对自助的 2.5%–97.5% 分位。',
           ' **这是事后分析**：区间本身是结论，"排除超过 10 个百分点"只是读法，不是预先登记的等价界。', '',
           '| 子集 | n | llmloop | Ultimate | 仅我方 | 仅 Ultimate | 风险差 | 95% CI | McNemar p | 排除 >5pp | 排除 >10pp |',

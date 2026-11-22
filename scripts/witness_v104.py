@@ -297,27 +297,39 @@ def emit_case(out, index, name, program, entries, abi, created, note):
 
 # --------------------------------------------------------------------------- CPAchecker
 
-def cpa_validate(external, program, witness, abi, timeout=300):
-    """Run the third-party validator. TRUE means the witness proves the property for this program."""
+def cpa_validate(external, program, witness, abi, log=None, timeout=300):
+    """Run the third-party validator. TRUE means the witness proves the property for this program.
+
+    The full output goes to `log` (and the last lines into the record) whatever the verdict: on the
+    first attempt this returned NO_RESULT for both invariants, and three lines of tail were not
+    enough to tell a rejected witness from a command line the tool never accepted. The command line
+    is recorded for the same reason -- it is what a reader has to be able to repeat.
+    """
     cpa = external / CPA_DIR
     if not (cpa / 'scripts' / 'cpa.sh').exists():
         return {'result': 'NO_CPA', 'detail': 'expected %s' % cpa}
     cfg = cpa / 'config' / 'correctness-witness-validation--overflow.properties'
     if not cfg.exists():
         return {'result': 'NO_CONFIG', 'detail': str(cfg)}
+    outdir = Path(log).with_suffix('') if log else Path(witness).with_suffix('.cpa')
+    outdir.mkdir(parents=True, exist_ok=True)
     cmd = [str(cpa / 'scripts' / 'cpa.sh'), '--config', str(cfg), '--witness', str(witness),
            '--spec', str(cpa / 'config' / 'specification' / 'sv-comp-overflow.spc'),
            '--32' if abi == 'ILP32' else '--64', '--timelimit', '%ds' % (timeout - 30),
-           '--output-path', str(Path(witness).parent.parent / 'cpa' / Path(witness).stem), str(program)]
+           '--output-path', str(outdir), str(program)]
     t = time.time()
     try:
         r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        o = r.stdout + r.stderr
+        code = r.returncode
     except subprocess.TimeoutExpired:
-        return {'result': 'TIMEOUT', 'seconds': round(time.time() - t, 1)}
-    o = r.stdout + r.stderr
+        return {'result': 'TIMEOUT', 'seconds': round(time.time() - t, 1), 'cmd': cmd}
+    if log:
+        save(Path(log), '$ %s\n\nexit %s\n\n%s' % (' '.join(cmd), code, o))
     m = re.search(r'Verification result:\s*(TRUE|FALSE|UNKNOWN)', o)
     return {'result': m.group(1) if m else 'NO_RESULT', 'seconds': round(time.time() - t, 1),
-            'tail': [x for x in o.strip().splitlines() if x.strip()][-3:]}
+            'exit': code, 'tail': [x for x in o.strip().splitlines() if x.strip()][-8:],
+            'log': str(log) if log else None}
 
 
 # --------------------------------------------------------------------------- the frozen case set
@@ -400,7 +412,8 @@ def validate(external, out, limit=None, abi_default='LP64'):
     def one(r):
         res = cpa_validate(external, out / 'program' / r['program'],
                            out / 'witness' / ('witness_%s.yml' % ('%04d' % r['index'])),
-                           r['data_model'])
+                           r['data_model'],
+                           log=out / 'logs' / ('%04d.out.txt' % r['index']))
         return {**{'name': r['name'], 'index': r['index']}, **res}
 
     with ThreadPoolExecutor(2) as pool:
@@ -436,12 +449,18 @@ def selftest(external, out):
         w = out / ('selftest_%s.yml' % label)
         save(w, witness_yaml('selftest_program.c', psha, entries, 'LP64',
                              FREEZE_TIME, 'non-vacuity control'))
-        r = cpa_validate(external, out / 'selftest_program.c', w, 'LP64')
+        r = cpa_validate(external, out / 'selftest_program.c', w, 'LP64',
+                         log=out / 'logs' / ('selftest_%s.out.txt' % label))
         rows.append({'label': label, 'invariant': inv, 'want': want, **r})
     dump(out / 'selftest.json', rows)
     for r in rows:
+        ok = r['result'] == r['want']
         print('%-6s want %-5s got %-8s %s' % (r['label'], r['want'], r['result'],
-                                              'OK' if r['result'] == r['want'] else 'MISMATCH'))
+                                              'OK' if ok else 'MISMATCH'))
+        if not ok:
+            print('  exit %s, %s s' % (r.get('exit'), r.get('seconds')))
+            for x in r.get('tail') or []:
+                print('  | ' + x)
     return all(r['result'] == r['want'] for r in rows)
 
 

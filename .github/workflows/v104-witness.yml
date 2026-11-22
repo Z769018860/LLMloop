@@ -8,12 +8,15 @@ name: v1.04 witness export, first batch
 # It is not a result: six cases cannot support a rate. It is the check that the exporter, the
 # harness and the validator agree on a format before the same code is pointed at all 165 (and at the
 # 400 of the scale-up).
+#
+# Both the control and the batch are allowed to fail without stopping the job, because the useful
+# thing to get out of a red run is the validator's own output, which the last step prints either way.
 on:
   push:
     paths: ['.github/workflows/v104-witness.yml']
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
 jobs:
   export:
     runs-on: ubuntu-24.04
@@ -38,33 +41,43 @@ jobs:
           echo "183adce15ced2641784dd16dd1dda3c4d88bb463674d8adb688fb28c3656525f  $EXT/cpa.zip" | sha256sum -c -
           unzip -q -o "$EXT/cpa.zip" -d "$EXT"
       - name: Non-vacuity control (a true invariant must pass, a false one must fail)
+        continue-on-error: true
         run: |
           python -u scripts/witness_v104.py selftest \
             --external "${{ runner.temp }}/ext" \
             --output experiments/v104/witness/selftest
       - name: Export six proved cases
+        continue-on-error: true
         run: |
           python -u scripts/witness_v104.py make \
             --external "${{ runner.temp }}/ext" \
             --output experiments/v104/witness/batch1 \
             --cases termination-restricted-15/java_Break.c,termination-restricted-15/PastaA7.c,termination-restricted-15/b.02.c,termination-restricted-15/b.16.c,termination-restricted-15/WhileSingle.c,termination-restricted-15/NO_13.c
       - name: Validate the witnesses with CPAchecker
+        continue-on-error: true
         run: |
           python -u scripts/witness_v104.py validate \
             --external "${{ runner.temp }}/ext" \
             --output experiments/v104/witness/batch1
-      - name: Show one program and one witness
+      - name: Print everything the run produced
+        if: always()
         run: |
-          O=experiments/v104/witness/batch1
-          echo "=== program:"; cat -n "$O"/program/program_0000.c || true
-          echo "=== witness:"; cat "$O"/witness/witness_0000.yml || true
-          echo "=== validation:"; cat "$O"/validation.json || true
-          python -u scripts/witness_v104.py merge --output "$O"
-      - name: Keep the evidence
-        run: |
-          O=experiments/v104/witness
-          rm -rf "$O"/batch1/cpa "$O"/selftest/cpa || true
-          du -sh "$O"/* || true
+          S=experiments/v104/witness/selftest
+          B=experiments/v104/witness/batch1
+          echo "===== selftest.json"; cat "$S"/selftest.json 2>/dev/null || true
+          echo "===== selftest program"; cat -n "$S"/selftest_program.c 2>/dev/null || true
+          echo "===== selftest witness (true)"; cat "$S"/selftest_true.yml 2>/dev/null || true
+          echo "===== selftest logs"
+          for f in "$S"/logs/*.txt; do echo "--- $f"; cat "$f" 2>/dev/null | tail -40; done
+          echo "===== batch plan"; cat "$B"/plan.json 2>/dev/null || true
+          echo "===== batch program 0000"; cat -n "$B"/program/program_0000.c 2>/dev/null || true
+          echo "===== batch witness 0000"; cat "$B"/witness/witness_0000.yml 2>/dev/null || true
+          echo "===== batch validation"; cat "$B"/validation.json 2>/dev/null || true
+          echo "===== batch logs"; for f in "$B"/logs/*.txt; do echo "--- $f"; tail -25 "$f" 2>/dev/null; done
+          python -u scripts/witness_v104.py merge --output "$B" 2>/dev/null || true
+      - name: Trim CPAchecker work dirs
+        if: always()
+        run: rm -rf experiments/v104/witness/*/cpa && du -sh experiments/v104/witness/* || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:
