@@ -1,0 +1,32 @@
+{
+ "rows": [
+  {
+   "project": "openssl",
+   "path": "crypto/modes/ocb128.c",
+   "function": "ocb_ntz",
+   "source": "typedef unsigned char uint8_t;\ntypedef signed char int8_t;\ntypedef unsigned short uint16_t;\ntypedef short int16_t;\ntypedef unsigned int uint32_t;\ntypedef int int32_t;\ntypedef unsigned long long uint64_t;\ntypedef long long int64_t;\ntypedef unsigned long size_t;\ntypedef long ssize_t;\ntypedef int bool;\nu32 ocb_ntz(unsigned long long n) {\n    u32 cnt = 0;\n\n    /*\n     * We do a right-to-left simple sequential search. This is surprisingly\n     * efficient as the distribution of trailing zeros is not uniform,\n     * e.g. the number of possible inputs with no trailing zeros is equal to\n     * the number with 1 or more; the number with exactly 1 is equal to the\n     * number with 2 or more, etc. Checking the last two bits covers 75% of\n     * all numbers. Checking the last three covers 87.5%\n     */\n    while (!(n & 1)) {\n        n >>= 1;\n        cnt++;\n    }\n    return cnt;\n}\n",
+   "bounds": {
+    "n": [
+     0,
+     18446744073709551615
+    ]
+   },
+   "abi": "LP64",
+   "status": "EXTRACTED"
+  },
+  {
+   "project": "openssl",
+   "path": "crypto/rsa/rsa_lib.c",
+   "function": "icbrt64",
+   "source": "typedef unsigned char uint8_t;\ntypedef signed char int8_t;\ntypedef unsigned short uint16_t;\ntypedef short int16_t;\ntypedef unsigned int uint32_t;\ntypedef int int32_t;\ntypedef unsigned long long uint64_t;\ntypedef long long int64_t;\ntypedef unsigned long size_t;\ntypedef long ssize_t;\ntypedef int bool;\nuint64_t icbrt64(unsigned long x) {\n    uint64_t r = 0;\n    uint64_t b;\n    int s;\n\n    for (s = 63; s >= 0; s -= 3) {\n        r <<= 1;\n        b = 3 * r * (r + 1) + 1;\n        if ((x >> s) >= b) {\n            x -= b << s;\n            r++;\n        }\n    }\n    return r * cbrt_scale;\n}\n",
+   "bounds": {
+    "x": [
+     0,
+     18446744073709551615
+    ]
+   },
+   "abi": "LP64",
+   "status": "EXTRACTED"
+  }
+ ]
+}

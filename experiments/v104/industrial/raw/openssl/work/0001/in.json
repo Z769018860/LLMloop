@@ -1,0 +1,10 @@
+{
+ "source": "typedef unsigned char uint8_t;\ntypedef signed char int8_t;\ntypedef unsigned short uint16_t;\ntypedef short int16_t;\ntypedef unsigned int uint32_t;\ntypedef int int32_t;\ntypedef unsigned long long uint64_t;\ntypedef long long int64_t;\ntypedef unsigned long size_t;\ntypedef long ssize_t;\ntypedef int bool;\nuint64_t icbrt64(unsigned long x) {\n    uint64_t r = 0;\n    uint64_t b;\n    int s;\n\n    for (s = 63; s >= 0; s -= 3) {\n        r <<= 1;\n        b = 3 * r * (r + 1) + 1;\n        if ((x >> s) >= b) {\n            x -= b << s;\n            r++;\n        }\n    }\n    return r * cbrt_scale;\n}\n",
+ "bounds": {
+  "x": [
+   0,
+   18446744073709551615
+  ]
+ },
+ "abi": "LP64"
+}

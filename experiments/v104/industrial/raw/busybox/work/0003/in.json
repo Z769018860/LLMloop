@@ -1,0 +1,5 @@
+{
+ "source": "typedef unsigned char uint8_t;\ntypedef signed char int8_t;\ntypedef unsigned short uint16_t;\ntypedef short int16_t;\ntypedef unsigned int uint32_t;\ntypedef int int32_t;\ntypedef unsigned long long uint64_t;\ntypedef long long int64_t;\ntypedef unsigned long size_t;\ntypedef long ssize_t;\ntypedef int bool;\nvoid open_next_file(void) {\n\twhile (1) {\n\t\tif (!*G.file_list)\n\t\t\treturn;\n\t\tG.in_stream = fopen_or_warn_stdin(*G.file_list++);\n\t\tif (G.in_stream) {\n\t\t\tbreak;\n\t\t}\n\t\tG.exit_code = 1;\n\t}\n\n\tif ((option_mask32 & (OPT_N|OPT_S)) == OPT_N)\n\t\tsetbuf(G.in_stream, NULL);\n}\n",
+ "bounds": {},
+ "abi": "LP64"
+}

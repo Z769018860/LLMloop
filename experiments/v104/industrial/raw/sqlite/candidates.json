@@ -1,0 +1,32 @@
+{
+ "rows": [
+  {
+   "project": "sqlite",
+   "path": "src/util.c",
+   "function": "sqlite3VarintLen",
+   "source": "typedef unsigned char uint8_t;\ntypedef signed char int8_t;\ntypedef unsigned short uint16_t;\ntypedef short int16_t;\ntypedef unsigned int uint32_t;\ntypedef int int32_t;\ntypedef unsigned long long uint64_t;\ntypedef long long int64_t;\ntypedef unsigned long size_t;\ntypedef long ssize_t;\ntypedef int bool;\nint sqlite3VarintLen(unsigned long long v) {\n  int i;\n  for(i=1; (v >>= 7)!=0; i++){ assert( i<10 ); }\n  return i;\n}\n",
+   "bounds": {
+    "v": [
+     0,
+     18446744073709551615
+    ]
+   },
+   "abi": "LP64",
+   "status": "EXTRACTED"
+  },
+  {
+   "project": "sqlite",
+   "path": "src/vdbesort.c",
+   "function": "vdbeSorterTreeDepth",
+   "source": "typedef unsigned char uint8_t;\ntypedef signed char int8_t;\ntypedef unsigned short uint16_t;\ntypedef short int16_t;\ntypedef unsigned int uint32_t;\ntypedef int int32_t;\ntypedef unsigned long long uint64_t;\ntypedef long long int64_t;\ntypedef unsigned long size_t;\ntypedef long ssize_t;\ntypedef int bool;\nint vdbeSorterTreeDepth(int nPMA) {\n  int nDepth = 0;\n  i64 nDiv = SORTER_MAX_MERGE_COUNT;\n  while( nDiv < (i64)nPMA ){\n    nDiv = nDiv * SORTER_MAX_MERGE_COUNT;\n    nDepth++;\n  }\n  return nDepth;\n}\n",
+   "bounds": {
+    "nPMA": [
+     -2147483648,
+     2147483647
+    ]
+   },
+   "abi": "LP64",
+   "status": "EXTRACTED"
+  }
+ ]
+}

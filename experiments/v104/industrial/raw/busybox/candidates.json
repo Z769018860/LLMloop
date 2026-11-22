@@ -1,0 +1,67 @@
+{
+ "rows": [
+  {
+   "project": "busybox",
+   "path": "archival/libarchive/lzo1x_9x.c",
+   "function": "len_of_coded_match",
+   "source": "typedef unsigned char uint8_t;\ntypedef signed char int8_t;\ntypedef unsigned short uint16_t;\ntypedef short int16_t;\ntypedef unsigned int uint32_t;\ntypedef int int32_t;\ntypedef unsigned long long uint64_t;\ntypedef long long int64_t;\ntypedef unsigned long size_t;\ntypedef long ssize_t;\ntypedef int bool;\nint len_of_coded_match(unsigned int m_len, unsigned int m_off, unsigned int lit) {\n\tint n = 4;\n\n\tif (m_len < 2)\n\t\treturn -1;\n\tif (m_len == 2)\n\t\treturn (m_off <= M1_MAX_OFFSET && lit > 0 && lit < 4) ? 2 : -1;\n\tif (m_len <= M2_MAX_LEN && m_off <= M2_MAX_OFFSET)\n\t\treturn 2;\n\tif (m_len == M2_MIN_LEN && m_off <= MX_MAX_OFFSET && lit >= 4)\n\t\treturn 2;\n\tif (m_off <= M3_MAX_OFFSET) {\n\t\tif (m_len <= M3_MAX_LEN)\n\t\t\treturn 3;\n\t\tm_len -= M3_MAX_LEN;\n\t} else if (m_off <= M4_MAX_OFFSET) {\n\t\tif (m_len <= M4_MAX_LEN)\n\t\t\treturn 3;\n\t\tm_len -= M4_MAX_LEN;\n\t} else\n\t\treturn -1;\n\twhile (m_len > 255) {\n\t\tm_len -= 255;\n\t\tn++;\n\t}\n\treturn n;\n}\n",
+   "bounds": {
+    "m_len": [
+     0,
+     4294967295
+    ],
+    "m_off": [
+     0,
+     4294967295
+    ],
+    "lit": [
+     0,
+     4294967295
+    ]
+   },
+   "abi": "LP64",
+   "status": "EXTRACTED"
+  },
+  {
+   "project": "busybox",
+   "path": "libbb/isqrt.c",
+   "function": "isqrt",
+   "source": "typedef unsigned char uint8_t;\ntypedef signed char int8_t;\ntypedef unsigned short uint16_t;\ntypedef short int16_t;\ntypedef unsigned int uint32_t;\ntypedef int int32_t;\ntypedef unsigned long long uint64_t;\ntypedef long long int64_t;\ntypedef unsigned long size_t;\ntypedef long ssize_t;\ntypedef int bool;\nunsigned long isqrt(unsigned long long N) {\n\tunsigned long x;\n\tunsigned shift;\n#define LL_WIDTH_BITS (unsigned)(sizeof(N)*8)\n\n\tshift = LL_WIDTH_BITS - 2;\n\tx = 0;\n\tdo {\n\t\tx = (x << 1) + 1;\n\t\tif ((unsigned long long)x * x > (N >> shift))\n\t\t\tx--; /* whoops, that +1 was too much */\n\t\tshift -= 2;\n\t} while ((int)shift >= 0);\n\treturn x;\n}\n",
+   "bounds": {
+    "N": [
+     0,
+     18446744073709551615
+    ]
+   },
+   "abi": "LP64",
+   "status": "EXTRACTED"
+  },
+  {
+   "project": "busybox",
+   "path": "coreutils/od_bloaty.c",
+   "function": "gcd",
+   "source": "typedef unsigned char uint8_t;\ntypedef signed char int8_t;\ntypedef unsigned short uint16_t;\ntypedef short int16_t;\ntypedef unsigned int uint32_t;\ntypedef int int32_t;\ntypedef unsigned long long uint64_t;\ntypedef long long int64_t;\ntypedef unsigned long size_t;\ntypedef long ssize_t;\ntypedef int bool;\nunsigned int gcd(unsigned int u, unsigned int v) {\n\tunsigned t;\n\twhile (v != 0) {\n\t\tt = u % v;\n\t\tu = v;\n\t\tv = t;\n\t}\n\treturn u;\n}\n",
+   "bounds": {
+    "u": [
+     0,
+     4294967295
+    ],
+    "v": [
+     0,
+     4294967295
+    ]
+   },
+   "abi": "LP64",
+   "status": "EXTRACTED"
+  },
+  {
+   "project": "busybox",
+   "path": "coreutils/od_bloaty.c",
+   "function": "open_next_file",
+   "source": "typedef unsigned char uint8_t;\ntypedef signed char int8_t;\ntypedef unsigned short uint16_t;\ntypedef short int16_t;\ntypedef unsigned int uint32_t;\ntypedef int int32_t;\ntypedef unsigned long long uint64_t;\ntypedef long long int64_t;\ntypedef unsigned long size_t;\ntypedef long ssize_t;\ntypedef int bool;\nvoid open_next_file(void) {\n\twhile (1) {\n\t\tif (!*G.file_list)\n\t\t\treturn;\n\t\tG.in_stream = fopen_or_warn_stdin(*G.file_list++);\n\t\tif (G.in_stream) {\n\t\t\tbreak;\n\t\t}\n\t\tG.exit_code = 1;\n\t}\n\n\tif ((option_mask32 & (OPT_N|OPT_S)) == OPT_N)\n\t\tsetbuf(G.in_stream, NULL);\n}\n",
+   "bounds": {},
+   "abi": "LP64",
+   "status": "EXTRACTED"
+  }
+ ]
+}
