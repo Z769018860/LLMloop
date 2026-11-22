@@ -149,24 +149,29 @@ def add_entry(code, bounds):
     `parameter_bounds` instead of leaving them in the source. Re-imposing exactly those constraints
     is what makes the validation a check of the same claim; without it CPAchecker would be asked
     about a strictly larger input set and could reject a correct invariant.
+
+    Each argument is drawn into a local of `main` first. The bounds are stated over the *parameter*
+    names, which do not exist outside `f`, so assuming them directly in `main` produced a program
+    CPAchecker refused to parse ("Undefined identifier n found", probe run 45009560330) -- a harness
+    bug that had been hiding behind the format errors.
     """
     params = parse_sig(code)
-    decls, call, assume = [], [], []
-    for t, n in params:
+    decls, draws, args = [], [], []
+    for i, (t, n) in enumerate(params):
         fn = NONDET.get(t)
         if fn is None:
             raise SystemExit('parameter %s has type %r, no nondeterministic source' % (n, t))
         d = 'extern %s __VERIFIER_nondet_%s(void);' % (t, fn)
         if d not in decls:
             decls.append(d)
-        call.append('__VERIFIER_nondet_%s()' % fn)
+        var = 'a%d' % i
+        draws.append('  %s %s = __VERIFIER_nondet_%s();' % (t, var, fn))
         if n in bounds and len(bounds[n]) == 2:
             lo, hi = bounds[n]
-            assume.append('__VERIFIER_assume(%s >= %s && %s <= %s);' % (n, lo, n, hi))
-    if not params:                       # the translation invents a dummy parameter in this case
-        call = []
-    main = ['extern void __VERIFIER_assume(int);', 'int main(void){']
-    main += assume + ['  return f(%s);' % ', '.join(call), '}']
+            draws.append('  __VERIFIER_assume(%s >= %s && %s <= %s);' % (var, lo, var, hi))
+        args.append(var)
+    main = ['extern void __VERIFIER_assume(int);', 'int main(void){'] + draws + \
+           ['  return f(%s);' % ', '.join(args), '}']
     return code.rstrip('\n') + '\n' + '\n'.join(decls) + '\n' + '\n'.join(main) + '\n'
 
 
