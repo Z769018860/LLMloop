@@ -172,16 +172,26 @@ def merge(what, scope):
         assert ov['complete'], 'incomplete overrides for %s' % what
         assert ov.get('cbmc') == engine, 'override ran on a different engine: %s' % ov.get('cbmc')
         assert ov.get('preamble_sha256') == preamble, 'override used a different preamble'
-        by_key = {(r['name'], r['invariant_loops']): r for r in rows}
+        # (name, loops) is not an identity: a study can carry the same certificate more than once
+        # (fresh_hybrid has DivMinus.c three times). Keep the row list intact and replace in place,
+        # and refuse to override a key that is not unique, rather than silently dropping rows.
+        positions = collections.defaultdict(list)
+        for k, r in enumerate(rows):
+            positions[(r['name'], r['invariant_loops'])].append(k)
         for r in ov['rows']:
             key = (r['name'], r['invariant_loops'])
-            assert key in by_key, 'override for an unplanned certificate: %s' % (key,)
-            was = by_key[key]['result']
-            by_key[key] = r
+            assert key in positions, 'override for an unplanned certificate: %s' % (key,)
+            where = positions[key]
+            if len(where) > 1:
+                # an override only ever replaces a row that came out ERROR, so among duplicates the
+                # target is the one that failed; if that is still ambiguous, stop rather than guess
+                where = [k for k in where if rows[k]['result'] == 'ERROR']
+                assert len(where) == 1, 'ambiguous override for %s: %d rows share it' % (key, len(where))
+            was = rows[where[0]]['result']
+            rows[where[0]] = r
             overrides.append({'name': r['name'], 'invariant_loops': r['invariant_loops'],
                               'was': was, 'now': r['result'],
                               'address_space_limit': ov.get('address_space_limit')})
-        rows = list(by_key.values())
 
     payload = {'study': what, 'scope': scope, 'planned': planned, 'completed': len(rows),
                'complete': len(rows) == planned, 'counts': dict(collections.Counter(r['result'] for r in rows)),
