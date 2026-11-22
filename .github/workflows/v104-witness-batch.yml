@@ -31,13 +31,9 @@ on:
         required: false
         default: ''
       shards:
-        description: 'comma-separated shard numbers to run; empty = every shard'
+        description: 'comma-separated shard numbers (0-19); empty = all twenty'
         required: false
         default: ''
-      total:
-        description: 'how many shards to split the protocol into (default 10)'
-        required: false
-        default: '10'
       workers:
         description: 'concurrent validations per shard (default 2)'
         required: false
@@ -112,20 +108,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Twenty slots, of which `total` are used. Longer jobs are what this environment kills --
-        # run 45016384532 lost shards 8 and 9 early and then shards 3 and 6 at the same instant
-        # around 48 minutes, all of them inside the CPAchecker step, and a killed job never reaches
-        # its artifact upload. Splitting the protocol into twenty slices and running four validations
-        # at a time turns a 45-50 minute job into a 10-15 minute one, which is the only mitigation
-        # that addresses the cause instead of the symptom.
-        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
-    # A dispatched subset exists because of a real failure mode: run 45016384532 lost shards 8 and 9
-    # to a runner shutdown *during validation*, so their export was done and their witness never
-    # checked. Re-running every shard to recover two throws away the rest.
-    if: >-
-      matrix.shard < fromJSON(inputs.total) &&
-      (inputs.shards == '' ||
-       contains(format(',{0},', inputs.shards), format(',{0},', matrix.shard)))
+        # Twenty slices, four validations at a time. Longer jobs are what this environment kills --
+        # run 45016384532 lost shards 8 and 9 early and then shards 3 and 6 at the same instant around
+        # 48 minutes, all of them inside the CPAchecker step, and a killed job never reaches its
+        # artifact upload. A 10-15 minute job shrinks the window; nothing else does.
+        #
+        # The matrix comes from the `shards` input rather than from a range, because a job-level `if`
+        # cannot see `matrix` (the parser rejects it: "Unrecognized named-value: 'matrix'"), so the
+        # subset has to be expressed by not creating the job at all.
+        shard: ${{ fromJSON(format('[{0}]', inputs.shards || '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19')) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -159,7 +150,7 @@ jobs:
           # specific question about a named witness, not to measure a rate.
           python -u scripts/witness_v104.py make --external "${{ runner.temp }}/ext" \
             --output "experiments/v104/witness/full165/shard${{ matrix.shard }}" \
-            --shard ${{ matrix.shard }}/${{ inputs.total }} --column-base 1 --dialect set-20 \
+            --shard ${{ matrix.shard }}/20 --column-base 1 --dialect set-20 \
             --cases "$CASES"
       # Uploaded after every phase, because a job the host kills skips every later step including the
       # artifact upload: shards 3, 6, 8 and 9 of run 45016384532 all died inside a validation step and
@@ -251,7 +242,6 @@ jobs:
       - name: Fold the shards in
         env:
           WANT: ${{ inputs.shards }}
-          TOTAL: ${{ inputs.total }}
         run: |
           D=experiments/v104/witness/full165
           ls "$D"
@@ -259,7 +249,7 @@ jobs:
           if [ -n "$WANT" ]; then
             want=$(printf '%s' "$WANT" | tr ',' '\n' | grep -c .)
           else
-            want="$TOTAL"
+            want=20
           fi
           echo "$n shard directory/directories, $want requested"
           # Only the shards that were asked for are required. On a full run that is every shard of
