@@ -39,6 +39,26 @@ if [ "$WHAT" = all ] || [ "$WHAT" = svbench ]; then
   sparse_at_pin "$SVBENCH_URL" "$EXT/svbench" "$PIN_SVBENCH" 'c/termination-15/*' 'c/termination-restricted-15/*'
 fi
 
+# Certificates of the older no-overflow studies are re-checked against the same pin but need
+# the directories those studies drew from; a separate checkout keeps the frozen studies' input
+# set byte-identical to what they ran with.
+if [ "$WHAT" = all ] || [ "$WHAT" = certbench ]; then
+  sparse_at_pin "$SVBENCH_URL" "$EXT/svbench-cert" "$PIN_SVBENCH" \
+    'c/termination-crafted/*' 'c/termination-crafted-lit/*' 'c/termination-restricted-15/*' 'c/bitvector/*'
+fi
+
+# CBMC alone, for certificate re-checks that need no Ultimate.
+if [ "$WHAT" = all ] || [ "$WHAT" = cbmc ]; then
+  if [ ! -x "$EXT/native/usr/bin/cbmc" ]; then
+    [ -f "$EXT/cbmc.deb" ] || curl -fsSL --retry 3 -o "$EXT/cbmc.deb" "$CBMC_URL"
+    dpkg-deb -x "$EXT/cbmc.deb" "$EXT/native"
+    chmod +x "$EXT/native/usr/bin/cbmc"
+  fi
+  got="$(sha256sum "$EXT/native/usr/bin/cbmc" | cut -d' ' -f1)"
+  [ "$got" = "$CBMC_SHA" ] || { echo "FATAL: cbmc binary sha256 $got != $CBMC_SHA" >&2; exit 1; }
+  echo "[ok] cbmc $("$EXT/native/usr/bin/cbmc" --version)"
+fi
+
 if [ "$WHAT" = all ] || [ "$WHAT" = juliet ]; then
   sparse_at_pin "$JULIET_URL" "$EXT/juliet" "$PIN_JULIET" 'testcases/CWE190_Integer_Overflow/*' 'testcasesupport/*'
 fi
