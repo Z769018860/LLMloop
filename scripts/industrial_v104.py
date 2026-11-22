@@ -437,6 +437,7 @@ def scan(external, out, project, log_func=print, limit=0):
                 cur = here
             if n.get('kind') != 'FunctionDecl':
                 continue
+            name = n.get('name') or ''
             b = body_of(n)
             if b is None:
                 continue
@@ -446,11 +447,16 @@ def scan(external, out, project, log_func=print, limit=0):
             beg = ((b.get('range') or {}).get('begin') or {}).get('offset') or 0
             if beg >= len(src_bytes):
                 continue
+            # The file name is not enough: clang elides `file` on repeat, so a `static inline` from a
+            # header inherits whatever file was printed last. A definition's own name sits in the few
+            # hundred bytes before its opening brace; if it is not there, this body belongs to some
+            # included file and the offsets are that file's, not this one's.
+            if name.encode() not in src_bytes[max(0, beg - 600):beg]:
+                continue
             if seen >= MAX_FUNCTIONS_PER_FILE:
                 break
             seen += 1
             cls = classify_function(n)
-            name = n.get('name', '?')
             rec['functions'].append({'name': name, 'class': cls})
             if cls != 'scalar_loop_candidate':
                 continue
