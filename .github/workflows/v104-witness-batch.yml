@@ -21,12 +21,17 @@ name: v1.04 witness batch, all 165
 # `validation-cpachecker.json` / `validation-ultimate.json`. The `cpa/` working directories are
 # deleted before upload; the log is the evidence.
 on:
-  push:
-    paths: ['.github/workflows/v104-witness-batch.yml']
+  # Deliberately not on push. This file describes one measurement, and a batch of ten 90-minute jobs
+  # is not something an edit should launch without being asked: pushing a fix to the workflow used to
+  # start a fresh 165-case run, which then collided with the run being fixed.
   workflow_dispatch:
     inputs:
       cases:
         description: 'comma-separated case names; empty = all 165'
+        required: false
+        default: ''
+      shards:
+        description: 'comma-separated shard numbers to run; empty = all ten'
         required: false
         default: ''
 permissions:
@@ -99,7 +104,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        # A dispatched subset exists because of a real failure mode: run 45016384532 lost shards 8
+        # and 9 to a runner shutdown *during validation*, so their export was done and their witness
+        # never checked. Re-running ten shards to recover two throws away eight good ones.
+        shard: ${{ fromJSON(format('[{0}]', inputs.shards || '0,1,2,3,4,5,6,7,8,9')) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -184,16 +192,25 @@ jobs:
           merge-multiple: true
           path: experiments/v104/witness/full165
       - name: Fold the shards in
+        env:
+          WANT: ${{ inputs.shards || '0,1,2,3,4,5,6,7,8,9' }}
         run: |
           D=experiments/v104/witness/full165
           ls "$D"
           n=$(ls -d "$D"/shard* 2>/dev/null | wc -l)
-          echo "$n shard directory/directories"
-          if [ "$n" -ne 10 ]; then echo "expected 10 shards, got $n" >&2; exit 1; fi
+          want=$(printf '%s' "$WANT" | tr ',' '\n' | grep -c .)
+          echo "$n shard directory/directories, $want requested"
+          # Only the shards that were asked for are required. On a full run that is ten, and a
+          # missing one is still an error; on a dispatched subset it is the subset.
+          if [ "$n" -ne "$want" ]; then echo "expected $want shards, got $n" >&2; exit 1; fi
           python -u scripts/witness_v104.py merge --output "$D" \
             --inputs "$(ls -d "$D"/shard* | paste -sd, -)"
           cat "$D"/summary.md
       - name: Record evidence and push
+        # A dispatched subset folds only its own shards, so its summary covers a fragment of the
+        # protocol and must not be committed over the full one. Subset runs are evidence producers;
+        # the summary is written once, from the union, when every shard exists.
+        if: inputs.shards == ''
         run: |
           D=experiments/v104/witness/full165
           git config user.name 'github-actions[bot]'
