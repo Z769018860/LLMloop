@@ -226,3 +226,23 @@ def test_sharding_covers_every_case_exactly_once():
     for n in (8, 10):
         got = [x for k in range(n) for x in names[k::n]]
         assert sorted(got) == names and len(got) == len(names)
+
+
+def test_a_row_that_never_got_a_status_is_refused_by_name(tmp_path):
+    # Run 45010719952: the NOT_PROVED path set `verdict` and forgot `status`, so six of ten shards
+    # exported their whole shard and then died inside Counter on the summary line -- no plan.json, no
+    # result. The failure has to name the case.
+    from scripts.witness_v104 import finish_plan
+    rows = [{'index': 0, 'name': 'ok.c', 'status': 'EXPORTED'},
+            {'index': 1, 'name': 'forgotten.c', 'verdict': 'NOT_PROVED'}]
+    with pytest.raises(SystemExit, match='forgotten.c'):
+        finish_plan(tmp_path, 2, (0, 10), rows)
+
+
+def test_a_complete_shard_writes_its_plan(tmp_path):
+    from scripts.witness_v104 import finish_plan
+    rows = [{'index': 0, 'name': 'a.c', 'status': 'EXPORTED'},
+            {'index': 1, 'name': 'b.c', 'status': 'NOT_PROVED'}]
+    assert finish_plan(tmp_path, 2, (3, 10), rows) == rows
+    blob = json.loads((tmp_path / 'plan.json').read_text())
+    assert blob['shard'] == [3, 10] and blob['cases'] == 2

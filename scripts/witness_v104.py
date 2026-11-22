@@ -36,6 +36,7 @@ Ultimate 0.3.2 answers UNKNOWN to both, so it cannot serve as the control.
 """
 
 import argparse
+import collections
 import hashlib
 import json
 import re
@@ -518,7 +519,8 @@ def make(external, out, only=(), limit=None, created=None, dialect='set-20', sha
             dump(out / 'records' / ('record_%04d.json' % i), rec)
             continue
         status, inv, phases = prove(source, bounds, c['abi'])
-        rec.update({'verdict': status, 'phases': phases, 'translation_sha256': sha_of_text(source)})
+        rec.update({'status': status, 'verdict': status, 'phases': phases,
+                    'translation_sha256': sha_of_text(source)})
         if status != 'PROVED':
             rows.append(rec)
             dump(out / 'records' / ('record_%04d.json' % i), rec)
@@ -536,9 +538,23 @@ def make(external, out, only=(), limit=None, created=None, dialect='set-20', sha
         rows.append(rec)
         dump(out / 'records' / ('record_%04d.json' % i), rec)
         print(json.dumps({'case': c['name'], 'loops': rec['loops']}), flush=True)
-    dump(out / 'plan.json', {'cases': len(cases), 'shard': shard, 'rows': rows})
-    import collections
+    return finish_plan(out, len(cases), shard, rows)
+
+
+def finish_plan(out, n_cases, shard, rows):
+    """Write the shard's plan and summarise it.
+
+    The status is the one field every row must have: `merge` counts on it, and a row without one is a
+    case that did work and then reported nothing. Run 45010719952 is why this raises a sentence naming
+    the cases instead of letting `Counter` produce a KeyError -- six of ten shards finished their
+    whole export and then died on the summary line, so no shard result was kept.
+    """
+    missing = [r.get('name') for r in rows if 'status' not in r]
+    if missing:
+        raise SystemExit('rows without a status, so the export is incomplete: %s' % missing)
+    dump(out / 'plan.json', {'cases': n_cases, 'shard': shard, 'rows': rows})
     print(json.dumps(collections.Counter(r['status'] for r in rows), indent=1))
+    return rows
 
 
 def sha_of_text(s):
@@ -565,7 +581,6 @@ def validate(external, out, limit=None, validator='cpachecker', timeout=300, wor
     # to overwrite the first is not a second opinion.
     dump(out / ('validation-%s.json' % validator),
          {'validator': validator, 'timeout': timeout, 'rows': results})
-    import collections
     print(json.dumps(collections.Counter(r['result'] for r in results), indent=1))
 
 
@@ -620,7 +635,6 @@ def merge(outs, out=None):
     position in the shard), which is what makes folding them back together safe: a duplicated or
     missing index is visible rather than silently averaged away.
     """
-    import collections
     out = out or outs[0]
     rows, shards = [], []
     vals = collections.defaultdict(dict)   # validator -> index -> row
