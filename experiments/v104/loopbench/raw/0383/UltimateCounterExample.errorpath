@@ -1,0 +1,31 @@
+[L14]              float pi = 3.14159 ;
+[L20]              float x = __VERIFIER_nondet_float() ;
+[L21]              float octant = pi/3 ;
+[L22]  CALL        assume_abort_if_not(x > 0 && x < octant)
+[L10]  COND FALSE  !(!cond)
+       VAL         [pi=3.141590118408203]
+[L22]  RET         assume_abort_if_not(x > 0 && x < octant)
+[L23]              float oddExp = x ;
+[L24]              float evenExp = 1.0 ;
+[L25]              float term = x ;
+[L26]              unsigned int count = 2 ;
+[L27]              int multFactor = 0 ;
+[L28]              int temp ;
+       VAL         [count=2, evenExp=1.0, oddExp=0.00000000000000000010842021724855044, pi=3.141590118408203, term=0.00000000000000000010842021724855044, x=0.00000000000000000010842021724855044]
+[L30]  COND TRUE   1
+[L32]              term = term * (x/count)
+[L33]              multFactor = (count>>1 % 2 == 0) ? 1 : -1
+[L35]              evenExp = evenExp + multFactor*term
+[L37]              count++
+[L39]              term = term * (x/count)
+[L41]              oddExp = oddExp + multFactor*term
+[L43]              count++
+[L45]              temp = __VERIFIER_nondet_int()
+[L46]  COND TRUE   temp == 0
+       VAL         [count=4, evenExp=1.0, oddExp=0.00000000000000000010842021724855044, pi=3.141590118408203, term=0.0, x=0.00000000000000000010842021724855044]
+[L49]  CALL        __VERIFIER_assert( oddExp >= evenExp )
+[L12]  COND TRUE   !(cond)
+       VAL         [pi=3.141590118408203]
+[L12]              reach_error()
+       VAL         [pi=3.141590118408203]
+
