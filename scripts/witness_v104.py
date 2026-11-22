@@ -165,7 +165,7 @@ def add_entry(code, bounds):
     return code.rstrip('\n') + '\n' + '\n'.join(decls) + '\n' + '\n'.join(main) + '\n'
 
 
-def loop_heads(code):
+def loop_heads(code, column_base=0):
     """(line, column) of each loop head, in the order `houdini_loops` numbers its invariants.
 
     That order is `[x for s in middle for x in _walk(s) if isinstance(x, c_ast.While)]` over the
@@ -203,7 +203,8 @@ def loop_heads(code):
             if isinstance(x, (c_ast.While, c_ast.For)):
                 if x.coord is None:
                     raise ValueError('loop without coordinates')
-                heads.append((x.coord.line, x.coord.column - 1))
+                heads.append((x.coord.line, x.coord.column - 1 if column_base == 0
+                              else x.coord.column))
     return heads
 
 
@@ -476,7 +477,7 @@ SELFTEST_PROGRAM = 'int f(int n){\n  int i = 0;\n  while (i <= n) {\n    i = i +
 SELFTEST_BOUNDS = {'n': [0, 10]}
 
 
-def selftest(external, out, validator='cpachecker'):
+def selftest(external, out, validator='cpachecker', column_base=0):
     """Validate a true invariant (want TRUE) and a false one (want FALSE) on a fixed program.
 
     Every number this script reports is a rate of `Verification result: TRUE`. That number means
@@ -489,7 +490,7 @@ def selftest(external, out, validator='cpachecker'):
     d = out / 'cases' / 'selftest'
     save(d / 'program.c', program)
     psha = sha(d / 'program.c')
-    heads = loop_heads(program)
+    heads = loop_heads(program, column_base)
     rows = []
     for label, inv, want in (('true', 'i >= 0 && i <= n + 1', 'TRUE'),
                              ('false', 'i < n', 'FALSE')):
@@ -558,6 +559,8 @@ if __name__ == '__main__':
     ap.add_argument('--cases', default='')
     ap.add_argument('--limit', type=int)
     ap.add_argument('--validator', choices=['cpachecker', 'ultimate'], default='cpachecker')
+    ap.add_argument('--column-base', type=int, choices=[0, 1], default=0,
+                    help='0 for the entries format definition, 1 for what pycparser reports')
     a = ap.parse_args()
     out = Path(a.output).resolve()
     if a.action == 'make':
@@ -565,6 +568,7 @@ if __name__ == '__main__':
     elif a.action == 'validate':
         validate(Path(a.external), out, limit=a.limit, validator=a.validator)
     elif a.action == 'selftest':
-        sys.exit(0 if selftest(Path(a.external), out, validator=a.validator) else 1)
+        sys.exit(0 if selftest(Path(a.external), out, validator=a.validator,
+                               column_base=a.column_base) else 1)
     else:
         merge(out)
