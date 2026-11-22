@@ -1,17 +1,23 @@
 name: v1.04 witness probe 3
 
-# One question, three facts, no code changes: what exactly does UAutomizer write when it writes a
-# correctness witness, and does either validator accept that file?
+# Which shape of correctness witness does a third-party validator actually confirm?
 #
-# Why it matters. Rounds so far:
-#   45007628049 / 45007989891 / 45008782977 -- CPAchecker 4.2.2 calls our YAML witness
-#     "format currently not supported", both through --config and through --witnessValidation, and
-#     fails its XML parser on the first character of the file;
-#   45007989891 / 45008782977 -- Ultimate matches our entry only with --column-base 1, then answers
-#     UNKNOWN for a true and a false invariant alike.
-# If CPAchecker accepts the witness Ultimate itself writes, our file has a defect and the difference
-# between the two files says what it is. If it rejects that one too, CPAchecker 4.2.2 does not read
-# YAML through this entry point at all, and that decides the route instead of guessing again.
+# The rounds that got here:
+#   45007628049 / 45007989891 -- CPAchecker 4.2.2: "The Witness format found for ... is currently
+#     not supported" for `entry_type: loop_invariant` at format_version 0.1 (the sv-witnesses README
+#     shape), both through --config and through --witnessValidation;
+#   45007989891 / 45008782977 -- Ultimate matched that entry only with a one-based column (its own
+#     witness uses `column: 5` for a `while` at zero-based column 4) and then said UNKNOWN for a true
+#     and a false invariant alike;
+#   45009169721 -- Ultimate printed its own correctness witness: `entry_type: invariant_set`,
+#     `format_version: '2.2'`, invariants under `content[].invariant` with `type: loop_invariant`,
+#     `location`, `value` and `format: c_expression`. Handed that file, CPAchecker reached
+#     `AutomatonWitnessV2d0Parser` and died in `Optional.orElseThrow` -- it has a 2.0 parser and
+#     does not know 2.2.
+#
+# So the two dimensions are the entry shape and the declared version. This job crosses both with
+# both validators, and each cell carries two invariants: one that must be confirmed and one that must
+# be rejected. Six cells, and the format question is closed.
 on:
   push:
     paths: ['.github/workflows/v104-witness-probe3.yml']
@@ -22,13 +28,22 @@ jobs:
   probe:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    strategy:
+      fail-fast: false
+      matrix:
+        validator: [cpachecker, ultimate]
+        dialect: [entries-01, set-20, set-22]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
       - uses: actions/setup-java@v4
         with: {distribution: temurin, java-version: '21'}
-      - name: Fetch CPAchecker, Ultimate and one benchmark directory
+      - name: Install package
+        run: python -m pip install -q -e '.[test,smt,exp]'
+      - name: Fetch CPAchecker and Ultimate
         run: |
           EXT="${{ runner.temp }}/ext"
           mkdir -p "$EXT"
@@ -37,50 +52,18 @@ jobs:
           unzip -q -o "$EXT/cpa.zip" -d "$EXT"
           chmod +x scripts/ci_setup_v103.sh
           scripts/ci_setup_v103.sh "$EXT" tools
-          scripts/ci_setup_v103.sh "$EXT" certbench
-      - name: Write Ultimate's own correctness witness and show it
-        run: |
-          EXT="${{ runner.temp }}/ext"; W="${{ runner.temp }}/w"; mkdir -p "$W"
-          CASE="$EXT/svbench-cert/c/termination-restricted-15/java_Break.c"
-          cp "$CASE" "$W/program.c"
-          cd "$W"
-          printf 'CHECK( init(main()), LTL(G ! overflow) )\n' > no-overflow.prp
-          timeout 300 python3 "$EXT/ultimate-v0.3.2/UAutomizer-linux/Ultimate.py" \
-            --spec no-overflow.prp --file program.c --architecture 64bit \
-            --witness-type correctness_witness --witness-dir "$W" --witness-name uw > u.out 2>&1 || true
-          echo "===== ultimate verdict"; grep -E '^Result:' -A2 u.out || true
-          echo "===== program"; cat -n program.c
-          echo "===== files"; ls -la
-          echo "===== ULTIMATE WITNESS BEGIN"
-          for f in uw.yml uw.graphml uw.json; do [ -f "$f" ] && { echo "--- $f"; cat "$f"; }; done
-          echo "===== ULTIMATE WITNESS END"
-      - name: Does CPAchecker accept Ultimate's own witness?
+      - name: selftest -- ${{ matrix.validator }} / ${{ matrix.dialect }}
         continue-on-error: true
         run: |
-          EXT="${{ runner.temp }}/ext"; W="${{ runner.temp }}/w"
-          cd "$W"
-          for wf in uw.yml uw.graphml; do
-            [ -f "$wf" ] || continue
-            echo "===== CPAchecker --witnessValidation on $wf"
-            timeout 300 "$EXT/CPAchecker-4.2.2-unix/scripts/cpa.sh" --witnessValidation --heap 4000M \
-              --witness "$wf" --spec no-overflow.prp --64 --timelimit 180s \
-              --output-path "$W/out-$wf" program.c 2>&1 | tail -20
-          done
-      - name: Does Ultimate accept its own witness?
-        continue-on-error: true
-        run: |
-          EXT="${{ runner.temp }}/ext"; W="${{ runner.temp }}/w"
-          cd "$W"
-          for wf in uw.yml uw.graphml; do
-            [ -f "$wf" ] || continue
-            echo "===== Ultimate --validate on $wf"
-            timeout 300 python3 "$EXT/ultimate-v0.3.2/UAutomizer-linux/Ultimate.py" \
-              --spec no-overflow.prp --file program.c --architecture 64bit --validate "$wf" 2>&1 | grep -E '^Result:|ERROR' || true
-          done
-      - uses: actions/upload-artifact@v4
+          python -u scripts/witness_v104.py selftest \
+            --external "${{ runner.temp }}/ext" \
+            --output "experiments/v104/witness/probe/${{ matrix.validator }}_${{ matrix.dialect }}" \
+            --validator ${{ matrix.validator }} --dialect ${{ matrix.dialect }}
+      - name: Show the witness under test and the validator's answer
         if: always()
-        with:
-          name: ultimate-own-witness
-          path: ${{ runner.temp }}/w
-          if-no-files-found: warn
-          retention-days: 14
+        run: |
+          D="experiments/v104/witness/probe/${{ matrix.validator }}_${{ matrix.dialect }}"
+          echo "===== witness (true)"; cat "$D"/cases/selftest/witness_true.yml 2>/dev/null || true
+          echo "===== result"; grep -E '"label"|"result"|"want"' "$D"/selftest.json 2>/dev/null || true
+          echo "===== validator output"
+          for f in "$D"/logs/*.txt; do echo "--- $f"; tail -18 "$f" 2>/dev/null; done

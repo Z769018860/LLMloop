@@ -57,6 +57,11 @@ PRODUCER = ('llmloop', '1.04')
 # same bytes and a reader can tell that the file was not rewritten after the results were known.
 FREEZE_TIME = '2026-11-22T00:00:00+00:00'
 CPA_DIR = 'CPAchecker-4.2.2-unix'
+# Which shape of correctness witness to write. Ultimate writes `invariant_set` at 2.0/2.2; the
+# sv-witnesses README describes `loop_invariant` at 0.1; CPAchecker 4.2.2 parses 2.0 only.
+DIALECTS = {'entries-01': ('loop_invariant', '0.1'),
+            'set-20': ('invariant_set', '2.0'),
+            'set-22': ('invariant_set', '2.2')}
 CPA_SHA256 = '183adce15ced2641784dd16dd1dda3c4d88bb463674d8adb688fb28c3656525f'
 
 # C type -> the SV-COMP nondeterministic function of that type, as CPAchecker and CBMC both provide
@@ -165,7 +170,7 @@ def add_entry(code, bounds):
     return code.rstrip('\n') + '\n' + '\n'.join(decls) + '\n' + '\n'.join(main) + '\n'
 
 
-def loop_heads(code, column_base=0):
+def loop_heads(code, column_base=1):
     """(line, column) of each loop head, in the order `houdini_loops` numbers its invariants.
 
     That order is `[x for s in middle for x in _walk(s) if isinstance(x, c_ast.While)]` over the
@@ -210,19 +215,26 @@ def loop_heads(code, column_base=0):
 
 # --------------------------------------------------------------------------- the YAML witness
 
-def witness_yaml(program_name, program_sha, entries, data_model, created, note):
-    """A file of verification entries, one `loop_invariant` per loop.
+def witness_yaml(program_name, program_sha, entries, data_model, created, note,
+                 entry='invariant_set', version='2.0'):
+    """The witness file, one invariant entry or content item per loop.
+
+    The shape is Ultimate's, not the one the sv-witnesses README describes. Ultimate 0.3.2 writes a
+    correctness witness as `entry_type: invariant_set` with `content: [{invariant: {type:
+    loop_invariant, location: {...}, value: ..., format: c_expression}}]` (probe run 45009169721
+    printed one), whereas the README's older `entry_type: loop_invariant` / `format_version: 0.1`
+    form is what CPAchecker 4.2.2 rejects with "The Witness format found for ... is currently not
+    supported". The `version` matters separately: CPAchecker routes version 2.0 to
+    `AutomatonWitnessV2d0Parser` and fails on 2.2 with a bare NoSuchElementException, so 2.0 is the
+    value to try first and 2.2 is kept only to reproduce that.
 
     Written by hand rather than through a YAML library so the bytes are reproducible: the UUID is
     derived from the content, and `creation_time` is the freeze time passed in, not the wall clock.
     A witness whose bytes change between two runs cannot be quoted as evidence.
     """
-    out = []
-    for k, (line, column, invariant) in enumerate(entries):
-        out.append(
-            '- entry_type: loop_invariant\n'
+    head = ('- entry_type: %s\n'
             '  metadata:\n'
-            '    format_version: 0.1\n'
+            '    format_version: %s\n'
             '    uuid: %s\n'
             '    creation_time: %s\n'
             '    producer:\n'
@@ -236,23 +248,41 @@ def witness_yaml(program_name, program_sha, entries, data_model, created, note):
             '        %s: %s\n'
             '      specification: %s\n'
             '      data_model: %s\n'
-            '      language: C\n'
-            '  location:\n'
-            '    file_name: %s\n'
-            '    file_hash: %s\n'
-            '    line: %d\n'
-            '    column: %d\n'
-            '    function: f\n'
-            '  loop_invariant:\n'
-            '    string: %s\n'
-            '    type: assertion\n'
-            '    format: C\n'
-            % (str(uuid.uuid5(uuid.NAMESPACE_URL, 'llmloop/v1.04/%s/%d/%s'
-                              % (program_sha, k, invariant))),
-               created, PRODUCER[0], PRODUCER[1], note, program_name, program_name, program_sha,
-               SPEC_OVERFLOW, data_model, program_name, program_sha, line, column,
-               yaml_scalar(invariant))
-        )
+            '      language: C\n')
+    out = []
+    for k, (line, column, invariant) in enumerate(entries):
+        uid = str(uuid.uuid5(uuid.NAMESPACE_URL,
+                             'llmloop/v1.04/%s/%d/%s/%s%s' % (program_sha, k, invariant, entry, version)))
+        if entry == 'loop_invariant':          # the README's entry type: location and invariant side by side
+            out.append(head % (entry, "'%s'" % version, uid, "'%s'" % created, PRODUCER[0],
+                               PRODUCER[1], note, program_name, program_name, program_sha,
+                               SPEC_OVERFLOW, data_model)
+                       + '  location:\n'
+                         '    file_name: %s\n'
+                         '    file_hash: %s\n'
+                         '    line: %d\n'
+                         '    column: %d\n'
+                         '    function: f\n'
+                         '  loop_invariant:\n'
+                         '    string: %s\n'
+                         '    type: assertion\n'
+                         '    format: C\n'
+                         % (program_name, program_sha, line, column, yaml_scalar(invariant)))
+        else:                                   # Ultimate's: one `content` list, each item an invariant
+            out.append(head % (entry, "'%s'" % version, uid, "'%s'" % created, PRODUCER[0],
+                               PRODUCER[1], note, program_name, program_name, program_sha,
+                               '|\n        ' + SPEC_OVERFLOW, data_model)
+                       + ('  content:\n' if k == 0 else '')
+                       + '  - invariant:\n'
+                         '      type: loop_invariant\n'
+                         '      location:\n'
+                         '        file_name: %s\n'
+                         '        line: %d\n'
+                         '        column: %d\n'
+                         '        function: f\n'
+                         '      value: %s\n'
+                         '      format: c_expression\n'
+                         % (program_name, line, column, yaml_scalar(invariant)))
     return ''.join(out)
 
 
@@ -284,7 +314,7 @@ def build_case(name, source, bounds, invariants, abi):
     return program, entries, {'status': 'EXPORTED', 'loops': len(entries), 'data_model': abi}
 
 
-def emit_case(out, index, name, program, entries, abi, created, note):
+def emit_case(out, index, name, program, entries, abi, created, note, dialect='set-20'):
     """Write the program and its witness into one directory, under the names the witness quotes.
 
     Both files have to sit side by side: a witness names its input as `program.c`, and a validator
@@ -295,7 +325,9 @@ def emit_case(out, index, name, program, entries, abi, created, note):
     d = out / 'cases' / stem
     save(d / 'program.c', program)
     psha = sha(d / 'program.c')
-    save(d / 'witness.yml', witness_yaml('program.c', psha, entries, abi, created, note))
+    entry, version = DIALECTS[dialect]
+    save(d / 'witness.yml', witness_yaml('program.c', psha, entries, abi, created, note,
+                                        entry, version))
     return {'index': index, 'name': name, 'dir': 'cases/%s' % stem, 'program': 'program.c',
             'program_sha256': psha, 'witness_sha256': sha(d / 'witness.yml'),
             'invariants': [{'line': l, 'column': c, 'invariant': i} for l, c, i in entries]}
@@ -319,12 +351,13 @@ def ultimate_validate(external, program, witness, abi, log=None, timeout=300):
     work.mkdir(parents=True, exist_ok=True)
     prp = work / 'no-overflow.prp'
     save(prp, SPEC_OVERFLOW + '\n')
-    cmd = ['python3', str(ult), '--spec', str(prp), '--file', str(program),
+    cmd = ['python3', str(ult), '--spec', str(prp), '--file', Path(program).name,
            '--architecture', '32bit' if abi == 'ILP32' else '64bit',
-           '--validate', str(witness)]
+           '--validate', str(Path(witness).name)]
     t = time.time()
     try:
-        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, cwd=str(work))
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout,
+                           cwd=str(Path(program).parent))
         o = r.stdout + r.stderr
         code = r.returncode
     except subprocess.TimeoutExpired:
@@ -372,10 +405,11 @@ def cpa_validate(external, program, witness, abi, log=None, timeout=300):
     cmd = [str(cpa / 'scripts' / 'cpa.sh'), '--witnessValidation', '--heap', '4000M',
            '--witness', str(witness), '--spec', str(prp),
            '--32' if abi == 'ILP32' else '--64', '--timelimit', '%ds' % (timeout - 30),
-           '--output-path', str(outdir), str(program)]
+           '--output-path', str(outdir), Path(program).name]
     t = time.time()
     try:
-        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout,
+                           cwd=str(Path(program).parent))
         o = r.stdout + r.stderr
         code = r.returncode
     except subprocess.TimeoutExpired:
@@ -412,7 +446,7 @@ def prove(source, bounds, abi):
     return 'NOT_PROVED', [], phases
 
 
-def make(external, out, only=(), limit=None, created=None):
+def make(external, out, only=(), limit=None, created=None, dialect='set-20'):
     plan, sv = case_set(external)
     out.mkdir(parents=True, exist_ok=True)
     created = created or FREEZE_TIME
@@ -446,7 +480,8 @@ def make(external, out, only=(), limit=None, created=None):
             dump(out / 'records' / ('record_%04d.json' % i), rec)
             continue
         rec.update(emit_case(out, i, c['name'], program, entries, c['abi'], created,
-                             'llmloop v1.04 deterministic pipeline, invariants exported as loop heads'))
+                             'llmloop v1.04 deterministic pipeline, invariants exported as loop heads',
+                             dialect))
         rows.append(rec)
         dump(out / 'records' / ('record_%04d.json' % i), rec)
         print(json.dumps({'case': c['name'], 'loops': rec['loops']}), flush=True)
@@ -485,7 +520,7 @@ SELFTEST_PROGRAM = 'int f(int n){\n  int i = 0;\n  while (i <= n) {\n    i = i +
 SELFTEST_BOUNDS = {'n': [0, 10]}
 
 
-def selftest(external, out, validator='cpachecker', column_base=0):
+def selftest(external, out, validator='cpachecker', column_base=1, dialect='set-20'):
     """Validate a true invariant (want TRUE) and a false one (want FALSE) on a fixed program.
 
     Every number this script reports is a rate of `Verification result: TRUE`. That number means
@@ -504,7 +539,9 @@ def selftest(external, out, validator='cpachecker', column_base=0):
                              ('false', 'i < n', 'FALSE')):
         entries = [(heads[0][0], heads[0][1], inv)]
         w = d / ('witness_%s.yml' % label)
-        save(w, witness_yaml('program.c', psha, entries, 'LP64', FREEZE_TIME, 'non-vacuity control'))
+        entry, version = DIALECTS[dialect]
+        save(w, witness_yaml('program.c', psha, entries, 'LP64', FREEZE_TIME,
+                             'non-vacuity control', entry, version))
         r = validate_with(validator, external, d / 'program.c', w, 'LP64',
                           log=out / 'logs' / ('selftest_%s.out.txt' % label))
         rows.append({'label': label, 'invariant': inv, 'want': want, **r})
@@ -567,16 +604,18 @@ if __name__ == '__main__':
     ap.add_argument('--cases', default='')
     ap.add_argument('--limit', type=int)
     ap.add_argument('--validator', choices=['cpachecker', 'ultimate'], default='cpachecker')
-    ap.add_argument('--column-base', type=int, choices=[0, 1], default=0,
+    ap.add_argument('--dialect', choices=sorted(DIALECTS), default='set-20')
+    ap.add_argument('--column-base', type=int, choices=[0, 1], default=1,
                     help='0 for the entries format definition, 1 for what pycparser reports')
     a = ap.parse_args()
     out = Path(a.output).resolve()
     if a.action == 'make':
-        make(Path(a.external), out, only={x for x in a.cases.split(',') if x}, limit=a.limit)
+        make(Path(a.external), out, only={x for x in a.cases.split(',') if x}, limit=a.limit,
+             dialect=a.dialect)
     elif a.action == 'validate':
         validate(Path(a.external), out, limit=a.limit, validator=a.validator)
     elif a.action == 'selftest':
         sys.exit(0 if selftest(Path(a.external), out, validator=a.validator,
-                               column_base=a.column_base) else 1)
+                               column_base=a.column_base, dialect=a.dialect) else 1)
     else:
         merge(out)
