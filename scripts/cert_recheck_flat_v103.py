@@ -15,9 +15,15 @@ results, so a reader can see exactly what differed from v1.00.
 
 usage:
   cert_recheck_flat_v103.py run <what> <scope> [--timeout S] [--workers N] [--shard K --shards M]
+  cert_recheck_flat_v103.py run <what> <scope> --names A,B --tag NAME [--mem-limit SPEC]
   cert_recheck_flat_v103.py merge <what> <scope>
   cert_recheck_flat_v103.py summary
 scope: all | unresolved
+
+`--names` re-runs just those certificates and writes `overrides/<what>--<tag>.json`; `merge` folds
+every matching override file back into the study, replacing the row in place and recording the swap.
+`merge` builds from the shards when they are still around and otherwise from the merged file, because
+the shards are deleted before the results are committed.
 """
 
 import argparse
@@ -146,27 +152,42 @@ def run(what, scope, timeout, workers, shard, shards, names=None, tag=None, mem_
 
 def merge(what, scope):
     files = sorted(OUT.glob('%s_%s_shard*.json' % (what, scope)))
-    if not files:
-        raise SystemExit('no shards for %s/%s' % (what, scope))
+    prior = OUT / ('%s_%s.json' % (what, scope))
     rows, planned, shard_counts = [], 0, {}
     engines, preambles, timeouts = set(), set(), set()
-    for f in files:
-        d = json.loads(f.read_text())
-        assert d['complete'], 'incomplete shard %s' % f
-        planned += d['planned']
-        shard_counts[f.name] = d['counts']
-        rows += d['rows']
-        engines.add(d.get('cbmc'))
-        preambles.add(d.get('preamble_sha256'))
+    overrides = []
+    if files:
+        for f in files:
+            d = json.loads(f.read_text())
+            assert d['complete'], 'incomplete shard %s' % f
+            planned += d['planned']
+            shard_counts[f.name] = d['counts']
+            rows += d['rows']
+            engines.add(d.get('cbmc'))
+            preambles.add(d.get('preamble_sha256'))
+            timeouts.add(d.get('per_certificate_timeout_s'))
+        # every shard must have run the same engine, inlining the same preamble, at the same timeout
+        assert len(engines) == 1, 'shards disagree on the engine: %s' % sorted(engines)
+        assert len(preambles) == 1, 'shards disagree on the preamble: %s' % sorted(preambles)
+        engine, preamble = engines.pop(), preambles.pop()
+    else:
+        # the shards are deleted before the results are committed (they are large and the merged
+        # file carries their counts), so a second pass over the same study -- here: folding in the
+        # certificates the address-space cap turned into ERROR -- starts from the merged file
+        if not prior.exists():
+            raise SystemExit('no shards and no merged file for %s/%s' % (what, scope))
+        d = json.loads(prior.read_text())
+        assert d['complete'], 'incomplete merged file %s' % prior
+        rows, planned = d['rows'], d['planned']
+        assert len(rows) == planned, 'merged file %s has %d of %d rows' % (prior, len(rows), planned)
+        shard_counts = d.get('shards') or {}
+        engine, preamble = d.get('cbmc'), d.get('preamble_sha256')
         timeouts.add(d.get('per_certificate_timeout_s'))
-    # every shard must have run the same engine, inlining the same preamble, at the same timeout
-    assert len(engines) == 1, 'shards disagree on the engine: %s' % sorted(engines)
-    assert len(preambles) == 1, 'shards disagree on the preamble: %s' % sorted(preambles)
-    engine, preamble = engines.pop(), preambles.pop()
+        # keep the swaps an earlier pass recorded, so re-running this is idempotent
+        overrides = list(d.get('overrides') or [])
 
     # certificates that the address-space cap turned into ERROR get a second run at the same
     # timeout with more memory; the override replaces the row, and the swap is recorded.
-    overrides = []
     # `fresh` must not pick up `fresh_hybrid--ex3a.json`: parallel runs write `<study>--<tag>.json`,
     # and the untagged form `<study>.json` is kept for runs made before tags existed
     ov_dir = OUT / 'overrides'
@@ -187,8 +208,11 @@ def merge(what, scope):
         positions = collections.defaultdict(list)
         for k, r in enumerate(rows):
             positions[(r['name'], r['invariant_loops'])].append(k)
+        folded = {(o['name'], o['invariant_loops']) for o in overrides}
         for r in ov_rows:
             key = (r['name'], r['invariant_loops'])
+            if key in folded:
+                continue  # an earlier pass over this study already applied this override
             assert key in positions, 'override for an unplanned certificate: %s' % (key,)
             where = positions[key]
             if len(where) > 1:
@@ -197,6 +221,7 @@ def merge(what, scope):
                 where = [k for k in where if rows[k]['result'] == 'ERROR']
                 assert len(where) == 1, 'ambiguous override for %s: %d rows share it' % (key, len(where))
             was = rows[where[0]]['result']
+            assert was == 'ERROR', 'override for a certificate that came out %s: %s' % (was, key)
             rows[where[0]] = r
             overrides.append({'name': r['name'], 'invariant_loops': r['invariant_loops'],
                               'was': was, 'now': r['result'],
@@ -269,7 +294,7 @@ if __name__ == '__main__':
     ap.add_argument('--workers', type=int, default=2)
     ap.add_argument('--shard', type=int)
     ap.add_argument('--shards', type=int)
-    ap.add_argument('--names', help='comma-separated certificate names; writes overrides/<study>.json')
+    ap.add_argument('--names', help='comma-separated certificate names; writes overrides/<study>--<tag>.json')
     ap.add_argument('--mem-limit', dest='mem_limit', help='address-space cap actually in force, recorded verbatim')
     ap.add_argument('--tag', help='override output file suffix, so parallel jobs do not write the same file')
     a = ap.parse_args()
