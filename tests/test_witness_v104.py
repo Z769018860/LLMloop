@@ -246,3 +246,35 @@ def test_a_complete_shard_writes_its_plan(tmp_path):
     assert finish_plan(tmp_path, 2, (3, 10), rows) == rows
     blob = json.loads((tmp_path / 'plan.json').read_text())
     assert blob['shard'] == [3, 10] and blob['cases'] == 2
+
+
+def test_the_two_validators_do_not_write_to_the_same_log():
+    # Run 45010719952: both tools wrote `0160.out.txt`, so Ultimate's run deleted the only record of
+    # the reason CPAchecker had rejected that witness.
+    from scripts.witness_v104 import log_name
+    assert log_name(160, 'cpachecker') != log_name(160, 'ultimate')
+    assert log_name(0, 'cpachecker') == '0000.cpachecker.out.txt'
+
+
+def test_a_rejection_keeps_the_validator_s_own_sentence_and_drops_the_config_dump(tmp_path, monkeypatch):
+    # CPAchecker prints its whole configuration when a run starts, and half those option names
+    # contain "witness" or "invariant", so an unfiltered grep for the reason returns the options
+    # instead of the finding.
+    from scripts import witness_v104 as W
+
+    class Done:
+        returncode = 0
+        stdout = ('witness.validation.correctness.config = VALUE\n'
+                  'cpa.arg.proofWitness = true\n'
+                  'Invariant (i >= 0) does not hold at line 4\n'
+                  'Verification result: FALSE\n')
+        stderr = ''
+
+    cpa = tmp_path / W.CPA_DIR / 'scripts'
+    cpa.mkdir(parents=True)
+    (cpa / 'cpa.sh').write_text('#!/bin/sh\n')
+    monkeypatch.setattr(W.subprocess, 'run', lambda *a, **k: Done())
+    res = W.cpa_validate(tmp_path, tmp_path / 'p.c', tmp_path / 'w.yml', 'LP64',
+                         log=tmp_path / 'logs' / 'p.out.txt')
+    assert res['result'] == 'FALSE'
+    assert res['why'] == ['Invariant (i >= 0) does not hold at line 4']

@@ -459,9 +459,14 @@ def cpa_validate(external, program, witness, abi, log=None, timeout=300):
         # A bare FALSE would be ambiguous: it can mean "the program violates the property" or "one of
         # the witness invariants is wrong". Under --witnessValidation the second case is reported
         # against the witness, so the reason is in the log and it is the only interesting part of a
-        # rejection -- it says which invariant, at which line, did not hold.
-        why = [x for x in o.splitlines() if re.search(r'(?i)witness|invariant', x) and x.strip()]
-        res['why'] = why[-5:]
+        # rejection -- it says which invariant, at which line, did not hold. The dotted lines are
+        # CPAchecker's configuration dump, which matches on the word "witness" everywhere and says
+        # nothing about this case.
+        hits = [x for x in o.splitlines()
+                if re.search(r'(?i)(witness|invariant)', x) and x.strip()
+                and not x.lstrip().startswith(('witness.', 'cpa.', 'counterexample.', 'termination.',
+                                               'java.', '#'))]
+        res['why'] = hits[-5:]
     return res
 
 
@@ -561,6 +566,16 @@ def sha_of_text(s):
     return hashlib.sha256(s.encode()).hexdigest()
 
 
+def log_name(index, validator):
+    """The log of one validator's verdict on one case.
+
+    Named per validator because both tools were writing `0030.out.txt`: the second one deleted the
+    only record of what the first one said. Run 45010719952 lost CPAchecker's reasons for four
+    rejected witnesses that way, and a rejection whose reason is gone cannot be argued about.
+    """
+    return '%04d.%s.out.txt' % (index, validator)
+
+
 def validate(external, out, limit=None, validator='cpachecker', timeout=300, workers=2):
     plan = json.loads((out / 'plan.json').read_text())
     rows = [r for r in plan['rows'] if r['status'] == 'EXPORTED']
@@ -571,7 +586,7 @@ def validate(external, out, limit=None, validator='cpachecker', timeout=300, wor
         d = out / r['dir']
         res = validate_with(validator, external, d / r['program'], d / 'witness.yml',
                             r['data_model'],
-                            log=out / 'logs' / ('%04d.out.txt' % r['index']), timeout=timeout)
+                            log=out / 'logs' / log_name(r['index'], validator), timeout=timeout)
         return {**{'name': r['name'], 'index': r['index'], 'loops': r.get('loops')}, **res}
 
     with ThreadPoolExecutor(workers) as pool:
