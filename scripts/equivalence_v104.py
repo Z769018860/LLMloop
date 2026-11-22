@@ -67,10 +67,15 @@ def subset(plan, by, name):
     elif name == 'accepted_now':
         names = [p for p in by if by[p]['llmloop'] != 'UNSUPPORTED']
     elif name == 'labelled_no_overflow':
-        names = [c['name'] for c in plan['cases'] if c.get('expected_nooverflow') is True]
+        # The v1.03 protocol records the label as `expected_nooverflow`, the v1.04 scale-up as
+        # `expected`; both mean the upstream no-overflow verdict of the sibling .yml.
+        names = [c['name'] for c in plan['cases']
+                 if c.get('expected_nooverflow', c.get('expected')) is True]
     else:
         names = sorted(by)
     names = [n for n in names if 'llmloop' in by[n] and 'ultimate' in by[n]]
+    if not names:
+        return [], [], []
     a = [int(by[n]['llmloop'] == 'TRUE') for n in names]
     b = [int(by[n]['ultimate'] == 'TRUE') for n in names]
     return names, a, b
@@ -99,6 +104,9 @@ def main():
     rows = []
     for name in subset_names(plan):
         names, x, y = subset(plan, by, name)
+        if not names:
+            print('%-22s (no case has a verdict from both tools)' % name, flush=True)
+            continue
         diff = (sum(x) - sum(y)) / len(names)
         lo, hi = interval(x, y, a.reps)
         only_x = sum(1 for i, j in zip(x, y) if i and not j)
