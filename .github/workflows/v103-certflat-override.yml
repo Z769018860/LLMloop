@@ -53,13 +53,8 @@ jobs:
         if: always()
         run: |
           for f in experiments/v103/cert_recheck_v103/overrides/*.json; do
-            echo "--- $f"; python -c "
-import json,sys
-d=json.load(open('$f'))
-print(d['counts'], 'complete=%s' % d['complete'], d.get('address_space_limit'))
-for r in d['rows']:
-    print(' ', r['result'], r['name'], 'loops=%s' % r['invariant_loops'], (r.get('detail') or '')[:90])
-"
+            echo "--- $f"
+            python -c "import json,sys; d=json.load(open(sys.argv[1])); print(d['counts'], 'complete=%s' % d['complete'], d.get('address_space_limit')); [print(' ', r['result'], r['name'], 'loops=%s' % r['invariant_loops'], (r.get('detail') or '')[:90]) for r in d['rows']]" "$f"
           done
       - uses: actions/upload-artifact@v4
         if: always()
