@@ -59,6 +59,11 @@ if [ "$WHAT" = all ] || [ "$WHAT" = cbmc ]; then
   echo "[ok] cbmc $("$EXT/native/usr/bin/cbmc" --version)"
 fi
 
+if [ "$WHAT" = all ] || [ "$WHAT" = loopbench ]; then
+  # v1.04 held-out study: the ten standard loop suites, none of which an earlier protocol used
+  sparse_at_pin "$SVBENCH_URL" "$EXT/svbench-loop" "$PIN_SVBENCH" 'c/loop-*/*'
+fi
+
 if [ "$WHAT" = all ] || [ "$WHAT" = juliet ]; then
   sparse_at_pin "$JULIET_URL" "$EXT/juliet" "$PIN_JULIET" 'testcases/CWE190_Integer_Overflow/*' 'testcasesupport/*'
 fi
