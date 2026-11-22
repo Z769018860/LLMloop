@@ -40,6 +40,16 @@ jobs:
         with: {distribution: temurin, java-version: '21'}
       - name: Install package
         run: python -m pip install -q -e '.[test,smt,exp]'
+      - name: 32-bit headers, because CBMC preprocesses system headers with -m32
+        run: |
+          # The loop-* suites ship an `assert.h` that includes the system one, and CBMC's `--32`
+          # preprocesses through `gcc -m32`, which needs bits/wordsize.h from gcc-multilib. Without
+          # it 110 of 203 CBMC cells died in 0.7 s at preprocessing and were recorded as
+          # PROCESS_ERROR -- which reads like a tool failure and is a missing package. The 400-case
+          # study never hit this because the termination suites' assert.h does not include the
+          # system header.
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq gcc-multilib
       - name: Prepare pinned inputs
         run: |
           chmod +x scripts/ci_setup_v103.sh
