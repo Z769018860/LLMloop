@@ -1,0 +1,115 @@
+name: v1.04 E3 industrial coverage boundary
+
+# Frozen protocol: experiments/v104/industrial/protocol.json
+#
+# E3 of `docs/TOP_TIER_AUDIT.md` §6: the number a reviewer asks for and the SV-COMP corpus cannot
+# supply -- where does this method stop on code nobody wrote for a verifier. Four bases pinned by
+# archive hash; 892 files sampled by ascending sha256 of the path, decided before any result existed.
+#
+# The stages are strictly nested and each one reports why the rest fell out:
+#   files -> functions with loops -> fragment candidates -> frontend accepts -> proved
+#
+# Each project is its own job because they need different configure steps (busybox `make defconfig`,
+# openssl `./Configure`, aws-c-common `cmake`, sqlite gets `sqlite3.h` from the pinned amalgamation).
+# A configure step that fails is recorded rather than fatal: the files then fail to parse, the
+# summary says so per project, and that is a result about the project, not a crash to hide.
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'files per project (empty = the frozen 892); for probes'
+        required: false
+        default: ''
+      seconds:
+        description: 'wall-clock seconds per proof (default 90)'
+        required: false
+        default: '90'
+permissions:
+  contents: write
+jobs:
+  scan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [busybox, openssl, sqlite, aws-c-common]
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install package
+        run: python -m pip install -q -e '.[test,smt,exp]'
+      - name: Toolchain
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq clang make cmake perl
+          clang --version | head -1
+      - name: Scan ${{ matrix.project }}
+        continue-on-error: true
+        env:
+          LIMIT: ${{ inputs.limit }}
+        run: |
+          args=""
+          if [ -n "$LIMIT" ]; then args="--limit $LIMIT"; fi
+          python -u scripts/industrial_v104.py scan --external "${{ runner.temp }}/ext" \
+            --output experiments/v104/industrial --project ${{ matrix.project }} $args
+      - name: Prove ${{ matrix.project }}
+        continue-on-error: true
+        env:
+          LIMIT: ${{ inputs.limit }}
+          SECONDS_PER_PROOF: ${{ inputs.seconds }}
+        run: |
+          args=""
+          if [ -n "$LIMIT" ]; then args="--limit $LIMIT"; fi
+          python -u scripts/industrial_v104.py prove --output experiments/v104/industrial \
+            --project ${{ matrix.project }} --seconds "${SECONDS_PER_PROOF:-90}" --workers 2 $args
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: industrial-raw-${{ matrix.project }}
+          path: experiments/v104/industrial/raw
+          if-no-files-found: warn
+          retention-days: 30
+
+  merge:
+    needs: scan
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install package
+        run: python -m pip install -q -e '.[test,smt,exp]'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: industrial-raw-*
+          merge-multiple: true
+          path: experiments/v104/industrial/raw
+      - name: Fold the four bases in
+        run: |
+          ls experiments/v104/industrial/raw
+          n=$(ls -d experiments/v104/industrial/raw/*/ | wc -l)
+          echo "$n project(s) present"
+          if [ "$n" -lt 4 ]; then echo "expected 4 projects, got $n" >&2; exit 1; fi
+          python -u scripts/industrial_v104.py merge --output experiments/v104/industrial
+          cat experiments/v104/industrial/summary.md
+      - name: Record evidence and push
+        if: inputs.limit == ''
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A experiments/v104/industrial
+          if git diff --cached --quiet; then echo 'no change'; exit 0; fi
+          git commit -q -m "v1.04 E3: industrial coverage boundary, three nested denominators [skip ci]"
+          for i in 1 2 3; do
+            git pull --rebase --quiet --autostash origin research/v103-exec \
+              && git push -q origin HEAD:refs/heads/research/v103-exec && break
+            sleep 5
+          done
