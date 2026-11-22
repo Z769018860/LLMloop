@@ -12,7 +12,7 @@
 - **信任基 / trust base.** 候选只是字符串；验证器（Z3 + 类型化 C 整数语义引擎）对任意满足候选的类型化状态检查：入口、归纳（一次迭代无未定义行为且保持）、出口（后续代码与返回表达式有定义）。规范化器（`llmloop/loop_index_normalize.py`）属于受信流程，均配原生 UBSan 差分测试。 Candidates are strings; the verifier (Z3 + typed C integer engine) checks entry, preservation (defined iteration) and exit for ANY typed state satisfying them; normalizers are part of the trusted pipeline and have native UBSan differential tests.
 - **模式 / modes.** `typed_invariant_tree`（计数循环树，区间 + `@rel` + 分支内循环）；`typed_invariant_while`（单循环谓词合取，`unknown()`/nondet 被改写为全称量化输入，可选 `ranking`，`integer_model` ∈ {c, mathematical}）；`typed_invariant_loops`（多个顺序/嵌套循环的组合式检查）。
 - **生成器 / generators.** LLM（6 个模型，其中 `claude-dsflash-itkk` 是 DeepSeek V4.1 Flash 别名）；轨迹拟合器（精确有理线性代数 + floor/ceil/min/max/指示项基，不受信）；采样 + Houdini（用验证器反例削弱）；LLM 候选原子 + Houdini 的混合方案；级联与反馈修复。
-- **可靠性证据 / soundness evidence.** 全量测试（见 `docs/PAPER_READINESS.md` 最新条目）；对小程序的穷举探索（认证 ⇒ 无可达未定义行为）；原生 UBSan 差分；**违例见证**：被找到具体违例的程序（C 语义 Code2Inv 34 个等）从未被任何生成器认证。 3405 tests; exhaustive exploration of small programs; native differentials; programs with a concrete violation witness were never certified.
+- **可靠性证据 / soundness evidence.** 全量测试（见 `docs/PAPER_READINESS.md` 最新条目）；对小程序的穷举探索（认证 ⇒ 无可达未定义行为）；原生 UBSan 差分；**违例见证**：被找到具体违例的程序（C 语义 Code2Inv 34 个等）从未被任何生成器认证。 3533 passed / 14 skipped / 0 failed at v1.03; exhaustive exploration of small programs; native differentials; programs with a concrete violation witness were never certified.
 
 ## 2. 基准 / Benchmarks
 | 语料 / corpus | 规模 / size | 来源 / source |
