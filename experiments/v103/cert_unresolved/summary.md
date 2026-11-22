@@ -1,3 +1,5 @@
+> **撤回 / withdrawn.** 本表的 `FAILED` 是 CBMC 6.11 把"调用无函数体的 `nd_*` 助手"当作 FAILURE 属性的产物，不是证书被推翻；`fresh` 分片也在取消时只完成 23 个中的 20 个。见同目录 `README.md`，以及取代它的 `experiments/v103/cert_recheck_v103/`。 The FAILED rows are a CBMC 6.11 stub artefact, not contradicted certificates.
+
 # v1.03 证书未决项复跑 / Re-run of the unresolved certificate re-checks
 
 v1.00 的 586 个证书中 556 VERIFIED、0 FAILED、29 TIMEOUT、1 ERROR；下表把"未决"按更大预算重跑。
