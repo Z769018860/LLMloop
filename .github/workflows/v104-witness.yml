@@ -1,7 +1,12 @@
 name: v1.04 witness export, first batch
 
 # E1, step 1. `scripts/witness_v104.py` exports the verifier's per-loop invariants as SV-COMP YAML
-# correctness witnesses and asks CPAchecker to re-verify the program from them alone. This job runs
+# correctness witnesses and asks a third-party verifier to re-verify the program from them alone.
+#
+# The validator is Ultimate, not CPAchecker: run 45007628049 handed CPAchecker 4.2.2 a YAML witness
+# and it answered "The Witness format found for ... is currently not supported" (its `--witness`
+# reads GraphML only, and it tried to parse the YAML as XML). Ultimate 0.3.2 is the tool that writes
+# this format, and has a `--validate` mode. This job runs
 # it on six cases that v1.03 proved, plus the non-vacuity control, and prints one program and one
 # witness so the shape can be read without downloading an artifact.
 #
@@ -45,7 +50,7 @@ jobs:
         run: |
           python -u scripts/witness_v104.py selftest \
             --external "${{ runner.temp }}/ext" \
-            --output experiments/v104/witness/selftest
+            --output experiments/v104/witness/selftest --validator ultimate
       - name: Export six proved cases
         continue-on-error: true
         run: |
@@ -53,25 +58,25 @@ jobs:
             --external "${{ runner.temp }}/ext" \
             --output experiments/v104/witness/batch1 \
             --cases termination-restricted-15/java_Break.c,termination-restricted-15/PastaA7.c,termination-restricted-15/b.02.c,termination-restricted-15/b.16.c,termination-restricted-15/WhileSingle.c,termination-restricted-15/NO_13.c
-      - name: Validate the witnesses with CPAchecker
+      - name: Validate the witnesses with Ultimate
         continue-on-error: true
         run: |
           python -u scripts/witness_v104.py validate \
             --external "${{ runner.temp }}/ext" \
-            --output experiments/v104/witness/batch1
+            --output experiments/v104/witness/batch1 --validator ultimate
       - name: Print everything the run produced
         if: always()
         run: |
           S=experiments/v104/witness/selftest
           B=experiments/v104/witness/batch1
           echo "===== selftest.json"; cat "$S"/selftest.json 2>/dev/null || true
-          echo "===== selftest program"; cat -n "$S"/selftest_program.c 2>/dev/null || true
-          echo "===== selftest witness (true)"; cat "$S"/selftest_true.yml 2>/dev/null || true
+          echo "===== selftest program"; cat -n "$S"/cases/selftest/program.c 2>/dev/null || true
+          echo "===== selftest witness (true)"; cat "$S"/cases/selftest/witness_true.yml 2>/dev/null || true
           echo "===== selftest logs"
           for f in "$S"/logs/*.txt; do echo "--- $f"; cat "$f" 2>/dev/null | tail -40; done
           echo "===== batch plan"; cat "$B"/plan.json 2>/dev/null || true
-          echo "===== batch program 0000"; cat -n "$B"/program/program_0000.c 2>/dev/null || true
-          echo "===== batch witness 0000"; cat "$B"/witness/witness_0000.yml 2>/dev/null || true
+          echo "===== batch program 0000"; cat -n "$B"/cases/0000/program.c 2>/dev/null || true
+          echo "===== batch witness 0000"; cat "$B"/cases/0000/witness.yml 2>/dev/null || true
           echo "===== batch validation"; cat "$B"/validation.json 2>/dev/null || true
           echo "===== batch logs"; for f in "$B"/logs/*.txt; do echo "--- $f"; tail -25 "$f" 2>/dev/null; done
           python -u scripts/witness_v104.py merge --output "$B" 2>/dev/null || true

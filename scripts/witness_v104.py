@@ -284,18 +284,63 @@ def build_case(name, source, bounds, invariants, abi):
 
 
 def emit_case(out, index, name, program, entries, abi, created, note):
+    """Write the program and its witness into one directory, under the names the witness quotes.
+
+    Both files have to sit side by side: a witness names its input as `program.c`, and a validator
+    that resolves that name relative to the witness (rather than to the command line) would not find
+    a file in a separate `program/` tree. Keeping them together removes the question.
+    """
     stem = '%04d' % index
-    prog_name = 'program_%s.c' % stem
-    save(out / 'program' / prog_name, program)
-    psha = sha(out / 'program' / prog_name)
-    text = witness_yaml(prog_name, psha, entries, abi, created, note)
-    save(out / 'witness' / ('witness_%s.yml' % stem), text)
-    return {'index': index, 'name': name, 'program': prog_name,
-            'program_sha256': psha, 'witness_sha256': sha(out / 'witness' / ('witness_%s.yml' % stem)),
+    d = out / 'cases' / stem
+    save(d / 'program.c', program)
+    psha = sha(d / 'program.c')
+    save(d / 'witness.yml', witness_yaml('program.c', psha, entries, abi, created, note))
+    return {'index': index, 'name': name, 'dir': 'cases/%s' % stem, 'program': 'program.c',
+            'program_sha256': psha, 'witness_sha256': sha(d / 'witness.yml'),
             'invariants': [{'line': l, 'column': c, 'invariant': i} for l, c, i in entries]}
 
 
 # --------------------------------------------------------------------------- CPAchecker
+
+def ultimate_validate(external, program, witness, abi, log=None, timeout=300):
+    """Validate the witness with Ultimate Automizer instead of CPAchecker.
+
+    CPAchecker 4.2.2's `--witness` reads GraphML only -- it answered a YAML witness with
+    "The Witness format found for ... is currently not supported" and a parser error from its XML
+    reader (probe run 45007628049). Ultimate, which is what writes YAML correctness witnesses in the
+    first place, has a `--validate` mode, so it is the shorter path to a second opinion. It is no
+    less independent: it shares no code, no proof rule and no invariant generator with this project.
+    """
+    ult = external / 'ultimate-v0.3.2' / 'UAutomizer-linux' / 'Ultimate.py'
+    if not ult.exists():
+        return {'result': 'NO_ULTIMATE', 'detail': str(ult)}
+    work = Path(log).parent if log else Path(witness).parent
+    work.mkdir(parents=True, exist_ok=True)
+    prp = work / 'no-overflow.prp'
+    save(prp, SPEC_OVERFLOW + '\n')
+    cmd = ['python3', str(ult), '--spec', str(prp), '--file', str(program),
+           '--architecture', '32bit' if abi == 'ILP32' else '64bit',
+           '--validate', str(witness)]
+    t = time.time()
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, cwd=str(work))
+        o = r.stdout + r.stderr
+        code = r.returncode
+    except subprocess.TimeoutExpired:
+        return {'result': 'TIMEOUT', 'seconds': round(time.time() - t, 1), 'cmd': cmd}
+    if log:
+        save(Path(log), '$ %s\n\nexit %s\n\n%s' % (' '.join(cmd), code, o))
+    m = re.search(r'Result:\s*\n?\s*(TRUE|FALSE|UNKNOWN|ERROR|TIMEOUT)', o)
+    return {'result': m.group(1) if m else 'NO_RESULT', 'seconds': round(time.time() - t, 1),
+            'exit': code, 'tail': [x for x in o.strip().splitlines() if x.strip()][-8:],
+            'log': str(log) if log else None}
+
+
+def validate_with(validator, external, program, witness, abi, log=None, timeout=300):
+    if validator == 'ultimate':
+        return ultimate_validate(external, program, witness, abi, log, timeout)
+    return cpa_validate(external, program, witness, abi, log, timeout)
+
 
 def cpa_validate(external, program, witness, abi, log=None, timeout=300):
     """Run the third-party validator. TRUE means the witness proves the property for this program.
@@ -405,22 +450,22 @@ def sha_of_text(s):
     return hashlib.sha256(s.encode()).hexdigest()
 
 
-def validate(external, out, limit=None, abi_default='LP64'):
+def validate(external, out, limit=None, validator='cpachecker'):
     plan = json.loads((out / 'plan.json').read_text())
     rows = [r for r in plan['rows'] if r['status'] == 'EXPORTED']
     if limit is not None:
         rows = rows[:limit]
 
     def one(r):
-        res = cpa_validate(external, out / 'program' / r['program'],
-                           out / 'witness' / ('witness_%s.yml' % ('%04d' % r['index'])),
-                           r['data_model'],
-                           log=out / 'logs' / ('%04d.out.txt' % r['index']))
+        d = out / r['dir']
+        res = validate_with(validator, external, d / r['program'], d / 'witness.yml',
+                            r['data_model'],
+                            log=out / 'logs' / ('%04d.out.txt' % r['index']))
         return {**{'name': r['name'], 'index': r['index']}, **res}
 
     with ThreadPoolExecutor(2) as pool:
         results = list(pool.map(one, rows))
-    dump(out / 'validation.json', results)
+    dump(out / 'validation.json', {'validator': validator, 'rows': results})
     import collections
     print(json.dumps(collections.Counter(r['result'] for r in results), indent=1))
 
@@ -431,7 +476,7 @@ SELFTEST_PROGRAM = 'int f(int n){\n  int i = 0;\n  while (i <= n) {\n    i = i +
 SELFTEST_BOUNDS = {'n': [0, 10]}
 
 
-def selftest(external, out):
+def selftest(external, out, validator='cpachecker'):
     """Validate a true invariant (want TRUE) and a false one (want FALSE) on a fixed program.
 
     Every number this script reports is a rate of `Verification result: TRUE`. That number means
@@ -441,18 +486,18 @@ def selftest(external, out):
     """
     out.mkdir(parents=True, exist_ok=True)
     program = add_entry(SELFTEST_PROGRAM, SELFTEST_BOUNDS)
-    save(out / 'selftest_program.c', program)
-    psha = sha(out / 'selftest_program.c')
+    d = out / 'cases' / 'selftest'
+    save(d / 'program.c', program)
+    psha = sha(d / 'program.c')
     heads = loop_heads(program)
     rows = []
     for label, inv, want in (('true', 'i >= 0 && i <= n + 1', 'TRUE'),
                              ('false', 'i < n', 'FALSE')):
         entries = [(heads[0][0], heads[0][1], inv)]
-        w = out / ('selftest_%s.yml' % label)
-        save(w, witness_yaml('selftest_program.c', psha, entries, 'LP64',
-                             FREEZE_TIME, 'non-vacuity control'))
-        r = cpa_validate(external, out / 'selftest_program.c', w, 'LP64',
-                         log=out / 'logs' / ('selftest_%s.out.txt' % label))
+        w = d / ('witness_%s.yml' % label)
+        save(w, witness_yaml('program.c', psha, entries, 'LP64', FREEZE_TIME, 'non-vacuity control'))
+        r = validate_with(validator, external, d / 'program.c', w, 'LP64',
+                          log=out / 'logs' / ('selftest_%s.out.txt' % label))
         rows.append({'label': label, 'invariant': inv, 'want': want, **r})
     dump(out / 'selftest.json', rows)
     for r in rows:
@@ -469,9 +514,12 @@ def selftest(external, out):
 def merge(out):
     plan = json.loads((out / 'plan.json').read_text())
     rows = plan['rows']
-    val = {}
+    val, validator = {}, 'none'
     if (out / 'validation.json').exists():
-        val = {r['index']: r for r in json.loads((out / 'validation.json').read_text())}
+        blob = json.loads((out / 'validation.json').read_text())
+        rows_v = blob['rows'] if isinstance(blob, dict) else blob
+        validator = blob.get('validator', 'unknown') if isinstance(blob, dict) else 'unknown'
+        val = {r['index']: r for r in rows_v}
     import collections
     exported = [r for r in rows if r['status'] == 'EXPORTED']
     verdict = collections.Counter((val.get(r['index']) or {}).get('result', 'NOT_RUN') for r in exported)
@@ -480,8 +528,8 @@ def merge(out):
     lines = [
         '# v1.04 witness export and third-party validation',
         '',
-        'Cases considered: **%d**; exported as witnesses: **%d**; validated TRUE by CPAchecker: **%d**.'
-        % (len(rows), len(exported), len(verify)),
+        'Cases considered: **%d**; exported as witnesses: **%d**; validated TRUE by %s: **%d**.'
+        % (len(rows), len(exported), validator, len(verify)),
         '',
         '| outcome of the export | n |', '|---|---|',
     ]
@@ -497,7 +545,8 @@ def merge(out):
                                                (val.get(r['index']) or {}).get('result', 'NOT_RUN')))
     save(out / 'summary.md', '\n'.join(lines) + '\n')
     dump(out / 'summary.json', {'considered': len(rows), 'export_outcomes': dict(tally),
-                                'validator': dict(verdict), 'validated': len(verify)})
+                                'validator_used': validator, 'verdicts': dict(verdict),
+                                'validated': len(verify)})
     print('\n'.join(lines[:14]))
 
 
@@ -508,13 +557,14 @@ if __name__ == '__main__':
     ap.add_argument('--output', required=True)
     ap.add_argument('--cases', default='')
     ap.add_argument('--limit', type=int)
+    ap.add_argument('--validator', choices=['cpachecker', 'ultimate'], default='cpachecker')
     a = ap.parse_args()
     out = Path(a.output).resolve()
     if a.action == 'make':
         make(Path(a.external), out, only={x for x in a.cases.split(',') if x}, limit=a.limit)
     elif a.action == 'validate':
-        validate(Path(a.external), out, limit=a.limit)
+        validate(Path(a.external), out, limit=a.limit, validator=a.validator)
     elif a.action == 'selftest':
-        sys.exit(0 if selftest(Path(a.external), out) else 1)
+        sys.exit(0 if selftest(Path(a.external), out, validator=a.validator) else 1)
     else:
         merge(out)
