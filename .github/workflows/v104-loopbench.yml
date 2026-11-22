@@ -1,0 +1,106 @@
+name: v1.04 loop-suite study, 203 cases
+
+# Frozen protocol: experiments/v104/loopbench/protocol.json (203 cases, 609 units, 20 shards).
+# The ten c/loop-* suites of sv-benchmarks, taken whole: they are the loop-invariant community's own
+# benchmarks, and the paper's reader is that community. The v1.03/v1.04 studies run on termination
+# suites, which is a fair objection to the evaluation no matter how precise the numbers are.
+#
+# This protocol was frozen once before (commit 1a6dd854) and never run; four driver defects were found
+# and fixed by the 400-case study afterwards (the Ultimate env name, a missing witness work directory,
+# unwinding assertions read as refutations, CRLF-folded hashes). It is re-frozen here at the fixed
+# driver: the 203 cases, their properties, labels, ABI, stratum and both hashes compare equal to the
+# first freeze, so the selection is untouched and only the code that runs has changed.
+#
+# Honesty note carried into the paper: 196 of these 203 were parsed by an earlier experiment, so this
+# is the community's benchmark population, not a clean hold-out. Only the seven
+# loop-floats-scientific-comp cases were never translated before. `held_out` in the protocol records
+# that distinction per case, and the summary keeps it as a stratum.
+on:
+  push:
+    branches: [research/v103-exec]
+    paths: ['.github/workflows/v104-loopbench.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  loopbench:
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '21'}
+      - name: Install package
+        run: python -m pip install -q -e '.[test,smt,exp]'
+      - name: Prepare pinned inputs
+        run: |
+          chmod +x scripts/ci_setup_v103.sh
+          EXT="${{ runner.temp }}/ext"
+          scripts/ci_setup_v103.sh "$EXT" loopbench
+          scripts/ci_setup_v103.sh "$EXT" tools
+      - name: Run shard ${{ matrix.shard }}
+        run: |
+          EXT="${{ runner.temp }}/ext"
+          python -u scripts/heldout_v104.py run --external "$EXT" \
+            --output experiments/v104/loopbench --shard ${{ matrix.shard }} --shards 20
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: loopbench-shard-${{ matrix.shard }}
+          path: experiments/v104/loopbench/shards
+          if-no-files-found: error
+          retention-days: 30
+
+  merge:
+    needs: loopbench
+    if: always()
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install package
+        run: python -m pip install -q -e '.[test,smt,exp]'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: loopbench-shard-*
+          merge-multiple: true
+          path: incoming
+      - name: Fold the shards in
+        run: |
+          set -e
+          n=$(ls -1 incoming/shard_*.json 2>/dev/null | wc -l)
+          echo "$n shard result(s) of 20"
+          if [ "$n" -ne 20 ]; then
+            # merge() refuses anything but a complete capture, so a missing shard is reported here
+            # rather than folded into a rate that silently changes its own denominator.
+            echo "incomplete: $n of 20 shards survived; nothing is recorded" >&2
+            exit 1
+          fi
+          mkdir -p experiments/v104/loopbench/shards
+          cp -a incoming/shard_*.json experiments/v104/loopbench/shards/
+          python -u scripts/heldout_v104.py merge --output experiments/v104/loopbench
+          cat experiments/v104/loopbench/summary.md
+      - name: Record evidence and push
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A experiments/v104/loopbench
+          if git diff --cached --quiet; then echo 'no change'; exit 0; fi
+          git commit -q -m "v1.04: the ten c/loop-* suites, 203 cases x 3 tools [skip ci]"
+          for i in 1 2 3; do
+            git pull --rebase --quiet --autostash origin research/v103-exec \
+              && git push -q origin HEAD:refs/heads/research/v103-exec && break
+            sleep 5
+          done
