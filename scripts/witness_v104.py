@@ -783,6 +783,13 @@ def merge(outs, out=None):
                      % (len(confirmed[v]), len(exported),
                         sum(r.get('loops', 0) for r in confirmed[v]), loops_all))
         lines.append('')
+    # Said here rather than in a caption, because the number above is conditional and a reader will
+    # otherwise take it as unconditional. `main` pins the parameter ranges the verifier assumed, so
+    # what is certified is "no overflow under those bounds", which is exactly what the verifier
+    # proved -- not no overflow on an unconstrained input.
+    lines += ['The witnesses certify no-overflow **under the same parameter bounds the verifier '
+              'assumed**: the generated `main` supplies them as assumptions, mirroring the range '
+              'the proof was made for. They are not unconditional proofs about arbitrary inputs.', '']
     lines += ['| outcome of the export | n |', '|---|---|']
     for k, v in sorted(tally.items()):
         lines.append('| %s | %d |' % (k, v))
