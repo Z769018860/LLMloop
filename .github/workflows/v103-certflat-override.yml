@@ -29,8 +29,8 @@ jobs:
           - {study: fresh, name: 'termination-restricted-15/NO_04.c', tag: NO_04}
           - {study: fresh, name: 'termination-restricted-15/b.14.c', tag: b14}
           - {study: fresh_hybrid, name: 'termination-restricted-15/ex3a.c', tag: ex3a}
-          - {study: nooverflow, name: 'termination-restricted-15/ChenFlurMukhopadhyay-SAS2012-Ex3.01.c', tag: ChenFlur}
-          - {study: nooverflow, name: 'termination-restricted-15/Urban-WST2013-Fig2.c', tag: Urban}
+          - {study: nooverflow, name: 'termination-crafted-lit/ChenFlurMukhopadhyay-SAS2012-Ex3.01.c', tag: ChenFlur}
+          - {study: nooverflow, name: 'termination-crafted-lit/Urban-WST2013-Fig2.c', tag: Urban}
     env:
       PYTHONPATH: ${{ github.workspace }}
       MEM_LIMIT: '14000000'
@@ -58,6 +58,7 @@ jobs:
       - name: Show result
         if: always()
         run: |
+          shopt -s nullglob
           for f in experiments/v103/cert_recheck_v103/overrides/*.json; do
             echo "--- $f"
             python -c "import json,sys; d=json.load(open(sys.argv[1])); print(d['counts'], 'complete=%s' % d['complete'], d.get('address_space_limit'))" "$f"
