@@ -346,23 +346,31 @@ def validate_with(validator, external, program, witness, abi, log=None, timeout=
 def cpa_validate(external, program, witness, abi, log=None, timeout=300):
     """Run the third-party validator. TRUE means the witness proves the property for this program.
 
-    The full output goes to `log` (and the last lines into the record) whatever the verdict: on the
-    first attempt this returned NO_RESULT for both invariants, and three lines of tail were not
-    enough to tell a rejected witness from a command line the tool never accepted. The command line
-    is recorded for the same reason -- it is what a reader has to be able to repeat.
+    The invocation is the one CPAchecker documents for witness validation (`--witnessValidation`,
+    `--witness`, `--spec`, plus the data model), not `--config
+    correctness-witness-validation--overflow.properties`: that file is the SV-COMP wrapper's entry
+    point, and handing it to `--config` made CPAchecker 4.2.2 answer a YAML witness with "The
+    Witness format found for ... is currently not supported" (run 45007628049 / 45007989891) even
+    though version 2.0 of the format has been readable since CPAchecker 2.3.
+
+    `--witnessValidation` also *validates the invariants themselves*: for no-overflow it runs the
+    predicate analysis while checking each witness invariant in parallel, reporting a violation if an
+    invariant does not hold. So a TRUE here is a positive result about the invariant, not just about
+    the program.
     """
     cpa = external / CPA_DIR
     if not (cpa / 'scripts' / 'cpa.sh').exists():
         return {'result': 'NO_CPA', 'detail': 'expected %s' % cpa}
-    cfg = cpa / 'config' / 'correctness-witness-validation--overflow.properties'
-    if not cfg.exists():
-        return {'result': 'NO_CONFIG', 'detail': str(cfg)}
+    work = Path(log).parent if log else Path(witness).parent
+    work.mkdir(parents=True, exist_ok=True)
+    prp = work / 'no-overflow.prp'
+    save(prp, SPEC_OVERFLOW + '\n')
     outdir = Path(log).with_suffix('') if log else Path(witness).with_suffix('.cpa')
     # CPAchecker creates its output directory itself and refuses one that is already there, so only
     # the parent is made here.
     outdir.parent.mkdir(parents=True, exist_ok=True)
-    cmd = [str(cpa / 'scripts' / 'cpa.sh'), '--config', str(cfg), '--witness', str(witness),
-           '--spec', str(cpa / 'config' / 'specification' / 'sv-comp-overflow.spc'),
+    cmd = [str(cpa / 'scripts' / 'cpa.sh'), '--witnessValidation', '--heap', '4000M',
+           '--witness', str(witness), '--spec', str(prp),
            '--32' if abi == 'ILP32' else '--64', '--timelimit', '%ds' % (timeout - 30),
            '--output-path', str(outdir), str(program)]
     t = time.time()
@@ -482,8 +490,8 @@ def selftest(external, out, validator='cpachecker', column_base=0):
 
     Every number this script reports is a rate of `Verification result: TRUE`. That number means
     nothing unless the same command line, on the same program, rejects an invariant that is wrong.
-    The wrong one is `i <= n - 1` at the loop head, which fails on the state that enters the loop
-    with `i == n`: true when the loop is skipped, false after the last iteration.
+    The wrong one is `i < n` at the loop head, which is false as soon as the loop has run to its
+    end (`i == n + 1`) and false immediately when `n == 0`.
     """
     out.mkdir(parents=True, exist_ok=True)
     program = add_entry(SELFTEST_PROGRAM, SELFTEST_BOUNDS)
