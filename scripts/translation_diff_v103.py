@@ -297,7 +297,7 @@ def run_native(binary, params, inputs):
             'ub_message': (run.stderr.strip().splitlines() or [''])[0][:160]}
 
 
-def loops(n, inputs, seed, cc, emit_only):
+def loops(n, inputs, seed, cc, emit_only, overflow_inputs=0):
     rng = random.Random(seed)
     (OUT / 'loops').mkdir(parents=True, exist_ok=True)
     rows, counts, rejected = [], collections.Counter(), []
@@ -325,7 +325,17 @@ def loops(n, inputs, seed, cc, emit_only):
                 counts['native compile error'] += 1
                 rows.append(row)
                 continue
-            for env in inputs_for(rng, prog['params'], inputs):
+            envs = inputs_for(rng, prog['params'], inputs)
+            if overflow_inputs:
+                # deliberately leave the no-overflow domain: the largest magnitude for the first
+                # parameter, ordinary values elsewhere. These rows are reported, never counted as
+                # translation errors, and they are what the certificates' no-overflow obligation
+                # exists to exclude.
+                for _ in range(overflow_inputs):
+                    env = {p: rng.randint(0, 9) for p in prog['params']}
+                    env[prog['params'][0]] = rng.choice([2 ** 31 - 1, -2 ** 31, 2 ** 31 - 7])
+                    envs.append(env)
+            for env in envs:
                 try:
                     model = model_run(analyzer, ir, env, prog['ret'])
                 except Exception as exc:
@@ -349,10 +359,53 @@ def loops(n, inputs, seed, cc, emit_only):
                                                      'trip_count': model['trip_count']})
             rows.append(row)
     payload = {'part': 'loops', 'seed': seed, 'programs': n, 'inputs_per_program': inputs,
+               'overflow_inputs_per_program': overflow_inputs,
                'compiler': cc_version(cc), 'flags': SAN, 'counts': dict(counts),
                'not_in_fragment': rejected[:20], 'rows': rows}
     (OUT / ('loops_seed%d.json' % seed)).write_text(json.dumps(payload, indent=1) + '\n')
     print(json.dumps({'part': 'loops', 'counts': dict(counts)}, ensure_ascii=False, indent=1))
+    return payload
+
+
+PROBES = [
+    ('parameters (as the harness calls it)', 'static int g(int a, unsigned short b){ return (int)(-(unsigned short)(a + b)); }\n'
+     'int main(void){ printf("%d\\n", g(2147483647, (unsigned short)-2)); return 0; }'),
+    ('volatile locals', 'int main(void){ volatile int a = 2147483647; volatile unsigned short b = 65534;\n'
+     '  printf("%d\\n", (int)(-(unsigned short)(a + b))); return 0; }'),
+    ('plain locals, constant initialisers', 'int main(void){ int a = 2147483647; unsigned short b = 65534;\n'
+     '  printf("%d\\n", (int)(-(unsigned short)(a + b))); return 0; }'),
+    ('plain locals, through argv', 'int main(int argc, char **argv){ int a = atoi(argv[1]); unsigned short b = (unsigned short)atoi(argv[2]);\n'
+     '  printf("%d\\n", (int)(-(unsigned short)(a + b))); return 0; }'),
+]
+
+
+def probe(cc):
+    """Does the host compiler actually report the one disagreement the integer part found?
+
+    The expression is `-(unsigned short)(0x7fffffff + (unsigned short)-2)`: `int + int` overflows, so
+    the model calls it undefined while one generated case produced a value with no sanitizer report.
+    This runs the same expression through four operand-provenance shapes to say which one the
+    compiler declines to instrument."""
+    OUT.mkdir(parents=True, exist_ok=True)
+    rows = []
+    with tempfile.TemporaryDirectory() as td:
+        wd = Path(td)
+        for name, body in PROBES:
+            src = wd / 'p.c'
+            src.write_text('#include <stdio.h>\n#include <stdlib.h>\n' + body + '\n', encoding='utf-8')
+            built = subprocess.run([cc] + SAN + ['-o', str(wd / 'p'), str(src)],
+                                   capture_output=True, text=True)
+            if built.returncode != 0:
+                rows.append({'shape': name, 'compile_error': (built.stderr.strip().splitlines() or ['?'])[-1][:160]})
+                continue
+            args = ['2147483647', '-2'] if 'argv' in body else []
+            run = subprocess.run([str(wd / 'p')] + args, capture_output=True, text=True)
+            rows.append({'shape': name, 'exit': run.returncode, 'stdout': run.stdout.strip(),
+                         'ub': 'runtime error' in run.stderr,
+                         'ub_message': (run.stderr.strip().splitlines() or [''])[0][:200]})
+    payload = {'part': 'probe', 'compiler': cc_version(cc), 'flags': SAN, 'rows': rows}
+    (OUT / 'probe.json').write_text(json.dumps(payload, indent=1) + '\n')
+    print(json.dumps(payload, ensure_ascii=False, indent=1))
     return payload
 
 
@@ -375,7 +428,7 @@ def summarise(payloads):
                               % (emit_expr(r['expression'])[:110], r['model_value'], r['native']['exit'],
                                  r['native']['stdout'], r['native']['ub']))
             md.append('')
-        else:
+        elif p['part'] == 'loops':
             md += ['## B. 循环翻译（`translate_c` + 重放 vs 原生 C）', '',
                    '- 程序 / programs: %d，每程序输入 / inputs each: %d，种子 / seed: %d'
                    % (p['programs'], p['inputs_per_program'], p['seed']),
@@ -383,6 +436,10 @@ def summarise(payloads):
                    '| 结论 | 例数 |', '|---|---|']
             for k, v in p['counts'].items():
                 md.append('| %s | %d |' % (k, v))
+            if p['counts'].get('outside no-overflow domain'):
+                md += ['', '另有每程序 %d 次输入被刻意放到 `int` 边界之外（`2^31-1`、`-2^31` 等）。'
+                       '这些行记作“越界”，不计为翻译错误——它们正是证书里那条 no-overflow 义务要排除的区域。'
+                       % p.get('overflow_inputs_per_program', 0)]
             if p['not_in_fragment']:
                 md += ['', '生成器产出但前端不接受的形状（最多 5 条）:', '']
                 for e in p['not_in_fragment'][:5]:
@@ -395,24 +452,36 @@ def summarise(payloads):
                     md.append('- `%s` 输入 %s → 模型 %s / 原生 %s'
                               % (r['name'], t['inputs'], t['model'], t['native']))
             md.append('')
+        if p['part'] == 'probe':
+            md += ['## A′. 那一例不一致到底是什么 / the single disagreement, probed', '',
+                   '被测表达式：`-(unsigned short)(0x7fffffff + (unsigned short)-2)`——`int + int` 溢出。'
+                   '同一表达式在四种操作数来源下的编译结果：', '',
+                   '| 操作数来源 | exit | 输出 | UBSan 报错 |', '|---|---|---|---|']
+            for r in p['rows']:
+                md.append('| %s | %s | %s | %s |' % (r.get('shape'), r.get('exit'), r.get('stdout'),
+                                                     '是' if r.get('ub') else '否'))
+            md.append('')
     (OUT / 'summary.md').write_text('\n'.join(md) + '\n')
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
-    ap.add_argument('action', choices=['integers', 'loops', 'all'])
+    ap.add_argument('action', choices=['integers', 'loops', 'probe', 'all'])
     ap.add_argument('--n', type=int, default=400)
     ap.add_argument('--loops', type=int, default=40)
     ap.add_argument('--inputs', type=int, default=8)
     ap.add_argument('--seed', type=int, default=1)
     ap.add_argument('--cc', default=os.environ.get('CC', 'gcc'))
     ap.add_argument('--emit-only', action='store_true')
+    ap.add_argument('--overflow-inputs', type=int, default=3, dest='overflow_inputs')
     a = ap.parse_args(argv)
     payloads = []
     if a.action in ('integers', 'all'):
         payloads.append(integers(a.n, a.seed, a.cc, a.emit_only))
     if a.action in ('loops', 'all'):
-        payloads.append(loops(a.loops, a.inputs, a.seed + 1, a.cc, a.emit_only))
+        payloads.append(loops(a.loops, a.inputs, a.seed + 1, a.cc, a.emit_only, a.overflow_inputs))
+    if a.action in ('probe', 'all') and not a.emit_only:
+        payloads.append(probe(a.cc))
     summarise(payloads)
 
 

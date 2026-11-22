@@ -32,7 +32,7 @@ jobs:
           gcc --version | head -1
           echo "CC=gcc" >> "$GITHUB_ENV"
       - name: Run both differentials
-        run: python -u scripts/translation_diff_v103.py all --n 1000 --loops 80 --inputs 12 --seed 1
+        run: python -u scripts/translation_diff_v103.py all --n 1200 --loops 80 --inputs 12 --overflow-inputs 4 --seed 1
       - name: Show summary
         if: always()
         run: cat experiments/v103/translation_diff/summary.md

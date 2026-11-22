@@ -1,0 +1,82 @@
+name: v1.03 component ablation
+
+# One component of the 165-case llmloop arm is switched off per arm, everything else identical:
+#   full / no_poly / no_ghost / rounds_1 / runs_1 / math   (definitions in scripts/ablation_v103.py)
+# Arms are independent, so the matrix is arm x shard; each job owns one arm's slice of the corpus.
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/v103-exec]
+    paths: ['.github/workflows/v103-ablation.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  arms:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 330
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        arm: [full, no_poly, no_ghost, rounds_1, runs_1, math]
+        shard: [0, 1, 2]
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install package
+        run: python -m pip install -q -e '.[test,smt,exp]'
+      - name: Prepare pinned corpus
+        run: |
+          chmod +x scripts/ci_setup_v103.sh
+          EXT="${{ runner.temp }}/ext"
+          scripts/ci_setup_v103.sh "$EXT" svbench
+          echo "LLMLOOP_SVBENCH=$EXT/svbench/c" >> "$GITHUB_ENV"
+      - name: Ablate ${{ matrix.arm }} (shard ${{ matrix.shard }})
+        run: |
+          python -u scripts/ablation_v103.py run --root "$LLMLOOP_SVBENCH" \
+            --arms ${{ matrix.arm }} --shard ${{ matrix.shard }} --shards 3
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ablation-${{ matrix.arm }}-${{ matrix.shard }}
+          path: |
+            experiments/v103/ablation/raw
+            experiments/v103/ablation/shards
+          if-no-files-found: warn
+
+  merge:
+    needs: arms
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ablation-*
+          merge-multiple: true
+          path: experiments/v103/ablation
+      - name: Merge and record
+        run: |
+          python -u scripts/ablation_v103.py merge
+          python -u scripts/ablation_v103.py summary
+          cat experiments/v103/ablation/summary.md
+          rm -rf experiments/v103/ablation/shards experiments/v103/ablation/raw
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A experiments/v103/ablation
+          if git diff --cached --quiet; then echo 'no change'; exit 0; fi
+          git commit -q -m "v1.03: component ablation of the llmloop arm on the 165 corpus [skip ci]"
+          for i in 1 2 3; do
+            git pull --rebase --quiet --autostash origin research/v103-exec && git push -q origin HEAD:refs/heads/research/v103-exec && break
+            sleep 5
+          done

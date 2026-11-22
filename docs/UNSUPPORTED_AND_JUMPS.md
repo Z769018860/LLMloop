@@ -65,13 +65,15 @@
 并把尾 `return` 改成 `return __done ? __rv : (expr);`。它的语义保持性由 `tests/test_jump_eliminate.py`
 的原生差分测试守着（同一程序在归一化前后与 `gcc -O0` 的结果逐例比对）。
 
-但**v1.03 的冻结流水线没有调用它**：`scripts/svcomp_translate.py` 直接拒绝函数体内的任何 `return`
-（`visit_Return` → `Reject('early return in body')`）、`goto`、标签、数组访问和调用。所以那 14 例的
-UNSUPPORTED 是**接线缺口，而不是表达能力缺口**。
+但**归一化跑得太晚，救不了这批用例**：流水线的顺序是「先翻译、后归一化」。
+`scripts/svcomp_translate.py` 在翻译阶段就把函数体内的任何 `return` 拒掉
+（`visit_Return` → `Reject('early return in body')`），`goto`、标签、数组访问、调用同样在此阶段拒绝；
+而 `llmloop/houdini_loops.py` 的 `_prepare` 虽然确实对**已通过翻译**的源码调用 `eliminate_jumps`，
+但那时这 14 例已经不在流程里了。所以它们的 UNSUPPORTED 是**关口位置**问题，而不是表达能力问题。
 
-## 5. 接上归一化能救回几例
+## 5. 把归一化提到翻译之前能救回几例
 
-对那 14 例先跑 `eliminate_jumps` 再重新翻译（`recover` 模式）：
+对那 14 例先跑 `eliminate_jumps` 再重新翻译（`recover` 模式，也就是模拟“把关口提前”）：
 
 - **2 例通过**：`termination-restricted-15/AlternKonv.c`、`termination-restricted-15/ex3b.c`；
 - 12 例仍然被拒，理由变成 `call inside program body: alloca` / `malloc`——它们本来就是堆用例，
