@@ -6,14 +6,38 @@
  "complete": true,
  "counts": {
   "VERIFIED": 94,
-  "TIMEOUT": 6,
-  "ERROR": 2
+  "TIMEOUT": 8
  },
  "cbmc": "6.11.0 (cbmc-6.11.0)",
  "preamble_sha256": "9ed18c22d1020f44ac7750ec62c335f21bf0aaaf7192dd5cbdb8e50728d07921",
  "per_certificate_timeout_s": 600,
  "address_space_limit": "6000000 bytes unless listed in overrides",
- "overrides": [],
+ "overrides": [
+  {
+   "name": "termination-crafted-lit/ChenFlurMukhopadhyay-SAS2012-Ex3.01.c",
+   "invariant_loops": 1,
+   "was": "ERROR",
+   "now": "TIMEOUT",
+   "address_space_limit": "address_space=14000000KB",
+   "reruns": [
+    "VERIFIED",
+    "TIMEOUT"
+   ],
+   "note": "name carries more than one certificate; folded to the worst re-run"
+  },
+  {
+   "name": "termination-crafted-lit/Urban-WST2013-Fig2.c",
+   "invariant_loops": 2,
+   "was": "ERROR",
+   "now": "TIMEOUT",
+   "address_space_limit": "address_space=14000000KB",
+   "reruns": [
+    "VERIFIED",
+    "TIMEOUT"
+   ],
+   "note": "name carries more than one certificate; folded to the worst re-run"
+  }
+ ],
  "shards": {
   "nooverflow_all_shard00.json": {
    "VERIFIED": 47,
@@ -255,8 +279,7 @@
   {
    "name": "termination-crafted-lit/ChenFlurMukhopadhyay-SAS2012-Ex3.01.c",
    "invariant_loops": 1,
-   "result": "ERROR",
-   "detail": "Out of memory"
+   "result": "TIMEOUT"
   },
   {
    "name": "termination-crafted-lit/CookSeeZuleger-TACAS2013-Fig1.c",
@@ -488,8 +511,7 @@
   {
    "name": "termination-crafted-lit/Urban-WST2013-Fig2.c",
    "invariant_loops": 2,
-   "result": "ERROR",
-   "detail": "SAT checker ran out of memory"
+   "result": "TIMEOUT"
   },
   {
    "name": "termination-crafted-lit/UrbanMine-ESOP2014-Fig3.c",

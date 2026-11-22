@@ -5,15 +5,63 @@
  "completed": 117,
  "complete": true,
  "counts": {
-  "VERIFIED": 105,
-  "TIMEOUT": 8,
-  "ERROR": 4
+  "VERIFIED": 106,
+  "TIMEOUT": 11
  },
  "cbmc": "6.11.0 (cbmc-6.11.0)",
  "preamble_sha256": "9ed18c22d1020f44ac7750ec62c335f21bf0aaaf7192dd5cbdb8e50728d07921",
  "per_certificate_timeout_s": 600,
  "address_space_limit": "6000000 bytes unless listed in overrides",
- "overrides": [],
+ "overrides": [
+  {
+   "name": "termination-restricted-15/Log.c",
+   "invariant_loops": 2,
+   "was": "ERROR",
+   "now": "TIMEOUT",
+   "address_space_limit": "address_space=14000000KB",
+   "reruns": [
+    "VERIFIED",
+    "TIMEOUT"
+   ],
+   "note": "name carries more than one certificate; folded to the worst re-run"
+  },
+  {
+   "name": "termination-restricted-15/LogAG.c",
+   "invariant_loops": 2,
+   "was": "ERROR",
+   "now": "TIMEOUT",
+   "address_space_limit": "address_space=14000000KB",
+   "reruns": [
+    "VERIFIED",
+    "TIMEOUT"
+   ],
+   "note": "name carries more than one certificate; folded to the worst re-run"
+  },
+  {
+   "name": "termination-restricted-15/NO_04.c",
+   "invariant_loops": 5,
+   "was": "ERROR",
+   "now": "VERIFIED",
+   "address_space_limit": "address_space=14000000KB",
+   "reruns": [
+    "VERIFIED",
+    "VERIFIED"
+   ],
+   "note": "name carries more than one certificate; folded to the worst re-run"
+  },
+  {
+   "name": "termination-restricted-15/b.14.c",
+   "invariant_loops": 2,
+   "was": "ERROR",
+   "now": "TIMEOUT",
+   "address_space_limit": "address_space=14000000KB",
+   "reruns": [
+    "VERIFIED",
+    "TIMEOUT"
+   ],
+   "note": "name carries more than one certificate; folded to the worst re-run"
+  }
+ ],
  "shards": {
   "fresh_all_shard00.json": {
    "VERIFIED": 53,
@@ -134,14 +182,12 @@
   {
    "name": "termination-restricted-15/Log.c",
    "invariant_loops": 2,
-   "result": "ERROR",
-   "detail": "SAT checker ran out of memory"
+   "result": "TIMEOUT"
   },
   {
    "name": "termination-restricted-15/LogAG.c",
    "invariant_loops": 2,
-   "result": "ERROR",
-   "detail": "SAT checker ran out of memory"
+   "result": "TIMEOUT"
   },
   {
    "name": "termination-restricted-15/LogAG.c",
@@ -200,8 +246,8 @@
   {
    "name": "termination-restricted-15/NO_04.c",
    "invariant_loops": 5,
-   "result": "ERROR",
-   "detail": "Out of memory"
+   "result": "VERIFIED",
+   "loops": 5
   },
   {
    "name": "termination-restricted-15/NO_13.c",
@@ -581,8 +627,7 @@
   {
    "name": "termination-restricted-15/b.14.c",
    "invariant_loops": 2,
-   "result": "ERROR",
-   "detail": "Out of memory"
+   "result": "TIMEOUT"
   },
   {
    "name": "termination-restricted-15/b.15.c",

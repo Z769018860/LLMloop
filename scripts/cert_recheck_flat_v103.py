@@ -214,30 +214,36 @@ def merge(what, scope):
         ov_rows += ov['rows']
         ov_limit = ov.get('address_space_limit')
     if ov_files:
-        # (name, loops) is not an identity: a study can carry the same certificate more than once
-        # (fresh_hybrid has DivMinus.c three times). Keep the row list intact and replace in place,
-        # and refuse to override a key that is not unique, rather than silently dropping rows.
+        # (name, loops) is not an identity: a study can carry several certificates under one name
+        # (Log.c has two, from two different invariant sets; fresh_hybrid has DivMinus.c three
+        # times), and those rows do not record which set they came from. So a name that was re-run
+        # more than once cannot be attributed to one of its rows. Fold the worst outcome instead:
+        # the ERROR row becomes VERIFIED only if every re-run of that name verified, which can only
+        # understate. Keep the row list intact and replace in place; never drop a row.
         positions = collections.defaultdict(list)
         for k, r in enumerate(rows):
             positions[(r['name'], r['invariant_loops'])].append(k)
-        folded = {(o['name'], o['invariant_loops']) for o in overrides}
+        grouped = collections.defaultdict(list)
         for r in ov_rows:
-            key = (r['name'], r['invariant_loops'])
+            grouped[(r['name'], r['invariant_loops'])].append(r)
+        folded = {(o['name'], o['invariant_loops']) for o in overrides}
+        for key, group in sorted(grouped.items()):
             if key in folded:
                 continue  # an earlier pass over this study already applied this override
             assert key in positions, 'override for an unplanned certificate: %s' % (key,)
-            where = positions[key]
-            if len(where) > 1:
-                # an override only ever replaces a row that came out ERROR, so among duplicates the
-                # target is the one that failed; if that is still ambiguous, stop rather than guess
-                where = [k for k in where if rows[k]['result'] == 'ERROR']
-                assert len(where) == 1, 'ambiguous override for %s: %d rows share it' % (key, len(where))
+            where = [k for k in positions[key] if rows[k]['result'] == 'ERROR']
+            assert len(where) == 1, 'override for %s, which is not a single ERROR row (%d)' % (key, len(where))
+            worst = [g for g in group if g['result'] != 'VERIFIED']
+            r = worst[0] if worst else group[0]
             was = rows[where[0]]['result']
-            assert was == 'ERROR', 'override for a certificate that came out %s: %s' % (was, key)
             rows[where[0]] = r
-            overrides.append({'name': r['name'], 'invariant_loops': r['invariant_loops'],
-                              'was': was, 'now': r['result'],
-                              'address_space_limit': ov_limit})
+            swap = {'name': r['name'], 'invariant_loops': r['invariant_loops'],
+                    'was': was, 'now': r['result'],
+                    'address_space_limit': ov_limit}
+            if len(group) > 1:
+                swap['reruns'] = [g['result'] for g in group]
+                swap['note'] = 'name carries more than one certificate; folded to the worst re-run'
+            overrides.append(swap)
 
     payload = {'study': what, 'scope': scope, 'planned': planned, 'completed': len(rows),
                'complete': len(rows) == planned, 'counts': dict(collections.Counter(r['result'] for r in rows)),
@@ -291,10 +297,17 @@ def summary():
     if ov:
         md += ['## 内存上限覆盖 / address-space overrides', '',
                '下列证书在 `ulimit -v 6000000` 下被 CBMC 自身报成 `Out of memory`（属运行环境的地址空间上限，'
-               '不是证书结论），已用更宽的上限、同样的 600 s 与同样的桩重跑，结果覆盖原记录：', '']
+               '不是证书结论），已用更宽的上限、同样的 600 s 与同样的桩重跑，结果覆盖原记录。'
+               '同一名称下若有不止一个证书（来自不同的不变式集合），重跑无法逐条归属到其中某一行，'
+               '故按**最差**重跑结果计，只会低估、不会抬高：', '']
         for o in ov:
-            md.append('- `%s` (loops=%d): %s → **%s**，上限 `%s`'
-                      % (o['name'], o['invariant_loops'], o['was'], o['now'], o['address_space_limit']))
+            line = '- `%s` (loops=%d): %s → **%s**，上限 `%s`' \
+                   % (o['name'], o['invariant_loops'], o['was'], o['now'], o['address_space_limit'])
+            if o.get('reruns'):
+                line += '；同名下 %d 次重跑 = %s' % (len(o['reruns']), ', '.join(o['reruns']))
+                if any(x != 'VERIFIED' for x in o['reruns']):
+                    line += '，按最差计'
+            md.append(line)
         md.append('')
     (OUT / 'summary.md').write_text('\n'.join(md) + '\n')
     print(json.dumps({'current': dict(total), 'previous': dict(prev_total)}, ensure_ascii=False, indent=1))
