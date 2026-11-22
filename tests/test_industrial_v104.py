@@ -54,6 +54,19 @@ def test_harness_keeps_the_body_verbatim():
     assert bad is None and bounds == {'u': [0, 2 ** 32 - 1], 'v': [0, 2 ** 32 - 1]}
 
 
+def test_a_typedef_parameter_is_read_through_its_underlying_type():
+    # `u64` is `unsigned long long`; clang says so in `desugaredQualType`, and refusing the parameter
+    # because the project spells it its own way would understate the fragment for no semantic reason.
+    src = 'unsigned long long f(unsigned long long u) { while (u > 0) { u = u - 1; } return u; }\n'
+    node = _fn(src, params=())
+    node['inner'].insert(0, {'kind': 'ParmVarDecl', 'name': 'u',
+                             'type': {'qualType': 'u64', 'desugaredQualType': 'unsigned long long'}})
+    bounds, bad = I.bounds_of(node)
+    assert bad is None and bounds == {'u': [0, 2 ** 64 - 1]}
+    out, why = I.harness(node, src.encode())
+    assert why is None and 'unsigned long long u' in out
+
+
 def test_a_pointer_parameter_is_not_given_a_bound():
     src = 'int h(int *p) { while (*p > 0) { *p = *p - 1; } return 0; }\n'
     node = _fn(src, name='h', params=(('p', 'int *'),))

@@ -344,9 +344,20 @@ def body_of(fn):
 
 
 def param_list(fn):
-    return [(c.get('name') or '', (c.get('type') or {}).get('qualType', '?'))
-            for c in fn.get('inner', []) or []
-            if isinstance(c, dict) and c.get('kind') == 'ParmVarDecl']
+    """(name, declared type, desugared type) per parameter.
+
+    A project typedef is not a semantic obstacle -- `u64` is `unsigned long long` and clang says so in
+    `desugaredQualType`. Using the desugared spelling for the parameter keeps the harness faithful and
+    keeps the bounds a statement about the type. Typedefs inside the *body* stay a real blocker,
+    because the body is fed to the frontend verbatim.
+    """
+    out = []
+    for c in fn.get('inner', []) or []:
+        if isinstance(c, dict) and c.get('kind') == 'ParmVarDecl':
+            td = c.get('type') or {}
+            out.append((c.get('name') or '', td.get('qualType', '?'),
+                        td.get('desugaredQualType') or td.get('qualType', '?')))
+    return out
 
 
 def return_type(fn):
@@ -370,10 +381,10 @@ def harness(fn, src_bytes):
     if body is None:
         return None, 'NO_OFFSETS'
     params = param_list(fn)
-    if any(not n for n, _ in params):
+    if any(not n for n, _, _ in params):
         return None, 'UNNAMED_PARAMETER'
     parts = []
-    for n, q in params:
+    for n, _declared, q in params:
         q = re.sub(r'\b(const|volatile|register)\b', '', q).strip()
         if not q or q == '?':
             return None, 'UNKNOWN_PARAMETER_TYPE'
@@ -385,7 +396,7 @@ def harness(fn, src_bytes):
 
 def bounds_of(fn):
     out = {}
-    for n, q in param_list(fn):
+    for n, _declared, q in param_list(fn):
         q = re.sub(r'\b(const|volatile|register)\b', '', q).strip()
         if q not in INT_TYPES:
             return None, q
@@ -647,6 +658,26 @@ def merge(out):
     L.append('| **合计 / total** | **%d** | **%d** | **%d** | **%d** | **%d** | **%d** |'
              % (totals['files'], totals['files_parsed'], totals['functions'],
                 totals['functions_with_loops'], totals['candidates'], totals['proved']))
+    blockers = collections.Counter()
+    for r in table:
+        if r.get('missing'):
+            continue
+        for k, v in r['classes'].items():
+            blockers[k] += v
+    top = blockers.most_common(1)
+    L += ['', '## 一句话 / in one line', '']
+    if totals['functions_with_loops']:
+        if top:
+            L.append('**%d 个含循环的函数里，第一处阻塞是内存（指针/数组/成员）的占了 %d 个（%.0f%%）**；'
+                     '片段内的标量候选 %d 个，最终证出 %d 个。'
+                     % (totals['functions_with_loops'], blockers['pointers_arrays_or_members'],
+                        100.0 * blockers['pointers_arrays_or_members'] / totals['functions_with_loops'],
+                        totals['candidates'], totals['proved']))
+        L.append('')
+        L.append('**Of %d loop-bearing functions, %d are stopped first by memory (pointers, arrays, '
+                 'members)**; %d reach the scalar fragment and %d are proved.'
+                 % (totals['functions_with_loops'], blockers['pointers_arrays_or_members'],
+                    totals['candidates'], totals['proved']))
     L += ['', '## 每一级为什么掉下去 / why each stage drops', '']
     for r in table:
         if r.get('missing'):

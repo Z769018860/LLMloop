@@ -57,7 +57,7 @@ jobs:
       - name: Scan ${{ matrix.project }}
         continue-on-error: true
         env:
-          LIMIT: '40'
+          LIMIT: ${{ github.event.inputs.limit }}
         run: |
           args=""
           if [ -n "$LIMIT" ]; then args="--limit $LIMIT"; fi
@@ -66,8 +66,8 @@ jobs:
       - name: Prove ${{ matrix.project }}
         continue-on-error: true
         env:
-          LIMIT: '40'
-          SECONDS_PER_PROOF: '40'
+          LIMIT: ${{ github.event.inputs.limit }}
+          SECONDS_PER_PROOF: ${{ github.event.inputs.seconds }}
         run: |
           args=""
           if [ -n "$LIMIT" ]; then args="--limit $LIMIT"; fi
