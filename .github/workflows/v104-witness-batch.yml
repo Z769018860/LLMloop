@@ -38,6 +38,10 @@ on:
         description: 'concurrent validations per shard (default 2)'
         required: false
         default: '2'
+      timeout:
+        description: 'wall-clock seconds per validation (default 150); CPAchecker gets 30 less'
+        required: false
+        default: '150'
 permissions:
   contents: write
 # No concurrency group. It was there to stop two batches colliding on the git push, which the retry
@@ -179,7 +183,7 @@ jobs:
         run: |
           python -u scripts/witness_v104.py validate --external "${{ runner.temp }}/ext" \
             --output "experiments/v104/witness/full165/shard${{ matrix.shard }}" \
-            --validator cpachecker --timeout 150 --workers ${{ inputs.workers }}
+            --validator cpachecker --timeout ${{ inputs.timeout }} --workers ${{ inputs.workers }}
       - name: Keep the CPAchecker verdicts
         if: always()
         run: |
@@ -201,7 +205,7 @@ jobs:
         run: |
           python -u scripts/witness_v104.py validate --external "${{ runner.temp }}/ext" \
             --output "experiments/v104/witness/full165/shard${{ matrix.shard }}" \
-            --validator ultimate --timeout 150 --workers ${{ inputs.workers }}
+            --validator ultimate --timeout ${{ inputs.timeout }} --workers ${{ inputs.workers }}
       - name: Trim the tools' working directories
         if: always()
         run: |
