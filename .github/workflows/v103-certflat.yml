@@ -8,9 +8,11 @@ name: v1.03 certificate re-check on CBMC 6.11
 # workflow re-runs all 586 certificates with that single preamble change, 600 s each.
 on:
   workflow_dispatch:
+  # deliberately only this file: editing the driver used to re-run all 586 certificates, which is
+  # both expensive and, for a cosmetic change, an unwanted new commit to the evidence directory.
   push:
     branches: [research/v103-exec]
-    paths: ['.github/workflows/v103-certflat.yml', 'scripts/cert_recheck_flat_v103.py']
+    paths: ['.github/workflows/v103-certflat.yml']
 
 permissions:
   contents: write

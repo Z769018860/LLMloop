@@ -82,13 +82,28 @@ def jobs(what, scope):
     return ps, joblist
 
 
-def run(what, scope, timeout, workers, shard, shards):
+def run(what, scope, timeout, workers, shard, shards, names=None, tag=None, mem_limit=None):
+    """Run certificates. `names` restricts the selection; `tag='override'` writes to overrides/.
+
+    The override path exists for the handful of certificates that the 6 GB address-space cap turns
+    into ERROR (CBMC's own "Out of memory" / "SAT checker ran out of memory"). Those are harness
+    artifacts, not verdicts, so they are re-run with more memory and folded in by `merge`.
+    """
     F = patch_preamble()
     ps, joblist = jobs(what, scope)
+    if names:
+        want = set(names)
+        joblist = [j for j in joblist if j[0] in want]
+        missing = want - {j[0] for j in joblist}
+        assert not missing, 'unknown certificate(s) for %s: %s' % (what, sorted(missing))
     selected = [j for i, j in enumerate(joblist) if shards is None or i % shards == shard]
     OUT.mkdir(parents=True, exist_ok=True)
-    suffix = '' if shards is None else '_shard%02d' % shard
-    target = OUT / ('%s_%s%s.json' % (what, scope, suffix))
+    if tag == 'override':
+        (OUT / 'overrides').mkdir(parents=True, exist_ok=True)
+        target = OUT / 'overrides' / ('%s.json' % what)
+    else:
+        suffix = '' if shards is None else '_shard%02d' % shard
+        target = OUT / ('%s_%s%s.json' % (what, scope, suffix))
 
     def one(job):
         name, inv = job
@@ -104,6 +119,7 @@ def run(what, scope, timeout, workers, shard, shards):
     def snapshot(rows):
         payload = {'study': what, 'scope': scope, 'per_certificate_timeout_s': timeout,
                    'workers': workers, 'shard': shard, 'shards': shards,
+                   'address_space_limit': mem_limit,
                    'cbmc': subprocess.run(['cbmc', '--version'], capture_output=True, text=True).stdout.strip(),
                    'preamble_sha256': hashlib.sha256(F.PRE.encode()).hexdigest(),
                    'preamble_change': 'nd_* helpers get an uninitialised-local body instead of a bare prototype; everything else as in cert_recheck_flat_v100',
@@ -132,14 +148,47 @@ def merge(what, scope):
     if not files:
         raise SystemExit('no shards for %s/%s' % (what, scope))
     rows, planned, shard_counts = [], 0, {}
+    engines, preambles, timeouts = set(), set(), set()
     for f in files:
         d = json.loads(f.read_text())
         assert d['complete'], 'incomplete shard %s' % f
         planned += d['planned']
         shard_counts[f.name] = d['counts']
         rows += d['rows']
+        engines.add(d.get('cbmc'))
+        preambles.add(d.get('preamble_sha256'))
+        timeouts.add(d.get('per_certificate_timeout_s'))
+    # every shard must have run the same engine, inlining the same preamble, at the same timeout
+    assert len(engines) == 1, 'shards disagree on the engine: %s' % sorted(engines)
+    assert len(preambles) == 1, 'shards disagree on the preamble: %s' % sorted(preambles)
+    engine, preamble = engines.pop(), preambles.pop()
+
+    # certificates that the address-space cap turned into ERROR get a second run at the same
+    # timeout with more memory; the override replaces the row, and the swap is recorded.
+    overrides = []
+    ov_path = OUT / 'overrides' / ('%s.json' % what)
+    if ov_path.exists():
+        ov = json.loads(ov_path.read_text())
+        assert ov['complete'], 'incomplete overrides for %s' % what
+        assert ov.get('cbmc') == engine, 'override ran on a different engine: %s' % ov.get('cbmc')
+        assert ov.get('preamble_sha256') == preamble, 'override used a different preamble'
+        by_key = {(r['name'], r['invariant_loops']): r for r in rows}
+        for r in ov['rows']:
+            key = (r['name'], r['invariant_loops'])
+            assert key in by_key, 'override for an unplanned certificate: %s' % (key,)
+            was = by_key[key]['result']
+            by_key[key] = r
+            overrides.append({'name': r['name'], 'invariant_loops': r['invariant_loops'],
+                              'was': was, 'now': r['result'],
+                              'address_space_limit': ov.get('address_space_limit')})
+        rows = list(by_key.values())
+
     payload = {'study': what, 'scope': scope, 'planned': planned, 'completed': len(rows),
                'complete': len(rows) == planned, 'counts': dict(collections.Counter(r['result'] for r in rows)),
+               'cbmc': engine, 'preamble_sha256': preamble,
+               'per_certificate_timeout_s': timeouts.pop() if len(timeouts) == 1 else sorted(timeouts),
+               'address_space_limit': '6000000 bytes unless listed in overrides',
+               'overrides': overrides,
                'shards': shard_counts, 'rows': sorted(rows, key=lambda r: (r['name'], r['invariant_loops']))}
     (OUT / ('%s_%s.json' % (what, scope))).write_text(json.dumps(payload, indent=1) + '\n')
     print(json.dumps({'merged': len(rows), 'planned': planned, 'counts': payload['counts']}, ensure_ascii=False))
@@ -156,7 +205,8 @@ def summary():
         p = ROOT / 'experiments' / STUDIES[what['study']][2]
         if p.exists():
             prev_total.update(r['result'] for r in json.loads(p.read_text()))
-    payload = {'cbmc': studies[0]['cbmc'] if studies else None,
+    payload = {'cbmc': studies[0].get('cbmc') if studies else None,
+               'preamble_sha256': studies[0].get('preamble_sha256') if studies else None,
                'previous': dict(prev_total), 'current': dict(total),
                'per_study': [{'study': s['study'], 'planned': s['planned'], 'counts': s['counts']} for s in studies]}
     (OUT / 'summary.json').write_text(json.dumps(payload, indent=1) + '\n')
@@ -166,6 +216,10 @@ def summary():
           '`scripts/cert_probe_v103.py` 的对照证明：同一份证书在冻结桩下 FAILED、补上显式非确定体后 VERIFIED。'
           '本节只改这一点桩（语义不变，因为未初始化局部量在 CBMC 里就是非确定值），其余（证明规则、验证条件、CBMC 参数、证书来源、判定词表）与 v1.00 完全相同。', '',
           '| 研究 | 证书 | VERIFIED | FAILED | TIMEOUT | ERROR | 其他 |', '|---|---|---|---|---|---|---|']
+    md = md[:-2] + [
+        '- 引擎 / engine: `%s`' % (payload['cbmc'] or 'unknown'),
+        '- 桩前导哈希 / preamble sha256: `%s`' % (payload['preamble_sha256'] or 'unknown'),
+        '- 每证书超时 / per-certificate timeout: 600 s, `ulimit -v 6000000`', ''] + md[-2:]
     for s in studies:
         c = s['counts']
         other = {k: v for k, v in c.items() if k not in ('VERIFIED', 'FAILED', 'TIMEOUT', 'ERROR')}
@@ -174,6 +228,15 @@ def summary():
                                                            json.dumps(other) if other else '—'))
     md += ['', '合计 / totals: %s' % json.dumps(dict(total), ensure_ascii=False),
            'v1.00 记录（旧引擎）/ v1.00 record: %s' % json.dumps(dict(prev_total), ensure_ascii=False), '']
+    ov = [o for s in studies for o in s.get('overrides') or []]
+    if ov:
+        md += ['## 内存上限覆盖 / address-space overrides', '',
+               '下列证书在 `ulimit -v 6000000` 下被 CBMC 自身报成 `Out of memory`（属运行环境的地址空间上限，'
+               '不是证书结论），已用更宽的上限、同样的 600 s 与同样的桩重跑，结果覆盖原记录：', '']
+        for o in ov:
+            md.append('- `%s` (loops=%d): %s → **%s**，上限 `%s`'
+                      % (o['name'], o['invariant_loops'], o['was'], o['now'], o['address_space_limit']))
+        md.append('')
     (OUT / 'summary.md').write_text('\n'.join(md) + '\n')
     print(json.dumps({'current': dict(total), 'previous': dict(prev_total)}, ensure_ascii=False, indent=1))
 
@@ -187,10 +250,15 @@ if __name__ == '__main__':
     ap.add_argument('--workers', type=int, default=2)
     ap.add_argument('--shard', type=int)
     ap.add_argument('--shards', type=int)
+    ap.add_argument('--names', help='comma-separated certificate names; writes overrides/<study>.json')
+    ap.add_argument('--mem-limit', dest='mem_limit', help='address-space cap actually in force, recorded verbatim')
     a = ap.parse_args()
     if a.action == 'summary':
         summary()
     elif a.action == 'merge':
         merge(a.what, a.scope)
+    elif a.names:
+        run(a.what, a.scope, a.timeout, a.workers, a.shard, a.shards,
+            names=[n.strip() for n in a.names.split(',') if n.strip()], tag='override', mem_limit=a.mem_limit)
     else:
-        run(a.what, a.scope, a.timeout, a.workers, a.shard, a.shards)
+        run(a.what, a.scope, a.timeout, a.workers, a.shard, a.shards, mem_limit=a.mem_limit)

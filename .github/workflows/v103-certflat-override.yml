@@ -1,0 +1,67 @@
+name: v1.03 certificate re-check, memory overrides
+
+# Seven certificates of the 586 came out ERROR on the CBMC 6.11 re-check, all of them with
+# CBMC's own "Out of memory" / "SAT checker ran out of memory". That is the harness address-space
+# cap (`ulimit -v 6000000`), not a verdict about the certificate. This run repeats exactly those
+# seven at the same 600 s timeout and the same preamble, with a wider cap, and records the result
+# as an override. `scripts/cert_recheck_flat_v103.py merge` folds it back in and lists every swap.
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/v103-exec]
+    paths: ['.github/workflows/v103-certflat-override.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  override:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+      MEM_LIMIT: '14000000'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install package
+        run: python -m pip install -q -e '.[test,smt,exp]'
+      - name: Prepare pinned inputs
+        run: |
+          chmod +x scripts/ci_setup_v103.sh
+          EXT="${{ runner.temp }}/ext"
+          scripts/ci_setup_v103.sh "$EXT" certbench
+          scripts/ci_setup_v103.sh "$EXT" cbmc
+          echo "LLMLOOP_SVBENCH=$EXT/svbench-cert/c" >> "$GITHUB_ENV"
+          echo "LLMLOOP_EXT=$EXT" >> "$GITHUB_ENV"
+          echo "$EXT/native/usr/bin" >> "$GITHUB_PATH"
+      - name: Re-run the seven OOM certificates with a wider cap
+        run: |
+          set -u
+          run() {
+            study="$1"; shift
+            bash -c "ulimit -v $MEM_LIMIT; exec python -u scripts/cert_recheck_flat_v103.py run '$study' all \
+              --timeout 600 --workers 2 --mem-limit \"address_space=${MEM_LIMIT}KB\" --names '$*'"
+          }
+          run fresh 'termination-restricted-15/Log.c,termination-restricted-15/LogAG.c,termination-restricted-15/NO_04.c,termination-restricted-15/b.14.c'
+          run fresh_hybrid 'termination-restricted-15/ex3a.c'
+          run nooverflow 'termination-restricted-15/ChenFlurMukhopadhyay-SAS2012-Ex3.01.c,termination-restricted-15/Urban-WST2013-Fig2.c'
+      - name: Show result
+        if: always()
+        run: |
+          for f in experiments/v103/cert_recheck_v103/overrides/*.json; do
+            echo "--- $f"; python -c "
+import json,sys
+d=json.load(open('$f'))
+print(d['counts'], 'complete=%s' % d['complete'], d.get('address_space_limit'))
+for r in d['rows']:
+    print(' ', r['result'], r['name'], 'loops=%s' % r['invariant_loops'], (r.get('detail') or '')[:90])
+"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: certflat-overrides
+          path: experiments/v103/cert_recheck_v103/overrides/
+          if-no-files-found: warn
