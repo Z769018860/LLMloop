@@ -39,6 +39,15 @@ if [ "$WHAT" = all ] || [ "$WHAT" = svbench ]; then
   sparse_at_pin "$SVBENCH_URL" "$EXT/svbench" "$PIN_SVBENCH" 'c/termination-15/*' 'c/termination-restricted-15/*'
 fi
 
+# The v1.04 scale-up draws on four termination suites, two of which no other checkout carries.
+# Again a checkout of its own: the v1.03 studies keep running against the exact directory they
+# were frozen with. (Run 45006470248 died here -- the first case it needed was
+# termination-crafted, which `svbench` never fetched.)
+if [ "$WHAT" = all ] || [ "$WHAT" = scale ]; then
+  sparse_at_pin "$SVBENCH_URL" "$EXT/svbench-scale" "$PIN_SVBENCH" \
+    'c/termination-15/*' 'c/termination-restricted-15/*' 'c/termination-crafted/*' 'c/termination-crafted-lit/*'
+fi
+
 # Certificates of the older no-overflow studies are re-checked against the same pin but need
 # the directories those studies drew from; a separate checkout keeps the frozen studies' input
 # set byte-identical to what they ran with.

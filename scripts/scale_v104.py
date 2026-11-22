@@ -40,7 +40,7 @@ from scripts import heldout_v104 as H  # noqa: E402
 PIN = H.PIN
 DIRS = ('termination-15', 'termination-restricted-15', 'termination-crafted', 'termination-crafted-lit')
 FROZEN = ROOT / 'experiments' / 'v103' / 'full165' / 'protocol.json'
-SVBENCH_DIR = 'svbench'
+SVBENCH_DIR = 'svbench-scale'   # ci_setup_v103.sh `scale`: the four termination suites, nothing else
 
 
 def declared_no_overflow(doc):

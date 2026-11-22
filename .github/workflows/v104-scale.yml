@@ -5,10 +5,14 @@ name: v1.04 scale-up, 400 cases
 # the additions are termination-crafted and a hash-ordered prefix of termination-crafted-lit, so the
 # set is the same population with more samples -- a precision increase, not a change of task.
 #
-# The first attempt (run 45005886487) died in every shard before the first case: the protocol was
-# frozen on Windows, so its source-hash keys were `scripts\scale_v104.py`, and `Path / 'scripts\x.py'`
-# is one odd file name on Linux rather than a directory traversal. Keys are now POSIX; the check also
-# folds both spellings, so a freeze made on either platform verifies on the other.
+# Two failed attempts, both before the first case:
+#   * 45005886487 -- the protocol was frozen on Windows, so its source-hash keys were
+#     `scripts\scale_v104.py`, and `Path / 'scripts\x.py'` is one odd file name on Linux rather than
+#     a directory traversal. Keys are now POSIX; the check folds both spellings either way.
+#   * 45006470248 -- `ci_setup_v103.sh svbench` only fetches termination-15 and
+#     termination-restricted-15, so the first termination-crafted case was missing. The study now
+#     has its own checkout (`scale`) rather than widening the one the v1.03 protocols were frozen
+#     against.
 on:
   push:
     branches: [research/v103-exec]
@@ -41,7 +45,7 @@ jobs:
         run: |
           chmod +x scripts/ci_setup_v103.sh
           EXT="${{ runner.temp }}/ext"
-          scripts/ci_setup_v103.sh "$EXT" svbench
+          scripts/ci_setup_v103.sh "$EXT" scale
           scripts/ci_setup_v103.sh "$EXT" tools
       - name: Run shard ${{ matrix.shard }}
         run: |
