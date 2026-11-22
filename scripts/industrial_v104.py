@@ -424,6 +424,10 @@ def scan(external, out, project, log_func=print, limit=0):
             continue
         src_bytes = p.read_bytes()
         rec['parsed'] = True
+        # The AST as observed, not as assumed: if a statement kind never appears here, the classifier
+        # cannot see it and the denominator means something other than what the label says.
+        kinds = collections.Counter(n.get('kind') for n in walk(ast))
+        rec['kinds'] = {k: v for k, v in kinds.most_common(14)}
         seen = 0
         cur = None
         for n in ast.get('inner', []) or []:
