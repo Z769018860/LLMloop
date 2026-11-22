@@ -66,7 +66,7 @@
 **设置 / setup.** SV-COMP NoOverflows（有符号溢出 = C 未定义行为）。翻译器与性质对齐（不翻译源码断言）、被修改参数保留入口副本 `p__in`、支配式死初始化；证明由 Houdini（默认/多项式配置）与 LLM 提议的**原子**（Houdini 弱化、未改动验证器验证）给出；**证伪**由原始文件本地编译 + 溢出陷阱 + 偏向边界的（可选持久选择）随机 nondet 给出，每个见证可重放；**证书**由 CBMC 独立复核（无契约、证明规则显式展开）。 
 **开发集（用于开发，数字为开发后）/ development set.** 63 个无溢出、110 个有溢出（4 个基准标签错误已按见证改标）：我们判定 169（61 证明 + 108 见证），Ultimate 156（56 + 100），ESBMC 105，CBMC 99，CPAchecker 42；配对 16 对 3。
 **族不相交集（`termination-15`、`termination-restricted-15`，冻结后未调整，无标签，用交叉一致性检验）/ family-disjoint set.** 93 个程序：我们 91 个证明 + 1 个见证 = 92，Ultimate 83（10 超时），CPAchecker 67，ESBMC/CBMC 各 10；配对 9 对 1，精确检验 p ≈ 0.02，0 矛盾。
-**证书复核 / re-check.** 586 个证书：556 VERIFIED、0 FAILED、29 超时、1 错误；新集合 91 个被证明程序中 90 个有被独立复核的证书。Ultimate 的见证用 CPAchecker 验证器验证 51/52 通过——**证书可复核不是我们独有的**。
+**证书复核 / re-check.** 586 个证书：556 VERIFIED、0 FAILED、29 超时、1 错误；新集合 91 个被证明程序中 90 个有被独立复核的证书。Ultimate 的见证用 CPAchecker 验证器验证 51/52 通过——**证书可复核不是我们独有的**。**引擎相关的更正（v1.03）：** 上述复核的验证条件用"只有原型、没有函数体"的 `nd_*` 助手表示非确定值；CBMC 6.11 把这种调用本身当成 FAILURE 属性（`no body for callee nd_int`），因而在**当前引擎**上同一批验证条件会全部 FAILED——探针（`scripts/cert_probe_v103.py`）显示连上表判为 VERIFIED 的证书在冻结桩下也 FAILED、给每个助手补一个"未初始化局部量"的函数体后恢复 VERIFIED。证明规则、验证条件、证书与判定词表都不变，重跑在 `experiments/v103/cert_recheck_v103/` 单独记录。 Engine-related correction: the stub helpers had no bodies, which CBMC 6.11 reports as a FAILURE property, so the same VCs cannot reproduce on the current engine; with nondeterministic bodies they do, and the re-run is recorded separately.
 **LLM 的真实贡献 / what the LLM really contributes.** 改为"LLM 只提原子"后每个模型证出 52–57/67（旧方案十几个），但默认 Houdini 已有 53；LLM 净增量约 0–4 个程序；回溯修复仅在 3/213（开发）与 3/350（新集合）个证明中起作用。
 **基准噪声 / benchmark noise.** SV-COMP 有 4 个 NoOverflows 预期标签错误（均有可重放的溢出见证，无工具对其给 TRUE）。
 
