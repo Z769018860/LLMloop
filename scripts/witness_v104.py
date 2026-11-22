@@ -782,13 +782,20 @@ def merge(outs, out=None):
         % (len(rows), len(exported), loops_all),
         '',
     ]
+    # One row per validator with every outcome side by side. A single "68 of 90" reads as twenty-two
+    # failures when ten of those cases were never asked at all, and a rate whose denominator hides
+    # "not run" is exactly the kind of number this audit exists to stop producing.
+    lines += ['| checked by | proves it | undecided | not validated | rejected | invariants '
+              'confirmed |', '|---|---|---|---|---|---|']
     for v in validators:
-        lines.append('| %s confirms | cases | invariants |' % v)
-        lines.append('|---|---|---|')
-        lines.append('| the witness proves the property | %d of %d | %d of %d |'
-                     % (len(confirmed[v]), len(exported),
+        cnt = verdict[v]
+        notrun = sum(n for k, n in cnt.items() if k in ('NOT_RUN', 'NO_RESULT', None))
+        undec = sum(n for k, n in cnt.items() if k in ('UNKNOWN', 'TIMEOUT'))
+        lines.append('| %s | %d | %d | %d | %d | %d of %d |'
+                     % (v, len(confirmed[v]), undec, notrun, cnt.get('FALSE', 0),
                         sum(r.get('loops', 0) for r in confirmed[v]), loops_all))
-        lines.append('')
+    lines.append('')
+    lines.append('')
     # Said here rather than in a caption, because the number above is conditional and a reader will
     # otherwise take it as unconditional. `main` pins the parameter ranges the verifier assumed, so
     # what is certified is "no overflow under those bounds", which is exactly what the verifier
