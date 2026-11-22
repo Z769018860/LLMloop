@@ -63,7 +63,8 @@ def code_sha():
     """Hash the modules the arm actually runs, so a code change invalidates a frozen protocol."""
     files = sorted([*(ROOT / 'llmloop').glob('*.py'), ROOT / 'scripts' / 'ablation_v103.py',
                     ROOT / 'scripts' / 'svcomp_translate.py'])
-    return {str(p.relative_to(ROOT)): sha(p) for p in files}
+    # POSIX-style keys: the same protocol must verify on Linux and on Windows
+    return {p.relative_to(ROOT).as_posix(): sha(p) for p in files}
 
 
 def cases_of():

@@ -3,6 +3,8 @@ name: v1.03 component ablation
 # One component of the 165-case llmloop arm is switched off per arm, everything else identical:
 #   full / no_poly / no_ghost / rounds_1 / runs_1 / math   (definitions in scripts/ablation_v103.py)
 # Arms are independent, so the matrix is arm x shard; each job owns one arm's slice of the corpus.
+# `scripts/ablation_v103.py` hashes the modules it runs; a code change invalidates the frozen protocol,
+# so this file must be touched whenever the driver is re-frozen.
 on:
   workflow_dispatch:
   push:
