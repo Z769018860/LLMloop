@@ -88,6 +88,18 @@ def jobs(what, scope):
     return ps, joblist
 
 
+def override_path(what, tag):
+    """Where a re-run of selected certificates is written.
+
+    One file per (study, tag), so several certificates can be re-run in parallel jobs without
+    writing the same file; the untagged name `<study>.json` is what single-job runs used to write.
+    """
+    if not tag:
+        return None
+    name = '%s.json' % what if tag == 'override' else '%s--%s.json' % (what, tag)
+    return OUT / 'overrides' / name
+
+
 def run(what, scope, timeout, workers, shard, shards, names=None, tag=None, mem_limit=None):
     """Run certificates. `names` restricts the selection; `tag='override'` writes to overrides/.
 
@@ -104,10 +116,10 @@ def run(what, scope, timeout, workers, shard, shards, names=None, tag=None, mem_
         assert not missing, 'unknown certificate(s) for %s: %s' % (what, sorted(missing))
     selected = [j for i, j in enumerate(joblist) if shards is None or i % shards == shard]
     OUT.mkdir(parents=True, exist_ok=True)
-    if tag == 'override':
-        (OUT / 'overrides').mkdir(parents=True, exist_ok=True)
-        # one file per (study, tag) so several certificates can be re-run in parallel jobs
-        target = OUT / 'overrides' / ('%s%s.json' % (what, '--' + tag if isinstance(tag, str) and tag != 'override' else ''))
+    if tag:
+        target = override_path(what, tag)
+        assert target is not None
+        target.parent.mkdir(parents=True, exist_ok=True)
     else:
         suffix = '' if shards is None else '_shard%02d' % shard
         target = OUT / ('%s_%s%s.json' % (what, scope, suffix))
@@ -263,7 +275,10 @@ def summary():
     md = md[:-2] + [
         '- 引擎 / engine: `%s`' % (payload['cbmc'] or 'unknown'),
         '- 桩前导哈希 / preamble sha256: `%s`' % (payload['preamble_sha256'] or 'unknown'),
-        '- 每证书超时 / per-certificate timeout: 600 s, `ulimit -v 6000000`', ''] + md[-2:]
+        '- 每证书超时 / per-certificate timeout: %s s，地址空间上限 / address-space cap: `%s`'
+        % (studies[0].get('per_certificate_timeout_s') if studies else '?',
+           (studies[0].get('address_space_limit') if studies else None) or 'not recorded'),
+        ''] + md[-2:]
     for s in studies:
         c = s['counts']
         other = {k: v for k, v in c.items() if k not in ('VERIFIED', 'FAILED', 'TIMEOUT', 'ERROR')}

@@ -68,7 +68,9 @@ jobs:
         with:
           name: certflat-override-${{ matrix.tag }}
           path: experiments/v103/cert_recheck_v103/overrides/
-          if-no-files-found: warn
+          # an empty upload here used to look like success and then left the merge with nothing to
+          # fold in, which quietly produced a run that "worked" and changed no number
+          if-no-files-found: error
 
   merge:
     needs: override
@@ -89,6 +91,12 @@ jobs:
       - name: Fold the overrides in
         run: |
           ls -l experiments/v103/cert_recheck_v103/overrides
+          n=$(ls -1 experiments/v103/cert_recheck_v103/overrides/*.json | wc -l)
+          echo "$n override file(s)"
+          if [ "$n" -ne 7 ]; then
+            echo "expected 7 override files, got $n" >&2
+            exit 1
+          fi
           for s in fresh fresh_hybrid nooverflow hybrid; do
             python -u scripts/cert_recheck_flat_v103.py merge "$s" all
           done
