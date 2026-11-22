@@ -423,15 +423,28 @@ def scan(external, out, project, log_func=print, limit=0):
             coverage.append(rec)
             continue
         src_bytes = p.read_bytes()
+        rec['parsed'] = True
         seen = 0
+        cur = None
         for n in ast.get('inner', []) or []:
-            if not isinstance(n, dict) or n.get('kind') != 'FunctionDecl':
+            if not isinstance(n, dict):
+                continue
+            # clang's JSON elides `file` when it repeats the previous location, so a node without one
+            # inherits the cursor. Without this, every `static inline` in every included header was
+            # counted as a function of the .c file: openssl showed 1727 functions in six files.
+            here = node_file(n)
+            if here:
+                cur = here
+            if n.get('kind') != 'FunctionDecl':
                 continue
             b = body_of(n)
             if b is None:
                 continue
-            fpath = node_file(n) or ''
+            fpath = here or cur or ''
             if fpath and Path(fpath).name != p.name:
+                continue
+            beg = ((b.get('range') or {}).get('begin') or {}).get('offset') or 0
+            if beg >= len(src_bytes):
                 continue
             if seen >= MAX_FUNCTIONS_PER_FILE:
                 break
