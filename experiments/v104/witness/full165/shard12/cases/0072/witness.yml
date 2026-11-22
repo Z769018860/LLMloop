@@ -1,0 +1,28 @@
+- entry_type: invariant_set
+  metadata:
+    format_version: '2.0'
+    uuid: ea86047b-dff6-55f4-9985-9c82e10524a4
+    creation_time: '2026-11-22T00:00:00+00:00'
+    producer:
+      name: llmloop
+      version: 1.04
+      configuration: llmloop v1.04 deterministic pipeline, invariants exported as loop heads
+    task:
+      input_files:
+      - program.c
+      input_file_hashes:
+        program.c: 4c7583447878e7e759163372d5ab9b3c29195772fce9d9fdf38767e45b875dfd
+      specification: |
+        CHECK( init(main()), LTL(G ! overflow) )
+      data_model: LP64
+      language: C
+  content:
+  - invariant:
+      type: loop_invariant
+      location:
+        file_name: program.c
+        line: 4
+        column: 1
+        function: f
+      value: '(i >= -2147483648) && (i <= 2147483647) && (up >= 0) && (up <= 1) && ((up == 0 || up == 1)) && (((long long)i__in + (long long)i) >= -4294967296) && (((long long)i__in + (long long)i) <= 4294967294) && (((long long)i__in - (long long)up) <= 2147483647) && (((long long)i__in + (long long)up) >= -2147483648) && (((long long)i - (long long)up) >= -2147483648) && (((long long)i - (long long)up) <= 2147483647) && (((long long)i + (long long)up) >= -2147483648) && (((long long)i + (long long)up) <= 2147483647) && (i*up >= 0) && (i*up <= 10) && (up*up >= 0) && (up*up <= 1) && (up >= -1) && (up <= 2) && (up <= 9) && (up <= 10) && (up <= 11)'
+      format: c_expression

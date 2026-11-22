@@ -1,0 +1,28 @@
+- entry_type: invariant_set
+  metadata:
+    format_version: '2.0'
+    uuid: 226d4876-8987-5436-bf7c-36dde101a6af
+    creation_time: '2026-11-22T00:00:00+00:00'
+    producer:
+      name: llmloop
+      version: 1.04
+      configuration: llmloop v1.04 deterministic pipeline, invariants exported as loop heads
+    task:
+      input_files:
+      - program.c
+      input_file_hashes:
+        program.c: b0f8b4e429faf36cfc0a2d21afc86ad4599f75993d3f4d98adaf96dc00a24a12
+      specification: |
+        CHECK( init(main()), LTL(G ! overflow) )
+      data_model: LP64
+      language: C
+  content:
+  - invariant:
+      type: loop_invariant
+      location:
+        file_name: program.c
+        line: 4
+        column: 1
+        function: f
+      value: '(i >= 0) && (i <= 20) && (c >= 0) && (((long long)__z - (long long)i) >= -20) && (((long long)__z - (long long)i) <= 0) && (((long long)__z + (long long)i) >= 0) && (((long long)__z + (long long)i) <= 20) && (__z <= i) && (((long long)__z - (long long)c) <= 0) && (((long long)__z + (long long)c) >= 0) && (__z <= c) && (((long long)i - (long long)c) >= 0) && (((long long)i - (long long)c) <= 10) && (((long long)i + (long long)c) >= 0) && (i >= c) && (1*__z == 0) && (i >= -1) && (i <= 21) && (c >= -1) && (c <= 20) && (c <= 21)'
+      format: c_expression

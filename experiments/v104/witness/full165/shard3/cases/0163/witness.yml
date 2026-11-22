@@ -1,0 +1,37 @@
+- entry_type: invariant_set
+  metadata:
+    format_version: '2.0'
+    uuid: d2c27f8f-4e4a-5974-86be-e7044642273b
+    creation_time: '2026-11-22T00:00:00+00:00'
+    producer:
+      name: llmloop
+      version: 1.04
+      configuration: llmloop v1.04 deterministic pipeline, invariants exported as loop heads
+    task:
+      input_files:
+      - program.c
+      input_file_hashes:
+        program.c: bcfe7012bf773fb59ddc6ea7974dfa87b09264965af51469d7be010c15497959
+      specification: |
+        CHECK( init(main()), LTL(G ! overflow) )
+      data_model: LP64
+      language: C
+  content:
+  - invariant:
+      type: loop_invariant
+      location:
+        file_name: program.c
+        line: 5
+        column: 1
+        function: f
+      value: '(i >= 0) && (i <= 10) && (j >= 0) && (j <= 12) && ((j == 0 || j == 12)) && (((j % 2) + 2) % 2 == 0) && (((j % 3) + 3) % 3 == 0) && (((j % 4) + 4) % 4 == 0) && (((j % 12) + 12) % 12 == 0) && (c >= 0) && (c <= 90) && (((c % 3) + 3) % 3 == 0) && (((c % 9) + 9) % 9 == 0) && (((long long)__z - (long long)i) >= -10) && (((long long)__z - (long long)i) <= 0) && (((long long)__z + (long long)i) >= 0) && (((long long)__z + (long long)i) <= 10) && (__z <= i) && (((long long)__z - (long long)j) >= -12) && (((long long)__z - (long long)j) <= 0) && ((((__z - j) % 2) + 2) % 2 == 0) && ((((__z - j) % 3) + 3) % 3 == 0) && ((((__z - j) % 4) + 4) % 4 == 0) && ((((__z - j) % 12) + 12) % 12 == 0) && (((long long)__z + (long long)j) >= 0) && (((long long)__z + (long long)j) <= 12) && (__z <= j) && (((long long)__z - (long long)c) >= -90) && (((long long)__z - (long long)c) <= 0) && ((((__z - c) % 3) + 3) % 3 == 0) && ((((__z - c) % 9) + 9) % 9 == 0) && (((long long)__z + (long long)c) >= 0) && (((long long)__z + (long long)c) <= 90) && (__z <= c) && (((long long)i - (long long)j) >= -11) && (((long long)i - (long long)j) <= 0) && (((long long)i + (long long)j) >= 0) && (((long long)i + (long long)j) <= 22) && (i <= j) && (((long long)i - (long long)c) >= -80) && (((long long)i - (long long)c) <= 0) && ((((i - c) % 2) + 2) % 2 == 0) && ((((i - c) % 4) + 4) % 4 == 0) && (((long long)i + (long long)c) >= 0) && (((long long)i + (long long)c) <= 100) && (i <= c) && (((long long)j - (long long)c) >= -78) && (((long long)j - (long long)c) <= 3) && ((((j - c) % 3) + 3) % 3 == 0) && (((long long)j + (long long)c) >= 0) && (((long long)j + (long long)c) <= 102) && (1*__z == 0) && (-9*i + 1*c == 0) && (i >= -1) && (i <= 11) && (i <= 12) && (i <= 13) && (j >= -1) && (j <= 13) && (c >= -1) && ((j != 0 || i <= 0)) && ((j == 0 || i >= 1)) && ((j != 0 || c <= 0)) && ((j == 0 || c >= 9)) && ((j != 12 || i >= 1)) && ((j == 12 || i <= 0)) && ((j != 12 || c >= 9)) && ((j == 12 || c <= 0))'
+      format: c_expression
+  - invariant:
+      type: loop_invariant
+      location:
+        file_name: program.c
+        line: 8
+        column: 3
+        function: f
+      value: '(i >= 0) && (i <= 9) && (j >= 3) && (j <= 12) && (c >= 0) && (c <= 90) && (((long long)__z - (long long)i) >= -9) && (((long long)__z - (long long)i) <= 0) && (((long long)__z + (long long)i) >= 0) && (((long long)__z + (long long)i) <= 9) && (__z <= i) && (((long long)__z - (long long)j) >= -12) && (((long long)__z - (long long)j) <= -3) && (((long long)__z + (long long)j) >= 3) && (((long long)__z + (long long)j) <= 12) && (__z <= j) && (((long long)__z - (long long)c) >= -90) && (((long long)__z - (long long)c) <= 0) && (((long long)__z + (long long)c) >= 0) && (((long long)__z + (long long)c) <= 90) && (__z <= c) && (((long long)i - (long long)j) >= -12) && (((long long)i - (long long)j) <= 6) && (((long long)i + (long long)j) >= 3) && (((long long)i + (long long)j) <= 21) && (((long long)i - (long long)c) >= -81) && (((long long)i - (long long)c) <= 0) && (((long long)i + (long long)c) >= 0) && (((long long)i + (long long)c) <= 99) && (i <= c) && (((long long)j - (long long)c) >= -78) && (((long long)j - (long long)c) <= 3) && ((((j - c) % 3) + 3) % 3 == 0) && ((((j - c) % 9) + 9) % 9 == 3) && (((long long)j + (long long)c) >= 3) && (((long long)j + (long long)c) <= 102) && (1*__z == 0) && (-9*i + -1*j + 1*c + 3 == 0) && (i >= -1) && (i <= 10) && (i <= 11) && (i <= 12) && (i <= 13) && (j >= -1) && (j >= 0) && (j >= 1) && (j >= 2) && (j <= 13) && (c >= -1)'
+      format: c_expression

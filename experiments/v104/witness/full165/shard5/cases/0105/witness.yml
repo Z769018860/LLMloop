@@ -1,0 +1,37 @@
+- entry_type: invariant_set
+  metadata:
+    format_version: '2.0'
+    uuid: 1c815968-ce13-56fe-bffb-7ed8c3c05697
+    creation_time: '2026-11-22T00:00:00+00:00'
+    producer:
+      name: llmloop
+      version: 1.04
+      configuration: llmloop v1.04 deterministic pipeline, invariants exported as loop heads
+    task:
+      input_files:
+      - program.c
+      input_file_hashes:
+        program.c: ae950e01d174953cdce6e468c8c73d432efdfadce65cf2c36af157d1c6a498af
+      specification: |
+        CHECK( init(main()), LTL(G ! overflow) )
+      data_model: LP64
+      language: C
+  content:
+  - invariant:
+      type: loop_invariant
+      location:
+        file_name: program.c
+        line: 4
+        column: 1
+        function: f
+      value: '(y >= -2147483648) && (y <= 2147483647) && (x >= -2147483648) && (x <= 2147483647) && (((long long)x__in - (long long)y__in) >= -4294967295) && (((long long)x__in + (long long)y__in) <= 4294967294) && (((long long)x__in - (long long)y) >= -4294967295) && (((long long)x__in + (long long)y) <= 4294967294) && (((long long)x__in - (long long)x) >= 0) && (((long long)x__in + (long long)x) >= -4294967296) && (((long long)x__in + (long long)x) <= 4294967294) && (x__in >= x) && (((long long)y__in - (long long)y) >= 0) && (((long long)y__in + (long long)y) >= -4294967296) && (((long long)y__in + (long long)y) <= 4294967294) && (y__in >= y) && (((long long)y__in - (long long)x) <= 4294967295) && (((long long)y__in + (long long)x) <= 4294967294) && (((long long)y - (long long)x) <= 4294967295) && (((long long)y + (long long)x) <= 4294967294) && (-1*x__in + 1*y__in + -1*y + 1*x == 0)'
+      format: c_expression
+  - invariant:
+      type: loop_invariant
+      location:
+        file_name: program.c
+        line: 6
+        column: 3
+        function: f
+      value: '(y >= 0) && (y <= 2147483647) && (x >= 0) && (x <= 2147483647) && (x__in - y__in == 0) && ((((x__in - y__in) % 2) + 2) % 2 == 0) && ((((x__in - y__in) % 3) + 3) % 3 == 0) && ((((x__in - y__in) % 4) + 4) % 4 == 0) && (((long long)x__in + (long long)y__in) <= 4294967294) && (x__in <= y__in) && (x__in >= y__in) && (((long long)x__in - (long long)y) >= 0) && (((long long)x__in + (long long)y) <= 4294967294) && (x__in >= y) && (((long long)x__in - (long long)x) >= 0) && (((long long)x__in + (long long)x) <= 4294967294) && (x__in >= x) && (((long long)y__in - (long long)y) >= 0) && (((long long)y__in + (long long)y) <= 4294967294) && (y__in >= y) && (((long long)y__in - (long long)x) >= 0) && (((long long)y__in + (long long)x) <= 4294967294) && (y__in >= x) && (y - x == 0) && ((((y - x) % 2) + 2) % 2 == 0) && ((((y - x) % 3) + 3) % 3 == 0) && ((((y - x) % 4) + 4) % 4 == 0) && (((long long)y + (long long)x) >= 0) && (((long long)y + (long long)x) <= 4294967294) && (y <= x) && (y >= x) && (-1*x__in + 1*y__in == 0) && (-1*y + 1*x == 0) && (y >= -1) && (x >= -1)'
+      format: c_expression

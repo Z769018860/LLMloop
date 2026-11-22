@@ -1,0 +1,28 @@
+- entry_type: invariant_set
+  metadata:
+    format_version: '2.0'
+    uuid: df3cb827-d1c5-55a4-a645-64f4e1c93368
+    creation_time: '2026-11-22T00:00:00+00:00'
+    producer:
+      name: llmloop
+      version: 1.04
+      configuration: llmloop v1.04 deterministic pipeline, invariants exported as loop heads
+    task:
+      input_files:
+      - program.c
+      input_file_hashes:
+        program.c: cf6dd435eaae7f364c06292a5804bd9c432d933d5477b2951707278ab8d54341
+      specification: |
+        CHECK( init(main()), LTL(G ! overflow) )
+      data_model: LP64
+      language: C
+  content:
+  - invariant:
+      type: loop_invariant
+      location:
+        file_name: program.c
+        line: 4
+        column: 1
+        function: f
+      value: '(i >= 0) && (i <= 11) && (c >= 0) && (c <= 11) && (((long long)__z - (long long)i) >= -11) && (((long long)__z - (long long)i) <= 0) && (((long long)__z + (long long)i) >= 0) && (((long long)__z + (long long)i) <= 11) && (__z <= i) && (((long long)__z - (long long)c) >= -11) && (((long long)__z - (long long)c) <= 0) && (((long long)__z + (long long)c) >= 0) && (((long long)__z + (long long)c) <= 11) && (__z <= c) && (i - c == 0) && ((((i - c) % 2) + 2) % 2 == 0) && ((((i - c) % 3) + 3) % 3 == 0) && ((((i - c) % 4) + 4) % 4 == 0) && ((((i - c) % 9) + 9) % 9 == 0) && ((((i - c) % 10) + 10) % 10 == 0) && ((((i - c) % 11) + 11) % 11 == 0) && (((long long)i + (long long)c) >= 0) && (((long long)i + (long long)c) <= 22) && (i <= c) && (i >= c) && (1*__z == 0) && (-1*i + 1*c == 0) && (i >= -1) && (c >= -1)'
+      format: c_expression

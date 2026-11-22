@@ -1,0 +1,28 @@
+- entry_type: invariant_set
+  metadata:
+    format_version: '2.0'
+    uuid: 0394175b-150f-521a-b583-86a8c39507b0
+    creation_time: '2026-11-22T00:00:00+00:00'
+    producer:
+      name: llmloop
+      version: 1.04
+      configuration: llmloop v1.04 deterministic pipeline, invariants exported as loop heads
+    task:
+      input_files:
+      - program.c
+      input_file_hashes:
+        program.c: 1dd3e2b416c31d226861c3edd05ce88a4b82fa52c9dd57c01bd07c06d962540d
+      specification: |
+        CHECK( init(main()), LTL(G ! overflow) )
+      data_model: LP64
+      language: C
+  content:
+  - invariant:
+      type: loop_invariant
+      location:
+        file_name: program.c
+        line: 4
+        column: 1
+        function: f
+      value: '(i >= 0) && (i <= 49) && (j >= 51) && (j <= 100) && (((long long)__z - (long long)i) >= -49) && (((long long)__z - (long long)i) <= 0) && (((long long)__z + (long long)i) >= 0) && (((long long)__z + (long long)i) <= 49) && (__z <= i) && (((long long)__z - (long long)j) >= -100) && (((long long)__z - (long long)j) <= -51) && (((long long)__z + (long long)j) >= 51) && (((long long)__z + (long long)j) <= 100) && (__z <= j) && (((long long)i - (long long)j) >= -100) && (((long long)i - (long long)j) <= -2) && ((((i - j) % 2) + 2) % 2 == 0) && (i + j == 100) && (i <= j) && (1*__z == 0) && (i >= -1) && (i <= 50) && (i <= 51) && (i <= 52) && (i <= 99) && (i <= 100) && (i <= 101) && (j >= -1) && (j >= 0) && (j >= 1) && (j >= 2) && (j >= 50) && (j <= 101)'
+      format: c_expression

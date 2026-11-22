@@ -1,0 +1,28 @@
+- entry_type: invariant_set
+  metadata:
+    format_version: '2.0'
+    uuid: 349ef17a-3f6a-5786-b3e4-47dff3c70cd4
+    creation_time: '2026-11-22T00:00:00+00:00'
+    producer:
+      name: llmloop
+      version: 1.04
+      configuration: llmloop v1.04 deterministic pipeline, invariants exported as loop heads
+    task:
+      input_files:
+      - program.c
+      input_file_hashes:
+        program.c: d93ca397518369be4afe8caca7ee1ea2178caf33d7e02dc413da9a7d2a62922a
+      specification: |
+        CHECK( init(main()), LTL(G ! overflow) )
+      data_model: LP64
+      language: C
+  content:
+  - invariant:
+      type: loop_invariant
+      location:
+        file_name: program.c
+        line: 5
+        column: 1
+        function: f
+      value: '(bob >= 13) && (bob <= 17) && ((bob == 13 || bob == 17)) && (((bob % 2) + 2) % 2 == 1) && (((bob % 4) + 4) % 4 == 1) && (samantha >= 13) && (samantha <= 17) && ((samantha == 13 || samantha == 17)) && (((samantha % 2) + 2) % 2 == 1) && (((samantha % 4) + 4) % 4 == 1) && (temp >= 0) && (temp <= 17) && ((temp == 0 || temp == 13 || temp == 17)) && (((long long)__z - (long long)bob) >= -17) && (((long long)__z - (long long)bob) <= -13) && ((((__z - bob) % 2) + 2) % 2 == 1) && ((((__z - bob) % 4) + 4) % 4 == 3) && (((long long)__z + (long long)bob) >= 13) && (((long long)__z + (long long)bob) <= 17) && (__z <= bob) && (((long long)__z - (long long)samantha) >= -17) && (((long long)__z - (long long)samantha) <= -13) && ((((__z - samantha) % 2) + 2) % 2 == 1) && ((((__z - samantha) % 4) + 4) % 4 == 3) && (((long long)__z + (long long)samantha) >= 13) && (((long long)__z + (long long)samantha) <= 17) && (__z <= samantha) && (((long long)__z - (long long)temp) >= -17) && (((long long)__z - (long long)temp) <= 0) && (((long long)__z + (long long)temp) >= 0) && (((long long)__z + (long long)temp) <= 17) && (__z <= temp) && (((long long)bob - (long long)samantha) >= -4) && (((long long)bob - (long long)samantha) <= 4) && ((((bob - samantha) % 2) + 2) % 2 == 0) && ((((bob - samantha) % 4) + 4) % 4 == 0) && (bob + samantha == 30) && (((long long)bob - (long long)temp) >= -4) && (((long long)bob - (long long)temp) <= 13) && (((long long)bob + (long long)temp) >= 13) && (((long long)bob + (long long)temp) <= 30) && (((long long)samantha - (long long)temp) >= 0) && (((long long)samantha - (long long)temp) <= 17) && ((((samantha - temp) % 17) + 17) % 17 == 0) && (((long long)samantha + (long long)temp) >= 17) && (((long long)samantha + (long long)temp) <= 34) && (samantha >= temp) && (1*__z == 0) && (bob >= -1) && (bob >= 0) && (bob >= 1) && (bob >= 12) && (bob <= 18) && (bob <= 99) && (bob <= 100) && (bob <= 101) && (samantha >= -1) && (samantha >= 0) && (samantha >= 1) && (samantha >= 12) && (samantha <= 18) && (samantha <= 99) && (samantha <= 100) && (samantha <= 101) && (temp >= -1) && (temp <= 18) && (temp <= 99) && (temp <= 100) && (temp <= 101) && ((bob != 13 || samantha >= 17)) && ((bob == 13 || samantha <= 13)) && ((bob != 17 || samantha <= 13)) && ((bob == 17 || samantha >= 17)) && ((samantha != 13 || bob >= 17)) && ((samantha == 13 || bob <= 13)) && ((samantha != 17 || bob <= 13)) && ((samantha == 17 || bob >= 17)) && ((temp != 13 || bob >= 17)) && ((temp == 13 || bob <= 13)) && ((temp != 13 || samantha <= 13)) && ((temp == 13 || samantha >= 17))'
+      format: c_expression
