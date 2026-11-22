@@ -100,7 +100,8 @@ def run(what, scope, timeout, workers, shard, shards, names=None, tag=None, mem_
     OUT.mkdir(parents=True, exist_ok=True)
     if tag == 'override':
         (OUT / 'overrides').mkdir(parents=True, exist_ok=True)
-        target = OUT / 'overrides' / ('%s.json' % what)
+        # one file per (study, tag) so several certificates can be re-run in parallel jobs
+        target = OUT / 'overrides' / ('%s%s.json' % (what, '--' + tag if isinstance(tag, str) and tag != 'override' else ''))
     else:
         suffix = '' if shards is None else '_shard%02d' % shard
         target = OUT / ('%s_%s%s.json' % (what, scope, suffix))
@@ -166,19 +167,27 @@ def merge(what, scope):
     # certificates that the address-space cap turned into ERROR get a second run at the same
     # timeout with more memory; the override replaces the row, and the swap is recorded.
     overrides = []
-    ov_path = OUT / 'overrides' / ('%s.json' % what)
-    if ov_path.exists():
-        ov = json.loads(ov_path.read_text())
-        assert ov['complete'], 'incomplete overrides for %s' % what
+    # `fresh` must not pick up `fresh_hybrid--ex3a.json`: parallel runs write `<study>--<tag>.json`,
+    # and the untagged form `<study>.json` is kept for runs made before tags existed
+    ov_dir = OUT / 'overrides'
+    ov_files = sorted(list(ov_dir.glob('%s--*.json' % what)) + list(ov_dir.glob('%s.json' % what))) \
+        if ov_dir.is_dir() else []
+    ov_rows = []
+    for f in ov_files:
+        ov = json.loads(f.read_text())
+        assert ov['complete'], 'incomplete overrides in %s' % f
         assert ov.get('cbmc') == engine, 'override ran on a different engine: %s' % ov.get('cbmc')
         assert ov.get('preamble_sha256') == preamble, 'override used a different preamble'
+        ov_rows += ov['rows']
+        ov_limit = ov.get('address_space_limit')
+    if ov_files:
         # (name, loops) is not an identity: a study can carry the same certificate more than once
         # (fresh_hybrid has DivMinus.c three times). Keep the row list intact and replace in place,
         # and refuse to override a key that is not unique, rather than silently dropping rows.
         positions = collections.defaultdict(list)
         for k, r in enumerate(rows):
             positions[(r['name'], r['invariant_loops'])].append(k)
-        for r in ov['rows']:
+        for r in ov_rows:
             key = (r['name'], r['invariant_loops'])
             assert key in positions, 'override for an unplanned certificate: %s' % (key,)
             where = positions[key]
@@ -191,7 +200,7 @@ def merge(what, scope):
             rows[where[0]] = r
             overrides.append({'name': r['name'], 'invariant_loops': r['invariant_loops'],
                               'was': was, 'now': r['result'],
-                              'address_space_limit': ov.get('address_space_limit')})
+                              'address_space_limit': ov_limit})
 
     payload = {'study': what, 'scope': scope, 'planned': planned, 'completed': len(rows),
                'complete': len(rows) == planned, 'counts': dict(collections.Counter(r['result'] for r in rows)),
@@ -262,6 +271,7 @@ if __name__ == '__main__':
     ap.add_argument('--shards', type=int)
     ap.add_argument('--names', help='comma-separated certificate names; writes overrides/<study>.json')
     ap.add_argument('--mem-limit', dest='mem_limit', help='address-space cap actually in force, recorded verbatim')
+    ap.add_argument('--tag', help='override output file suffix, so parallel jobs do not write the same file')
     a = ap.parse_args()
     if a.action == 'summary':
         summary()
@@ -269,6 +279,7 @@ if __name__ == '__main__':
         merge(a.what, a.scope)
     elif a.names:
         run(a.what, a.scope, a.timeout, a.workers, a.shard, a.shards,
-            names=[n.strip() for n in a.names.split(',') if n.strip()], tag='override', mem_limit=a.mem_limit)
+            names=[n.strip() for n in a.names.split(',') if n.strip()], tag=a.tag or 'override',
+            mem_limit=a.mem_limit)
     else:
         run(a.what, a.scope, a.timeout, a.workers, a.shard, a.shards, mem_limit=a.mem_limit)

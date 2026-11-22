@@ -2,9 +2,10 @@ name: v1.03 certificate re-check, memory overrides
 
 # Seven certificates of the 586 came out ERROR on the CBMC 6.11 re-check, all of them with
 # CBMC's own "Out of memory" / "SAT checker ran out of memory". That is the harness address-space
-# cap (`ulimit -v 6000000`), not a verdict about the certificate. This run repeats exactly those
-# seven at the same 600 s timeout and the same preamble, with a wider cap, and records the result
-# as an override. `scripts/cert_recheck_flat_v103.py merge` folds it back in and lists every swap.
+# cap (`ulimit -v 6000000`), not a verdict about the certificate. Each one is repeated here at the
+# same 600 s timeout and the same preamble with a wider cap, in its own job (they are independent and
+# several of them are slow), and recorded as an override. A merge job then folds them back in and
+# rewrites the study files, so every swap ("was ERROR, now VERIFIED") is in the committed evidence.
 on:
   workflow_dispatch:
   push:
@@ -12,14 +13,24 @@ on:
     paths: ['.github/workflows/v103-certflat-override.yml']
 
 permissions:
-  contents: read
-# note: dispatched by pushing to this file, because a workflow that only exists on a non-default
-# branch is not addressable through the workflow_dispatch API by filename.
+  contents: write
 
 jobs:
   override:
     runs-on: ubuntu-24.04
-    timeout-minutes: 150
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        include:
+          - {study: fresh, name: 'termination-restricted-15/Log.c', tag: Log}
+          - {study: fresh, name: 'termination-restricted-15/LogAG.c', tag: LogAG}
+          - {study: fresh, name: 'termination-restricted-15/NO_04.c', tag: NO_04}
+          - {study: fresh, name: 'termination-restricted-15/b.14.c', tag: b14}
+          - {study: fresh_hybrid, name: 'termination-restricted-15/ex3a.c', tag: ex3a}
+          - {study: nooverflow, name: 'termination-restricted-15/ChenFlurMukhopadhyay-SAS2012-Ex3.01.c', tag: ChenFlur}
+          - {study: nooverflow, name: 'termination-restricted-15/Urban-WST2013-Fig2.c', tag: Urban}
     env:
       PYTHONPATH: ${{ github.workspace }}
       MEM_LIMIT: '14000000'
@@ -38,27 +49,56 @@ jobs:
           echo "LLMLOOP_SVBENCH=$EXT/svbench-cert/c" >> "$GITHUB_ENV"
           echo "LLMLOOP_EXT=$EXT" >> "$GITHUB_ENV"
           echo "$EXT/native/usr/bin" >> "$GITHUB_PATH"
-      - name: Re-run the seven OOM certificates with a wider cap
+      - name: Re-run ${{ matrix.tag }} with a wider cap
         run: |
-          set -u
-          run() {
-            study="$1"; shift
-            bash -c "ulimit -v $MEM_LIMIT; exec python -u scripts/cert_recheck_flat_v103.py run '$study' all \
-              --timeout 600 --workers 2 --mem-limit \"address_space=${MEM_LIMIT}KB\" --names '$*'"
-          }
-          run fresh 'termination-restricted-15/Log.c,termination-restricted-15/LogAG.c,termination-restricted-15/NO_04.c,termination-restricted-15/b.14.c'
-          run fresh_hybrid 'termination-restricted-15/ex3a.c'
-          run nooverflow 'termination-restricted-15/ChenFlurMukhopadhyay-SAS2012-Ex3.01.c,termination-restricted-15/Urban-WST2013-Fig2.c'
+          bash -c "ulimit -v $MEM_LIMIT; exec python -u scripts/cert_recheck_flat_v103.py run \
+            '${{ matrix.study }}' all --timeout 600 --workers 1 \
+            --mem-limit 'address_space=${MEM_LIMIT}KB' --tag '${{ matrix.tag }}' \
+            --names '${{ matrix.name }}'"
       - name: Show result
         if: always()
         run: |
           for f in experiments/v103/cert_recheck_v103/overrides/*.json; do
             echo "--- $f"
-            python -c "import json,sys; d=json.load(open(sys.argv[1])); print(d['counts'], 'complete=%s' % d['complete'], d.get('address_space_limit')); [print(' ', r['result'], r['name'], 'loops=%s' % r['invariant_loops'], (r.get('detail') or '')[:90]) for r in d['rows']]" "$f"
+            python -c "import json,sys; d=json.load(open(sys.argv[1])); print(d['counts'], 'complete=%s' % d['complete'], d.get('address_space_limit'))" "$f"
           done
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: certflat-overrides
+          name: certflat-override-${{ matrix.tag }}
           path: experiments/v103/cert_recheck_v103/overrides/
           if-no-files-found: warn
+
+  merge:
+    needs: override
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: certflat-override-*
+          merge-multiple: true
+          path: experiments/v103/cert_recheck_v103/overrides
+      - name: Fold the overrides in
+        run: |
+          ls -l experiments/v103/cert_recheck_v103/overrides
+          for s in fresh fresh_hybrid nooverflow hybrid; do
+            python -u scripts/cert_recheck_flat_v103.py merge "$s" all
+          done
+          python -u scripts/cert_recheck_flat_v103.py summary
+          cat experiments/v103/cert_recheck_v103/summary.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A experiments/v103/cert_recheck_v103
+          if git diff --cached --quiet; then echo 'no change'; exit 0; fi
+          git commit -q -m "v1.03: fold the seven memory-cap overrides into the 586-certificate re-check [skip ci]"
+          for i in 1 2 3; do
+            git pull --rebase --quiet --autostash origin research/v103-exec && git push -q origin HEAD:refs/heads/research/v103-exec && break
+            sleep 5
+          done
