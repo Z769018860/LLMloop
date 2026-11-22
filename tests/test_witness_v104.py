@@ -457,3 +457,59 @@ def test_a_validator_that_answers_in_time_is_not_killed(monkeypatch):
     monkeypatch.setattr(W.subprocess, 'Popen', lambda *a, **k: Fake())
     out, code, secs = W.run_capture(['cpa.sh'], pathlib.Path('.'), 5)
     assert code == 7 and 'TRUE' in out and secs >= 0
+
+
+def test_the_exporter_reads_a_case_path_from_the_protocol_when_it_has_one(tmp_path, monkeypatch):
+    # The 165 protocol names a case by its `c/`-relative path with the extension; the hold-out
+    # protocol carries `path` and a label name without one. Reading only `name` made every hold-out
+    # case a FileNotFoundError, which the exporter faithfully recorded as UNSUPPORTED -- a 41-case
+    # study would have reported "the front end refuses these programs" when the path was wrong.
+    import scripts.witness_v104 as W
+
+    sv = tmp_path / 'svbench-scale'
+    (sv / 'c' / 'termination-crafted-lit').mkdir(parents=True)
+    (sv / 'c' / 'termination-crafted-lit' / 'x.c').write_text(PROGRAM)
+    case = {'corpus': 'termination-crafted-lit', 'path': 'c/termination-crafted-lit/x.c',
+            'name': 'termination-crafted-lit/x', 'property': 'no-overflow', 'expected': 'True',
+            'abi': 'LP64'}
+    monkeypatch.setattr(W, 'case_set', lambda e, p=None, s='svbench': ({'cases': [case]}, sv))
+    seen = {}
+
+    def fake_translate(p):
+        seen['path'] = str(p)
+        raise RuntimeError('stop here')
+    import scripts.svcomp_translate as T
+    monkeypatch.setattr(T, 'translate', fake_translate)
+
+    W.make(tmp_path, tmp_path / 'out', protocol=tmp_path / 'p.json')
+    assert seen['path'].replace('\\', '/').endswith('svbench-scale/c/termination-crafted-lit/x.c')
+    rec = json.loads((tmp_path / 'out' / 'records' / 'record_0000.json').read_text())
+    assert rec['status'] == 'UNSUPPORTED' and 'stop here' in rec['reason']
+
+
+def test_the_exporter_reads_a_case_path_from_the_protocol_when_it_has_one(tmp_path, monkeypatch):
+    # The 165 protocol names a case by its `c/`-relative path with the extension; the hold-out
+    # protocol carries `path` and a label name without one. Reading only `name` made every hold-out
+    # case a FileNotFoundError, which the exporter faithfully recorded as UNSUPPORTED -- a 41-case
+    # study would have reported "the front end refuses these programs" when the path was wrong.
+    import scripts.witness_v104 as W
+
+    sv = tmp_path / 'svbench-scale'
+    (sv / 'c' / 'termination-crafted-lit').mkdir(parents=True)
+    (sv / 'c' / 'termination-crafted-lit' / 'x.c').write_text(PROGRAM)
+    case = {'corpus': 'termination-crafted-lit', 'path': 'c/termination-crafted-lit/x.c',
+            'name': 'termination-crafted-lit/x', 'property': 'no-overflow', 'expected': 'True',
+            'abi': 'LP64'}
+    monkeypatch.setattr(W, 'case_set', lambda e, p=None, s='svbench': ({'cases': [case]}, sv))
+    seen = {}
+
+    def fake_translate(p):
+        seen['path'] = str(p)
+        raise RuntimeError('stop here')
+    import scripts.svcomp_translate as T
+    monkeypatch.setattr(T, 'translate', fake_translate)
+
+    W.make(tmp_path, tmp_path / 'out', protocol=tmp_path / 'p.json')
+    assert seen['path'].replace(chr(92), '/').endswith('svbench-scale/c/termination-crafted-lit/x.c')
+    rec = json.loads((tmp_path / 'out' / 'records' / 'record_0000.json').read_text())
+    assert rec['status'] == 'UNSUPPORTED' and 'stop here' in rec['reason']
