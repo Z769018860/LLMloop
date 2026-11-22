@@ -73,6 +73,36 @@ if [ "$WHAT" = all ] || [ "$WHAT" = loopbench ]; then
   sparse_at_pin "$SVBENCH_URL" "$EXT/svbench-loop" "$PIN_SVBENCH" 'c/loop-*/*'
 fi
 
+# v1.05 E2: the cases upstream added after our pin. The collection moved off GitHub (the archived
+# repository's README says so and points at GitLab), so this one is cloned from GitLab. It is a
+# partial clone plus a sparse checkout of the exact 265 inputs in the census -- not whole
+# directories, because `c/coreutils-v8.31` alone is 1.1 GB and this study needs ten files from it.
+# The SHA is checked out rather than fetched by name: GitLab does not promise
+# uploadpack.allowReachableSHA1InWant, and a fetch-by-SHA that works today is not a protocol.
+if [ "$WHAT" = all ] || [ "$WHAT" = sv2026 ]; then
+  PIN_2026=5092e58a0044330c449b05177bb13027081af369
+  URL_2026=https://gitlab.com/sosy-lab/benchmarking/sv-benchmarks.git
+  CENSUS="${CENSUS:-experiments/v104/upstream2026/census.json}"
+  if [ -d "$EXT/svbench-2026/.git" ] && [ "$(git -C "$EXT/svbench-2026" rev-parse HEAD 2>/dev/null || true)" = "$PIN_2026" ]; then
+    echo "[skip] svbench-2026 already at $PIN_2026"
+  else
+    rm -rf "$EXT/svbench-2026"
+    git clone -q --filter=blob:none --no-checkout "$URL_2026" "$EXT/svbench-2026"
+    git -C "$EXT/svbench-2026" sparse-checkout init --no-cone
+    python - "$CENSUS" <<'PY' > "$EXT/sv2026-paths.txt"
+import json, sys
+d = json.load(open(sys.argv[1]))
+for p in sorted({c['path'] for c in d['cases']}):
+    print('/' + p)
+PY
+    git -C "$EXT/svbench-2026" sparse-checkout set --stdin < "$EXT/sv2026-paths.txt"
+    git -C "$EXT/svbench-2026" checkout -q "$PIN_2026"
+    got="$(git -C "$EXT/svbench-2026" rev-parse HEAD)"
+    [ "$got" = "$PIN_2026" ] || { echo "FATAL: svbench-2026 at $got, expected $PIN_2026" >&2; exit 1; }
+    echo "[ok] svbench-2026 @ $PIN_2026 ($(wc -l < "$EXT/sv2026-paths.txt") inputs)"
+  fi
+fi
+
 if [ "$WHAT" = all ] || [ "$WHAT" = juliet ]; then
   sparse_at_pin "$JULIET_URL" "$EXT/juliet" "$PIN_JULIET" 'testcases/CWE190_Integer_Overflow/*' 'testcasesupport/*'
 fi

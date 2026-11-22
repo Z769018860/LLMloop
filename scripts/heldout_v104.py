@@ -161,7 +161,7 @@ def freeze(external, out):
                           'source_sha256': sha_source(src), 'yaml_sha256': sha_source(y)})
     assert cases, 'no cases'
     assert sum(1 for c in cases if c['expected'] is None) == 0, 'unlabelled case in a frozen set'
-    out.mkdir(parents=True, exist_ok=False)
+    out.mkdir(parents=True, exist_ok=True)   # the census file already lives here by design
     for name, text in PRP.items():
         (out / (name + '.prp')).write_text(text)
     files = [Path(__file__), ROOT / 'scripts/resource_capture.py', ROOT / 'scripts/ultimate_adapter_v103.py',
@@ -205,6 +205,68 @@ def freeze(external, out):
                       'by_property': dict(collections.Counter(c['property'] for c in cases)),
                       'by_label': dict(collections.Counter('%s:%s' % (c['property'], c['expected'])
                                                            for c in cases))}, indent=1))
+
+
+def freeze_cases(external, out, cases_json, svbench_dir, stratum_of=None):
+    """Freeze a plan from an explicit case list, for corpora that are not one directory template.
+
+    `freeze` above derives its cases from the ten `c/loop-*` directories and from `input_files`
+    being the sibling `.c`. The 2026 upstream study (v1.05 E2) cannot use that rule: its cases sit
+    in eight directories, half of them do not exist in the pinned collection at all, and the 2026
+    collection ships preprocessed `.i` inputs. What is common to every study is the *shape* of the
+    plan, so this writes the same shape from a census file whose selection rule is documented
+    inside it (and re-derivable with scripts/scan_upstream_v105.py).
+    """
+    doc = json.loads(Path(cases_json).read_text())
+    sv = external / svbench_dir
+    got = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=sv, text=True).strip()
+    assert got == doc['new_pin'], '%s is at %s, expected %s' % (sv, got, doc['new_pin'])
+
+    cases = []
+    for c in doc['cases']:
+        p = sv / c['path']
+        assert sha_source(p) == c['source_sha256'], 'case %s changed since the census' % c['name']
+        cases.append({'corpus': c['corpus'], 'path': c['path'], 'name': c['name'],
+                      'property': c['property'], 'expected': c['expected'], 'abi': c['abi'],
+                      'stratum': c.get('stratum') or (stratum_of or (lambda x: 'added-after-the-pin'))(c),
+                      'source_sha256': c['source_sha256'], 'yaml_sha256': c['yaml_sha256']})
+    assert cases, 'no cases'
+    assert sum(1 for c in cases if c['expected'] is None) == 0, 'unlabelled case in a frozen set'
+    out.mkdir(parents=True, exist_ok=True)   # the census file already lives here by design
+    for name, text in PRP.items():
+        (out / (name + '.prp')).write_text(text)
+    files = [Path(__file__), ROOT / 'scripts/resource_capture.py', ROOT / 'scripts/ultimate_adapter_v103.py',
+             ROOT / 'scripts/svcomp_translate.py', ROOT / 'scripts/scan_upstream_v105.py',
+             *sorted((ROOT / 'llmloop').glob('*.py'))]
+    plan = {
+        'base_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
+        'cases': cases, 'excluded': [],
+        'tools': ['ultimate', 'cbmc', 'llmloop'],
+        'host_seconds': 600, 'memory_bytes': 2 * 1024 ** 3, 'workers': 4, 'seed': 20261122,
+        'svbench_pin': doc['new_pin'],
+        'svbench_dir': svbench_dir,
+        'corpus_url': doc['url'],
+        'selection': doc['rule'],
+        'census': doc['census'],
+        'labels': 'expected_verdict of no-overflow.prp in the same .yml, for scoring only',
+        'llmloop_configuration': 'unchanged front end scripts/svcomp_translate.py with GHOST on and '
+                                 'NOOVF on; deterministic default then polynomial profile only if the '
+                                 'default does not prove; 60 samples, 150 rounds, 5 s per query, seed 1',
+        'cbmc_configuration': '--no-standard-checks --signed-overflow-check --unwind 64 '
+                              '--unwinding-assertions, actual ABI; incomplete unrolling is UNKNOWN',
+        'ultimate_configuration': 'unmodified v0.3.2 release, default/bitvector portfolio, JVM Xmx1G, '
+                                  'internal timeout 600 s inside the same 600 s host cap',
+        'timing': 'concurrent throughput observations, not cross-tool speedup',
+        'remote_model_calls': 0,
+        'frozen_source_sha256': source_hashes(files),
+    }
+    save(out / 'protocol.json', plan)
+    tasks = [{'case': c, 'tool': t} for c in cases for t in plan['tools']]
+    random.Random(plan['seed']).shuffle(tasks)
+    save(out / 'schedule.json', tasks)
+    print(json.dumps({'cases': len(cases), 'units': len(tasks),
+                      'by_stratum': dict(collections.Counter(c['stratum'] for c in cases)),
+                      'by_label': dict(collections.Counter(c['expected'] for c in cases))}, indent=1))
 
 
 def plan_dir(out):
@@ -542,10 +604,15 @@ if __name__ == '__main__':
     p.add_argument('--index', type=int)
     p.add_argument('--shard', type=int)
     p.add_argument('--shards', type=int)
+    p.add_argument('--cases', help='census file for freeze: an explicit case list instead of a directory template')
+    p.add_argument('--svbench-dir', help='which pinned checkout the cases come from, for freeze --cases')
     a = p.parse_args()
     a.output = a.output.resolve()
     if a.action == 'freeze':
-        freeze(a.external.resolve(), a.output)
+        if a.cases:
+            freeze_cases(a.external.resolve(), a.output, a.cases, a.svbench_dir or 'svbench-2026')
+        else:
+            freeze(a.external.resolve(), a.output)
     elif a.action == 'worker':
         worker(a.external.resolve(), a.output, a.index)
     elif a.action == 'merge':
