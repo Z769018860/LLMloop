@@ -717,6 +717,15 @@ def merge(outs, out=None):
     rows.sort(key=lambda r: r['index'])
     exported = [r for r in rows if r['status'] == 'EXPORTED']
     tally = collections.Counter(r['status'] for r in rows)
+    # The denominator in the pass rate is "cases with a witness", but a reader is going to ask what
+    # happened to the rest. They fail for two very different reasons -- the translator refuses the
+    # program, or the verifier ran and did not prove it -- so they are counted apart, and the
+    # translator's own message is kept, because it says exactly how far outside our input language
+    # the case sits.
+    why_unsup = collections.Counter(r.get('reason', '?') for r in rows
+                                    if r['status'] == 'UNSUPPORTED')
+    why_np = collections.Counter(r.get('reason') or 'no proof from either phase (mono, then poly)'
+                                 for r in rows if r['status'] == 'NOT_PROVED')
     loops_all = sum(r.get('loops', 0) for r in exported)
     validators = sorted(vals)
     verdict = {v: collections.Counter(vals[v].get(r['index'], {}).get('result', 'NOT_RUN')
@@ -740,6 +749,17 @@ def merge(outs, out=None):
     lines += ['| outcome of the export | n |', '|---|---|']
     for k, v in sorted(tally.items()):
         lines.append('| %s | %d |' % (k, v))
+    if why_unsup:
+        lines += ['', 'The %d cases with no witness because the translator refused them are outside '
+                  'the verifier\'s own input language (`svcomp_translate`), not failures of the '
+                  'invariants:' % sum(why_unsup.values()), '',
+                  '| why the case was refused | n |', '|---|---|']
+        for k, n in why_unsup.most_common():
+            lines.append('| `%s` | %d |' % (k, n))
+    if why_np:
+        lines += ['', '| why the prover did not prove it | n |', '|---|---|']
+        for k, n in why_np.most_common():
+            lines.append('| `%s` | %d |' % (k, n))
     for v in validators:
         lines += ['', '| %s verdict | n |' % v, '|---|---|']
         for k, n in sorted(verdict[v].items()):
@@ -765,6 +785,12 @@ def merge(outs, out=None):
             lines.append('| %s | %d |%s %s |' % (r['name'], r.get('loops', 0), cell, secs or '-'))
     rejected = [r for r in exported
                 if any(vals[v].get(r['index'], {}).get('result') == 'FALSE' for v in validators)]
+    if not rejected and exported:
+        # Silence would read the same as "not checked". The strongest sentence this study can say
+        # is that no independent verifier rejected a single invariant, so it is said explicitly.
+        lines += ['', '**No validator rejected a witness**: across %d exported witnesses and %d '
+                  'invariants, %d `FALSE` verdicts.' %
+                  (len(exported), loops_all, sum(verdict[v].get('FALSE', 0) for v in validators))]
     if rejected:
         lines += ['', '## Witnesses a validator rejected', '']
         for r in rejected:
@@ -776,6 +802,7 @@ def merge(outs, out=None):
     save(out / 'summary.md', '\n'.join(lines) + '\n')
     dump(out / 'summary.json', {
         'considered': len(rows), 'export_outcomes': dict(tally),
+        'unsupported_reasons': dict(why_unsup), 'not_proved_reasons': dict(why_np),
         'validators': validators,
         'verdicts': {v: dict(verdict[v]) for v in validators},
         'exporter': {'exported_cases': len(exported), 'invariants_exported': loops_all,

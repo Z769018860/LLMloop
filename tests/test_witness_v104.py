@@ -228,6 +228,45 @@ def test_sharding_covers_every_case_exactly_once():
         assert sorted(got) == names and len(got) == len(names)
 
 
+def test_merge_says_out_loud_that_nothing_was_rejected(tmp_path):
+    # An empty "rejected" section and a missing one read the same in a paper, and only one of them is
+    # true. When every witness survives, the summary has to say so on its own.
+    from scripts import witness_v104 as W
+    d = tmp_path / 'a'
+    d.mkdir()
+    rows = [{'index': i, 'name': 'c%d.c' % i, 'status': 'EXPORTED', 'dir': 'cases/%04d' % i,
+             'loops': 1, 'data_model': 'LP64'} for i in (0, 1)]
+    (d / 'plan.json').write_text(json.dumps({'cases': 2, 'rows': rows}))
+    for v in ('cpachecker', 'ultimate'):
+        (d / ('validation-%s.json' % v)).write_text(json.dumps(
+            {'validator': v, 'rows': [{'index': 0, 'result': 'TRUE'}, {'index': 1, 'result': 'TRUE'}]}))
+    W.merge([d], tmp_path)
+    md = (tmp_path / 'summary.md').read_text()
+    assert 'No validator rejected a witness' in md
+    assert 'rejected' not in md.split('No validator rejected')[1]
+
+
+def test_merge_keeps_the_translators_own_words_for_unsupported_cases(tmp_path):
+    # "39 unsupported" invites the question the paper has to answer: 39 of what, and why. The
+    # translator's message is the answer, so the merge must not paraphrase or truncate it.
+    from scripts import witness_v104 as W
+    d = tmp_path / 'a'
+    d.mkdir()
+    rows = [{'index': 0, 'name': 'c0.c', 'status': 'EXPORTED', 'dir': 'cases/0000', 'loops': 1},
+            {'index': 1, 'name': 'c1.c', 'status': 'UNSUPPORTED',
+             'reason': 'Reject: call inside program body: alloca'},
+            {'index': 2, 'name': 'c2.c', 'status': 'NOT_PROVED', 'verdict': 'NOT_PROVED'}]
+    (d / 'plan.json').write_text(json.dumps({'cases': 3, 'rows': rows}))
+    (d / 'validation-cpachecker.json').write_text(json.dumps(
+        {'validator': 'cpachecker', 'rows': [{'index': 0, 'result': 'TRUE'}]}))
+    W.merge([d], tmp_path)
+    md = (tmp_path / 'summary.md').read_text()
+    assert 'Reject: call inside program body: alloca' in md
+    assert 'no proof from either phase' in md
+    blob = json.loads((tmp_path / 'summary.json').read_text())
+    assert blob['unsupported_reasons'] == {'Reject: call inside program body: alloca': 1}
+
+
 def test_a_row_that_never_got_a_status_is_refused_by_name(tmp_path):
     # Run 45010719952: the NOT_PROVED path set `verdict` and forgot `status`, so six of ten shards
     # exported their whole shard and then died inside Counter on the summary line -- no plan.json, no
