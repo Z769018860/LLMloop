@@ -1,6 +1,6 @@
-int f(int p0) {
+int f(int p0, int p1) {
   int i = 0;
-  int s = 0;
-  while (i < 4 + p0) { i = i + 3; s = s + p0 * 2; }
-  return s;
+  int s = p0;
+  while (i < 6) { i = i + 3; s = s + 1 + p1; }
+  return i;
 }

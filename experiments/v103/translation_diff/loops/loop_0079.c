@@ -1,7 +1,8 @@
-int f(int p0) {
+int f(int p0, int p1, int p2) {
   int i = 0;
-  int s = 0;
-  int t0 = 0;
-  while (i < 6) { i = i + 1; s = s + 1; t0 = t0 + p0 * 2; }
-  return t0;
+  int s = 1;
+  int t0 = p0;
+  int t1 = p1;
+  while (i < 10) { i = i + 1; s = s + p0; t0 = t0 + p0; t1 = t1 + 1; }
+  return i;
 }

@@ -1,8 +1,8 @@
 int f(int p0) {
   int i = 0;
-  int s = 1;
-  int t0 = 2;
-  int t1 = p0;
-  while (i < p0) { i = i + 2; s = s + 1; t0 = t0 + 2; t1 = t1 + p0; }
-  return t1;
+  int s = p0;
+  int t0 = 0;
+  int t1 = 0;
+  while (i < 8) { i = i + 1; s = s + 2; t0 = t0 + p0; t1 = t1 + 3; }
+  return t0;
 }

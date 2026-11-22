@@ -1,7 +1,7 @@
 {
  "part": "integers",
  "seed": 1,
- "cases": 1000,
+ "cases": 1200,
  "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
  "flags": [
   "-O0",
@@ -12,7 +12,7 @@
   "-fno-sanitize=alignment"
  ],
  "counts": {
-  "agree": 999,
+  "agree": 1199,
   "model too strict": 1
  },
  "rows": [
@@ -40414,6 +40414,7390 @@
    "native": {
     "exit": 0,
     "stdout": "7",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1000,
+   "expression": {
+    "literal": "10"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 10,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "10",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1001,
+   "expression": {
+    "op": "-",
+    "args": [
+     {
+      "op": "/",
+      "args": [
+       {
+        "value": 2,
+        "type": "long"
+       },
+       {
+        "op": "-",
+        "args": [
+         {
+          "value": 2147483647,
+          "type": "short"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "value": 32767,
+      "type": "long"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": -32765,
+   "model_type": "signed long",
+   "native": {
+    "exit": 0,
+    "stdout": "-32765",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1002,
+   "expression": {
+    "op": "%",
+    "args": [
+     {
+      "op": ">>",
+      "args": [
+       {
+        "cast": "_Bool",
+        "expr": {
+         "literal": "0xffff"
+        }
+       },
+       {
+        "op": "==",
+        "args": [
+         {
+          "literal": "0x7fffffff"
+         },
+         {
+          "value": 7,
+          "type": "unsigned char"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": ">>",
+      "args": [
+       {
+        "op": "&",
+        "args": [
+         {
+          "literal": "0x7fffffff"
+         },
+         {
+          "value": 3,
+          "type": "long long"
+         }
+        ]
+       },
+       {
+        "op": "?:",
+        "args": [
+         {
+          "value": 0,
+          "type": "int"
+         },
+         {
+          "literal": "0x7f"
+         },
+         {
+          "value": 2,
+          "type": "long"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "UNDEFINED_INTEGER_OPERATION",
+   "model_value": null,
+   "model_type": null,
+   "native": {
+    "exit": 1,
+    "stdout": "",
+    "ub": true,
+    "ub_message": "/home/runner/work/LLMloop/LLMloop/experiments/v103/translation_diff/integers_seed1.c:1006:219: runtime error: division by zero"
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1003,
+   "expression": {
+    "value": -32768,
+    "type": "long"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": -32768,
+   "model_type": "signed long",
+   "native": {
+    "exit": 0,
+    "stdout": "-32768",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1004,
+   "expression": {
+    "value": 32767,
+    "type": "unsigned int"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 32767,
+   "model_type": "unsigned int",
+   "native": {
+    "exit": 0,
+    "stdout": "32767",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1005,
+   "expression": {
+    "literal": "1ul"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "unsigned long",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1006,
+   "expression": {
+    "op": "!=",
+    "args": [
+     {
+      "literal": "0x7f"
+     },
+     {
+      "op": "!",
+      "args": [
+       {
+        "op": "<<",
+        "args": [
+         {
+          "literal": "7"
+         },
+         {
+          "literal": "1"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1007,
+   "expression": {
+    "op": "<<",
+    "args": [
+     {
+      "value": 2,
+      "type": "char"
+     },
+     {
+      "literal": "10"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 2048,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "2048",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1008,
+   "expression": {
+    "op": "&&",
+    "args": [
+     {
+      "literal": "255"
+     },
+     {
+      "cast": "unsigned long",
+      "expr": {
+       "op": "~",
+       "args": [
+        {
+         "literal": "0x8000"
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1009,
+   "expression": {
+    "op": "||",
+    "args": [
+     {
+      "op": "|",
+      "args": [
+       {
+        "op": "%",
+        "args": [
+         {
+          "value": 2,
+          "type": "char"
+         },
+         {
+          "value": -1,
+          "type": "_Bool"
+         }
+        ]
+       },
+       {
+        "op": "!=",
+        "args": [
+         {
+          "value": 32767,
+          "type": "unsigned short"
+         },
+         {
+          "literal": "1"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "value": -2147483648,
+      "type": "char"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1010,
+   "expression": {
+    "value": -2,
+    "type": "unsigned long long"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 18446744073709551614,
+   "model_type": "unsigned long long",
+   "native": {
+    "exit": 0,
+    "stdout": "18446744073709551614",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1011,
+   "expression": {
+    "op": ">=",
+    "args": [
+     {
+      "op": "<",
+      "args": [
+       {
+        "op": "&",
+        "args": [
+         {
+          "value": -2147483648,
+          "type": "unsigned short"
+         },
+         {
+          "literal": "0xffffffff"
+         }
+        ]
+       },
+       {
+        "op": "+",
+        "args": [
+         {
+          "literal": "255"
+         },
+         {
+          "literal": "7"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": ">=",
+      "args": [
+       {
+        "literal": "0x7f"
+       },
+       {
+        "op": "/",
+        "args": [
+         {
+          "value": 2,
+          "type": "_Bool"
+         },
+         {
+          "value": -2147483648,
+          "type": "long long"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1012,
+   "expression": {
+    "literal": "7"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 7,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "7",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1013,
+   "expression": {
+    "cast": "unsigned char",
+    "expr": {
+     "op": "*",
+     "args": [
+      {
+       "op": "<",
+       "args": [
+        {
+         "literal": "1ul"
+        },
+        {
+         "value": -2147483648,
+         "type": "unsigned short"
+        }
+       ]
+      },
+      {
+       "op": ">=",
+       "args": [
+        {
+         "literal": "255"
+        },
+        {
+         "value": 1,
+         "type": "long"
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "unsigned char",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1014,
+   "expression": {
+    "op": "^",
+    "args": [
+     {
+      "op": "<<",
+      "args": [
+       {
+        "literal": "0xffffffff"
+       },
+       {
+        "op": "<=",
+        "args": [
+         {
+          "literal": "0x7f"
+         },
+         {
+          "value": 0,
+          "type": "short"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": "%",
+      "args": [
+       {
+        "op": "!",
+        "args": [
+         {
+          "literal": "0xffff"
+         }
+        ]
+       },
+       {
+        "op": "!",
+        "args": [
+         {
+          "value": -2,
+          "type": "unsigned long"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "UNDEFINED_INTEGER_OPERATION",
+   "model_value": null,
+   "model_type": null,
+   "native": {
+    "exit": 1,
+    "stdout": "",
+    "ub": true,
+    "ub_message": "/home/runner/work/LLMloop/LLMloop/experiments/v103/translation_diff/integers_seed1.c:1018:180: runtime error: division by zero"
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1015,
+   "expression": {
+    "literal": "0x8000"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 32768,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "32768",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1016,
+   "expression": {
+    "op": "~",
+    "args": [
+     {
+      "op": "!",
+      "args": [
+       {
+        "literal": "1u"
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": -1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "-1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1017,
+   "expression": {
+    "op": "<<",
+    "args": [
+     {
+      "op": ">",
+      "args": [
+       {
+        "op": "?:",
+        "args": [
+         {
+          "value": 2,
+          "type": "short"
+         },
+         {
+          "value": 32767,
+          "type": "_Bool"
+         },
+         {
+          "literal": "1"
+         }
+        ]
+       },
+       {
+        "op": "&",
+        "args": [
+         {
+          "literal": "2"
+         },
+         {
+          "value": 256,
+          "type": "long"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "value": 2,
+      "type": "char"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 4,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "4",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1018,
+   "expression": {
+    "op": "%",
+    "args": [
+     {
+      "op": "-",
+      "args": [
+       {
+        "value": 255,
+        "type": "unsigned char"
+       }
+      ]
+     },
+     {
+      "op": "%",
+      "args": [
+       {
+        "value": 1,
+        "type": "long"
+       },
+       {
+        "op": "~",
+        "args": [
+         {
+          "literal": "0x7f"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed long",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1019,
+   "expression": {
+    "cast": "unsigned char",
+    "expr": {
+     "value": -2,
+     "type": "unsigned char"
+    }
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 254,
+   "model_type": "unsigned char",
+   "native": {
+    "exit": 0,
+    "stdout": "254",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1020,
+   "expression": {
+    "literal": "0x8000"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 32768,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "32768",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1021,
+   "expression": {
+    "literal": "1ll"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed long long",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1022,
+   "expression": {
+    "op": ">>",
+    "args": [
+     {
+      "op": "<<",
+      "args": [
+       {
+        "literal": "10"
+       },
+       {
+        "cast": "long",
+        "expr": {
+         "value": -2147483648,
+         "type": "unsigned int"
+        }
+       }
+      ]
+     },
+     {
+      "op": "?:",
+      "args": [
+       {
+        "literal": "1ll"
+       },
+       {
+        "op": "<<",
+        "args": [
+         {
+          "value": 2,
+          "type": "unsigned long long"
+         },
+         {
+          "value": 2,
+          "type": "long"
+         }
+        ]
+       },
+       {
+        "op": "~",
+        "args": [
+         {
+          "literal": "7"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "UNDEFINED_INTEGER_OPERATION",
+   "model_value": null,
+   "model_type": null,
+   "native": {
+    "exit": 1,
+    "stdout": "",
+    "ub": true,
+    "ub_message": "/home/runner/work/LLMloop/LLMloop/experiments/v103/translation_diff/integers_seed1.c:1026:160: runtime error: shift exponent 2147483648 is too large for 32-bit "
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1023,
+   "expression": {
+    "op": "==",
+    "args": [
+     {
+      "op": "+",
+      "args": [
+       {
+        "value": 7,
+        "type": "int"
+       },
+       {
+        "op": "?:",
+        "args": [
+         {
+          "literal": "1u"
+         },
+         {
+          "value": 256,
+          "type": "unsigned long"
+         },
+         {
+          "value": -128,
+          "type": "long long"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": "&",
+      "args": [
+       {
+        "op": "==",
+        "args": [
+         {
+          "literal": "1"
+         },
+         {
+          "literal": "255"
+         }
+        ]
+       },
+       {
+        "op": "<",
+        "args": [
+         {
+          "literal": "0x7f"
+         },
+         {
+          "value": -32768,
+          "type": "unsigned short"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1024,
+   "expression": {
+    "op": "<<",
+    "args": [
+     {
+      "value": -32768,
+      "type": "int"
+     },
+     {
+      "value": 2,
+      "type": "long long"
+     }
+    ]
+   },
+   "model_status": "UNDEFINED_INTEGER_OPERATION",
+   "model_value": null,
+   "model_type": null,
+   "native": {
+    "exit": 1,
+    "stdout": "",
+    "ub": true,
+    "ub_message": "/home/runner/work/LLMloop/LLMloop/experiments/v103/translation_diff/integers_seed1.c:1028:87: runtime error: left shift of negative value -32768"
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1025,
+   "expression": {
+    "op": "~",
+    "args": [
+     {
+      "op": "<<",
+      "args": [
+       {
+        "op": "<",
+        "args": [
+         {
+          "literal": "2"
+         },
+         {
+          "value": 3,
+          "type": "long long"
+         }
+        ]
+       },
+       {
+        "op": "<",
+        "args": [
+         {
+          "value": 3,
+          "type": "unsigned long"
+         },
+         {
+          "literal": "0x8000"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": -3,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "-3",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1026,
+   "expression": {
+    "op": "<<",
+    "args": [
+     {
+      "literal": "1ll"
+     },
+     {
+      "value": 128,
+      "type": "long"
+     }
+    ]
+   },
+   "model_status": "UNDEFINED_INTEGER_OPERATION",
+   "model_value": null,
+   "model_type": null,
+   "native": {
+    "exit": 1,
+    "stdout": "",
+    "ub": true,
+    "ub_message": "/home/runner/work/LLMloop/LLMloop/experiments/v103/translation_diff/integers_seed1.c:1030:88: runtime error: shift exponent 128 is too large for 64-bit type 'lo"
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1027,
+   "expression": {
+    "value": -1,
+    "type": "unsigned short"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 65535,
+   "model_type": "unsigned short",
+   "native": {
+    "exit": 0,
+    "stdout": "65535",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1028,
+   "expression": {
+    "value": 1,
+    "type": "_Bool"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "_Bool",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1029,
+   "expression": {
+    "op": "-",
+    "args": [
+     {
+      "op": "!=",
+      "args": [
+       {
+        "op": ">",
+        "args": [
+         {
+          "value": 256,
+          "type": "unsigned int"
+         },
+         {
+          "literal": "255"
+         }
+        ]
+       },
+       {
+        "op": "<",
+        "args": [
+         {
+          "literal": "0xffff"
+         },
+         {
+          "literal": "0x8000"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "cast": "unsigned long long",
+      "expr": {
+       "op": "&",
+       "args": [
+        {
+         "literal": "0x7fffffff"
+        },
+        {
+         "value": 127,
+         "type": "unsigned long"
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 18446744073709551490,
+   "model_type": "unsigned long long",
+   "native": {
+    "exit": 0,
+    "stdout": "18446744073709551490",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1030,
+   "expression": {
+    "op": "<",
+    "args": [
+     {
+      "op": "!",
+      "args": [
+       {
+        "cast": "int",
+        "expr": {
+         "value": 32768,
+         "type": "unsigned int"
+        }
+       }
+      ]
+     },
+     {
+      "literal": "7"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1031,
+   "expression": {
+    "op": "||",
+    "args": [
+     {
+      "op": "&",
+      "args": [
+       {
+        "op": "&",
+        "args": [
+         {
+          "literal": "0x7fffffff"
+         },
+         {
+          "literal": "7"
+         }
+        ]
+       },
+       {
+        "value": -2147483648,
+        "type": "long long"
+       }
+      ]
+     },
+     {
+      "op": "-",
+      "args": [
+       {
+        "op": ">=",
+        "args": [
+         {
+          "literal": "10"
+         },
+         {
+          "value": 32767,
+          "type": "unsigned short"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1032,
+   "expression": {
+    "value": 65535,
+    "type": "unsigned int"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 65535,
+   "model_type": "unsigned int",
+   "native": {
+    "exit": 0,
+    "stdout": "65535",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1033,
+   "expression": {
+    "op": "?:",
+    "args": [
+     {
+      "literal": "1ll"
+     },
+     {
+      "op": "%",
+      "args": [
+       {
+        "op": "|",
+        "args": [
+         {
+          "literal": "1ll"
+         },
+         {
+          "value": 7,
+          "type": "long long"
+         }
+        ]
+       },
+       {
+        "cast": "long long",
+        "expr": {
+         "value": -2147483648,
+         "type": "char"
+        }
+       }
+      ]
+     },
+     {
+      "op": "+",
+      "args": [
+       {
+        "op": "<",
+        "args": [
+         {
+          "literal": "2"
+         },
+         {
+          "literal": "0x8000"
+         }
+        ]
+       },
+       {
+        "value": 256,
+        "type": "unsigned int"
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "UNDEFINED_INTEGER_OPERATION",
+   "model_value": null,
+   "model_type": null,
+   "native": {
+    "exit": 1,
+    "stdout": "",
+    "ub": true,
+    "ub_message": "/home/runner/work/LLMloop/LLMloop/experiments/v103/translation_diff/integers_seed1.c:1037:203: runtime error: division by zero"
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1034,
+   "expression": {
+    "value": 65535,
+    "type": "unsigned long long"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 65535,
+   "model_type": "unsigned long long",
+   "native": {
+    "exit": 0,
+    "stdout": "65535",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1035,
+   "expression": {
+    "op": ">>",
+    "args": [
+     {
+      "op": ">=",
+      "args": [
+       {
+        "op": "<",
+        "args": [
+         {
+          "value": 7,
+          "type": "_Bool"
+         },
+         {
+          "literal": "7"
+         }
+        ]
+       },
+       {
+        "op": "!=",
+        "args": [
+         {
+          "literal": "1u"
+         },
+         {
+          "value": 255,
+          "type": "int"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "literal": "0x7f"
+     }
+    ]
+   },
+   "model_status": "UNDEFINED_INTEGER_OPERATION",
+   "model_value": null,
+   "model_type": null,
+   "native": {
+    "exit": 1,
+    "stdout": "",
+    "ub": true,
+    "ub_message": "/home/runner/work/LLMloop/LLMloop/experiments/v103/translation_diff/integers_seed1.c:1039:174: runtime error: shift exponent 127 is too large for 32-bit type 'i"
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1036,
+   "expression": {
+    "op": "|",
+    "args": [
+     {
+      "op": "-",
+      "args": [
+       {
+        "op": "?:",
+        "args": [
+         {
+          "value": 0,
+          "type": "unsigned char"
+         },
+         {
+          "value": 32768,
+          "type": "unsigned long long"
+         },
+         {
+          "value": 1,
+          "type": "char"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": "/",
+      "args": [
+       {
+        "op": "<=",
+        "args": [
+         {
+          "value": -128,
+          "type": "long long"
+         },
+         {
+          "literal": "0x7fffffff"
+         }
+        ]
+       },
+       {
+        "op": "||",
+        "args": [
+         {
+          "literal": "0x8000"
+         },
+         {
+          "value": -128,
+          "type": "long long"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 18446744073709551615,
+   "model_type": "unsigned long long",
+   "native": {
+    "exit": 0,
+    "stdout": "18446744073709551615",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1037,
+   "expression": {
+    "op": "%",
+    "args": [
+     {
+      "literal": "255"
+     },
+     {
+      "value": 255,
+      "type": "unsigned long long"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "unsigned long long",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1038,
+   "expression": {
+    "literal": "2"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 2,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "2",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1039,
+   "expression": {
+    "op": "!=",
+    "args": [
+     {
+      "op": "|",
+      "args": [
+       {
+        "op": "<",
+        "args": [
+         {
+          "value": 32768,
+          "type": "long"
+         },
+         {
+          "value": 32768,
+          "type": "unsigned long long"
+         }
+        ]
+       },
+       {
+        "op": "!",
+        "args": [
+         {
+          "value": 0,
+          "type": "unsigned long"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": "-",
+      "args": [
+       {
+        "value": 255,
+        "type": "int"
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1040,
+   "expression": {
+    "cast": "short",
+    "expr": {
+     "op": "||",
+     "args": [
+      {
+       "op": "/",
+       "args": [
+        {
+         "literal": "0xffffffff"
+        },
+        {
+         "literal": "0xffffffff"
+        }
+       ]
+      },
+      {
+       "literal": "0x7f"
+      }
+     ]
+    }
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed short",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1041,
+   "expression": {
+    "op": "&",
+    "args": [
+     {
+      "op": "<",
+      "args": [
+       {
+        "op": "|",
+        "args": [
+         {
+          "literal": "0x7fffffff"
+         },
+         {
+          "literal": "0x8000"
+         }
+        ]
+       },
+       {
+        "literal": "0"
+       }
+      ]
+     },
+     {
+      "value": 3,
+      "type": "unsigned int"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "unsigned int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1042,
+   "expression": {
+    "op": "<<",
+    "args": [
+     {
+      "value": 1,
+      "type": "unsigned char"
+     },
+     {
+      "value": 2,
+      "type": "unsigned char"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 4,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "4",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1043,
+   "expression": {
+    "value": 128,
+    "type": "char"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": -128,
+   "model_type": "char",
+   "native": {
+    "exit": 0,
+    "stdout": "-128",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1044,
+   "expression": {
+    "cast": "unsigned char",
+    "expr": {
+     "op": "<=",
+     "args": [
+      {
+       "value": -32768,
+       "type": "int"
+      },
+      {
+       "literal": "0xffff"
+      }
+     ]
+    }
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "unsigned char",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1045,
+   "expression": {
+    "value": 2,
+    "type": "unsigned long long"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 2,
+   "model_type": "unsigned long long",
+   "native": {
+    "exit": 0,
+    "stdout": "2",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1046,
+   "expression": {
+    "literal": "1ul"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "unsigned long",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1047,
+   "expression": {
+    "literal": "0x7fffffff"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 2147483647,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "2147483647",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1048,
+   "expression": {
+    "op": "^",
+    "args": [
+     {
+      "op": "+",
+      "args": [
+       {
+        "value": 127,
+        "type": "long"
+       },
+       {
+        "op": "&",
+        "args": [
+         {
+          "value": 128,
+          "type": "long"
+         },
+         {
+          "value": 2,
+          "type": "int"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": "-",
+      "args": [
+       {
+        "value": 32768,
+        "type": "unsigned char"
+       },
+       {
+        "op": "-",
+        "args": [
+         {
+          "value": 256,
+          "type": "unsigned long"
+         },
+         {
+          "value": 255,
+          "type": "unsigned long long"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 18446744073709551488,
+   "model_type": "unsigned long long",
+   "native": {
+    "exit": 0,
+    "stdout": "18446744073709551488",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1049,
+   "expression": {
+    "op": ">",
+    "args": [
+     {
+      "op": "&&",
+      "args": [
+       {
+        "op": "-",
+        "args": [
+         {
+          "literal": "0"
+         }
+        ]
+       },
+       {
+        "value": 256,
+        "type": "unsigned long long"
+       }
+      ]
+     },
+     {
+      "literal": "0x7fffffff"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1050,
+   "expression": {
+    "op": "/",
+    "args": [
+     {
+      "op": "-",
+      "args": [
+       {
+        "literal": "0"
+       }
+      ]
+     },
+     {
+      "op": "?:",
+      "args": [
+       {
+        "literal": "0"
+       },
+       {
+        "literal": "1ll"
+       },
+       {
+        "op": "-",
+        "args": [
+         {
+          "literal": "2"
+         },
+         {
+          "literal": "1ul"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "unsigned long long",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1051,
+   "expression": {
+    "op": "?:",
+    "args": [
+     {
+      "op": "*",
+      "args": [
+       {
+        "op": "!",
+        "args": [
+         {
+          "literal": "0"
+         }
+        ]
+       },
+       {
+        "op": "==",
+        "args": [
+         {
+          "literal": "10"
+         },
+         {
+          "value": 32768,
+          "type": "char"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": "<",
+      "args": [
+       {
+        "op": ">",
+        "args": [
+         {
+          "value": 32768,
+          "type": "unsigned char"
+         },
+         {
+          "value": 32767,
+          "type": "long long"
+         }
+        ]
+       },
+       {
+        "op": "!=",
+        "args": [
+         {
+          "literal": "1ul"
+         },
+         {
+          "value": 127,
+          "type": "unsigned int"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": ">",
+      "args": [
+       {
+        "op": "+",
+        "args": [
+         {
+          "literal": "10"
+         },
+         {
+          "literal": "1"
+         }
+        ]
+       },
+       {
+        "op": "%",
+        "args": [
+         {
+          "literal": "0x7fffffff"
+         },
+         {
+          "literal": "7"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1052,
+   "expression": {
+    "value": 1,
+    "type": "int"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1053,
+   "expression": {
+    "op": "-",
+    "args": [
+     {
+      "value": -32768,
+      "type": "unsigned long"
+     },
+     {
+      "op": ">",
+      "args": [
+       {
+        "op": "/",
+        "args": [
+         {
+          "value": 32767,
+          "type": "unsigned short"
+         },
+         {
+          "literal": "1u"
+         }
+        ]
+       },
+       {
+        "op": "~",
+        "args": [
+         {
+          "value": 1,
+          "type": "unsigned char"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 18446744073709518848,
+   "model_type": "unsigned long",
+   "native": {
+    "exit": 0,
+    "stdout": "18446744073709518848",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1054,
+   "expression": {
+    "literal": "0xffff"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 65535,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "65535",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1055,
+   "expression": {
+    "literal": "10"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 10,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "10",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1056,
+   "expression": {
+    "op": "?:",
+    "args": [
+     {
+      "literal": "0xffffffff"
+     },
+     {
+      "op": "!=",
+      "args": [
+       {
+        "op": "^",
+        "args": [
+         {
+          "value": 32768,
+          "type": "unsigned short"
+         },
+         {
+          "value": -2147483648,
+          "type": "long long"
+         }
+        ]
+       },
+       {
+        "literal": "0"
+       }
+      ]
+     },
+     {
+      "op": "?:",
+      "args": [
+       {
+        "op": "~",
+        "args": [
+         {
+          "value": 1,
+          "type": "short"
+         }
+        ]
+       },
+       {
+        "op": "!=",
+        "args": [
+         {
+          "value": -2147483648,
+          "type": "unsigned short"
+         },
+         {
+          "value": 256,
+          "type": "unsigned char"
+         }
+        ]
+       },
+       {
+        "literal": "0xffff"
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1057,
+   "expression": {
+    "literal": "0x7f"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 127,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "127",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1058,
+   "expression": {
+    "cast": "long long",
+    "expr": {
+     "cast": "unsigned char",
+     "expr": {
+      "op": ">>",
+      "args": [
+       {
+        "value": 128,
+        "type": "unsigned long"
+       },
+       {
+        "value": 1,
+        "type": "unsigned int"
+       }
+      ]
+     }
+    }
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 64,
+   "model_type": "signed long long",
+   "native": {
+    "exit": 0,
+    "stdout": "64",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1059,
+   "expression": {
+    "op": "*",
+    "args": [
+     {
+      "value": -2147483648,
+      "type": "unsigned char"
+     },
+     {
+      "value": -128,
+      "type": "short"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1060,
+   "expression": {
+    "op": "-",
+    "args": [
+     {
+      "op": "^",
+      "args": [
+       {
+        "cast": "unsigned long",
+        "expr": {
+         "value": -2147483648,
+         "type": "_Bool"
+        }
+       },
+       {
+        "cast": "unsigned short",
+        "expr": {
+         "literal": "1ul"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "unsigned long",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1061,
+   "expression": {
+    "cast": "long long",
+    "expr": {
+     "op": "|",
+     "args": [
+      {
+       "op": "+",
+       "args": [
+        {
+         "literal": "1"
+        },
+        {
+         "value": -128,
+         "type": "unsigned char"
+        }
+       ]
+      },
+      {
+       "op": "<<",
+       "args": [
+        {
+         "literal": "0x8000"
+        },
+        {
+         "literal": "10"
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 33554561,
+   "model_type": "signed long long",
+   "native": {
+    "exit": 0,
+    "stdout": "33554561",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1062,
+   "expression": {
+    "literal": "255"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 255,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "255",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1063,
+   "expression": {
+    "op": "%",
+    "args": [
+     {
+      "op": "&",
+      "args": [
+       {
+        "op": "!=",
+        "args": [
+         {
+          "value": -1,
+          "type": "unsigned long long"
+         },
+         {
+          "value": 2,
+          "type": "unsigned char"
+         }
+        ]
+       },
+       {
+        "op": "<=",
+        "args": [
+         {
+          "literal": "0x7fffffff"
+         },
+         {
+          "value": 1,
+          "type": "long long"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": "?:",
+      "args": [
+       {
+        "value": 3,
+        "type": "long"
+       },
+       {
+        "cast": "unsigned long",
+        "expr": {
+         "literal": "0"
+        }
+       },
+       {
+        "literal": "1"
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "UNDEFINED_INTEGER_OPERATION",
+   "model_value": null,
+   "model_type": null,
+   "native": {
+    "exit": 1,
+    "stdout": "",
+    "ub": true,
+    "ub_message": "/home/runner/work/LLMloop/LLMloop/experiments/v103/translation_diff/integers_seed1.c:1067:254: runtime error: division by zero"
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1064,
+   "expression": {
+    "op": "-",
+    "args": [
+     {
+      "op": "-",
+      "args": [
+       {
+        "literal": "0x8000"
+       },
+       {
+        "literal": "0x7fffffff"
+       }
+      ]
+     },
+     {
+      "op": "?:",
+      "args": [
+       {
+        "op": "<<",
+        "args": [
+         {
+          "literal": "0xffff"
+         },
+         {
+          "literal": "1"
+         }
+        ]
+       },
+       {
+        "cast": "unsigned int",
+        "expr": {
+         "value": 255,
+         "type": "int"
+        }
+       },
+       {
+        "literal": "0x7f"
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 2147516162,
+   "model_type": "unsigned int",
+   "native": {
+    "exit": 0,
+    "stdout": "2147516162",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1065,
+   "expression": {
+    "value": 65535,
+    "type": "unsigned int"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 65535,
+   "model_type": "unsigned int",
+   "native": {
+    "exit": 0,
+    "stdout": "65535",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1066,
+   "expression": {
+    "literal": "0xffff"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 65535,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "65535",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1067,
+   "expression": {
+    "op": "==",
+    "args": [
+     {
+      "op": "^",
+      "args": [
+       {
+        "op": "!",
+        "args": [
+         {
+          "value": -2,
+          "type": "long long"
+         }
+        ]
+       },
+       {
+        "op": "+",
+        "args": [
+         {
+          "value": 256,
+          "type": "unsigned char"
+         },
+         {
+          "literal": "1ll"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "value": 65535,
+      "type": "long long"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1068,
+   "expression": {
+    "op": ">>",
+    "args": [
+     {
+      "op": "?:",
+      "args": [
+       {
+        "op": "*",
+        "args": [
+         {
+          "value": 65535,
+          "type": "short"
+         },
+         {
+          "literal": "2"
+         }
+        ]
+       },
+       {
+        "op": "<=",
+        "args": [
+         {
+          "value": 0,
+          "type": "long"
+         },
+         {
+          "literal": "0x7fffffff"
+         }
+        ]
+       },
+       {
+        "op": "<",
+        "args": [
+         {
+          "literal": "0x8000"
+         },
+         {
+          "value": 32768,
+          "type": "unsigned long"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": "|",
+      "args": [
+       {
+        "op": "/",
+        "args": [
+         {
+          "literal": "2"
+         },
+         {
+          "literal": "1u"
+         }
+        ]
+       },
+       {
+        "op": "/",
+        "args": [
+         {
+          "literal": "0xffff"
+         },
+         {
+          "literal": "0x7fffffff"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1069,
+   "expression": {
+    "op": "<<",
+    "args": [
+     {
+      "cast": "unsigned char",
+      "expr": {
+       "value": 255,
+       "type": "char"
+      }
+     },
+     {
+      "op": "~",
+      "args": [
+       {
+        "op": "?:",
+        "args": [
+         {
+          "value": -32768,
+          "type": "short"
+         },
+         {
+          "value": 127,
+          "type": "int"
+         },
+         {
+          "literal": "0x8000"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "UNDEFINED_INTEGER_OPERATION",
+   "model_value": null,
+   "model_type": null,
+   "native": {
+    "exit": 1,
+    "stdout": "",
+    "ub": true,
+    "ub_message": "/home/runner/work/LLMloop/LLMloop/experiments/v103/translation_diff/integers_seed1.c:1073:127: runtime error: shift exponent -128 is negative"
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1070,
+   "expression": {
+    "op": "^",
+    "args": [
+     {
+      "op": ">=",
+      "args": [
+       {
+        "op": ">>",
+        "args": [
+         {
+          "value": 256,
+          "type": "_Bool"
+         },
+         {
+          "literal": "0x8000"
+         }
+        ]
+       },
+       {
+        "op": "<=",
+        "args": [
+         {
+          "value": -128,
+          "type": "short"
+         },
+         {
+          "value": 65535,
+          "type": "unsigned int"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "value": 256,
+      "type": "int"
+     }
+    ]
+   },
+   "model_status": "UNDEFINED_INTEGER_OPERATION",
+   "model_value": null,
+   "model_type": null,
+   "native": {
+    "exit": 1,
+    "stdout": "",
+    "ub": true,
+    "ub_message": "/home/runner/work/LLMloop/LLMloop/experiments/v103/translation_diff/integers_seed1.c:1074:131: runtime error: shift exponent 32768 is too large for 32-bit type "
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1071,
+   "expression": {
+    "op": "*",
+    "args": [
+     {
+      "value": 2,
+      "type": "unsigned short"
+     },
+     {
+      "op": "!",
+      "args": [
+       {
+        "op": "?:",
+        "args": [
+         {
+          "value": 1,
+          "type": "_Bool"
+         },
+         {
+          "value": 32767,
+          "type": "unsigned int"
+         },
+         {
+          "value": 0,
+          "type": "unsigned long"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1072,
+   "expression": {
+    "op": "<=",
+    "args": [
+     {
+      "op": "~",
+      "args": [
+       {
+        "op": "-",
+        "args": [
+         {
+          "value": 3,
+          "type": "long long"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": "!",
+      "args": [
+       {
+        "op": "?:",
+        "args": [
+         {
+          "value": 256,
+          "type": "_Bool"
+         },
+         {
+          "value": 2,
+          "type": "unsigned short"
+         },
+         {
+          "value": 2147483647,
+          "type": "int"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1073,
+   "expression": {
+    "op": ">>",
+    "args": [
+     {
+      "op": "^",
+      "args": [
+       {
+        "op": "-",
+        "args": [
+         {
+          "literal": "0xffffffff"
+         },
+         {
+          "literal": "1ll"
+         }
+        ]
+       },
+       {
+        "op": "-",
+        "args": [
+         {
+          "literal": "255"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": "*",
+      "args": [
+       {
+        "op": "!=",
+        "args": [
+         {
+          "value": -1,
+          "type": "unsigned long"
+         },
+         {
+          "literal": "7"
+         }
+        ]
+       },
+       {
+        "op": "&",
+        "args": [
+         {
+          "literal": "0x7fffffff"
+         },
+         {
+          "value": 7,
+          "type": "short"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": -33554431,
+   "model_type": "signed long long",
+   "native": {
+    "exit": 0,
+    "stdout": "-33554431",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1074,
+   "expression": {
+    "cast": "char",
+    "expr": {
+     "cast": "unsigned long",
+     "expr": {
+      "op": "^",
+      "args": [
+       {
+        "literal": "255"
+       },
+       {
+        "value": 0,
+        "type": "unsigned long long"
+       }
+      ]
+     }
+    }
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": -1,
+   "model_type": "char",
+   "native": {
+    "exit": 0,
+    "stdout": "-1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1075,
+   "expression": {
+    "op": "~",
+    "args": [
+     {
+      "value": 127,
+      "type": "unsigned long long"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 18446744073709551488,
+   "model_type": "unsigned long long",
+   "native": {
+    "exit": 0,
+    "stdout": "18446744073709551488",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1076,
+   "expression": {
+    "literal": "0x7f"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 127,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "127",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1077,
+   "expression": {
+    "op": "||",
+    "args": [
+     {
+      "op": "!",
+      "args": [
+       {
+        "value": 2147483647,
+        "type": "long"
+       }
+      ]
+     },
+     {
+      "op": "!",
+      "args": [
+       {
+        "op": "-",
+        "args": [
+         {
+          "literal": "1ll"
+         },
+         {
+          "literal": "1"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1078,
+   "expression": {
+    "cast": "_Bool",
+    "expr": {
+     "literal": "10"
+    }
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "_Bool",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1079,
+   "expression": {
+    "op": "?:",
+    "args": [
+     {
+      "op": "<",
+      "args": [
+       {
+        "op": "-",
+        "args": [
+         {
+          "literal": "255"
+         }
+        ]
+       },
+       {
+        "literal": "0x7fffffff"
+       }
+      ]
+     },
+     {
+      "op": "<<",
+      "args": [
+       {
+        "op": "<=",
+        "args": [
+         {
+          "literal": "2"
+         },
+         {
+          "value": 128,
+          "type": "unsigned long long"
+         }
+        ]
+       },
+       {
+        "op": "<",
+        "args": [
+         {
+          "value": 65535,
+          "type": "long long"
+         },
+         {
+          "value": 128,
+          "type": "unsigned long"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": "&&",
+      "args": [
+       {
+        "op": "&&",
+        "args": [
+         {
+          "literal": "0x7f"
+         },
+         {
+          "literal": "1"
+         }
+        ]
+       },
+       {
+        "value": 255,
+        "type": "unsigned short"
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1080,
+   "expression": {
+    "value": 65535,
+    "type": "short"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": -1,
+   "model_type": "signed short",
+   "native": {
+    "exit": 0,
+    "stdout": "-1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1081,
+   "expression": {
+    "cast": "unsigned char",
+    "expr": {
+     "op": "!",
+     "args": [
+      {
+       "cast": "short",
+       "expr": {
+        "literal": "1ul"
+       }
+      }
+     ]
+    }
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "unsigned char",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1082,
+   "expression": {
+    "cast": "unsigned char",
+    "expr": {
+     "op": "?:",
+     "args": [
+      {
+       "op": "-",
+       "args": [
+        {
+         "value": 32767,
+         "type": "unsigned long"
+        }
+       ]
+      },
+      {
+       "value": -32768,
+       "type": "short"
+      },
+      {
+       "op": "||",
+       "args": [
+        {
+         "value": 2,
+         "type": "unsigned long"
+        },
+        {
+         "literal": "255"
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "unsigned char",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1083,
+   "expression": {
+    "op": "<=",
+    "args": [
+     {
+      "op": "!",
+      "args": [
+       {
+        "op": "-",
+        "args": [
+         {
+          "literal": "1"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": "<=",
+      "args": [
+       {
+        "op": "==",
+        "args": [
+         {
+          "literal": "0xffffffff"
+         },
+         {
+          "literal": "0x8000"
+         }
+        ]
+       },
+       {
+        "op": "%",
+        "args": [
+         {
+          "literal": "7"
+         },
+         {
+          "value": 3,
+          "type": "unsigned long long"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1084,
+   "expression": {
+    "op": "!=",
+    "args": [
+     {
+      "op": "|",
+      "args": [
+       {
+        "op": "<<",
+        "args": [
+         {
+          "literal": "1"
+         },
+         {
+          "value": 2,
+          "type": "unsigned char"
+         }
+        ]
+       },
+       {
+        "literal": "0x7f"
+       }
+      ]
+     },
+     {
+      "op": "&",
+      "args": [
+       {
+        "op": "|",
+        "args": [
+         {
+          "value": 32768,
+          "type": "long long"
+         },
+         {
+          "literal": "0x8000"
+         }
+        ]
+       },
+       {
+        "value": 127,
+        "type": "int"
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1085,
+   "expression": {
+    "value": -2,
+    "type": "unsigned int"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 4294967294,
+   "model_type": "unsigned int",
+   "native": {
+    "exit": 0,
+    "stdout": "4294967294",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1086,
+   "expression": {
+    "op": "*",
+    "args": [
+     {
+      "literal": "0x8000"
+     },
+     {
+      "literal": "0"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1087,
+   "expression": {
+    "op": "&&",
+    "args": [
+     {
+      "op": "~",
+      "args": [
+       {
+        "cast": "long",
+        "expr": {
+         "literal": "1u"
+        }
+       }
+      ]
+     },
+     {
+      "op": ">",
+      "args": [
+       {
+        "op": "?:",
+        "args": [
+         {
+          "value": -1,
+          "type": "unsigned int"
+         },
+         {
+          "value": 255,
+          "type": "_Bool"
+         },
+         {
+          "value": -1,
+          "type": "_Bool"
+         }
+        ]
+       },
+       {
+        "op": "?:",
+        "args": [
+         {
+          "literal": "1ll"
+         },
+         {
+          "literal": "0x7f"
+         },
+         {
+          "literal": "1"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1088,
+   "expression": {
+    "op": "?:",
+    "args": [
+     {
+      "op": ">",
+      "args": [
+       {
+        "op": "^",
+        "args": [
+         {
+          "value": -32768,
+          "type": "unsigned int"
+         },
+         {
+          "literal": "1u"
+         }
+        ]
+       },
+       {
+        "op": ">=",
+        "args": [
+         {
+          "literal": "1u"
+         },
+         {
+          "value": 255,
+          "type": "int"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "cast": "unsigned long",
+      "expr": {
+       "op": ">",
+       "args": [
+        {
+         "value": 1,
+         "type": "short"
+        },
+        {
+         "value": -2147483648,
+         "type": "long long"
+        }
+       ]
+      }
+     },
+     {
+      "cast": "unsigned long long",
+      "expr": {
+       "op": "^",
+       "args": [
+        {
+         "value": 65535,
+         "type": "long long"
+        },
+        {
+         "literal": "0"
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "unsigned long long",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1089,
+   "expression": {
+    "op": "~",
+    "args": [
+     {
+      "cast": "int",
+      "expr": {
+       "op": "-",
+       "args": [
+        {
+         "literal": "0xffff"
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 65534,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "65534",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1090,
+   "expression": {
+    "op": "||",
+    "args": [
+     {
+      "op": "~",
+      "args": [
+       {
+        "cast": "unsigned long long",
+        "expr": {
+         "value": 65535,
+         "type": "unsigned short"
+        }
+       }
+      ]
+     },
+     {
+      "cast": "char",
+      "expr": {
+       "value": 65535,
+       "type": "int"
+      }
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1091,
+   "expression": {
+    "op": ">",
+    "args": [
+     {
+      "literal": "10"
+     },
+     {
+      "literal": "1"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1092,
+   "expression": {
+    "op": "~",
+    "args": [
+     {
+      "literal": "255"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": -256,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "-256",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1093,
+   "expression": {
+    "cast": "unsigned short",
+    "expr": {
+     "op": ">",
+     "args": [
+      {
+       "op": "*",
+       "args": [
+        {
+         "value": 3,
+         "type": "char"
+        },
+        {
+         "literal": "0x7f"
+        }
+       ]
+      },
+      {
+       "op": "^",
+       "args": [
+        {
+         "literal": "0x7fffffff"
+        },
+        {
+         "literal": "0xffff"
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "unsigned short",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1094,
+   "expression": {
+    "op": "&",
+    "args": [
+     {
+      "op": "<<",
+      "args": [
+       {
+        "cast": "long",
+        "expr": {
+         "value": 65535,
+         "type": "unsigned short"
+        }
+       },
+       {
+        "op": "<<",
+        "args": [
+         {
+          "value": -2,
+          "type": "unsigned int"
+         },
+         {
+          "value": -1,
+          "type": "unsigned short"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": "&&",
+      "args": [
+       {
+        "op": "^",
+        "args": [
+         {
+          "literal": "0x7f"
+         },
+         {
+          "literal": "0x7f"
+         }
+        ]
+       },
+       {
+        "value": 127,
+        "type": "char"
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "UNDEFINED_INTEGER_OPERATION",
+   "model_value": null,
+   "model_type": null,
+   "native": {
+    "exit": 1,
+    "stdout": "",
+    "ub": true,
+    "ub_message": "/home/runner/work/LLMloop/LLMloop/experiments/v103/translation_diff/integers_seed1.c:1098:208: runtime error: shift exponent 65535 is too large for 32-bit type "
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1095,
+   "expression": {
+    "cast": "_Bool",
+    "expr": {
+     "literal": "10"
+    }
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "_Bool",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1096,
+   "expression": {
+    "op": "||",
+    "args": [
+     {
+      "value": 2,
+      "type": "long long"
+     },
+     {
+      "cast": "unsigned short",
+      "expr": {
+       "cast": "char",
+       "expr": {
+        "literal": "10"
+       }
+      }
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1097,
+   "expression": {
+    "op": "/",
+    "args": [
+     {
+      "op": "&",
+      "args": [
+       {
+        "op": "!",
+        "args": [
+         {
+          "value": 128,
+          "type": "unsigned char"
+         }
+        ]
+       },
+       {
+        "value": 255,
+        "type": "unsigned int"
+       }
+      ]
+     },
+     {
+      "value": 7,
+      "type": "unsigned long long"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "unsigned long long",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1098,
+   "expression": {
+    "literal": "1"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1099,
+   "expression": {
+    "value": 3,
+    "type": "long"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 3,
+   "model_type": "signed long",
+   "native": {
+    "exit": 0,
+    "stdout": "3",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1100,
+   "expression": {
+    "op": "^",
+    "args": [
+     {
+      "op": ">=",
+      "args": [
+       {
+        "op": "&",
+        "args": [
+         {
+          "literal": "0x7fffffff"
+         },
+         {
+          "literal": "2"
+         }
+        ]
+       },
+       {
+        "value": -128,
+        "type": "long"
+       }
+      ]
+     },
+     {
+      "op": "?:",
+      "args": [
+       {
+        "value": 7,
+        "type": "char"
+       },
+       {
+        "op": ">=",
+        "args": [
+         {
+          "literal": "7"
+         },
+         {
+          "value": 7,
+          "type": "short"
+         }
+        ]
+       },
+       {
+        "cast": "char",
+        "expr": {
+         "value": 127,
+         "type": "unsigned char"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1101,
+   "expression": {
+    "literal": "1"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1102,
+   "expression": {
+    "value": 255,
+    "type": "unsigned char"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 255,
+   "model_type": "unsigned char",
+   "native": {
+    "exit": 0,
+    "stdout": "255",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1103,
+   "expression": {
+    "op": "?:",
+    "args": [
+     {
+      "op": "~",
+      "args": [
+       {
+        "op": "|",
+        "args": [
+         {
+          "value": 2,
+          "type": "unsigned long long"
+         },
+         {
+          "value": -2147483648,
+          "type": "unsigned short"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": "-",
+      "args": [
+       {
+        "value": 7,
+        "type": "_Bool"
+       },
+       {
+        "cast": "_Bool",
+        "expr": {
+         "value": 0,
+         "type": "unsigned long long"
+        }
+       }
+      ]
+     },
+     {
+      "op": "?:",
+      "args": [
+       {
+        "op": "/",
+        "args": [
+         {
+          "literal": "10"
+         },
+         {
+          "value": 32768,
+          "type": "long"
+         }
+        ]
+       },
+       {
+        "literal": "0x7f"
+       },
+       {
+        "op": "+",
+        "args": [
+         {
+          "value": 32768,
+          "type": "_Bool"
+         },
+         {
+          "value": 128,
+          "type": "_Bool"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1104,
+   "expression": {
+    "op": "<<",
+    "args": [
+     {
+      "literal": "2"
+     },
+     {
+      "value": 65535,
+      "type": "long long"
+     }
+    ]
+   },
+   "model_status": "UNDEFINED_INTEGER_OPERATION",
+   "model_value": null,
+   "model_type": null,
+   "native": {
+    "exit": 1,
+    "stdout": "",
+    "ub": true,
+    "ub_message": "/home/runner/work/LLMloop/LLMloop/experiments/v103/translation_diff/integers_seed1.c:1108:87: runtime error: shift exponent 65535 is too large for 32-bit type '"
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1105,
+   "expression": {
+    "op": "|",
+    "args": [
+     {
+      "literal": "1ul"
+     },
+     {
+      "op": "?:",
+      "args": [
+       {
+        "op": "&",
+        "args": [
+         {
+          "literal": "2"
+         },
+         {
+          "literal": "0x7f"
+         }
+        ]
+       },
+       {
+        "op": ">",
+        "args": [
+         {
+          "value": 65535,
+          "type": "unsigned long"
+         },
+         {
+          "literal": "2"
+         }
+        ]
+       },
+       {
+        "op": "<<",
+        "args": [
+         {
+          "value": 7,
+          "type": "long long"
+         },
+         {
+          "value": 1,
+          "type": "unsigned int"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "unsigned long long",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1106,
+   "expression": {
+    "cast": "unsigned char",
+    "expr": {
+     "op": "~",
+     "args": [
+      {
+       "op": "?:",
+       "args": [
+        {
+         "literal": "1"
+        },
+        {
+         "value": 0,
+         "type": "unsigned char"
+        },
+        {
+         "value": 32767,
+         "type": "int"
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 255,
+   "model_type": "unsigned char",
+   "native": {
+    "exit": 0,
+    "stdout": "255",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1107,
+   "expression": {
+    "value": 3,
+    "type": "char"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 3,
+   "model_type": "char",
+   "native": {
+    "exit": 0,
+    "stdout": "3",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1108,
+   "expression": {
+    "op": "!=",
+    "args": [
+     {
+      "op": "~",
+      "args": [
+       {
+        "cast": "long long",
+        "expr": {
+         "literal": "0"
+        }
+       }
+      ]
+     },
+     {
+      "op": "^",
+      "args": [
+       {
+        "op": "*",
+        "args": [
+         {
+          "literal": "255"
+         },
+         {
+          "literal": "1u"
+         }
+        ]
+       },
+       {
+        "op": "<",
+        "args": [
+         {
+          "literal": "0x7fffffff"
+         },
+         {
+          "literal": "255"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1109,
+   "expression": {
+    "literal": "255"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 255,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "255",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1110,
+   "expression": {
+    "op": ">=",
+    "args": [
+     {
+      "op": "&",
+      "args": [
+       {
+        "op": "-",
+        "args": [
+         {
+          "value": -1,
+          "type": "unsigned char"
+         }
+        ]
+       },
+       {
+        "op": "?:",
+        "args": [
+         {
+          "literal": "1ul"
+         },
+         {
+          "value": 255,
+          "type": "unsigned long long"
+         },
+         {
+          "literal": "2"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": "-",
+      "args": [
+       {
+        "cast": "unsigned short",
+        "expr": {
+         "value": 255,
+         "type": "unsigned char"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1111,
+   "expression": {
+    "op": "^",
+    "args": [
+     {
+      "op": "||",
+      "args": [
+       {
+        "cast": "unsigned long long",
+        "expr": {
+         "value": 0,
+         "type": "short"
+        }
+       },
+       {
+        "literal": "0"
+       }
+      ]
+     },
+     {
+      "op": "%",
+      "args": [
+       {
+        "op": "%",
+        "args": [
+         {
+          "value": 3,
+          "type": "unsigned long long"
+         },
+         {
+          "literal": "1ll"
+         }
+        ]
+       },
+       {
+        "literal": "255"
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "unsigned long long",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1112,
+   "expression": {
+    "op": "/",
+    "args": [
+     {
+      "op": "?:",
+      "args": [
+       {
+        "cast": "short",
+        "expr": {
+         "literal": "2"
+        }
+       },
+       {
+        "cast": "short",
+        "expr": {
+         "literal": "0xffff"
+        }
+       },
+       {
+        "op": ">>",
+        "args": [
+         {
+          "value": -1,
+          "type": "unsigned char"
+         },
+         {
+          "value": 32767,
+          "type": "long"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": "-",
+      "args": [
+       {
+        "cast": "long",
+        "expr": {
+         "value": -128,
+         "type": "unsigned int"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed long",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1113,
+   "expression": {
+    "op": "!",
+    "args": [
+     {
+      "op": "||",
+      "args": [
+       {
+        "op": ">",
+        "args": [
+         {
+          "value": -2147483648,
+          "type": "unsigned int"
+         },
+         {
+          "value": -2,
+          "type": "long long"
+         }
+        ]
+       },
+       {
+        "cast": "unsigned long",
+        "expr": {
+         "literal": "1ul"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1114,
+   "expression": {
+    "cast": "unsigned long long",
+    "expr": {
+     "op": "!",
+     "args": [
+      {
+       "value": 32767,
+       "type": "unsigned long"
+      }
+     ]
+    }
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "unsigned long long",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1115,
+   "expression": {
+    "op": "&&",
+    "args": [
+     {
+      "op": ">=",
+      "args": [
+       {
+        "op": "&&",
+        "args": [
+         {
+          "literal": "255"
+         },
+         {
+          "literal": "1u"
+         }
+        ]
+       },
+       {
+        "op": "%",
+        "args": [
+         {
+          "value": 1,
+          "type": "unsigned long"
+         },
+         {
+          "value": 255,
+          "type": "unsigned char"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": "&&",
+      "args": [
+       {
+        "op": "<<",
+        "args": [
+         {
+          "literal": "0xffffffff"
+         },
+         {
+          "value": 0,
+          "type": "short"
+         }
+        ]
+       },
+       {
+        "op": "==",
+        "args": [
+         {
+          "value": 32768,
+          "type": "unsigned long long"
+         },
+         {
+          "value": 255,
+          "type": "unsigned long long"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1116,
+   "expression": {
+    "op": "!=",
+    "args": [
+     {
+      "op": "~",
+      "args": [
+       {
+        "op": ">",
+        "args": [
+         {
+          "literal": "1u"
+         },
+         {
+          "value": -1,
+          "type": "long"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "value": 2147483647,
+      "type": "unsigned long"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1117,
+   "expression": {
+    "op": "<",
+    "args": [
+     {
+      "literal": "0x7f"
+     },
+     {
+      "op": "%",
+      "args": [
+       {
+        "op": "&",
+        "args": [
+         {
+          "value": 128,
+          "type": "unsigned int"
+         },
+         {
+          "value": 65535,
+          "type": "long long"
+         }
+        ]
+       },
+       {
+        "literal": "0x7f"
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1118,
+   "expression": {
+    "value": 7,
+    "type": "unsigned long"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 7,
+   "model_type": "unsigned long",
+   "native": {
+    "exit": 0,
+    "stdout": "7",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1119,
+   "expression": {
+    "literal": "1ll"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed long long",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1120,
+   "expression": {
+    "literal": "1ll"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed long long",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1121,
+   "expression": {
+    "op": "&&",
+    "args": [
+     {
+      "op": "?:",
+      "args": [
+       {
+        "op": "&",
+        "args": [
+         {
+          "literal": "0xffffffff"
+         },
+         {
+          "value": -128,
+          "type": "short"
+         }
+        ]
+       },
+       {
+        "cast": "long long",
+        "expr": {
+         "literal": "0"
+        }
+       },
+       {
+        "op": "<",
+        "args": [
+         {
+          "literal": "10"
+         },
+         {
+          "literal": "0"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": "*",
+      "args": [
+       {
+        "op": "|",
+        "args": [
+         {
+          "literal": "1ul"
+         },
+         {
+          "value": -128,
+          "type": "char"
+         }
+        ]
+       },
+       {
+        "op": "!",
+        "args": [
+         {
+          "literal": "2"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1122,
+   "expression": {
+    "op": "-",
+    "args": [
+     {
+      "cast": "unsigned char",
+      "expr": {
+       "op": ">>",
+       "args": [
+        {
+         "value": -2147483648,
+         "type": "short"
+        },
+        {
+         "literal": "0x7f"
+        }
+       ]
+      }
+     },
+     {
+      "op": "+",
+      "args": [
+       {
+        "value": 3,
+        "type": "int"
+       },
+       {
+        "literal": "2"
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "UNDEFINED_INTEGER_OPERATION",
+   "model_value": null,
+   "model_type": null,
+   "native": {
+    "exit": 1,
+    "stdout": "",
+    "ub": true,
+    "ub_message": "/home/runner/work/LLMloop/LLMloop/experiments/v103/translation_diff/integers_seed1.c:1126:134: runtime error: shift exponent 127 is too large for 32-bit type 'i"
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1123,
+   "expression": {
+    "literal": "1u"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "unsigned int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1124,
+   "expression": {
+    "op": "<",
+    "args": [
+     {
+      "literal": "1u"
+     },
+     {
+      "op": "!",
+      "args": [
+       {
+        "op": "!",
+        "args": [
+         {
+          "value": 128,
+          "type": "_Bool"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1125,
+   "expression": {
+    "literal": "0x7f"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 127,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "127",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1126,
+   "expression": {
+    "op": "==",
+    "args": [
+     {
+      "literal": "1"
+     },
+     {
+      "literal": "1u"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1127,
+   "expression": {
+    "op": "+",
+    "args": [
+     {
+      "op": "-",
+      "args": [
+       {
+        "literal": "10"
+       }
+      ]
+     },
+     {
+      "op": ">=",
+      "args": [
+       {
+        "value": 2147483647,
+        "type": "unsigned short"
+       },
+       {
+        "op": ">=",
+        "args": [
+         {
+          "literal": "7"
+         },
+         {
+          "literal": "0xffffffff"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": -9,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "-9",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1128,
+   "expression": {
+    "op": "-",
+    "args": [
+     {
+      "op": "|",
+      "args": [
+       {
+        "cast": "unsigned short",
+        "expr": {
+         "literal": "1u"
+        }
+       },
+       {
+        "op": "<",
+        "args": [
+         {
+          "value": 2147483647,
+          "type": "short"
+         },
+         {
+          "value": -1,
+          "type": "unsigned long"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": "!",
+      "args": [
+       {
+        "cast": "_Bool",
+        "expr": {
+         "literal": "255"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1129,
+   "expression": {
+    "value": 1,
+    "type": "short"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed short",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1130,
+   "expression": {
+    "op": "<",
+    "args": [
+     {
+      "literal": "0x7fffffff"
+     },
+     {
+      "op": "-",
+      "args": [
+       {
+        "op": "~",
+        "args": [
+         {
+          "literal": "0"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1131,
+   "expression": {
+    "cast": "int",
+    "expr": {
+     "op": ">=",
+     "args": [
+      {
+       "op": ">>",
+       "args": [
+        {
+         "literal": "2"
+        },
+        {
+         "value": -2,
+         "type": "unsigned long"
+        }
+       ]
+      },
+      {
+       "literal": "1ll"
+      }
+     ]
+    }
+   },
+   "model_status": "UNDEFINED_INTEGER_OPERATION",
+   "model_value": null,
+   "model_type": null,
+   "native": {
+    "exit": 1,
+    "stdout": "",
+    "ub": true,
+    "ub_message": "/home/runner/work/LLMloop/LLMloop/experiments/v103/translation_diff/integers_seed1.c:1135:121: runtime error: shift exponent 18446744073709551614 is too large f"
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1132,
+   "expression": {
+    "op": ">>",
+    "args": [
+     {
+      "op": "!",
+      "args": [
+       {
+        "op": "&&",
+        "args": [
+         {
+          "literal": "0xffff"
+         },
+         {
+          "literal": "1ll"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": "^",
+      "args": [
+       {
+        "op": "-",
+        "args": [
+         {
+          "literal": "255"
+         }
+        ]
+       },
+       {
+        "literal": "0x7fffffff"
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "UNDEFINED_INTEGER_OPERATION",
+   "model_value": null,
+   "model_type": null,
+   "native": {
+    "exit": 1,
+    "stdout": "",
+    "ub": true,
+    "ub_message": "/home/runner/work/LLMloop/LLMloop/experiments/v103/translation_diff/integers_seed1.c:1136:141: runtime error: shift exponent -2147483394 is negative"
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1133,
+   "expression": {
+    "op": "~",
+    "args": [
+     {
+      "op": ">",
+      "args": [
+       {
+        "op": "^",
+        "args": [
+         {
+          "value": -2,
+          "type": "unsigned char"
+         },
+         {
+          "literal": "0x7f"
+         }
+        ]
+       },
+       {
+        "op": "&",
+        "args": [
+         {
+          "literal": "1u"
+         },
+         {
+          "value": -2147483648,
+          "type": "unsigned char"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": -2,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "-2",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1134,
+   "expression": {
+    "literal": "255"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 255,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "255",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1135,
+   "expression": {
+    "cast": "_Bool",
+    "expr": {
+     "literal": "0"
+    }
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "_Bool",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1136,
+   "expression": {
+    "op": "/",
+    "args": [
+     {
+      "value": -1,
+      "type": "long long"
+     },
+     {
+      "literal": "0xffffffff"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed long long",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1137,
+   "expression": {
+    "literal": "0x8000"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 32768,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "32768",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1138,
+   "expression": {
+    "op": ">",
+    "args": [
+     {
+      "literal": "1"
+     },
+     {
+      "op": "?:",
+      "args": [
+       {
+        "literal": "0x8000"
+       },
+       {
+        "cast": "unsigned char",
+        "expr": {
+         "literal": "0xffffffff"
+        }
+       },
+       {
+        "op": ">",
+        "args": [
+         {
+          "literal": "255"
+         },
+         {
+          "literal": "2"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1139,
+   "expression": {
+    "op": "&&",
+    "args": [
+     {
+      "op": ">=",
+      "args": [
+       {
+        "op": "!",
+        "args": [
+         {
+          "literal": "1ul"
+         }
+        ]
+       },
+       {
+        "literal": "7"
+       }
+      ]
+     },
+     {
+      "cast": "unsigned char",
+      "expr": {
+       "literal": "0x7fffffff"
+      }
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1140,
+   "expression": {
+    "op": "==",
+    "args": [
+     {
+      "op": "!=",
+      "args": [
+       {
+        "op": "~",
+        "args": [
+         {
+          "value": -2147483648,
+          "type": "int"
+         }
+        ]
+       },
+       {
+        "op": "!=",
+        "args": [
+         {
+          "literal": "0x7fffffff"
+         },
+         {
+          "value": -32768,
+          "type": "long"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "literal": "255"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1141,
+   "expression": {
+    "op": "|",
+    "args": [
+     {
+      "op": "~",
+      "args": [
+       {
+        "op": ">=",
+        "args": [
+         {
+          "value": -2,
+          "type": "_Bool"
+         },
+         {
+          "literal": "10"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "value": 127,
+      "type": "unsigned long long"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 18446744073709551615,
+   "model_type": "unsigned long long",
+   "native": {
+    "exit": 0,
+    "stdout": "18446744073709551615",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1142,
+   "expression": {
+    "value": -32768,
+    "type": "unsigned long long"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 18446744073709518848,
+   "model_type": "unsigned long long",
+   "native": {
+    "exit": 0,
+    "stdout": "18446744073709518848",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1143,
+   "expression": {
+    "op": "&",
+    "args": [
+     {
+      "value": -1,
+      "type": "long long"
+     },
+     {
+      "op": "%",
+      "args": [
+       {
+        "op": ">",
+        "args": [
+         {
+          "value": -2147483648,
+          "type": "unsigned long"
+         },
+         {
+          "literal": "1"
+         }
+        ]
+       },
+       {
+        "cast": "unsigned long long",
+        "expr": {
+         "literal": "0x7f"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "unsigned long long",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1144,
+   "expression": {
+    "op": "/",
+    "args": [
+     {
+      "op": "?:",
+      "args": [
+       {
+        "op": "|",
+        "args": [
+         {
+          "literal": "0xffff"
+         },
+         {
+          "value": -32768,
+          "type": "int"
+         }
+        ]
+       },
+       {
+        "literal": "0x8000"
+       },
+       {
+        "op": ">>",
+        "args": [
+         {
+          "value": 3,
+          "type": "int"
+         },
+         {
+          "value": -2147483648,
+          "type": "unsigned long"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "value": -2147483648,
+      "type": "unsigned long long"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "unsigned long long",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1145,
+   "expression": {
+    "op": "*",
+    "args": [
+     {
+      "op": "?:",
+      "args": [
+       {
+        "op": "||",
+        "args": [
+         {
+          "literal": "0"
+         },
+         {
+          "value": 7,
+          "type": "long"
+         }
+        ]
+       },
+       {
+        "cast": "long long",
+        "expr": {
+         "value": -32768,
+         "type": "unsigned char"
+        }
+       },
+       {
+        "op": "~",
+        "args": [
+         {
+          "literal": "0x8000"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "literal": "0x7fffffff"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed long long",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1146,
+   "expression": {
+    "op": "<=",
+    "args": [
+     {
+      "value": -2,
+      "type": "unsigned long long"
+     },
+     {
+      "op": "?:",
+      "args": [
+       {
+        "op": "+",
+        "args": [
+         {
+          "value": 2,
+          "type": "short"
+         },
+         {
+          "value": 2,
+          "type": "short"
+         }
+        ]
+       },
+       {
+        "op": "?:",
+        "args": [
+         {
+          "value": 256,
+          "type": "int"
+         },
+         {
+          "literal": "1u"
+         },
+         {
+          "value": 255,
+          "type": "int"
+         }
+        ]
+       },
+       {
+        "op": "/",
+        "args": [
+         {
+          "literal": "1ul"
+         },
+         {
+          "value": -1,
+          "type": "long long"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1147,
+   "expression": {
+    "op": "*",
+    "args": [
+     {
+      "cast": "unsigned char",
+      "expr": {
+       "value": 7,
+       "type": "unsigned int"
+      }
+     },
+     {
+      "op": "<<",
+      "args": [
+       {
+        "literal": "1u"
+       },
+       {
+        "op": "/",
+        "args": [
+         {
+          "literal": "2"
+         },
+         {
+          "value": -128,
+          "type": "char"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 7,
+   "model_type": "unsigned int",
+   "native": {
+    "exit": 0,
+    "stdout": "7",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1148,
+   "expression": {
+    "op": "!",
+    "args": [
+     {
+      "literal": "0x7f"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1149,
+   "expression": {
+    "op": "!",
+    "args": [
+     {
+      "op": "==",
+      "args": [
+       {
+        "value": 128,
+        "type": "_Bool"
+       },
+       {
+        "op": ">=",
+        "args": [
+         {
+          "value": -2147483648,
+          "type": "unsigned long"
+         },
+         {
+          "literal": "1"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1150,
+   "expression": {
+    "literal": "255"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 255,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "255",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1151,
+   "expression": {
+    "op": "&",
+    "args": [
+     {
+      "op": "?:",
+      "args": [
+       {
+        "literal": "0xffff"
+       },
+       {
+        "op": "~",
+        "args": [
+         {
+          "value": 65535,
+          "type": "unsigned int"
+         }
+        ]
+       },
+       {
+        "op": ">>",
+        "args": [
+         {
+          "value": -2,
+          "type": "int"
+         },
+         {
+          "value": 7,
+          "type": "unsigned long long"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "value": 32768,
+      "type": "unsigned char"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "unsigned int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1152,
+   "expression": {
+    "op": "+",
+    "args": [
+     {
+      "op": "%",
+      "args": [
+       {
+        "op": "!",
+        "args": [
+         {
+          "literal": "0x8000"
+         }
+        ]
+       },
+       {
+        "op": "?:",
+        "args": [
+         {
+          "value": 2,
+          "type": "short"
+         },
+         {
+          "literal": "1ul"
+         },
+         {
+          "literal": "0x7f"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "literal": "0x8000"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 32768,
+   "model_type": "unsigned long",
+   "native": {
+    "exit": 0,
+    "stdout": "32768",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1153,
+   "expression": {
+    "value": 256,
+    "type": "unsigned char"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "unsigned char",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1154,
+   "expression": {
+    "value": 65535,
+    "type": "unsigned long long"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 65535,
+   "model_type": "unsigned long long",
+   "native": {
+    "exit": 0,
+    "stdout": "65535",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1155,
+   "expression": {
+    "literal": "255"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 255,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "255",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1156,
+   "expression": {
+    "value": 65535,
+    "type": "char"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": -1,
+   "model_type": "char",
+   "native": {
+    "exit": 0,
+    "stdout": "-1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1157,
+   "expression": {
+    "op": "~",
+    "args": [
+     {
+      "op": "==",
+      "args": [
+       {
+        "op": "|",
+        "args": [
+         {
+          "literal": "0x7fffffff"
+         },
+         {
+          "value": 255,
+          "type": "int"
+         }
+        ]
+       },
+       {
+        "literal": "7"
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": -1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "-1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1158,
+   "expression": {
+    "op": "%",
+    "args": [
+     {
+      "op": "~",
+      "args": [
+       {
+        "op": ">",
+        "args": [
+         {
+          "value": -2147483648,
+          "type": "unsigned short"
+         },
+         {
+          "literal": "0xffff"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": "~",
+      "args": [
+       {
+        "cast": "unsigned short",
+        "expr": {
+         "value": -32768,
+         "type": "long"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": -1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "-1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1159,
+   "expression": {
+    "cast": "unsigned long long",
+    "expr": {
+     "op": "/",
+     "args": [
+      {
+       "literal": "255"
+      },
+      {
+       "op": "?:",
+       "args": [
+        {
+         "literal": "1ul"
+        },
+        {
+         "literal": "0xffff"
+        },
+        {
+         "literal": "0xffff"
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "unsigned long long",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1160,
+   "expression": {
+    "cast": "unsigned long",
+    "expr": {
+     "op": "<",
+     "args": [
+      {
+       "op": "&",
+       "args": [
+        {
+         "literal": "0x8000"
+        },
+        {
+         "value": 127,
+         "type": "long long"
+        }
+       ]
+      },
+      {
+       "op": "*",
+       "args": [
+        {
+         "literal": "255"
+        },
+        {
+         "literal": "10"
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "unsigned long",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1161,
+   "expression": {
+    "literal": "10"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 10,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "10",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1162,
+   "expression": {
+    "op": "?:",
+    "args": [
+     {
+      "op": "|",
+      "args": [
+       {
+        "literal": "1ll"
+       },
+       {
+        "value": 255,
+        "type": "long long"
+       }
+      ]
+     },
+     {
+      "op": "<",
+      "args": [
+       {
+        "cast": "unsigned char",
+        "expr": {
+         "value": 256,
+         "type": "int"
+        }
+       },
+       {
+        "cast": "int",
+        "expr": {
+         "value": 7,
+         "type": "char"
+        }
+       }
+      ]
+     },
+     {
+      "literal": "7"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1163,
+   "expression": {
+    "literal": "0xffffffff"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 4294967295,
+   "model_type": "unsigned int",
+   "native": {
+    "exit": 0,
+    "stdout": "4294967295",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1164,
+   "expression": {
+    "literal": "255"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 255,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "255",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1165,
+   "expression": {
+    "op": ">",
+    "args": [
+     {
+      "literal": "0xffff"
+     },
+     {
+      "literal": "1ul"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1166,
+   "expression": {
+    "op": ">>",
+    "args": [
+     {
+      "literal": "1ll"
+     },
+     {
+      "literal": "1"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed long long",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1167,
+   "expression": {
+    "value": 65535,
+    "type": "long"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 65535,
+   "model_type": "signed long",
+   "native": {
+    "exit": 0,
+    "stdout": "65535",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1168,
+   "expression": {
+    "op": "?:",
+    "args": [
+     {
+      "literal": "0"
+     },
+     {
+      "cast": "unsigned short",
+      "expr": {
+       "op": "%",
+       "args": [
+        {
+         "value": 0,
+         "type": "int"
+        },
+        {
+         "literal": "1ul"
+        }
+       ]
+      }
+     },
+     {
+      "value": -32768,
+      "type": "long"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": -32768,
+   "model_type": "signed long",
+   "native": {
+    "exit": 0,
+    "stdout": "-32768",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1169,
+   "expression": {
+    "op": "?:",
+    "args": [
+     {
+      "value": 256,
+      "type": "short"
+     },
+     {
+      "literal": "1"
+     },
+     {
+      "op": "+",
+      "args": [
+       {
+        "op": "/",
+        "args": [
+         {
+          "literal": "0x8000"
+         },
+         {
+          "literal": "7"
+         }
+        ]
+       },
+       {
+        "op": "||",
+        "args": [
+         {
+          "value": 1,
+          "type": "unsigned int"
+         },
+         {
+          "value": 3,
+          "type": "char"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1170,
+   "expression": {
+    "literal": "0"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1171,
+   "expression": {
+    "op": "~",
+    "args": [
+     {
+      "op": "?:",
+      "args": [
+       {
+        "op": ">>",
+        "args": [
+         {
+          "value": -2147483648,
+          "type": "short"
+         },
+         {
+          "literal": "1u"
+         }
+        ]
+       },
+       {
+        "value": -32768,
+        "type": "char"
+       },
+       {
+        "value": 3,
+        "type": "unsigned int"
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 4294967292,
+   "model_type": "unsigned int",
+   "native": {
+    "exit": 0,
+    "stdout": "4294967292",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1172,
+   "expression": {
+    "op": "^",
+    "args": [
+     {
+      "cast": "short",
+      "expr": {
+       "op": "-",
+       "args": [
+        {
+         "value": 32767,
+         "type": "long long"
+        }
+       ]
+      }
+     },
+     {
+      "op": "!=",
+      "args": [
+       {
+        "op": "~",
+        "args": [
+         {
+          "literal": "10"
+         }
+        ]
+       },
+       {
+        "value": -32768,
+        "type": "_Bool"
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": -32768,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "-32768",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1173,
+   "expression": {
+    "cast": "unsigned int",
+    "expr": {
+     "value": -32768,
+     "type": "_Bool"
+    }
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "unsigned int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1174,
+   "expression": {
+    "op": "!",
+    "args": [
+     {
+      "op": ">=",
+      "args": [
+       {
+        "op": "<",
+        "args": [
+         {
+          "literal": "1"
+         },
+         {
+          "value": -32768,
+          "type": "unsigned short"
+         }
+        ]
+       },
+       {
+        "op": "%",
+        "args": [
+         {
+          "value": 7,
+          "type": "long long"
+         },
+         {
+          "value": -2,
+          "type": "short"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1175,
+   "expression": {
+    "op": "||",
+    "args": [
+     {
+      "value": -2147483648,
+      "type": "unsigned short"
+     },
+     {
+      "value": 1,
+      "type": "unsigned char"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1176,
+   "expression": {
+    "cast": "unsigned long",
+    "expr": {
+     "literal": "10"
+    }
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 10,
+   "model_type": "unsigned long",
+   "native": {
+    "exit": 0,
+    "stdout": "10",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1177,
+   "expression": {
+    "literal": "1ul"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "unsigned long",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1178,
+   "expression": {
+    "value": 65535,
+    "type": "short"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": -1,
+   "model_type": "signed short",
+   "native": {
+    "exit": 0,
+    "stdout": "-1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1179,
+   "expression": {
+    "op": "%",
+    "args": [
+     {
+      "cast": "short",
+      "expr": {
+       "op": "?:",
+       "args": [
+        {
+         "literal": "0x7fffffff"
+        },
+        {
+         "literal": "0"
+        },
+        {
+         "literal": "0xffffffff"
+        }
+       ]
+      }
+     },
+     {
+      "value": 32767,
+      "type": "unsigned char"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1180,
+   "expression": {
+    "value": -128,
+    "type": "char"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": -128,
+   "model_type": "char",
+   "native": {
+    "exit": 0,
+    "stdout": "-128",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1181,
+   "expression": {
+    "op": "^",
+    "args": [
+     {
+      "op": "|",
+      "args": [
+       {
+        "op": "!",
+        "args": [
+         {
+          "literal": "1ul"
+         }
+        ]
+       },
+       {
+        "cast": "unsigned long",
+        "expr": {
+         "value": 32767,
+         "type": "unsigned int"
+        }
+       }
+      ]
+     },
+     {
+      "cast": "unsigned long",
+      "expr": {
+       "cast": "_Bool",
+       "expr": {
+        "literal": "2"
+       }
+      }
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 32766,
+   "model_type": "unsigned long",
+   "native": {
+    "exit": 0,
+    "stdout": "32766",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1182,
+   "expression": {
+    "op": "?:",
+    "args": [
+     {
+      "op": "!=",
+      "args": [
+       {
+        "literal": "255"
+       },
+       {
+        "op": "?:",
+        "args": [
+         {
+          "value": 32768,
+          "type": "unsigned long long"
+         },
+         {
+          "value": -2,
+          "type": "long"
+         },
+         {
+          "literal": "0x7fffffff"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": "?:",
+      "args": [
+       {
+        "literal": "1ul"
+       },
+       {
+        "op": "|",
+        "args": [
+         {
+          "literal": "1ll"
+         },
+         {
+          "value": -2,
+          "type": "long long"
+         }
+        ]
+       },
+       {
+        "cast": "long long",
+        "expr": {
+         "literal": "255"
+        }
+       }
+      ]
+     },
+     {
+      "op": "?:",
+      "args": [
+       {
+        "op": "<=",
+        "args": [
+         {
+          "value": 32767,
+          "type": "short"
+         },
+         {
+          "value": -2,
+          "type": "_Bool"
+         }
+        ]
+       },
+       {
+        "literal": "0x7f"
+       },
+       {
+        "op": "-",
+        "args": [
+         {
+          "literal": "7"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": -1,
+   "model_type": "signed long long",
+   "native": {
+    "exit": 0,
+    "stdout": "-1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1183,
+   "expression": {
+    "op": "*",
+    "args": [
+     {
+      "value": -2,
+      "type": "_Bool"
+     },
+     {
+      "literal": "1u"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "unsigned int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1184,
+   "expression": {
+    "value": -2147483648,
+    "type": "_Bool"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "_Bool",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1185,
+   "expression": {
+    "op": "-",
+    "args": [
+     {
+      "value": 128,
+      "type": "unsigned long"
+     },
+     {
+      "cast": "unsigned int",
+      "expr": {
+       "op": "-",
+       "args": [
+        {
+         "value": 2147483647,
+         "type": "short"
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 127,
+   "model_type": "unsigned long",
+   "native": {
+    "exit": 0,
+    "stdout": "127",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1186,
+   "expression": {
+    "literal": "0x8000"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 32768,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "32768",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1187,
+   "expression": {
+    "op": "?:",
+    "args": [
+     {
+      "op": "/",
+      "args": [
+       {
+        "op": "<<",
+        "args": [
+         {
+          "literal": "10"
+         },
+         {
+          "literal": "0xffffffff"
+         }
+        ]
+       },
+       {
+        "op": "|",
+        "args": [
+         {
+          "literal": "0xffff"
+         },
+         {
+          "literal": "0"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": "<<",
+      "args": [
+       {
+        "literal": "7"
+       },
+       {
+        "op": "~",
+        "args": [
+         {
+          "literal": "1ll"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": "<=",
+      "args": [
+       {
+        "op": ">",
+        "args": [
+         {
+          "literal": "0xffff"
+         },
+         {
+          "literal": "2"
+         }
+        ]
+       },
+       {
+        "op": "~",
+        "args": [
+         {
+          "literal": "1ul"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "UNDEFINED_INTEGER_OPERATION",
+   "model_value": null,
+   "model_type": null,
+   "native": {
+    "exit": 1,
+    "stdout": "",
+    "ub": true,
+    "ub_message": "/home/runner/work/LLMloop/LLMloop/experiments/v103/translation_diff/integers_seed1.c:1191:208: runtime error: shift exponent 4294967295 is too large for 32-bit "
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1188,
+   "expression": {
+    "op": "%",
+    "args": [
+     {
+      "op": "<",
+      "args": [
+       {
+        "op": "%",
+        "args": [
+         {
+          "literal": "7"
+         },
+         {
+          "literal": "0x7f"
+         }
+        ]
+       },
+       {
+        "op": "==",
+        "args": [
+         {
+          "value": -128,
+          "type": "unsigned int"
+         },
+         {
+          "literal": "1"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": "?:",
+      "args": [
+       {
+        "op": "*",
+        "args": [
+         {
+          "literal": "255"
+         },
+         {
+          "literal": "255"
+         }
+        ]
+       },
+       {
+        "cast": "long long",
+        "expr": {
+         "value": 128,
+         "type": "_Bool"
+        }
+       },
+       {
+        "op": "?:",
+        "args": [
+         {
+          "value": -32768,
+          "type": "_Bool"
+         },
+         {
+          "value": 256,
+          "type": "unsigned int"
+         },
+         {
+          "value": 256,
+          "type": "long long"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed long long",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1189,
+   "expression": {
+    "op": "?:",
+    "args": [
+     {
+      "op": "%",
+      "args": [
+       {
+        "cast": "short",
+        "expr": {
+         "literal": "0x7f"
+        }
+       },
+       {
+        "op": "!",
+        "args": [
+         {
+          "value": 256,
+          "type": "long"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "literal": "0xffff"
+     },
+     {
+      "op": "~",
+      "args": [
+       {
+        "literal": "0x8000"
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "UNDEFINED_INTEGER_OPERATION",
+   "model_value": null,
+   "model_type": null,
+   "native": {
+    "exit": 1,
+    "stdout": "",
+    "ub": true,
+    "ub_message": "/home/runner/work/LLMloop/LLMloop/experiments/v103/translation_diff/integers_seed1.c:1193:125: runtime error: division by zero"
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1190,
+   "expression": {
+    "value": 127,
+    "type": "unsigned int"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 127,
+   "model_type": "unsigned int",
+   "native": {
+    "exit": 0,
+    "stdout": "127",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1191,
+   "expression": {
+    "literal": "0x7fffffff"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 2147483647,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "2147483647",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1192,
+   "expression": {
+    "cast": "_Bool",
+    "expr": {
+     "op": "?:",
+     "args": [
+      {
+       "op": "<<",
+       "args": [
+        {
+         "literal": "1"
+        },
+        {
+         "value": 2,
+         "type": "short"
+        }
+       ]
+      },
+      {
+       "op": "%",
+       "args": [
+        {
+         "literal": "0xffffffff"
+        },
+        {
+         "value": -1,
+         "type": "unsigned long long"
+        }
+       ]
+      },
+      {
+       "literal": "2"
+      }
+     ]
+    }
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "_Bool",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1193,
+   "expression": {
+    "cast": "int",
+    "expr": {
+     "op": "!=",
+     "args": [
+      {
+       "op": "==",
+       "args": [
+        {
+         "literal": "0xffff"
+        },
+        {
+         "literal": "0xffff"
+        }
+       ]
+      },
+      {
+       "op": "<",
+       "args": [
+        {
+         "literal": "2"
+        },
+        {
+         "literal": "0xffff"
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 0,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "0",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1194,
+   "expression": {
+    "op": "||",
+    "args": [
+     {
+      "op": "&&",
+      "args": [
+       {
+        "op": "&",
+        "args": [
+         {
+          "value": 32767,
+          "type": "short"
+         },
+         {
+          "literal": "1"
+         }
+        ]
+       },
+       {
+        "value": 2147483647,
+        "type": "int"
+       }
+      ]
+     },
+     {
+      "op": "<",
+      "args": [
+       {
+        "cast": "char",
+        "expr": {
+         "value": -2147483648,
+         "type": "short"
+        }
+       },
+       {
+        "op": "-",
+        "args": [
+         {
+          "value": 128,
+          "type": "short"
+         },
+         {
+          "value": 128,
+          "type": "short"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1195,
+   "expression": {
+    "op": "==",
+    "args": [
+     {
+      "literal": "0"
+     },
+     {
+      "cast": "unsigned long long",
+      "expr": {
+       "op": "!",
+       "args": [
+        {
+         "value": 32767,
+         "type": "unsigned long"
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1196,
+   "expression": {
+    "literal": "2"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 2,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "2",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1197,
+   "expression": {
+    "op": "?:",
+    "args": [
+     {
+      "op": "-",
+      "args": [
+       {
+        "literal": "0"
+       },
+       {
+        "op": "||",
+        "args": [
+         {
+          "value": 7,
+          "type": "char"
+         },
+         {
+          "value": 7,
+          "type": "short"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "op": "/",
+      "args": [
+       {
+        "value": 2147483647,
+        "type": "unsigned int"
+       },
+       {
+        "cast": "long",
+        "expr": {
+         "value": 2147483647,
+         "type": "unsigned char"
+        }
+       }
+      ]
+     },
+     {
+      "literal": "1u"
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 8421504,
+   "model_type": "signed long",
+   "native": {
+    "exit": 0,
+    "stdout": "8421504",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1198,
+   "expression": {
+    "op": "~",
+    "args": [
+     {
+      "op": "==",
+      "args": [
+       {
+        "value": -128,
+        "type": "unsigned long long"
+       },
+       {
+        "value": 256,
+        "type": "unsigned long"
+       }
+      ]
+     }
+    ]
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": -1,
+   "model_type": "signed int",
+   "native": {
+    "exit": 0,
+    "stdout": "-1",
+    "ub": false,
+    "ub_message": ""
+   },
+   "verdict": "agree"
+  },
+  {
+   "index": 1199,
+   "expression": {
+    "value": -32768,
+    "type": "unsigned short"
+   },
+   "model_status": "DEFINED_INTEGER_EXPRESSION",
+   "model_value": 32768,
+   "model_type": "unsigned short",
+   "native": {
+    "exit": 0,
+    "stdout": "32768",
     "ub": false,
     "ub_message": ""
    },
