@@ -264,6 +264,12 @@ def trial(external, out, plan, i, t):
     spec = out / (c['property'] + '.prp')
     arch = '32bit' if c['abi'] == 'ILP32' else '64bit'
     if t['tool'] == 'ultimate':
+        # Ultimate's adapter refuses a `--witness-dir` that does not exist
+        # ("Directory .../work does not exist", exit 2), and the driver never made it. Every one of
+        # the 400 Ultimate cells in run 45009599863 died in 0.23 s and was recorded as
+        # MALFORMED_OUTPUT -- the whole comparison column, reported as `broken: 400`, which reads
+        # like a tool failure and was a missing mkdir.
+        (d / 'work').mkdir(parents=True, exist_ok=True)
         argv = [sys.executable, '-u', str(ROOT / 'scripts/ultimate_adapter_v103.py'), '--spec', str(spec),
                 '--file', str(p), '--architecture', arch, '--full-output', '--witness-dir', str(d / 'work'),
                 '--core.toolchain.timeout.in.seconds', '600']
@@ -444,8 +450,30 @@ def merge(out):
 
     md += ['## 配对比较 / paired', '', '| 对比 | 前者证明 | 后者证明 | 仅前者 | 仅后者 | 精确 McNemar p | 差值 95% CI |',
            '| --- | --- | --- | --- | --- | --- | --- |']
+    # A tool whose every unit came back as an error is not a weak opponent, it is a missing column.
+    # In run 45009599863 the Ultimate adapter refused a witness directory the driver had not created,
+    # so all 400 of its cells were MALFORMED_OUTPUT in 0.2 s each -- and the table below happily
+    # produced "llmloop 143 vs ultimate 0, only former 143, p = 1.8e-43". That p-value is a
+    # statement about a broken subprocess. A comparison is only reported for a tool that returned at
+    # least one verdict on its own merits.
+    dead = [t for t in tools if summary[t]['proved'] + summary[t]['refuted'] + summary[t]['undecided'] == 0]
+    if dead:
+        md += ['', '> **⚠ 死列 / dead column: %s** — %s 在这 %d 个单元上没有给出任何判定'
+               '（全部为 %s），因此不参与任何配对比较。这是 harness 故障，不是工具能力。'
+               % (', '.join(dead), ', '.join(dead), len(units),
+                  ', '.join(sorted({by[(u[0], u[1], t)]['status'] for t in dead for u in units
+                                    if (u[0], u[1], t) in by}))),
+               '', '> **⚠ dead column: %s** — no verdict on any of the %d units (all %s); excluded '
+               'from every paired comparison. That is a harness fault, not a capability result.'
+               % (', '.join(dead), len(units),
+                  ', '.join(sorted({by[(u[0], u[1], t)]['status'] for t in dead for u in units
+                                    if (u[0], u[1], t) in by})))]
     pairs = []
     for a, b in (('llmloop', 'ultimate'), ('llmloop', 'cbmc'), ('ultimate', 'cbmc')):
+        if a in dead or b in dead:
+            md.append('| %s vs %s | — | — | — | — | not reported | dead column |' % (a, b))
+            pairs.append({'a': a, 'b': b, 'skipped': 'dead column'})
+            continue
         va, vb, na, nbb = [], [], [], []
         for n, p in units:
             ra, rb = by.get((n, p, a)), by.get((n, p, b))
@@ -494,12 +522,16 @@ def merge(out):
 
     (out / 'summary.md').write_text('\n'.join(md) + '\n')
     save(out / 'summary.json', {'units': len(units), 'tools': tools,
+                                'dead_columns': dead,
                                 'verdicts': {t: dict(c) for t, c in summary.items()},
                                 'pairs': [{k: v for k, v in p.items() if k not in ('a_only_names', 'b_only_names')}
                                           for p in pairs]})
-    print(json.dumps({'units': len(units), 'verdicts': {t: dict(c) for t, c in summary.items()},
-                      'llmloop_vs_ultimate': {'a': pairs[0]['a_proved'], 'b': pairs[0]['b_proved'],
-                                              'p': round(pairs[0]['p'], 5)}}, indent=1))
+    head = pairs[0]
+    print(json.dumps({'units': len(units), 'dead_columns': dead,
+                      'verdicts': {t: dict(c) for t, c in summary.items()},
+                      'llmloop_vs_ultimate': ({'a': head['a_proved'], 'b': head['b_proved'],
+                                               'p': round(head['p'], 5)} if 'p' in head
+                                              else 'not reported: %s' % head['skipped'])}, indent=1))
 
 
 if __name__ == '__main__':
