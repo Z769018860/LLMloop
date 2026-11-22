@@ -57,6 +57,12 @@ sys.path.insert(0, str(ROOT))
 
 CASE_SET = ROOT / 'experiments' / 'v103' / 'full165' / 'protocol.json'
 SPEC_OVERFLOW = 'CHECK( init(main()), LTL(G ! overflow) )'
+# Heap for the validator, not a performance knob: four concurrent four-gigabyte JVMs is the whole
+# memory of a GitHub runner, and the jobs that ran four of them were the ones the host killed with a
+# shutdown signal -- shards 16 and 19 twice each, right as the CPAchecker phase ended. Predicate
+# analysis of a twenty-line loop program does not approach two gigabytes, so the cap is set to what
+# the workload uses and the four workers then fit.
+CPA_HEAP = '2000M'
 PRODUCER = ('llmloop', '1.04')
 # Frozen into every entry instead of the wall clock, so two exports of the same case produce the
 # same bytes and a reader can tell that the file was not rewritten after the results were known.
@@ -487,7 +493,7 @@ def cpa_validate(external, program, witness, abi, log=None, timeout=300):
     outdir = (Path(log).parent.parent / 'cpa' / Path(log).stem) if log \
         else Path(witness).with_suffix('.cpa')
     outdir.parent.mkdir(parents=True, exist_ok=True)
-    cmd = [str(cpa / 'scripts' / 'cpa.sh'), '--witnessValidation', '--heap', '4000M',
+    cmd = [str(cpa / 'scripts' / 'cpa.sh'), '--witnessValidation', '--heap', CPA_HEAP,
            '--witness', str(witness), '--spec', str(prp),
            '--32' if abi == 'ILP32' else '--64', '--timelimit', '%ds' % (timeout - 30),
            '--output-path', str(outdir), Path(program).name]
