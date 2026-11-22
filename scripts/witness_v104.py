@@ -312,7 +312,9 @@ def cpa_validate(external, program, witness, abi, log=None, timeout=300):
     if not cfg.exists():
         return {'result': 'NO_CONFIG', 'detail': str(cfg)}
     outdir = Path(log).with_suffix('') if log else Path(witness).with_suffix('.cpa')
-    outdir.mkdir(parents=True, exist_ok=True)
+    # CPAchecker creates its output directory itself and refuses one that is already there, so only
+    # the parent is made here.
+    outdir.parent.mkdir(parents=True, exist_ok=True)
     cmd = [str(cpa / 'scripts' / 'cpa.sh'), '--config', str(cfg), '--witness', str(witness),
            '--spec', str(cpa / 'config' / 'specification' / 'sv-comp-overflow.spc'),
            '--32' if abi == 'ILP32' else '--64', '--timelimit', '%ds' % (timeout - 30),
