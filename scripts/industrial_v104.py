@@ -461,7 +461,8 @@ def scan(external, out, project, log_func=print, limit=0):
                 break
             seen += 1
             cls = classify_function(n)
-            rec['functions'].append({'name': name, 'class': cls})
+            nloops = sum(1 for x in walk(n) if x.get('kind') in ('ForStmt', 'WhileStmt', 'DoStmt'))
+            rec['functions'].append({'name': name, 'class': cls, 'loops': nloops})
             if cls != 'scalar_loop_candidate':
                 continue
             src, why = harness(n, src_bytes)
@@ -594,8 +595,8 @@ def merge(out):
         parsed = sum(1 for r in rows if r.get('parsed'))
         fail = collections.Counter(r.get('reason') for r in rows if not r.get('parsed'))
         funcs = [f for r in rows for f in r['functions']]
-        with_loops = sum(1 for f in funcs if f['class'] != 'no_loops')
-        classes = collections.Counter(f['class'] for f in funcs if f['class'] != 'no_loops')
+        with_loops = sum(1 for f in funcs if f.get('loops', 0) > 0)
+        classes = collections.Counter(f['class'] for f in funcs if f.get('loops', 0) > 0)
         ext = collections.Counter(c.get('status') for c in cands)
         proofs = {}
         pdir = out / 'raw' / p / 'proofs'

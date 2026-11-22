@@ -73,9 +73,9 @@ def _out(tmp_path, proved=True):
     (out / 'protocol.json').write_text(json.dumps({'pin': {'p': {'sha256': 'x'}}, 'files': []}))
     (out / 'raw' / 'p' / 'coverage.json').write_text(json.dumps({'rows': [
         {'project': 'p', 'path': 'a.c', 'parsed': True,
-         'functions': [{'name': 'f', 'class': 'scalar_loop_candidate'},
-                       {'name': 'g', 'class': 'calls_to_other_functions'},
-                       {'name': 'h', 'class': 'no_loops'}]},
+         'functions': [{'name': 'f', 'class': 'scalar_loop_candidate', 'loops': 1},
+                       {'name': 'g', 'class': 'calls_to_other_functions', 'loops': 2},
+                       {'name': 'h', 'class': 'no_loops', 'loops': 0}]},
         {'project': 'p', 'path': 'b.c', 'parsed': False, 'reason': 'PARSE_FAIL', 'functions': []}]}))
     (out / 'raw' / 'p' / 'candidates.json').write_text(json.dumps({'rows': [
         {'project': 'p', 'path': 'a.c', 'function': 'f', 'status': 'EXTRACTED',
@@ -95,6 +95,19 @@ def test_merge_counts_three_nested_denominators(tmp_path):
     assert r['candidates'] == 1 and r['proved'] == 1
     md = (tmp_path / 'summary.md').read_text(encoding='utf-8')
     assert '| p | 2 | 1 | 3 | **2** | 1 | **1** |' in md
+
+
+def test_a_loop_with_pointers_still_counts_in_the_loop_denominator(tmp_path):
+    # The classifier labels by the FIRST blocking feature, so a function with a loop and a pointer is
+    # 'pointers_arrays_or_members'. Reading the label as "has loops" undercounted the denominator by
+    # every loop function that touches memory, which is most of them.
+    out = _out(tmp_path)
+    cov = json.loads((out / 'raw' / 'p' / 'coverage.json').read_text())
+    cov['rows'][0]['functions'].append({'name': 'k', 'class': 'pointers_arrays_or_members', 'loops': 3})
+    (out / 'raw' / 'p' / 'coverage.json').write_text(json.dumps(cov))
+    s = I.merge(out)
+    assert s['projects'][0]['functions_with_loops'] == 3
+    assert s['projects'][0]['classes']['pointers_arrays_or_members'] == 1
 
 
 def test_merge_still_names_the_reason_when_nothing_was_proved(tmp_path):
