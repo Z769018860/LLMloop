@@ -295,6 +295,63 @@ def test_the_two_validators_do_not_write_to_the_same_log():
     assert log_name(0, 'cpachecker') == '0000.cpachecker.out.txt'
 
 
+def _plan(tmp_path, statuses):
+    rows = [{'index': i, 'name': 'c%d.c' % i, 'status': s, 'dir': 'cases/%04d' % i,
+             'loops': 1, 'program': 'program.c', 'witness.yml': 'witness.yml',
+             'data_model': 'LP64'} for i, s in enumerate(statuses)]
+    (tmp_path / 'plan.json').write_text(json.dumps({'cases': len(rows), 'rows': rows}))
+    for r in rows:
+        d = tmp_path / r['dir']
+        d.mkdir(parents=True, exist_ok=True)
+    return rows
+
+
+def test_validation_resumes_instead_of_paying_for_decided_cases_twice(tmp_path, monkeypatch):
+    # Two shards of run 45016384532 and one of 45017894997 were killed by the runner *during*
+    # validation: the verdicts they had already paid for were written once at the end and were lost
+    # with the job. A re-dispatch has to pick up where it stopped, not start over.
+    from scripts import witness_v104 as W
+    _plan(tmp_path, ['EXPORTED', 'EXPORTED', 'NOT_PROVED'])
+    seen = []
+
+    def fake(validator, external, program, witness, abi, log=None, timeout=300):
+        seen.append(program.parent.name)
+        return {'result': 'TRUE'}
+
+    monkeypatch.setattr(W, 'validate_with', fake)
+    W.validate(tmp_path, tmp_path, validator='cpachecker', workers=1)
+    assert sorted(seen) == ['0000', '0001']
+    assert len(json.loads((tmp_path / 'validation-cpachecker.json').read_text())['rows']) == 2
+
+    seen.clear()
+    W.validate(tmp_path, tmp_path, validator='cpachecker', workers=1)
+    assert seen == []          # nothing decided is redone
+
+
+def test_validation_retries_undecided_cases_because_the_reason_may_be_the_budget(tmp_path, monkeypatch):
+    # The seven CPAchecker UNKNOWNs in run 45016384532 all hit the internal 120 s CPU limit. Skipping
+    # them on a re-run would freeze a budget artefact into the result as if it were a verdict.
+    from scripts import witness_v104 as W
+    _plan(tmp_path, ['EXPORTED', 'EXPORTED'])
+    (tmp_path / 'validation-cpachecker.json').write_text(json.dumps({'validator': 'cpachecker', 'rows': [
+        {'index': 0, 'name': 'c0.c', 'result': 'TRUE'}]}))
+    seen = []
+
+    def fake(validator, external, program, witness, abi, log=None, timeout=300):
+        seen.append(program.parent.name)
+        return {'result': 'UNKNOWN'}
+
+    monkeypatch.setattr(W, 'validate_with', fake)
+    W.validate(tmp_path, tmp_path, validator='cpachecker', workers=1)
+    assert seen == ['0001']    # 0000 was TRUE and stays; nothing is retried for being UNKNOWN-but-done
+    blob = json.loads((tmp_path / 'validation-cpachecker.json').read_text())
+    assert [r['result'] for r in blob['rows']] == ['TRUE', 'UNKNOWN']
+    # ...and a *stored* UNKNOWN is retried, because the budget is what usually changes.
+    seen.clear()
+    W.validate(tmp_path, tmp_path, validator='cpachecker', workers=1)
+    assert seen == ['0001']
+
+
 def test_a_rejection_keeps_the_validator_s_own_sentence_and_drops_the_config_dump(tmp_path, monkeypatch):
     # CPAchecker prints its whole configuration when a run starts, and half those option names
     # contain "witness" or "invariant", so an unfiltered grep for the reason returns the options

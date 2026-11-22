@@ -44,9 +44,10 @@ import re
 import signal
 import subprocess
 import sys
+import threading
 import time
 import uuid
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 from pycparser import c_ast, c_parser
@@ -388,11 +389,15 @@ def emit_case(out, index, name, program, entries, abi, created, note, dialect='s
 def ultimate_validate(external, program, witness, abi, log=None, timeout=300):
     """Validate the witness with Ultimate Automizer instead of CPAchecker.
 
-    Kept as the second opinion, not the primary one. Ultimate is what writes YAML correctness
-    witnesses in the first place, so it is the strictest reader of the format -- but in probe run
-    45008232723 it matched the entries and then answered UNKNOWN for both a true and a false
-    invariant, which makes it useless as a non-vacuity control (see `cpa_validate` for the tool that
-    did separate them).
+    Kept as the second opinion. It is a genuinely different implementation (trace abstraction with
+    interpolant synthesis, not predicate abstraction), and it is the reference producer of YAML
+    correctness witnesses, so it is the strictest reader of the format.
+
+    In probe run 45008232723 it matched the entries and then answered UNKNOWN for both a true and a
+    false invariant, which would have made it useless as a non-vacuity control. That was our harness
+    and our column base, not its ability: after both were fixed the control in run 45016384532 gets
+    TRUE for the true invariant and FALSE for the false one from Ultimate, the same as from
+    CPAchecker. The control is what keeps this claim honest, so it runs before every batch.
     """
     ult = external / 'ultimate-v0.3.2' / 'UAutomizer-linux' / 'Ultimate.py'
     if not ult.exists():
@@ -627,26 +632,58 @@ def log_name(index, validator):
 
 
 def validate(external, out, limit=None, validator='cpachecker', timeout=300, workers=2):
+    """Validate every exported witness, writing each verdict as soon as it exists.
+
+    Validation is the step a host shutdown lands on. Shards 8 and 9 of run 45016384532 and shard 8
+    again in 45017894997 were exported, started validating, and were killed by the runner with exit
+    143 -- and because the file was written once at the end, every verdict they had already paid for
+    was thrown away with them. Writing after each case makes a kill cost at most the cases in flight,
+    and a re-dispatch then only does the work that is still missing.
+
+    A decided verdict (TRUE/FALSE) counts as done. UNKNOWN, TIMEOUT and NO_RESULT do not, because
+    re-running with a larger budget is the usual reason to run this again, and skipping them would
+    keep the old answer forever.
+    """
     plan = json.loads((out / 'plan.json').read_text())
     rows = [r for r in plan['rows'] if r['status'] == 'EXPORTED']
     if limit is not None:
         rows = rows[:limit]
+    path = out / ('validation-%s.json' % validator)
+    done = {}
+    if path.exists():
+        for r in json.loads(path.read_text())['rows']:
+            if r.get('result') in ('TRUE', 'FALSE'):
+                done[r['index']] = r
+    todo = [r for r in rows if r['index'] not in done]
+    if done:
+        print('%d of %d already decided, %d to run' % (len(done), len(rows), len(todo)))
+    finished, lock = [], threading.Lock()
+
+    def flush():
+        with lock:
+            # One file per validator instead of one file: the same witness then gets two independent
+            # verdicts, and `merge` can report whether the two tools agree. A second opinion that is
+            # allowed to overwrite the first is not a second opinion.
+            dump(path, {'validator': validator, 'timeout': timeout,
+                        'rows': sorted(list(done.values()) + finished, key=lambda r: r['index'])})
 
     def one(r):
         d = out / r['dir']
         res = validate_with(validator, external, d / r['program'], d / 'witness.yml',
                             r['data_model'],
                             log=out / 'logs' / log_name(r['index'], validator), timeout=timeout)
-        return {**{'name': r['name'], 'index': r['index'], 'loops': r.get('loops')}, **res}
+        row = {**{'name': r['name'], 'index': r['index'], 'loops': r.get('loops')}, **res}
+        with lock:
+            finished.append(row)
+        flush()
+        return row
 
     with ThreadPoolExecutor(workers) as pool:
-        results = list(pool.map(one, rows))
-    # One file per validator instead of one file: the same witness then gets two independent
-    # verdicts, and `merge` can report whether the two tools agree. A second opinion that is allowed
-    # to overwrite the first is not a second opinion.
-    dump(out / ('validation-%s.json' % validator),
-         {'validator': validator, 'timeout': timeout, 'rows': results})
-    print(json.dumps(collections.Counter(r['result'] for r in results), indent=1))
+        for f in as_completed([pool.submit(one, r) for r in todo]):
+            f.result()            # surface an exception here rather than at shutdown
+    all_rows = sorted(list(done.values()) + finished, key=lambda r: r['index'])
+    flush()
+    print(json.dumps(collections.Counter(r['result'] for r in all_rows), indent=1))
 
 
 # --------------------------------------------------------------------------- non-vacuity control
