@@ -100,6 +100,24 @@
 **B. 循环翻译（`translate_c` + 具体重放 vs 原生返回值）/ loop translation.** 生成 80 个片段内程序 × 16 个输入（12 个小值 + 4 个刻意放到 `int` 边界）：域内 **1095/1095** 与原生返回值完全一致，`value mismatch` **0**，80/80 通过前端；185 次越界被执行拦下，单列为"越界"，不计为翻译错误——它们正是证书里 no-overflow 义务要排除的区域。 1095 in-domain trials agree exactly, zero mismatches; 185 boundary trials are reported separately.
 **覆盖边界（必须说明）/ scope.** 这两项覆盖 `llmloop/c_integers.py` 与 `llmloop/c_frontend.py`；165 例对照实际使用的 `scripts/svcomp_translate.py` **没有**做语义差分，只做过接受/拒绝判定的一致性核对（165/165，§4h）。因此"翻译保语义"在这条路径上**未直接测量**，不作为已验证事实使用。 The 165-case pipeline's own translator is not semantically differenced; only its accept/reject decisions were reproduced.
 
+## 4h. 组件消融（v1.03）/ Component ablation (v1.03)
+**为什么做 / why.** §4e 的 165 例对照只跑了**一个**配置。把配置拆开、每次只关掉一个部件，才能说清"90 个证明"里各部分各负责什么，也才能回答"这些证明是关于 C 的还是关于理想整数的"。协议在运行前冻结（`experiments/v103/ablation/protocol.json`，含被运行模块的 sha256，代码一改就失效），6 个臂 × 165 例，时限、资源上限、随机种子与其余配置完全相同。 Six arms, one component off each, frozen protocol hashing the modules it runs.
+**结果 / results.**
+
+| 臂 | 关掉的部件 | TRUE | UNKNOWN | UNSUPPORTED | 相对 full |
+| --- | --- | --- | --- | --- | --- |
+| `full` | 冻结配置（默认剖面 + 多项式回退 + ghost 入口值） | **90** | 11 | 64 | — |
+| `no_poly` | 去掉多项式回退 | 88 | 13 | 64 | −2 |
+| `no_ghost` | 参数被改写时不保留入口值 `p__in` | 88 | 13 | 64 | −2 |
+| `rounds_1` | Houdini 不动点只走一轮 | 57 | 44 | 64 | **−33** |
+| `runs_1` | 采样从 60 次降到 1 次 | 77 | 24 | 64 | **−13** |
+| `math` | 把类型化 C 义务换成无界整数（可靠性消融） | **96** | 5 | 64 | **+6** |
+
+`full` 臂独立复现 **90**（与 §4e 的冻结运行完全一致），这是对驱动改造的一次内部一致性检查。 The `full` arm reproduces the frozen 90 exactly.
+**读数 / reading.** 主干是 Houdini 不动点（少 33 个）与采样量（少 13 个）——候选原子既要有足够的观测，也要有多轮弱化才能收敛。多项式剖面与 ghost 入口值各值 2 个程序（`DivMinus2.c`/`Ex08.c` 与 `DivMinus2.c`/`PastaB16.c`）。`UNSUPPORTED` 在所有臂上恒为 64，符合预期：除 ghost 外这些部件都作用于翻译之后的阶段。 The fixpoint and the sampling budget dominate; the polynomial profile and ghost entry values are worth 2 programs each; `UNSUPPORTED` is constant at 64 because these parts act after translation.
+**`math` 臂是可靠性消融，不是性能消融 / the `math` arm is a soundness ablation.** 把义务放到无界整数上会多证 **6** 个（`McCarthyIterative.c`、`MinusUserDefined.c`、`b.03-no-inv_assume.c`、`b.09-no-inv_assume.c`、`ex3a.c`、`java_Sequence.c`），一个都不丢——但这 6 个结论**不是关于 C 程序的**：无界整数上不成立的回绕恰好是没有被排除的那部分行为。所以类型化语义不是"白付的代价"，它决定结论属于 C 还是属于理想整数；若按 `math` 报数，覆盖率会从 90 抬到 96，代价是结论不再支撑 no-overflow 这个性质。 Unbounded integers would raise coverage from 90 to 96 with nothing lost, but those six verdicts would not be about the C program; the typed obligations are what make the claim a claim about C.
+**与 §4f 的交叉 / where this meets the LLM result.** 那 6 个里有 2 个（`ex3a.c`、`java_Sequence.c`）正是 §4f 中 LLM 臂在**类型化语义下**拿到的净新增。两者不矛盾：这些程序恰好落在"理想整数可证、类型化义务是瓶颈"的边界上，LLM 的原子在类型化语义内把缺口补上了。这也解释了为什么 LLM 的净增量小而不稳定——它要补的正是最难的一类缺口。 Two of the six are exactly the LLM's typed net-new cases from §4f: these programs sit on the ideal-integer/typed-C boundary, and the LLM closes that gap within typed semantics.
+
 ## 4i. 含跳转的循环与 UNSUPPORTED 的处置（v1.03）/ Loops with jumps, and what UNSUPPORTED means (v1.03)
 **UNSUPPORTED 的含义 / what it means.** 它是**前端拒绝**，不是判定：没有产生任何验证条件，不进入 `TRUE` 计数，也不构成对程序的任何断言。比较分母永远是冻结全量，UNSUPPORTED 一律算"未证明"。因此它只会**低估**覆盖率，不带来可靠性风险。 It is a front-end refusal, not a verdict: it never enters the `TRUE` count and can only understate coverage.
 **语料里其实没有 `goto` / there is no `goto` in this corpus.** 165 例的静态统计（整份翻译单元，不只 `main`）：`goto` **0**、`switch` **0**、循环内 `break` 4、`continue` 0、循环内 `return` 17（其中仅 1 例落在 `main`）、嵌套循环 46、主循环在被调函数里 42。 Zero `goto`, zero `switch`; "jumps" here means only `break` and `return`.
