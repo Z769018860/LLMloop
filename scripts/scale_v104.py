@@ -127,7 +127,7 @@ def freeze(external, out, cap):
         'timing': 'concurrent throughput observations, not cross-tool speedup; wait4 CPU, sampled '
                   'group RSS, stdout/stderr and the actual command lines retained',
         'remote_model_calls': 0,
-        'frozen_source_sha256': {str(p.relative_to(ROOT)): H.sha(p) for p in files},
+        'frozen_source_sha256': H.source_hashes(files),
     }
     H.save(out / 'protocol.json', plan)
     tasks = [{'case': c, 'tool': t} for c in cases for t in plan['tools']]

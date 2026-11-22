@@ -60,6 +60,22 @@ def sha(p):
     return hashlib.sha256(Path(p).read_bytes()).hexdigest()
 
 
+def repo_path(p):
+    """Resolve a frozen source key back to a file.
+
+    Protocols are frozen on Windows and re-verified on Linux runners. Keys are stored POSIX-style
+    (`scripts/heldout_v104.py`), but a protocol frozen before that rule existed carries backslashes,
+    and `Path / 'scripts\\x.py'` is a single odd file name on Linux, not a directory traversal. Fold
+    both spellings to one so a cross-platform hash check cannot fail for a reason that has nothing to
+    do with the code.
+    """
+    return ROOT.joinpath(*str(p).replace('\\', '/').split('/'))
+
+
+def source_hashes(files):
+    return {Path(p).resolve().relative_to(ROOT).as_posix(): sha(p) for p in files}
+
+
 def save(p, x):
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(x, indent=2) + '\n')
@@ -167,7 +183,7 @@ def freeze(external, out):
         'timing': 'concurrent throughput observations, not cross-tool speedup; wait4 CPU, sampled '
                   'group RSS, stdout/stderr and the actual command lines retained',
         'remote_model_calls': 0,
-        'frozen_source_sha256': {str(p.relative_to(ROOT)): sha(p) for p in files},
+        'frozen_source_sha256': source_hashes(files),
     }
     save(out / 'protocol.json', plan)
     tasks = [{'case': c, 'tool': t} for c in cases for t in plan['tools']]
@@ -273,9 +289,27 @@ def trial(external, out, plan, i, t):
     return row
 
 
+def check_sources(plan, strict=True):
+    """Compare the tree against the freeze, and on mismatch say *which* files moved.
+
+    A bare `assert` here costs a full matrix to discover nothing but a path spelling, so it reports
+    the offending keys by name and only raises when `strict`.
+    """
+    want = plan['frozen_source_sha256']
+    bad = []
+    for p, h in want.items():
+        f = repo_path(p)
+        got = sha(f) if f.exists() else None
+        if got != h:
+            bad.append({'path': p, 'expected': h, 'found': got or 'MISSING'})
+    if bad and strict:
+        raise SystemExit('code changed since freeze:\n' + json.dumps(bad, indent=1))
+    return bad
+
+
 def run(external, out, shard=None, shards=None):
     plan = json.loads((out / 'protocol.json').read_text())
-    assert all(sha(ROOT / p) == h for p, h in plan['frozen_source_sha256'].items()), 'code changed since freeze'
+    check_sources(plan)
     tasks = json.loads((out / 'schedule.json').read_text())
     selected = [(i, t) for i, t in enumerate(tasks) if shards is None or i % shards == shard]
     rows = []
@@ -286,7 +320,7 @@ def run(external, out, shard=None, shards=None):
                 print(json.dumps({'captured': len(rows), 'planned': len(selected),
                                   'counts': dict(collections.Counter(r['tool'] + ':' + r['status'] for r in rows))}),
                       flush=True)
-    unchanged = all(sha(ROOT / p) == h for p, h in plan['frozen_source_sha256'].items())
+    unchanged = not check_sources(plan, strict=False)
     payload = {'complete_capture': len(rows) == len(selected), 'source_unchanged': unchanged,
                'counts': dict(collections.Counter('%s|%s|%s' % (r['corpus'], r['tool'], r['status']) for r in rows)),
                'rows': sorted(rows, key=lambda r: r['index']), 'remote_model_calls': 0,
@@ -335,7 +369,7 @@ def merge(out):
     assert len(by_index) == len(tasks), '%d of %d units' % (len(by_index), len(tasks))
     rows = [by_index[i] for i in range(len(tasks))]
     save(out / 'results.json', {'complete_capture': True,
-                                'source_unchanged': all(sha(ROOT / p) == h for p, h in plan['frozen_source_sha256'].items()),
+                                'source_unchanged': not check_sources(plan, strict=False),
                                 'counts': dict(collections.Counter('%s|%s|%s' % (r['corpus'], r['tool'], r['status']) for r in rows)),
                                 'rows': rows, 'remote_model_calls': 0, 'merged_from_shards': per_shard,
                                 'schedule_sha256': sha(out / 'schedule.json')})

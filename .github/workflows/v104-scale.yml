@@ -4,6 +4,11 @@ name: v1.04 scale-up, 400 cases
 # 400 cases x 3 tools at 600 s / 2 GiB = 1200 units. The 165 of v1.03 are included by identity;
 # the additions are termination-crafted and a hash-ordered prefix of termination-crafted-lit, so the
 # set is the same population with more samples -- a precision increase, not a change of task.
+#
+# The first attempt (run 45005886487) died in every shard before the first case: the protocol was
+# frozen on Windows, so its source-hash keys were `scripts\scale_v104.py`, and `Path / 'scripts\x.py'`
+# is one odd file name on Linux rather than a directory traversal. Keys are now POSIX; the check also
+# folds both spellings, so a freeze made on either platform verifies on the other.
 on:
   push:
     branches: [research/v103-exec]
