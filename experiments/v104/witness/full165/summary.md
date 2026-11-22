@@ -5,7 +5,7 @@ Cases considered: **165**; exported as witnesses: **90** (121 loop invariants).
 | checked by | proves it | undecided | not validated | rejected | invariants confirmed |
 |---|---|---|---|---|---|
 | cpachecker | 74 | 13 | 3 | 0 | 89 of 121 |
-| ultimate | 87 | 0 | 3 | 0 | 117 of 121 |
+| ultimate | 90 | 0 | 0 | 0 | 121 of 121 |
 
 
 The witnesses certify no-overflow **under the same parameter bounds the verifier assumed**: the generated `main` supplies them as assumptions, mirroring the range the proof was made for. They are not unconditional proofs about arbitrary inputs.
@@ -37,10 +37,9 @@ The 64 cases with no witness because the translator refused them are outside the
 
 | ultimate verdict | n |
 |---|---|
-| NOT_RUN | 3 |
-| TRUE | 87 |
+| TRUE | 90 |
 
-Both validators return the same verdict on **77 of 90** exported cases, and both confirm **74**.
+Both validators return the same verdict on **74 of 90** exported cases, and both confirm **74**.
 
 | case | invariants | cpachecker | ultimate | s |
 |---|---|---|---|
@@ -71,10 +70,10 @@ Both validators return the same verdict on **77 of 90** exported cases, and both
 | termination-restricted-15/NO_21.c | 1 | TRUE | TRUE | 12.8 |
 | termination-restricted-15/NO_22.c | 1 | TRUE | TRUE | 14.5 |
 | termination-restricted-15/NO_23.c | 1 | TRUE | TRUE | 17.0 |
-| termination-restricted-15/NO_24.c | 1 | NOT_RUN | NOT_RUN | - |
+| termination-restricted-15/NO_24.c | 1 | NOT_RUN | TRUE | 9.5 |
 | termination-restricted-15/NarrowKonv.c | 1 | TRUE | TRUE | 13.8 |
 | termination-restricted-15/Narrowing.c | 1 | TRUE | TRUE | 7.8 |
-| termination-restricted-15/Nested-2.c | 2 | NOT_RUN | NOT_RUN | - |
+| termination-restricted-15/Nested-2.c | 2 | NOT_RUN | TRUE | 11.3 |
 | termination-restricted-15/PastaA1.c | 2 | TRUE | TRUE | 31.0 |
 | termination-restricted-15/PastaA10.c | 1 | TRUE | TRUE | 14.9 |
 | termination-restricted-15/PastaA4.c | 1 | TRUE | TRUE | 17.9 |
@@ -92,7 +91,7 @@ Both validators return the same verdict on **77 of 90** exported cases, and both
 | termination-restricted-15/PastaC9.c | 1 | TRUE | TRUE | 17.8 |
 | termination-restricted-15/Sequence.c | 2 | TRUE | TRUE | 6.2 |
 | termination-restricted-15/Sunset.c | 1 | TRUE | TRUE | 13.1 |
-| termination-restricted-15/Swingers.c | 1 | NOT_RUN | NOT_RUN | - |
+| termination-restricted-15/Swingers.c | 1 | NOT_RUN | TRUE | 13.2 |
 | termination-restricted-15/TwoFloatInterv.c | 1 | TRUE | TRUE | 5.3 |
 | termination-restricted-15/UpAndDown.c | 1 | TRUE | TRUE | 17.5 |
 | termination-restricted-15/UpAndDownIneq.c | 1 | TRUE | TRUE | 13.1 |
