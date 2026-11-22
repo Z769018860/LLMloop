@@ -457,16 +457,25 @@ def cpa_validate(external, program, witness, abi, log=None, timeout=300):
            'log': str(log) if log else None}
     if res['result'] != 'TRUE':
         # A bare FALSE would be ambiguous: it can mean "the program violates the property" or "one of
-        # the witness invariants is wrong". Under --witnessValidation the second case is reported
-        # against the witness, so the reason is in the log and it is the only interesting part of a
-        # rejection -- it says which invariant, at which line, did not hold. The dotted lines are
-        # CPAchecker's configuration dump, which matches on the word "witness" everywhere and says
-        # nothing about this case.
+        # the witness invariants is wrong". CPAchecker's own wording settles it -- under
+        # --witnessValidation a refuted invariant is reported as "Property violation (invalid
+        # invariant)", a refuted program as a violation of the specification. The dotted lines are
+        # its configuration dump, which matches on the word "witness" everywhere.
         hits = [x for x in o.splitlines()
                 if re.search(r'(?i)(witness|invariant)', x) and x.strip()
                 and not x.lstrip().startswith(('witness.', 'cpa.', 'counterexample.', 'termination.',
                                                'java.', '#'))]
         res['why'] = hits[-5:]
+        res['invalid_invariant'] = bool(re.search(r'invalid invariant', o))
+        # The counterexample says *which* invariant failed and at which line. It lives in the
+        # directory the run deletes, so a rejection whose reason is thrown away leaves a 40 %
+        # rejection rate with no explanation -- which is not a result, it is a question.
+        if log:
+            ce_src = outdir / 'Counterexample.1.assignment.txt'
+            if ce_src.exists():
+                ce = Path(log).parent.parent / 'counterexamples' / (Path(log).stem + '.txt')
+                save(ce, '\n'.join(ce_src.read_text(errors='replace').splitlines()[:60]) + '\n')
+                res['counterexample'] = str(ce)
     return res
 
 

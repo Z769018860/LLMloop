@@ -278,3 +278,28 @@ def test_a_rejection_keeps_the_validator_s_own_sentence_and_drops_the_config_dum
                          log=tmp_path / 'logs' / 'p.out.txt')
     assert res['result'] == 'FALSE'
     assert res['why'] == ['Invariant (i >= 0) does not hold at line 4']
+
+
+def test_a_rejection_keeps_the_counterexample_the_run_deletes(tmp_path, monkeypatch):
+    # The counterexample names the invariant that failed. The workflow deletes `cpa/` before the
+    # artifact is kept, so copying it out is the only way a rejection stays explainable.
+    from scripts import witness_v104 as W
+
+    class Done:
+        returncode = 0
+        stdout = 'Verification result: FALSE. Property violation (invalid invariant) found.\n'
+        stderr = ''
+
+    cpa = tmp_path / W.CPA_DIR / 'scripts'
+    cpa.mkdir(parents=True)
+    (cpa / 'cpa.sh').write_text('#!/bin/sh\n')
+    monkeypatch.setattr(W.subprocess, 'run', lambda *a, **k: Done())
+    log = tmp_path / 'logs' / '0007.cpachecker.out.txt'
+    outdir = tmp_path / 'cpa' / '0007.cpachecker.out'
+    outdir.mkdir(parents=True)
+    (outdir / 'Counterexample.1.assignment.txt').write_text('x = 5\ninvariant false\n' * 40)
+    res = W.cpa_validate(tmp_path, tmp_path / 'p.c', tmp_path / 'w.yml', 'LP64', log=log)
+    assert res['result'] == 'FALSE' and res['invalid_invariant'] is True
+    kept = tmp_path / 'counterexamples' / '0007.cpachecker.out.txt'
+    assert kept.exists() and 'invariant false' in kept.read_text()
+    assert len(kept.read_text().splitlines()) <= 60
