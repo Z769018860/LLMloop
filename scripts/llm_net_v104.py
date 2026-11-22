@@ -21,8 +21,10 @@ FULL = ROOT / 'experiments/v103/full165'
 SYSTEM = ('You are a loop-summary hypothesis generator. You only PROPOSE candidates; '
           'a separate verifier checks them against the real C semantics and rejects wrong ones. '
           'Reply with one JSON object and nothing else.')
-MODELS = ['deepseek-v4.1-flash-ark', 'gpt-4.1-mini', 'claude-sonnet-4-5-20250929']
-TEMP, MAXTOK, REPEATS, REPAIRS, ATTEMPTS = 0.7, 6000, 3, 2, 3
+MODELS = [m.strip() for m in os.environ.get('LLM_NET_MODELS',
+          'deepseek-v4.1-flash-ark,gpt-4.1-mini,claude-sonnet-4-5-20250929').split(',') if m.strip()]
+TEMP, REPEATS, REPAIRS, ATTEMPTS = 0.7, 3, 2, 3
+MAXTOK = int(os.environ.get('LLM_MAX_TOKENS', '6000'))  # frozen into the protocol; a second study may raise it
 CALL_TIMEOUT = 240
 RUNS, ROUNDS, SOLVER_MS, SEED = 60, 150, 5000, 1
 DEFAULT_BASE = 'https://api.square16.org/v1'
@@ -156,7 +158,8 @@ def freeze(external, out):
         r = call(m, [{'role': 'user', 'content': 'Reply with the single word OK'}], key, base)
         served[m] = r.get('served_model') or r.get('attempts')
     files = [Path(__file__), ROOT / 'scripts/resource_capture.py']
-    plan = {'study': 'v104_llm_net', 'base_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
+    plan = {'study': os.environ.get('LLM_NET_STUDY', 'v104_llm_net'),
+            'note': os.environ.get('LLM_NET_NOTE', ''), 'base_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
             'purpose': 'what the LLM adds on top of the deterministic arm, and what that costs',
             'denominator': 'the 93 v1.03 cases whose historical_stage starts with in_; the 72 front-end rejections are reported as a capability boundary, not as LLM failures',
             'arm_D': 'the frozen v1.03 llmloop units (experiments/v103/full165/raw), reused unchanged, zero model calls',
@@ -199,6 +202,8 @@ def ask(out, index):
     d.mkdir(parents=True, exist_ok=True)
     from llmloop.houdini_loops import houdini_loops
     key, base = os.environ['LLM_API_KEY'], os.environ.get('LLM_BASE_URL') or DEFAULT_BASE
+    proto = json.loads((out / 'protocol.json').read_text())
+    assert proto['max_tokens'] == MAXTOK, f"protocol froze {proto['max_tokens']} tokens, this run uses {MAXTOK}"
     atoms, calls, rounds, status = [], [], [], 'NOT_RUN'
     for rnd in range(REPAIRS + 1 if case['expected_nooverflow'] is not False else 1):
         rep = rounds[-1].get('repair') if rnd else None
@@ -307,6 +312,7 @@ def run(external, out, shard=None, shards=None, workers=4):
     assert all(sha(ROOT / p) == v for p, v in plan['frozen_source_sha256'].items())
     assert sha(out / 'cases_payload.json') == plan['cases_payload_sha256']
     units = json.loads((out / 'schedule.json').read_text())
+    assert plan['max_tokens'] == MAXTOK, f"protocol froze {plan['max_tokens']} tokens, this run uses {MAXTOK}"
     selected = [(i, u) for i, u in enumerate(units) if shards is None or i % shards == shard]
     rows = []
     with ThreadPoolExecutor(workers) as pool:

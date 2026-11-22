@@ -1,0 +1,151 @@
+name: v1.05 LLM arm at a 16k output budget
+
+# Post-hoc follow-up, not part of the pre-registered v1.04 test. v1.04 fixed max_tokens at 6000 and
+# two of the three models kept hitting that cap (deepseek-v4.1-flash-ark returned empty content in
+# 220 of 309 calls, so its arm was equal to arm D by construction). This study re-runs only those
+# two models at 16000, with everything else identical, and is reported separately from v1.04.
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/v103-exec]
+    paths:
+      - '.github/workflows/v103-llmnet16k.yml'
+
+permissions:
+  contents: write
+
+env:
+  PYTHONPATH: ${{ github.workspace }}
+  LLM_MAX_TOKENS: '16000'
+  LLM_NET_MODELS: deepseek-v4.1-flash-ark,claude-sonnet-4-5-20250929
+  LLM_NET_STUDY: v105_llm_net_16k
+  LLM_NET_NOTE: >-
+    post-hoc follow-up to v1.04, motivated by 220 of 309 deepseek calls returning empty content at
+    the 6000 token cap; same 93 cases, same atoms-only prompt, same verifier configuration, only
+    max_tokens differs. Not part of the pre-registered v1.04 comparison.
+
+jobs:
+  freeze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: |
+          python -m pip install -q --upgrade pip
+          python -m pip install -q -e '.[test,smt,exp]'
+          python -m pip install -q pyyaml psutil
+      - name: Fetch the pinned SV-COMP checkout
+        run: bash scripts/ci_setup_v103.sh "${{ runner.temp }}/ext" svbench
+      - name: Freeze the protocol before the first real call
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+        run: |
+          python -u scripts/llm_net_v104.py freeze --external "${{ runner.temp }}/ext" \
+            --output experiments/v103/llm_net16k
+          python - <<'PY'
+          import json
+          p = json.load(open('experiments/v103/llm_net16k/protocol.json'))
+          assert len(p['cases']) == 93, len(p['cases'])
+          assert p['max_tokens'] == 16000, p['max_tokens']
+          print('frozen cases', len(p['cases']), 'models', p['models'], 'max_tokens', p['max_tokens'])
+          print('served', json.dumps(p['served_model_strings']))
+          PY
+      - name: Commit the frozen protocol
+        run: |
+          git config user.name "v103 runner"
+          git config user.email "v103@users.noreply.github.com"
+          git add experiments/v103/llm_net16k/protocol.json experiments/v103/llm_net16k/schedule.json experiments/v103/llm_net16k/cases_payload.json
+          git commit -m "v1.05: freeze the 16k-budget LLM follow-up before its first call [skip ci]" || echo "already committed"
+          for i in 1 2 3; do
+            git pull --rebase --quiet --autostash origin research/v103-exec && git push -q origin HEAD:research/v103-exec && break
+            sleep 5
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: llmnet16k-frozen
+          path: experiments/v103/llm_net16k
+          if-no-files-found: error
+
+  llmnet:
+    needs: freeze
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: |
+          python -m pip install -q --upgrade pip
+          python -m pip install -q -e '.[test,smt,exp]'
+          python -m pip install -q pyyaml psutil
+      - uses: actions/download-artifact@v4
+        with:
+          name: llmnet16k-frozen
+          path: experiments/v103/llm_net16k
+      - name: Run the frozen schedule, shard ${{ matrix.shard }} of 6
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+        run: |
+          python -u scripts/llm_net_v104.py run --external "${{ runner.temp }}/ext" \
+            --output experiments/v103/llm_net16k --shard ${{ matrix.shard }} --shards 6 --workers 4
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: llmnet16k-shard-${{ matrix.shard }}
+          path: experiments/v103/llm_net16k
+          if-no-files-found: warn
+
+  merge:
+    needs: [freeze, llmnet]
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: |
+          python -m pip install -q --upgrade pip
+          python -m pip install -q -e '.[test,smt,exp]'
+          python -m pip install -q pyyaml psutil
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: llmnet16k-shard-*
+          merge-multiple: true
+          path: experiments/v103/llm_net16k
+      - name: Merge the shards
+        run: python -u scripts/llm_net_v104.py merge --output experiments/v103/llm_net16k
+      - name: Derive the paired comparison and the cost
+        env:
+          LLM_NET_DIR: experiments/v103/llm_net16k
+        run: python -u scripts/analyze_llm_net_v104.py
+      - name: Commit the evidence
+        run: |
+          git config user.name "v103 runner"
+          git config user.email "v103@users.noreply.github.com"
+          git add experiments/v103/llm_net16k
+          git commit -m "v1.05: 16k-budget LLM follow-up evidence [skip ci]" || echo "nothing to commit"
+          for i in 1 2 3; do
+            git pull --rebase --quiet --autostash origin research/v103-exec && git push -q origin HEAD:research/v103-exec && break
+            sleep 5
+          done

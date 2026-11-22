@@ -148,6 +148,29 @@ def main():
     report['stability'] = stab
     report['health'] = health
 
+    # generation health: a response that hits the frozen max_tokens cap, or comes back empty,
+    # makes arm L equal arm D by construction and must not be read as "the atoms were useless"
+    gen_health = {}
+    for m in models:
+        h = collections.Counter()
+        for r in rows:
+            if r['model'] != m:
+                continue
+            d = LN / 'raw' / f"{r['index']:04d}" / 'calls.json'
+            if not d.exists():
+                continue
+            for c in json.loads(d.read_text()):
+                h['calls'] += 1
+                u = c.get('usage') or {}
+                ct = u.get('completion_tokens', u.get('output_tokens')) or 0
+                if ct >= net['max_tokens'] - 100:
+                    h['at_token_cap'] += 1
+                if not (c.get('content') or '').strip():
+                    h['empty_content'] += 1
+                h['finish_' + str(c.get('finish_reason'))] += 1
+        gen_health[m] = dict(h)
+    report['generation_health'] = gen_health
+
     primary = report['arms'][f'{models[0]}|majority']
     verdict = []
     union_net_new = sorted({n for m in models for n in net_new[m]})
@@ -177,6 +200,12 @@ def main():
     md += ['', '## 稳定性 / stability', '']
     for m in models:
         md.append(f'- `{m}`: 重复间判定不一致的用例 {stab[m]["cases_proved_some_repeat_but_not_all"]} 个 / {stab[m]["cases_proved_some_repeat_but_not_all"]} cases disagree across repeats')
+    md += ['', '## 生成健康度 / generation health', '',
+           '一个撞到冻结的 `max_tokens` 上限或返回空内容的响应，会让臂 L 在构造上等于臂 D，不能读成"原子无用"。 A response that hits the frozen cap or comes back empty makes arm L equal arm D by construction.', '']
+    for m in models:
+        h = gen_health[m]
+        md.append(f'- `{m}`: 调用 {h.get("calls", 0)}，撞上限 {h.get("at_token_cap", 0)}，空内容 {h.get("empty_content", 0)}，finish '
+                  + ', '.join(f'{k[7:]}={v}' for k, v in sorted(h.items()) if k.startswith('finish_')))
     md += ['', '## 成本 / cost', '',
            f'- 臂 D：0 次模型调用，0 token。 Arm D: zero calls.', '']
     for m in models:

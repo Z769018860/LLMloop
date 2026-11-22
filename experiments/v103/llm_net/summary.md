@@ -26,6 +26,14 @@
 - `gpt-4.1-mini`: 重复间判定不一致的用例 12 个 / 12 cases disagree across repeats
 - `claude-sonnet-4-5-20250929`: 重复间判定不一致的用例 6 个 / 6 cases disagree across repeats
 
+## 生成健康度 / generation health
+
+一个撞到冻结的 `max_tokens` 上限或返回空内容的响应，会让臂 L 在构造上等于臂 D，不能读成"原子无用"。 A response that hits the frozen cap or comes back empty makes arm L equal arm D by construction.
+
+- `deepseek-v4.1-flash-ark`: 调用 309，撞上限 226，空内容 220，finish length=223, stop=86
+- `gpt-4.1-mini`: 调用 342，撞上限 0，空内容 0，finish stop=342
+- `claude-sonnet-4-5-20250929`: 调用 319，撞上限 51，空内容 0，finish length=48, stop=269, tool_calls=2
+
 ## 成本 / cost
 
 - 臂 D：0 次模型调用，0 token。 Arm D: zero calls.
