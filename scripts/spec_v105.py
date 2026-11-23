@@ -75,6 +75,14 @@ RUNS, ROUNDS, SOLVER_MS, SEED = 60, 150, 5000, 1
 # Pre-registered before the model was asked anything: the descending grid the model-free control
 # searches, and the retained-volume floor below which a conditional proof is not counted as one.
 SHRINK_GRID = [1.0, 0.85, 0.7, 0.55, 0.4, 0.28, 0.18, 0.1, 0.05, 0.02, 0.01]
+# Every status the driver can write into a row, in one place so a test can walk it. The first
+# real merge died on `unnamed status in the S arm: ['ERROR']` because this list lived inside
+# `write_summary` and I had written the buckets from the outcomes I expected rather than from the
+# statuses the code can produce. `TIMEOUT` is the control's, not the model arm's.
+STATUSES = ('PROVED', 'UNKNOWN', 'MALFORMED', 'VACUOUS', 'RESOURCE_STOP', 'NOT_VERIFIED',
+            'ERROR', 'HARNESS_ERROR')
+BASELINE_STATUSES = ('PROVED', 'UNKNOWN', 'TIMEOUT')
+
 MATERIAL = 1e-3
 # Per-case budget for the control's grid search. Added after `termination-nla/egcd3-both-t` (two
 # full 32-bit ranges) ran past half an hour without finishing: the arm had no cap at all, which is a
@@ -882,9 +890,8 @@ def write_summary(out, plan, rows, base):
     # is exactly how "795 units, all UNKNOWN" survived a whole run: every cell was green and every
     # cell was empty. Buckets defined by name rather than by "everything else", so the sum below can
     # actually fail -- and a status nobody thought about raises instead of being swept into a bucket.
-    S_STATUSES = ('PROVED', 'UNKNOWN', 'MALFORMED', 'VACUOUS', 'RESOURCE_STOP', 'NOT_VERIFIED',
-                  'ERROR', 'HARNESS_ERROR')
-    B_STATUSES = ('PROVED', 'UNKNOWN', 'TIMEOUT')
+    S_STATUSES = STATUSES
+    B_STATUSES = BASELINE_STATUSES
     bad = sorted({r['status'] for r in rows} - set(S_STATUSES))
     assert not bad, ('unnamed status in the S arm: %s -- add it to a named bucket and to the table, '
                      'do not fold it into UNKNOWN' % bad)

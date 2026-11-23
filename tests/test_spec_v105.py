@@ -428,3 +428,42 @@ def test_a_declared_name_wins_over_its_entry_copy_spelling():
     got, info = narrow({'n': [-10, 10]}, {'n': [-2, 2], 'n__in': [-9, 9]})
     assert got == {'n': [-2, 2]}
     assert info['aliased'] == ['n__in'] and info['unknown'] == []
+
+
+def test_every_status_the_driver_can_write_is_a_named_bucket(tmp_path):
+    """Gate 12: the vocabulary is walked, not remembered.
+
+    Run 45111896858 proved this the expensive way. `verify` returns `ERROR` when the frozen pipeline
+    raises, four units did, and the summary's buckets -- written from the outcomes I expected --
+    had no column for it. The assertion refused to fold it into a default, which is right, and the
+    price was that a finished run's evidence could not be merged.
+    """
+    import scripts.spec_v105 as m
+    from scripts.spec_v105 import write_summary
+    for status in m.STATUSES:
+        plan, rows, base = _summary_fixture()
+        rows[1]['status'] = status
+        if status == 'PROVED':
+            rows[1]['retained'] = 0.5
+        write_summary(tmp_path, plan, rows, base)
+        md = (tmp_path / 'summary.md').read_text(encoding='utf-8')
+        assert _cell(md, 'S', '合计') == str(len(rows)), status
+    # and the code may not invent a status outside the vocabulary: every literal assigned to a
+    # status field has to be one of these
+    import pathlib, re
+    src = pathlib.Path(m.__file__).read_text(encoding='utf-8')
+    used = set(re.findall(r"['\"]status['\"]\s*[:=]\s*['\"]([A-Z_]+)['\"]", src))
+    used |= set(re.findall(r"status\s*=\s*['\"]([A-Z_]{3,})['\"]", src))
+    assert used, 'the scan found no status literal at all, so it is not proving anything'
+    assert used <= set(m.STATUSES) | {'PROVED', 'UNKNOWN', 'ERROR', 'TIMEOUT'}, used - set(m.STATUSES)
+
+
+def test_a_control_attempt_that_raised_is_disclosed_and_not_turned_into_a_bucket(tmp_path):
+    from scripts.spec_v105 import write_summary
+    plan, rows, base = _summary_fixture()
+    base['a/p1']['tried'] = [{'s': 1.0, 'status': "ERROR:KeyError:'temp'", 'vol': 1.0},
+                             {'s': 0.85, 'status': 'UNKNOWN', 'vol': 0.85}]
+    write_summary(tmp_path, plan, rows, base)
+    md = (tmp_path / 'summary.md').read_text(encoding='utf-8')
+    assert '偏向模型臂' in md and '至少有一次尝试因管道抛异常' in md
+    assert _cell(md, 'B', '合计') == str(len(base))      # still 83 of 83, not 84 of 83
