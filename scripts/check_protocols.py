@@ -30,19 +30,33 @@ sys.path.insert(0, str(ROOT))
 from scripts.heldout_v104 import check_sources  # noqa: E402
 
 
-def inspect(path):
+def _rel(path, root):
     try:
-        plan = json.loads(path.read_text())
+        return Path(path).resolve().relative_to(Path(root).resolve()).as_posix()
+    except ValueError:
+        return Path(path).as_posix()
+
+
+def inspect(path, root=None):
+    """State of one protocol. `root` exists so a test can build a tree of three files and check the
+    three states without touching the real one -- the alternative was to test this by pointing it at
+    a repository that happens to be in a particular state, which tests nothing on any other day."""
+    root = Path(root or ROOT)
+    try:
+        plan = json.loads(Path(path).read_text())
     except Exception as exc:
-        return {'protocol': str(path.relative_to(ROOT).as_posix()), 'state': 'UNREADABLE',
+        return {'protocol': _rel(path, root), 'state': 'UNREADABLE',
                 'detail': type(exc).__name__ + ': ' + str(exc)[:120]}
-    if 'frozen_source_sha256' not in plan:
-        return {'protocol': str(path.relative_to(ROOT).as_posix()), 'state': 'no-freeze',
+    # an empty freeze is not a passing freeze: `ok` must mean "the bytes I froze are the bytes on
+    # disk", and with nothing frozen there are no bytes to disagree with -- vacuously true, which is
+    # the exact shape of result this repository keeps having to delete
+    if not plan.get('frozen_source_sha256'):
+        return {'protocol': _rel(path, root), 'state': 'no-freeze',
                 'files': 0, 'detail': 'this protocol froze no code'}
-    bad = check_sources(plan, strict=False)
+    bad = check_sources(plan, strict=False, root=root)
     hard = [b for b in bad if not b.get('covered_by_amendment')]
     state = 'DRIFT' if hard else ('amended' if bad else 'ok')
-    return {'protocol': str(path.relative_to(ROOT).as_posix()), 'state': state,
+    return {'protocol': _rel(path, root), 'state': state,
             'files': len(plan['frozen_source_sha256']),
             'amended': [b['path'] for b in bad if b.get('covered_by_amendment')],
             'drift': [{'path': b['path'], 'expected': b['expected'][:12], 'found': str(b['found'])[:12]}

@@ -53,6 +53,17 @@ def test_a_list_of_triples_is_accepted_as_the_same_thing():
     assert parse_spec('{"pre": [["n", 0, 10]]}') == ({'n': [0, 10]}, None)
 
 
+def test_a_lo_hi_object_is_the_same_interval():
+    assert parse_spec('{"pre": {"n": {"lo": 0, "hi": 10}}}') == ({'n': [0, 10]}, None)
+
+
+def test_an_integral_float_is_that_integer():
+    """Models write 1e9 for a 32-bit endpoint; rejecting it would measure JSON style, not the task."""
+    assert parse_spec('{"pre": {"n": [0, 1e9]}}') == ({'n': [0, 1000000000]}, None)
+    assert parse_spec('{"pre": {"n": [0.0, 10.0]}}') == ({'n': [0, 10]}, None)
+    assert parse_spec('{"pre": {"n": [0, 2.5]}}')[0] is None
+
+
 @pytest.mark.parametrize('text,why', [
     ('no json here', 'not a JSON object'),
     ('{"atoms": ["x > 0"]}', 'no "pre" key'),
@@ -191,3 +202,95 @@ def test_a_malformed_reply_never_reaches_the_solver(tmp_path, monkeypatch):
 
 def test_the_material_floor_is_the_one_the_protocol_states():
     assert MATERIAL == 1e-3
+
+
+# ------------------------------------------------------------------- the summary must add up
+
+def _row(case, status, expected, **kw):
+    r = {'case': case, 'model': 'm', 'status': status, 'expected': expected,
+         'retained': kw.pop('retained', None), 'pre': {'n': [0, 1]}, 'shrunk': True,
+         'empty_interval': False, 'widened': False, 'narrowed': {'n': [0, 1]},
+         'prompt_tokens': 10, 'completion_tokens': 5, 'seconds': 1.0}
+    r.update(kw)
+    return r
+
+
+def _summary_fixture():
+    cases = [{'corpus': 'a', 'name': 'p%d' % i, 'expected': i % 2 == 0, 'bounds': {'n': [0, 100]}}
+             for i in range(4)]
+    plan = {'cases': cases, 'models': ['m'],
+            'no_room': [{'corpus': 'a', 'name': 'z1', 'expected': True},
+                        {'corpus': 'a', 'name': 'z2', 'expected': False}],
+            'budgets': {'baseline_case_seconds': 900, 'verify_wall_seconds': 600}}
+    n = ['a/p%d' % i for i in range(4)]
+    rows = [_row(n[0], 'PROVED', True, retained=0.9), _row(n[1], 'UNKNOWN', False),
+            _row(n[2], 'PROVED', True, retained=0.8), _row(n[3], 'RESOURCE_STOP', False)]
+    base = {n[0]: {'case': n[0], 'status': 'UNKNOWN', 'expected': True, 'retained': None, 's': None, 'seconds': 3.0},
+            n[1]: {'case': n[1], 'status': 'PROVED', 'expected': False, 'retained': 0.85, 's': 0.85, 'seconds': 4.0},
+            n[2]: {'case': n[2], 'status': 'TIMEOUT', 'expected': True, 'retained': None, 's': None, 'seconds': 900.0},
+            n[3]: {'case': n[3], 'status': 'UNKNOWN', 'expected': False, 'retained': None, 's': None, 'seconds': 1.0}}
+    return plan, rows, base
+
+
+def test_the_summary_table_adds_up_to_each_arm_denominator(tmp_path):
+    from scripts.spec_v105 import write_summary
+    plan, rows, base = _summary_fixture()
+    write_summary(tmp_path, plan, rows, base)
+    md = (tmp_path / 'summary.md').read_text(encoding='utf-8')
+    s_row = [l for l in md.splitlines() if l.startswith('| **S')][0]
+    b_row = [l for l in md.splitlines() if l.startswith('| **B')][0]
+    assert s_row.split('|')[-2].strip() == str(len(rows)), s_row
+    assert b_row.split('|')[-2].strip() == str(len(base)), b_row
+    assert '资源停止' in md and s_row.split('|')[-3].strip() == '1', s_row
+
+
+def test_an_unnamed_status_stops_the_summary_instead_of_hiding_in_a_bucket(tmp_path):
+    from scripts.spec_v105 import write_summary
+    plan, rows, base = _summary_fixture()
+    rows[1]['status'] = 'ERROR'          # a status nobody has thought about yet
+    with pytest.raises(AssertionError, match='unnamed status'):
+        write_summary(tmp_path, plan, rows, base)
+
+
+def test_a_control_timeout_is_reported_and_the_conclusion_is_rechecked_without_it(tmp_path):
+    from scripts.spec_v105 import write_summary
+    plan, rows, base = _summary_fixture()
+    write_summary(tmp_path, plan, rows, base)
+    md = (tmp_path / 'summary.md').read_text(encoding='utf-8')
+    summ = json.loads((tmp_path / 'summary.json').read_text(encoding='utf-8'))
+    assert summ['baseline_timeouts'] == ['a/p2']
+    assert summ['only_s'] == ['a/p0', 'a/p2']          # p2 is only-S because the control ran out of time
+    assert summ['only_s_control_timeouts_as_provable'] == ['a/p0']
+    assert '敏感性' in md
+    # the exclusion is stated with its own label split, not as a bare count
+    assert '2** 个单元被排除' in md and '1 false / 1 true' in md
+
+
+# --------------------------------------------------- the budget must be the budget that gets enforced
+
+def test_a_case_killed_by_the_parent_still_produces_a_record(tmp_path, monkeypatch):
+    """`termination-nla/egcd3-both-t` ran 15 minutes past a 900 s budget without emitting a single
+    attempt, because the in-child check only fires *between* attempts. The parent now kills and
+    writes the record; this pins that the record exists, says TIMEOUT, and says where it died."""
+    import subprocess as real_subprocess
+    import types
+
+    from scripts import spec_v105 as M
+    out = _out(tmp_path)
+    d = out / 'baseline' / '0000'
+    d.mkdir(parents=True, exist_ok=True)
+    (d / 'progress.json').write_text(json.dumps({'attempt': 1, 's': 1.0, 'elapsed': 900.0, 'tried': []}))
+
+    def boom(*a, **k):
+        raise real_subprocess.TimeoutExpired(cmd='spec_v105.py baseline-case', timeout=1020, output='')
+
+    monkeypatch.setattr(M, 'subprocess', types.SimpleNamespace(run=boom,
+                                                              TimeoutExpired=real_subprocess.TimeoutExpired))
+    assert M._control_case(out, 0) is None            # killed, no CompletedProcess to inspect
+    row = json.loads((d / 'outcome.json').read_text())
+    assert row['status'] == 'TIMEOUT' and row['attempts'] == 0
+    assert row['killed_at_s'] == 1.0 and row['killed_during_attempt'] == 1
+    # the message must state the budget, the grace and what it actually died on -- a record that
+    # says "TIMEOUT, 900 s" while the process was killed at 960 s is a small lie with a long life
+    assert 'budget 900 s' in row['killed_by'] and '60 s start-up grace' in row['killed_by']
+    assert 'inside attempt 1 at s = 1.0' in row['killed_by']

@@ -75,6 +75,16 @@ RUNS, ROUNDS, SOLVER_MS, SEED = 60, 150, 5000, 1
 # searches, and the retained-volume floor below which a conditional proof is not counted as one.
 SHRINK_GRID = [1.0, 0.85, 0.7, 0.55, 0.4, 0.28, 0.18, 0.1, 0.05, 0.02, 0.01]
 MATERIAL = 1e-3
+# Per-case budget for the control's grid search. Added after `termination-nla/egcd3-both-t` (two
+# full 32-bit ranges) ran past half an hour without finishing: the arm had no cap at all, which is a
+# property of the harness and not of the method. The 82 cases that finished before the cap existed
+# are unaffected by it -- a cap cannot change a result that already terminated.
+CASE_SECONDS = 900
+# Per-unit budget for the contract arm's single verification. Kept as a constant rather than a
+# literal in the protocol so the summary can print both budgets side by side: the control gets 900 s
+# per case, the model arm 600 s per verify, and saying that with numbers is the only honest way to
+# report an asymmetry that favours the control.
+VERIFY_SECONDS = 600
 
 
 def sha(p):
@@ -99,11 +109,28 @@ def repo_path(p):
 # the contract: one JSON object, checked by arithmetic before any solver sees it
 # --------------------------------------------------------------------------------------------------
 
+def _as_int(x):
+    """A JSON number that denotes an integer is that integer; anything else is not a bound.
+
+    Models write `1e9` and `1000000000.0` for the same endpoint. Rejecting those would measure JSON
+    formatting rather than the task, so integral floats are accepted; `true`/`false` are not, because
+    Python makes them ints and a boolean endpoint is a misunderstanding, not a style.
+    """
+    if isinstance(x, bool):
+        return None
+    if isinstance(x, int):
+        return x
+    if isinstance(x, float) and x.is_integer():
+        return int(x)
+    return None
+
+
 def parse_spec(text):
     """Extract {"pre": {...}} from a reply; returns (spec, error).
 
-    Deliberately strict about the parameter names and the interval shape: a malformed contract is
-    recorded as malformed, never repaired by guessing.
+    Deliberately strict about the parameter names, and lenient only about the two spellings of the
+    same interval (`[lo, hi]` and `{"lo": .., "hi": ..}`). A malformed contract is recorded as
+    malformed, never repaired by guessing what the model meant.
     """
     t = (text or '').strip()
     f = re.search(r'```(?:json)?\s*(.*?)```', t, re.S)
@@ -136,12 +163,13 @@ def parse_spec(text):
     for k, v in pre.items():
         if not isinstance(k, str):
             return None, 'non-string parameter name'
+        if isinstance(v, dict) and {'lo', 'hi'} <= set(v):
+            v = [v['lo'], v['hi']]
         if not isinstance(v, (list, tuple)) or len(v) != 2:
             return None, 'parameter %s is not [lo, hi]' % k
-        lo, hi = v
-        for x in (lo, hi):
-            if isinstance(x, bool) or not isinstance(x, int):
-                return None, 'parameter %s has a non-integer bound' % k
+        lo, hi = _as_int(v[0]), _as_int(v[1])
+        if lo is None or hi is None:
+            return None, 'parameter %s has a non-integer bound' % k
         out[k] = [lo, hi]
     return out, None
 
@@ -317,8 +345,12 @@ def freeze(out):
         'control': 'a model-free search over the one-parameter family "shrink every interval towards '
                    'its midpoint by the same factor s", descending pre-registered grid %s, taking the '
                    'first (largest) s that proves. Up to %d attempts per case against the model arm\'s '
-                   'one, i.e. the asymmetry favours the control.'
-                   % (SHRINK_GRID, len(SHRINK_GRID)),
+                   'one, and %d s of wall clock per case against the model arm\'s %d s per verify: '
+                   'both asymmetries favour the control, which is the direction a control should be '
+                   'biased in. A case that exceeds its budget is recorded as TIMEOUT rather than as a '
+                   'failure of the method, and the summary reports the conclusion again with every '
+                   'timeout counted as provable.'
+                   % (SHRINK_GRID, len(SHRINK_GRID), CASE_SECONDS, VERIFY_SECONDS),
         'decision_rule': 'the contract arm is credited with a capability only if it proves at least '
                          'one case that no uniform shrink proves (McNemar p < 0.05 over the paired '
                          'cases); any proof whose retained volume is below %g is reported but not '
@@ -335,7 +367,8 @@ def freeze(out):
                     'seed=%d, default profile then the polynomial profile -- the v1.04 llmloop arm'
                     % (RUNS, ROUNDS, SOLVER_MS, SEED),
         'budgets': {'ask_wall_seconds': 300, 'ask_memory_bytes': 1 << 30,
-                    'verify_wall_seconds': 600, 'verify_memory_bytes': 2 * 1024 ** 3},
+                    'verify_wall_seconds': VERIFY_SECONDS, 'verify_memory_bytes': 2 * 1024 ** 3,
+                    'baseline_case_seconds': CASE_SECONDS},
         'seeds': {'schedule': 20261123, 'houdini': SEED},
         'cases': cases, 'no_room': no_room, 'cases_payload_sha256': sha(out / 'cases_payload.json'),
         'frozen_source_sha256': {str(p.relative_to(ROOT).as_posix()): sha(p) for p in files},
@@ -561,24 +594,69 @@ def baseline_case(out, i):
     if (d / 'outcome.json').exists():
         return json.loads((d / 'outcome.json').read_text())
     d.mkdir(parents=True, exist_ok=True)
-    tried, proven = [], None
+    tried, proven, timed_out = [], None, False
+    start = time.monotonic()
     for sc in SHRINK_GRID:
         box = shrink(c['bounds'], sc)
         if box == c['bounds'] and sc < 1.0:
             continue                      # this granularity collapses to the declared box
+        if time.monotonic() - start > CASE_SECONDS:
+            timed_out = True
+            break
+        # Written before the attempt, not after: the parent reads it if this process has to be
+        # killed mid-attempt, and then the record can still say which s it died at.
+        save(d / 'progress.json', {'attempt': len(tried) + 1, 's': sc,
+                                   'elapsed': round(time.monotonic() - start, 1), 'tried': tried})
         status, phases = prove(c['source'], box, c['abi'])
         tried.append({'s': sc, 'status': status, 'vol': volume(c['bounds'], box)})
         if status == 'PROVED':
             proven = tried[-1]
             break
     row = {'case': c['corpus'] + '/' + c['name'], 'corpus': c['corpus'], 'expected': c['expected'],
-           'status': 'PROVED' if proven else 'UNKNOWN',
+           'status': 'PROVED' if proven else ('TIMEOUT' if timed_out else 'UNKNOWN'),
            's': proven['s'] if proven else None, 'retained': proven['vol'] if proven else None,
-           'tried': tried, 'attempts': len(tried), 'index': i}
+           'tried': tried, 'attempts': len(tried), 'index': i,
+           'seconds': round(time.monotonic() - start, 1)}
     save(d / 'outcome.json', row)
     print(json.dumps({'case': row['case'], 'status': row['status'], 'retained': row['retained'],
                       'attempts': row['attempts']}), flush=True)
     return row
+
+
+def _control_case(out, i):
+    """One control case, as a child process, with the case budget enforced *here*.
+
+    The check inside `baseline_case` only fires between attempts, so a single attempt that never
+    returns is never capped by it -- and the case that motivated the budget, `termination-nla/
+    egcd3-both-t` (two full 32-bit ranges), does not return at s = 1.0. Measured: it was killed by
+    hand after 15 minutes, having produced no attempt at all, i.e. the budget in the protocol was
+    three hundred seconds away from being enforced. A budget that is written down but not enforced is
+    worse than none: it reads as a cap while the arm runs as long as it likes. So the parent takes
+    the decision, and when it kills, it writes the record itself.
+    """
+    budget = CASE_SECONDS + 60                  # grace for interpreter start-up, nothing else
+    t0 = time.monotonic()
+    try:
+        return subprocess.run([sys.executable, '-u', str(Path(__file__).resolve()), 'baseline-case',
+                               '--output', str(out), '--index', str(i)],
+                              capture_output=True, text=True, timeout=budget)
+    except subprocess.TimeoutExpired as exc:
+        d = Path(out) / 'baseline' / ('%04d' % i)
+        c = json.loads((Path(out) / 'protocol.json').read_text())['cases'][i]
+        prog = json.loads((d / 'progress.json').read_text()) if (d / 'progress.json').exists() else {}
+        done = prog.get('tried') or []
+        secs = round(time.monotonic() - t0, 1)
+        save(d / 'outcome.json', {
+            'case': c['corpus'] + '/' + c['name'], 'corpus': c['corpus'], 'expected': c['expected'],
+            'status': 'TIMEOUT', 's': None, 'retained': None, 'tried': done,
+            'attempts': len(done), 'index': i, 'seconds': secs,
+            'killed_at_s': prog.get('s'), 'killed_during_attempt': prog.get('attempt'),
+            'killed_by': 'parent after %.0f s (budget %d s + %d s start-up grace), '
+                         'inside attempt %s at s = %s, with %d attempt(s) finished'
+                         % (secs, CASE_SECONDS, budget - CASE_SECONDS,
+                            prog.get('attempt'), prog.get('s'), len(done)),
+            'tail': (exc.stdout or '')[-1500:] if isinstance(exc.stdout, str) else ''})
+        return None
 
 
 def baseline(out, shard=None, shards=None, workers=8):
@@ -589,13 +667,10 @@ def baseline(out, shard=None, shards=None, workers=8):
     payload_sha = sha(out / 'cases_payload.json')
     assert payload_sha == plan['cases_payload_sha256'], 'payload changed since freeze'
     with ThreadPoolExecutor(workers) as pool:
-        futs = [pool.submit(subprocess.run,
-                            [sys.executable, '-u', str(Path(__file__).resolve()), 'baseline-case',
-                             '--output', str(out), '--index', str(i)], capture_output=True, text=True)
-                for i in idx]
+        futs = [pool.submit(_control_case, out, i) for i in idx]
         for f in as_completed(futs):
             r = f.result()
-            if r.returncode:
+            if r is not None and r.returncode:
                 print(r.stdout[-1500:], r.stderr[-1500:], file=sys.stderr, flush=True)
                 raise SystemExit('baseline case failed')
     rows = []
@@ -633,18 +708,37 @@ def merge(out):
                                 'counts': dict(collections.Counter(r['status'] for r in rows)),
                                 'protocol_sha256': sha(out / 'protocol.json')})
     base = {}
-    bfiles = sorted((out / 'baseline_shards').glob('shard_*.json')) or ([out / 'baseline.json'] if (out / 'baseline.json').exists() else [])
-    assert bfiles, 'no baseline results'
-    for f in bfiles:
+    shards = sorted((out / 'baseline_shards').glob('shard_*.json'))
+    if shards:                                  # the control ran sharded: fold it once, here
+        for f in shards:
+            d = json.loads(f.read_text())
+            assert d['cases_payload_sha256'] == plan['cases_payload_sha256'], f
+            assert d['complete_capture'], 'incomplete baseline shard %s' % f
+            for r in d['rows']:
+                base[r['case']] = r
+        assert len(base) == len(plan['cases']), 'baseline %d of %d' % (len(base), len(plan['cases']))
+        save(out / 'baseline.json', {'rows': [base[c['corpus'] + '/' + c['name']] for c in plan['cases']],
+                                     'cases_payload_sha256': plan['cases_payload_sha256'],
+                                     'complete_capture': True, 'merged_from_shards': len(shards)})
+    else:
+        # already the canonical artefact: read it, do not rewrite it. The first version rewrote it
+        # without the payload hash, so the second `merge` on the same directory failed on its own
+        # output -- found by rehearsing merge on synthetic shards rather than after 747 model calls.
+        f = out / 'baseline.json'
+        assert f.exists(), 'no baseline results'
         d = json.loads(f.read_text())
         assert d['cases_payload_sha256'] == plan['cases_payload_sha256'], f
-        assert d['complete_capture'], 'incomplete baseline shard %s' % f
+        assert d['complete_capture'], 'incomplete baseline'
         for r in d['rows']:
             base[r['case']] = r
-    assert len(base) == len(plan['cases']), 'baseline %d of %d' % (len(base), len(plan['cases']))
-    save(out / 'baseline.json', {'rows': [base[c['corpus'] + '/' + c['name']] for c in plan['cases']]})
+        assert len(base) == len(plan['cases']), 'baseline %d of %d' % (len(base), len(plan['cases']))
     write_summary(out, plan, rows, base)
     print(json.dumps({'merged': len(rows), 'cases': len(base)}, indent=1))
+
+
+def _num(x):
+    """A missing number is a dash, not the string `None`, in a table a reviewer will read."""
+    return '—' if x is None else x
 
 
 def _q(xs):
@@ -675,49 +769,109 @@ def write_summary(out, plan, rows, base):
     n_false = sum(1 for c in cases.values() if c['expected'] is False)
     n_true = sum(1 for c in cases.values() if c['expected'] is True)
     by_corpus = collections.Counter(c['corpus'] for c in cases.values())
+    nr = plan.get('no_room') or []
+    nr_by_corpus = collections.Counter(x['corpus'] for x in nr)
+    nr_true = sum(1 for x in nr if x['expected'] is True)
     L = ['# v1.05 E6：让模型写契约，而不是写证明材料 / The model writes the contract', '',
          '分母 / population: **%d** 个用例 —— 两个 v1.04 研究里"前端接住、冻结管线在声明范围内证不出"的单元'
-         '（%s）。另有 %d 个单元被排除并记录：声明盒子里没有任何一个区间有正宽度，'
-         '没有可收缩的东西，这个任务对它们根本无法提出。'
+         '（%s）。'
          '标签未做任何筛选：**%d 个 false**（真会溢出）与 %d 个 true。'
          % (len(cases), ' / '.join('%s %d' % (k, v) for k, v in sorted(by_corpus.items())),
-            len(plan.get('no_room') or []), n_false, n_true), '',
+            n_false, n_true), '',
+         '另有 **%d** 个单元被排除，逐条记在协议的 `no_room` 里（%s；标签 %d false / %d true）：'
+         '它们的声明盒子里**没有任何一个区间有正宽度**（`__z: [0, 0]` 等于把参数当常数），'
+         '没有可收缩的东西，这个任务对它们根本无法提出。'
+         '这一步发生在任何一次调用之前、按纯结构规则判定，与结果无关；'
+         '被排除的 %d 个**正标签**用例是排除的代价，不是筛选的结果——'
+         '如果任务本来就能对它们提出，它们会出现在分母里。'
+         % (len(nr), ' / '.join('%s %d' % (k, v) for k, v in sorted(nr_by_corpus.items())),
+            len(nr) - nr_true, nr_true, nr_true), '',
          '臂 / arms: **D** 声明范围内的冻结管线（全部 UNKNOWN，构成 population）/ '
          '**S** 模型写前置条件（每单元 1 次调用，无修复轮）/ '
          '**B** 无模型的对照：对"所有区间按同一因子 s 向中点收缩"这一族做下降网格搜索，取最大可行 s（每例最多 %d 次尝试）'
          % len(SHRINK_GRID), '']
 
-    def count(sel, status='PROVED'):
-        return sum(1 for r in rows if sel(r) and r['status'] == status)
+    def count(sel, status=None):
+        # status=None means "the predicate alone". The first version defaulted to 'PROVED', so
+        # `count(lambda r: r['status'] == 'UNKNOWN')` counted rows that were UNKNOWN *and* PROVED,
+        # i.e. zero -- three columns of the table would have been permanently 0 and the table would
+        # still have looked fine. The sum check below is what found it.
+        return sum(1 for r in rows if sel(r) and (status is None or r['status'] == status))
 
+    # Every row here must add up to its own arm's denominator. A table that quietly drops a status
+    # is exactly how "795 units, all UNKNOWN" survived a whole run: every cell was green and every
+    # cell was empty. Buckets defined by name rather than by "everything else", so the sum below can
+    # actually fail -- and a status nobody thought about raises instead of being swept into a bucket.
+    S_STATUSES = ('PROVED', 'UNKNOWN', 'MALFORMED', 'VACUOUS', 'RESOURCE_STOP', 'NOT_VERIFIED')
+    B_STATUSES = ('PROVED', 'UNKNOWN', 'TIMEOUT')
+    bad = sorted({r['status'] for r in rows} - set(S_STATUSES))
+    assert not bad, 'unnamed status in the S arm: %s' % bad
+    bad = sorted({b['status'] for b in base.values()} - set(B_STATUSES))
+    assert not bad, 'unnamed status in the B arm: %s' % bad
     L += ['## 按标签 / by label', '',
-          '| 臂 | 证明（真标签） | 证明（假标签＝掩盖了可达溢出） | 未证 | 畸形 | 空区间 |',
-          '| --- | --- | --- | --- | --- | --- |']
-    L.append('| **S 模型契约** | %d / %d | **%d / %d** | %d | %d | %d |' % (
-        count(lambda r: r['status'] == 'PROVED' and r['expected'] is True),
-        sum(1 for c in cases.values() if c['expected'] is True),
-        count(lambda r: r['status'] == 'PROVED' and r['expected'] is False),
-        sum(1 for c in cases.values() if c['expected'] is False),
-        count(lambda r: r['status'] == 'UNKNOWN'), count(lambda r: r['status'] == 'MALFORMED'),
-        count(lambda r: r['status'] == 'VACUOUS')))
-    bfrac = [b for b in base.values() if b['status'] == 'PROVED']
-    L.append('| **B 均匀收缩** | %d / %d | %d / %d | %d | — | — |' % (
-        sum(1 for b in bfrac if b['expected'] is True), sum(1 for c in cases.values() if c['expected'] is True),
-        sum(1 for b in bfrac if b['expected'] is False), sum(1 for c in cases.values() if c['expected'] is False),
-        sum(1 for b in base.values() if b['status'] != 'PROVED')))
+          '| 臂 | 证明（真标签） | 证明（假标签＝掩盖了可达溢出） | 未证 | 畸形 | 空区间 | 资源停止 | 合计 |',
+          '| --- | --- | --- | --- | --- | --- | --- | --- |']
+    s_cells = [count(lambda r: r['expected'] is True, 'PROVED'),
+               count(lambda r: r['expected'] is False, 'PROVED'),
+               count(lambda r: True, 'UNKNOWN'),
+               count(lambda r: True, 'MALFORMED'),
+               count(lambda r: True, 'VACUOUS'),
+               count(lambda r: r['status'] in ('RESOURCE_STOP', 'NOT_VERIFIED'))]
+    assert sum(s_cells) == len(rows), 'the S row does not add up: %s vs %d' % (s_cells, len(rows))
+    L.append('| **S 模型契约** | %d / %d | **%d / %d** | %d | %d | %d | %d | %d |' % (
+        s_cells[0], n_true, s_cells[1], n_false, s_cells[2], s_cells[3], s_cells[4], s_cells[5], sum(s_cells)))
+    bvals = list(base.values())
+    b_cells = [sum(1 for b in bvals if b['status'] == 'PROVED' and b['expected'] is True),
+               sum(1 for b in bvals if b['status'] == 'PROVED' and b['expected'] is False),
+               sum(1 for b in bvals if b['status'] == 'UNKNOWN'),
+               0, 0,
+               sum(1 for b in bvals if b['status'] == 'TIMEOUT')]
+    assert sum(b_cells) == len(bvals), 'the B row does not add up: %s vs %d' % (b_cells, len(bvals))
+    L.append('| **B 均匀收缩** | %d / %d | %d / %d | %d | — | — | %d | %d |' % (
+        b_cells[0], n_true, b_cells[1], n_false, b_cells[2], b_cells[5], sum(b_cells)))
     L.append('')
+
+    # the two arms are not given the same budget, and the difference favours the control -- say so
+    # with the numbers, not with an adjective
+    b_to = [b for b in bvals if b['status'] == 'TIMEOUT']
+    b_done = [b for b in bvals if b['status'] != 'TIMEOUT']
+    b_sec = sorted((b.get('seconds') or 0.0) for b in b_done)
+    case_budget = plan['budgets'].get('baseline_case_seconds', CASE_SECONDS)
+    L += ['## 预算与不对称 / budget and asymmetry', '',
+          '- **B** 每例上限 **%d s**（`budgets.baseline_case_seconds`，已冻结），最多 %d 次尝试共享这一点预算；'
+          '**S** 每次验证上限 **%d s**（`budgets.verify_wall_seconds`），而 S 只有一次机会。'
+          '预算不同且**偏向对照**：同一个用例，模型猜一次，音量旋钮可以拧 %d 次。'
+          % (case_budget, len(SHRINK_GRID), plan['budgets']['verify_wall_seconds'], len(SHRINK_GRID)),
+          '- B 实际耗时（不含超时用例）：非超时 %d 例合计 %.0f s，中位 %.0f s、最慢 %.0f s%s。'
+          % (len(b_done), sum((b.get('seconds') or 0.0) for b in b_done),
+             b_sec[int(round(0.5 * (len(b_sec) - 1)))] if b_sec else 0.0,
+             b_sec[-1] if b_sec else 0.0,
+             '' if not b_sec else '（`%s`）' % max(b_done, key=lambda b: b.get('seconds') or 0.0)['case']),
+          '- B 超时 **%d** 例%s。超时记为"未证出"，所以它**只会让对照更难看**，不会让模型臂更好看；'
+          '下面仍按最保守的口径给一个敏感性数字。'
+          % (len(b_to), '' if not b_to else '（%s）' % ', '.join('`%s`' % b['case'] for b in b_to[:6])), '']
 
     # head to head, per case, majority-vote union over models
     bset = {c for c, b in base.items() if b['status'] == 'PROVED'}
     sset = {c for c in cases if union[c]}
     only_s, only_b = sorted(sset - bset), sorted(bset - sset)
     p = mcnemar_exact(len(only_s), len(only_b))
+    # worst case for S: every control case that hit the budget is assumed to have been provable,
+    # so each of them that S also proved stops being a discordant pair. If the conclusion survives
+    # this, it does not rest on the control running out of time.
+    to_set = {b['case'] for b in b_to}
+    only_s_adj = [c for c in only_s if c not in to_set]
+    p_adj = mcnemar_exact(len(only_s_adj), len(only_b))
     L += ['## 配对 / paired, per case (S = majority of repeats, any model)', '',
           '- 仅 S 证出 / only the contract: **%d** %s' % (len(only_s), only_s if len(only_s) <= 25 else '(list truncated)'),
           '- 仅 B 证出 / only the uniform shrink: **%d** %s' % (len(only_b), only_b if len(only_b) <= 25 else '(list truncated)'),
           '- 两者都证出 / both: %d；都未证出 / neither: %d' % (
               len(sset & bset), len([c for c in cases if c not in sset and c not in bset])),
-          '- 精确 McNemar / exact McNemar: **p = %.3g**' % p, '']
+          '- 精确 McNemar / exact McNemar: **p = %.3g**' % p]
+    if b_to:
+        L.append('- 敏感性（把对照的超时当作"本可证出"）/ sensitivity, control timeouts counted as provable: '
+                 '仅 S 证出 %d → **%d**，p = %.3g → **%.3g**' % (len(only_s), len(only_s_adj), p, p_adj))
+    L.append('')
 
     sp = [per[(m, c)]['repeats'][0] for c in cases for m in models if (m, c) in per and majority[(m, c)]]
     L += ['## 保留域 / retained fraction of the declared box (proved units)', '',
@@ -734,16 +888,16 @@ def write_summary(out, plan, rows, base):
     masked_b = [b for b in base.values() if b['status'] == 'PROVED' and b['expected'] is False]
     if masked_s or masked_b:
         L += ['## 掩盖可达溢出 / reachable overflow proved away', '',
-              '这**不是**不健全：结论本来就以盒子为条件，工具在盒子里没做错任何事。'
-              '它是这个任务的固有风险——把真实的 bug 收到盒子外面，然后宣称"证明通过"。'
-              '标签为 false 的用例一共 %d 个。It is not unsoundness; it is the task.', '' % n_false,
+              ('这**不是**不健全：结论本来就以盒子为条件，工具在盒子里没做错任何事。'
+               '它是这个任务的固有风险——把真实的 bug 收到盒子外面，然后宣称"证明通过"。'
+               '标签为 false 的用例一共 %d 个。It is not unsoundness; it is the task.' % n_false), '',
               '| 臂 | 掩盖的用例 | 占 false 的比例 | 保留域中位数 | 最多见的收缩因子 |',
               '| --- | --- | --- | --- | --- |',
               '| **S 模型契约** | %d | %d/%d | %s | — |' % (
                   len(masked_s), len(masked_s), n_false,
-                  _q([r['retained'] for r in masked_s]).get('median')),
+                  _num(_q([r['retained'] for r in masked_s]).get('median'))),
               '| **B 均匀收缩** | %d | %d/%d | %s | s = %s |' % (
-                  len(masked_b), len(masked_b), n_false, _q([b['retained'] for b in masked_b]).get('median'),
+                  len(masked_b), len(masked_b), n_false, _num(_q([b['retained'] for b in masked_b]).get('median')),
                   collections.Counter(b['s'] for b in masked_b).most_common(1)[0][0] if masked_b else '-'),
               '']
 
@@ -760,7 +914,7 @@ def write_summary(out, plan, rows, base):
         ct = sum((x['completion_tokens'] or 0) for x in rr)
         secs = sum((x['seconds'] or 0) for x in rr)
         L.append('| `%s` | %d / %d | %d | %s | %d | %d | %d | %.0f |' % (
-            m, len(mine), len(cases), len(uni), _q([r['retained'] for r in rr]).get('median'), calls, pt, ct, secs))
+            m, len(mine), len(cases), len(uni), _num(_q([r['retained'] for r in rr]).get('median')), calls, pt, ct, secs))
     L.append('')
 
     # how much did the model narrow, and did it narrow the right thing
@@ -776,9 +930,21 @@ def write_summary(out, plan, rows, base):
     material_s = [c for c in sset if max((per[(m, c)]['repeats'][0]['retained'] or 0) for m in models
                                          if (m, c) in per) >= MATERIAL]
     L += ['## 结论 / verdict', '']
-    if only_s:
-        L += ['- **契约确实带来了别的搜索找不到的证明**：%d 个用例只有 S 证出（McNemar p = %.3g）。'
-              '均匀收缩是同族的一维搜索，S 能赢只能靠"只收该收的那个参数"，这是结构，不是音量。' % (len(only_s), p)]
+    credited = bool(only_s) and p < 0.05
+    if credited:
+        L += ['- **契约有净贡献（按预注册规则）**：%d 个用例只有 S 证出，精确 McNemar p = %.3g < 0.05。'
+              '均匀收缩是同族的一维搜索，S 能赢只能靠"只收该收的那个参数"，这是结构，不是音量。'
+              % (len(only_s), p)]
+        if b_to:
+            L += ['- 这一条**不依赖**对照跑不完：把每一例对照超时都算作"本可证出"，仅 S 证出降到 %d、p 变为 %.3g，'
+                  '结论%s。' % (len(only_s_adj), p_adj,
+                                '不变' if p_adj < 0.05 and only_s_adj else '因此**降级为不成立**')]
+    elif only_s:
+        L += ['- **方向对，但不显著**：%d 个用例只有 S 证出、%d 个只有 B 证出，精确 McNemar p = %.3g，'
+              '达不到预注册的 0.05。按规则这**不构成"契约有净贡献"**：模型写出的盒子在这批用例上'
+              '没有跑赢一个一维的音量旋钮，差距小到无法与运气区分。'
+              '写"契约更好"就是拿方向当结论——§4.1 的"统计上不可区分"当初就是这么来的。'
+              % (len(only_s), len(only_b), p)]
     else:
         L += ['- **契约没有带来均匀收缩找不到的证明**（仅 S 证出 0 个）。一个模型写出的盒子，跑不过一个一维的音量旋钮。']
     if only_b:
@@ -796,7 +962,11 @@ def write_summary(out, plan, rows, base):
         'mcnemar_p': p, 'retained_s': _q([r['retained'] for r in sp]),
         'retained_b': _q([b['retained'] for b in base.values() if b['status'] == 'PROVED']),
         'masked_false': [r['case'] for r in sp if r['expected'] is False],
-        'material_s': len(material_s)})
+        'material_s': len(material_s),
+        'baseline_timeouts': [b['case'] for b in b_to],
+        'only_s_control_timeouts_as_provable': only_s_adj, 'mcnemar_p_sensitivity': p_adj,
+        'status_counts_s': dict(collections.Counter(r['status'] for r in rows)),
+        'status_counts_b': dict(collections.Counter(b['status'] for b in bvals))})
     print(json.dumps(json.loads((out / 'summary.json').read_text()), indent=1)[:2000])
 
 

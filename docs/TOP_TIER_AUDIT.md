@@ -178,7 +178,6 @@ NIST CWE190 int64 的 190 个用例是**函数级**溢出检查（`INT64_MAX + 1
 | `loop-acceleration` | 37 | 37 |
 | `loop-lit` | 22 | 22 |
 | `loop-industry-pattern` | 18 | 18 |
-| 19 | 结果作业 21/21 全绿，但仓库里没有结果：`record evidence and push` 步骤 success，`git push` 三次被拒（`GH001: Large files detected`，单个 CBMC 日志 361 MB） | 重试循环的退出码是循环的退出码，三次失败之后仍是 0。**"步骤绿了"和"东西到了"是两件事** | 本地 `git pull` 后 HEAD 没有变化——只有去读那一步的日志才看得出来。修法：`pushed` 标记 + 失败退出；外加 `scripts/trim_logs.py` 把单元日志截到 4 MB（判定不在日志里，在 `outcome.json`） |
 | `loop-new` | 11 | 11 |
 | `loop-crafted` | 9 | 9 |
 | `loop-invariants` | 9 | 9 |
@@ -265,7 +264,7 @@ SV-COMP YAML 正确性见证，交给 **CPAchecker 4.2.2**（`--witnessValidatio
 
 ---
 
-### 4.6 十九次"看起来是工具结论"的 harness 故障
+### 4.6 二十次"看起来是工具结论"的 harness 故障
 
 E1/E4 这一轮补实验里，**每一次跑出来的异常结果都是我们自己的 bug，没有一次是工具的能力**。
 按发生顺序记下来，因为这类错误的共同点是：它们出现在结果表里，而不出现在报错里。
@@ -290,11 +289,13 @@ E1/E4 这一轮补实验里，**每一次跑出来的异常结果都是我们自
 | 16 | 合并作业在 20 个分片全部成功后失败：`sequence item 4: expected str instance, dict found` | `freeze_cases` 把普查的 `rule` 字典写进了 `selection`，而 summary 头部是逐行 join 的字符串列表 | 合并作业的 traceback。修复时发现不能事后改 protocol.json：`merge` 会用 `protocol_sha256` 拒绝，这条是对的 |
 | 17 | （过程，不进结果表）后台监视脚本在任务完成后继续空转 50–80 分钟，最后被工具判成 failed | `watchE2.py` 的循环次数是写死的，任务完成后不 break | 两次假红灯。已改成 `watchruns.py`：全部 run 有结论即退出，有 failure 立刻返回 1 |
 | 18 | （过程，不进结果表）四个已冻结的协议不再能按原样重跑：`check_sources` 报 1/96 哈希不符 | `scripts/llm_net_v104.py` 在冻结后被改成可配（默认值不变）；`scripts/heldout_v104.py` 在本轮被加了 `freeze_cases` | 对所有 `protocol.json` 跑一遍 `check_sources`——一条命令的问题："这个仓库还能复现自己吗" |
+| 19 | 结果作业 21/21 全绿，但仓库里没有结果：`record evidence and push` 步骤 success，`git push` 三次被拒（`GH001: Large files detected`，单个 CBMC 日志 361 MB） | 重试循环的退出码是循环的退出码，三次失败之后仍是 0。**"步骤绿了"和"东西到了"是两件事** | 本地 `git pull` 后 HEAD 没有变化——只有去读那一步的日志才看得出来。修法：`pushed` 标记 + 失败退出；外加 `scripts/trim_logs.py` 把单元日志截到 4 MB（判定不在日志里，在 `outcome.json`） |
+| 20 | （过程，不进结果表）控制臂给 `termination-nla/egcd3-both-t` 在协议里写了 900 s 预算，实际跑过 15 分钟、**一个 attempt 都没产出** | 预算只在**两次尝试之间**检查（`if tried and elapsed > CASE_SECONDS`），而 s = 1.0 那一次尝试本身永不返回：需要被限流的那一次，恰好是限流点从不到达的那一次。协议里写着 900 s，臂在按 z3 的意愿跑 | 发现 15 分钟后目录还是空的、`tried` 也是空的——它不是"在跑第 1 次尝试"，是**连第一次都没跑完**。改成父进程持 `subprocess.run(timeout=)` 并在超时后自己写 `outcome.json`（`killed_at_s` 说明死在哪一级），子进程每次尝试前写 `progress.json`。**写下来却没被执行的预算，比没有预算更坏：它看着像闸门** |
 
 还有一次是把**通过的闸门报成失败**：`grep -q MISMATCH f && { ...; exit 1; }` 在 grep 没命中时
 以 1 退出，于是"两个校验器都能区分真假不变式"的控制步把 job 判红（run 45010561925）。
 
-**因此新增的、必须长期保留的八道闸门 / the eight gates this produced:**
+**因此新增的、必须长期保留的九道闸门 / the nine gates this produced:**
 
 1. **非空洞性控制（non-vacuity control）**：任何通过率之前，先用同一命令行验证一个**真**不变式
    （期望 TRUE）和一个**假**不变式（期望 FALSE）。两个校验器在 run 45009866409 上都通过这一关
@@ -318,6 +319,7 @@ E1/E4 这一轮补实验里，**每一次跑出来的异常结果都是我们自
    不是判断"有没有循环"；用它当分母会同时多算和漏算（§4.6 第 11 条）。E3 的每个函数因此自带
    `loops` 计数，分母是数出来的。同理，`parsed` 这类布尔量必须有置真分支和一处断言它的测试。
 8. **环境修复之后必须证明"重跑真的跑了"**：可续跑的驱动会返回缓存（第 13 条），所以判据不是"步骤变绿"，而是**该工具的每一个计数都变了**；做不到就先删掉那一列再跑。同时，产物必须包含 `raw/`（命令行、退出码、stderr）——只有状态没有 stderr 的"结果"不是证据（第 12、14 条都是靠它才被认出来的）。
+9. **写在协议里的预算必须是被执行的预算**：第 20 条就是反例——900 s 写在 `budgets` 里，检查点却在两次尝试之间，而需要被截断的那一次尝试永不返回，于是"有预算"和"没预算"跑得一样久。判据是硬的：`subprocess.run(timeout=)` 由**父进程**持有，超时由父进程杀、并由父进程写 `outcome.json`（`killed_at_s` 指出死在哪一级），子进程在每次尝试前写 `progress.json`；`tests/test_spec_v105.py::test_a_case_killed_by_the_parent_still_produces_a_record` 钉住"被杀也必须有记录"，因为被杀正是最容易什么都不留下的那种结局。
 
 ---
 
@@ -570,6 +572,30 @@ name / property / label / ABI / stratum / 两个哈希**逐项相同**，609 个
 - **不声称这是"SV-COMP 之外"的语料**：它仍然在 SV-COMP 里，只是**在我们这个 pin 之后才加进去**。
   E2 原本想要的两者（第三方、外来语料）现在只满足了"第三方 + 时间上在我们之后"这一种。
 
+
+
+### 4.11 三处坑：从"记下来"变成"挡住"（v1.05）
+
+§4.6 那张表记的是故障，这一节记的是**处置**。三处坑的共同点是：它们都不是工具的结论，
+却都能以"结论"的样子出现在产物里；而它们当时都是靠人事后对账发现的，不是靠代码发现的。
+所以处置的标准不是"我们知道了"，是"下一次它会被一条命令挡住"。
+
+| 坑 | 当时的症状 | 当时怎么发现的 | 现在挡住它的是什么 | 一条命令 |
+| --- | --- | --- | --- | --- |
+| 用例路径指向 `.yml` | 795 个单元全空：Ultimate `UNKNOWN`、CBMC `PROCESS_ERROR`、翻译器 `no main`（而源码里明明有 `int main()`） | 分片日志里的 `--file .../ps4-both-nt.yml`；**更早的本地冒烟就报过 `no main`，被我用"zig 在 Windows 路径上抽风"解释掉了** | `scan_upstream_v105.source_of()` 与 `heldout_v104.case_source()` 各自在解析处断言，且都由测试驱动；另有一条测试直接读**已提交的普查文件**，确认没有任何 `path` 以 `.yml` 结尾 | `pytest tests/test_upstream_v105.py` |
+| 推送被拒三次而步骤是绿的 | `record evidence and push` 成功，仓库里没有任何结果；`GH001: Large files detected`（单个 CBMC 日志 361 MB） | 跑完之后 `git pull` 发现 HEAD 没变 | `scripts/push_evidence.sh`：先 push 再 pull（新分支在空远端上 pull 必然失败，旧写法连这一步都会静默），最后一定检查远端，失败退出 1 并打印 `trim_logs` 的修法 | `pytest tests/test_push_evidence.py`（用一个 `pre-receive` 钩子模拟 GH001） |
+| 四个协议不能按原样重跑 | `check_sources` 报 1/96 哈希不符，而这条检查当时只存在于一个手写脚本里 | 逐个目录手工比对 | `scripts/check_protocols.py`：遍历全仓 `protocol.json`，三态 **ok / amended / DRIFT**，只有 DRIFT 让退出码非 0；`check_sources` 新增 `allow_amended`（`merge` 只重读结果可以过，`run` 需要冻结字节仍然拒绝）；`driver_amendment` 升级为**历史列表**——一个冻结文件可以移动多次，快照式记录下一次编辑就过期（本轮自己就发生了第二次） | `python scripts/check_protocols.py` |
+
+**这一节的诚实部分。** 三条里只有第一条是真正的"结论错误"（795 个单元被喂了 yaml，而报告会说
+"三个工具都证不出"）；第二条让一轮结果彻底丢失；第三条是记账问题。三者都已在代码里加锁，
+但**锁的位置不同**：第一条锁在产生路径的地方（因此下一个语料也受保护），第二条锁在唯一的
+推送入口（因此只有用它的人才受保护——`v103-*` 那五个历史工作流里仍有旧写法，改它们会触发
+五轮已完成的实验，故留着并在 §4.6 第 19 条点名），第三条锁在一遍全仓扫描里（因此新增协议
+自动纳入）。
+
+还有一件事这三把锁都挡不住：**它们验证不了"结论对不对"**。契约臂（§4.10）就是活例子——
+模型写的预条件让工具在 69 个真会溢出的用例上"证出"了一部分，而那**不是** bug，
+是任务本身允许的事。锁只能保证"产物说的是它实际做的事"。
 
 
 ## 5. 事实问题 vs 表述问题

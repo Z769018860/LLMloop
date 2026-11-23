@@ -576,12 +576,22 @@
     "llmloop/typed_recurrence.py": "3a9d942f8e97a0922c6fbd3e793548cc2ae12061efe7563a64221b0af25a8ab5",
     "llmloop/unbounded_memory.py": "1e316db2e4fecd2266be2052dee97d37f9eb9dabfd1b8270c766201b7684f9c5"
   },
-  "driver_amendment": {
-    "script": "scripts/heldout_v104.py",
-    "frozen_sha256": "1424874efdf4b5394a7614500d354a6c167d26a10555a8c141a403546535ba65",
-    "current_sha256": "cc7a5c1800ae144ed8b329718dce0b589bdc54add008df7552d06b54fba514bd",
-    "changed_in": "46da8e01",
-    "change": "freeze_cases() and the --cases/--svbench-dir flags were added so the v1.05 upstream study could freeze an explicit case list; run(), merge(), worker() and the summary code are byte-identical, and every plan, schedule and result in this directory was produced by the code at frozen_sha256",
-    "to_rerun": "git checkout 43f43a47 -- scripts/heldout_v104.py"
-  }
+  "driver_amendments": [
+    {
+      "script": "scripts/heldout_v104.py",
+      "frozen_sha256": "1424874efdf4b5394a7614500d354a6c167d26a10555a8c141a403546535ba65",
+      "current_sha256": "cc7a5c1800ae144ed8b329718dce0b589bdc54add008df7552d06b54fba514bd",
+      "changed_in": "46da8e01",
+      "change": "freeze_cases() and the --cases/--svbench-dir flags were added so the v1.05 upstream study could freeze an explicit case list; run(), merge(), worker() and the summary code are byte-identical, and every plan, schedule and result in this directory was produced by the code at frozen_sha256",
+      "to_rerun": "git checkout 43f43a47 -- scripts/heldout_v104.py"
+    },
+    {
+      "script": "scripts/heldout_v104.py",
+      "current_sha256": "d5cee71b2c60d69f763268d45dae489dc057179763c53442080fc8bd6a099b74",
+      "changed_in": "034301de",
+      "change": "the three v1.05 faults, fixed in the driver: `check_sources` grew `allow_amended` and an amendment history, `merge` records \"covered by amendment\" and \"uncovered drift\" separately, and the yaml-path guard moved into `case_source()` so a test can drive it. `run`, `worker`, `trial`, `merge` and every verdict in this directory are unchanged; the two new keys are additive. To re-run as frozen, restore the bytes.",
+      "to_rerun": "git checkout 8eb721b3 -- scripts/heldout_v104.py",
+      "frozen_sha256": "1424874efdf4b5394a7614500d354a6c167d26a10555a8c141a403546535ba65"
+    }
+  ]
 }
