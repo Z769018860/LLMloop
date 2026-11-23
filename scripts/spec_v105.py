@@ -45,6 +45,7 @@ import re
 import subprocess
 import sys
 import time
+import traceback
 from pathlib import Path
 from urllib import error, request
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -186,11 +187,26 @@ def narrow(declared, pre):
     Widening is not an error and cannot buy anything -- the verifier's premise is the declared box,
     so a wider interval is simply clipped back -- but it is recorded, because a model that tries to
     widen has misread the task.
+
+    `NAME__in` is read as `NAME` when `NAME` is declared and `NAME__in` is not. The first version of
+    the prompt described the `__in` convention (it belongs to the translator, where a modified
+    parameter keeps a copy of its entry value), and the first unit ever run on a runner -- one model
+    call, `gpt-4.1-mini`, `termination-nla/dijkstra5-both-nt` -- answered with five `__in` names and
+    had all five dropped as unknown, leaving the declared box untouched. The arm had silently
+    degenerated to arm D, and the row would have looked like a model that chose not to narrow. Fixed
+    on both sides: the prompt no longer mentions the convention, and the parser tolerates it, because
+    rejecting a name the model could only have got from us measures prompt-following, not judgement.
     """
-    bounds, info = {}, {'widened': [], 'unknown': [], 'shrunk': [], 'empty': []}
+    bounds, info = {}, {'widened': [], 'unknown': [], 'shrunk': [], 'empty': [], 'aliased': []}
+    effective = dict(pre)
+    for name in list(pre):
+        if name.endswith('__in') and name not in declared and name[:-4] in declared:
+            effective.setdefault(name[:-4], pre[name])
+            info['aliased'].append(name)
+            del effective[name]
     for name, (lo0, hi0) in declared.items():
-        if name in pre:
-            lo, hi = pre[name]
+        if name in effective:
+            lo, hi = effective[name]
             if lo < lo0 or hi > hi0:
                 info['widened'].append(name)
             lo, hi = max(lo, lo0), min(hi, hi0)
@@ -203,7 +219,7 @@ def narrow(declared, pre):
                 info['shrunk'].append(name)
         else:
             bounds[name] = [lo0, hi0]
-    info['unknown'] = sorted(set(pre) - set(declared))
+    info['unknown'] = sorted(set(effective) - set(declared))
     return bounds, info
 
 
@@ -281,8 +297,8 @@ def prompt(case):
         'that is merely small is worthless, so keep as much of the declared domain as you can.',
         'Rules: only the parameters named below may appear, each as [lo, hi] inclusive integers. '
         'Leave out a parameter to keep its declared bounds. Return an empty precondition if you '
-        'believe the declared bounds are already safe. Parameters named `NAME__in` hold the ENTRY '
-        'value of NAME; the local `NAME` is a copy that the code modifies.',
+        'believe the declared bounds are already safe. Use the names exactly as they appear in '
+        '"Declared bounds": those are the entry values, and any other name is dropped.',
         'Output schema (JSON only): {"pre": {"<parameter>": [lo, hi], ...}}', '',
         'Source:', case['source'], '',
         'ABI: ' + case['abi'],
@@ -372,9 +388,16 @@ def freeze(out):
         'models': MODELS, 'served_model_strings': served, 'repeats': REPEATS, 'temperature': TEMP,
         'max_tokens': MAXTOK, 'attempts_per_call': ATTEMPTS, 'call_timeout_seconds': CALL_TIMEOUT,
         'system_prompt_sha256': shatext(SYSTEM),
-        'prompt_template_note': 'first draft, never tuned; the metric it states (retained fraction) '
-                                'is the metric the summary reports, so the prompt cannot bias it by '
-                                'omission',
+        'prompt_template_note': 'first draft, corrected once before any row existed: the sentence '
+                                'about `NAME__in` was removed, because it described the translator\'s '
+                                'entry-copy convention while the declared bounds use the plain '
+                                'parameter name. The first unit ever run on a runner answered with '
+                                'five `__in` names, all five were dropped as unknown, and the row '
+                                'would have read as "the model chose not to narrow" -- the arm '
+                                'silently becoming arm D. The parser now also accepts `NAME__in` as '
+                                '`NAME` and counts how often it happens. The metric the prompt states '
+                                '(retained fraction) is the metric the summary reports, so the prompt '
+                                'cannot bias it by omission.',
         'pipeline': 'llmloop.houdini_loops, integer_model=c, runs=%d, max_rounds=%d, solver_timeout_ms=%d, '
                     'seed=%d, default profile then the polynomial profile -- the v1.04 llmloop arm'
                     % (RUNS, ROUNDS, SOLVER_MS, SEED),
@@ -496,7 +519,7 @@ def ask(out, index):
         out_rec.update({'narrowed': bounds, 'retained': volume(case['bounds'], bounds),
                         'per_dim': per_dim(case['bounds'], bounds), 'widened': info['widened'],
                         'unknown_parameters': info['unknown'], 'shrunk': info['shrunk'],
-                        'empty_interval': info['empty']})
+                        'empty_interval': info['empty'], 'aliased': info['aliased']})
     save(d / 'spec.json', out_rec)
     print(json.dumps({'index': index, 'case': out_rec['case'], 'model': unit['model'],
                       'parsed': pre is not None, 'retained': out_rec.get('retained')}), flush=True)
@@ -543,14 +566,22 @@ def one_unit(out, plan, units, i, u):
     stop = (ask_run or {}).get('stop_reason') or (ver_run or {}).get('stop_reason')
     spec = json.loads((d / 'spec.json').read_text()) if (d / 'spec.json').exists() else {}
     ver = json.loads((d / 'verify.json').read_text()) if (d / 'verify.json').exists() else {}
-    case = load(out)[2][u['case']]
+    # The case comes from the protocol, not from a positional index into `load()`. The first version
+    # read `load(out)[3][u['case']]['expected']`, which was one past the end of a 3-tuple: it raised
+    # IndexError on the very first unit of every shard and took all eight of them down before any
+    # row was written. The `[2]` next to it was silently wrong in a milder way -- it is the payload
+    # entry, not the case record, so the fallback name came out as `corpus/name` while the field it
+    # was assigned to expects one or the other. Both are gone: `plan['cases']` is where the case is.
+    meta = plan['cases'][u['case']]
     status = 'RESOURCE_STOP' if stop else ver.get('status', 'NOT_VERIFIED')
-    row = {'index': i, 'case': spec.get('case') or case['name'], 'corpus': spec.get('case', '/').split('/')[0],
-           'expected': load(out)[3][u['case']]['expected'], 'model': u['model'], 'repeat': u['repeat'],
+    row = {'index': i, 'case': spec.get('case') or meta['corpus'] + '/' + meta['name'],
+           'corpus': meta['corpus'],
+           'expected': meta['expected'], 'model': u['model'], 'repeat': u['repeat'],
            'status': status, 'retained': spec.get('retained'), 'pre': spec.get('pre'),
            'narrowed': spec.get('narrowed'), 'per_dim': spec.get('per_dim'),
            'shrunk': spec.get('shrunk'), 'widened': spec.get('widened'),
-           'empty_interval': spec.get('empty_interval'), 'parse_error': spec.get('parse_error'),
+           'empty_interval': spec.get('empty_interval'), 'aliased': spec.get('aliased'),
+           'parse_error': spec.get('parse_error'),
            'model_reply': spec.get('model_reply'), 'served_model': spec.get('served_model'),
            'stub': spec.get('stub'), 'phases': ver.get('phases'),
            'calls': 1 if spec else 0,
@@ -565,6 +596,35 @@ def one_unit(out, plan, units, i, u):
     return row
 
 
+def _safe_unit(out, plan, units, i, u):
+    """`one_unit`, but a fault in the harness costs one row instead of the whole shard.
+
+    Run 45105136591 is why this exists. One IndexError in `one_unit` -- raised on the first unit of
+    every shard, before any row was written -- killed all eight shards and the merge with them: about
+    two hours of runner time, a few hundred model calls, and no evidence at all, because the batch
+    wrote everything at the end. The v1.04 lesson is the same one: a fault should leave a row that
+    says "harness", not a hole where the study used to be. `HARNESS_ERROR` rows are counted in their
+    own column and never folded into a verdict.
+    """
+    try:
+        return one_unit(out, plan, units, i, u)
+    except Exception:
+        tb = traceback.format_exc()
+        meta = plan['cases'][u['case']]
+        d = Path(out) / 'raw' / ('%04d' % i)
+        row = {'index': i, 'case': meta['corpus'] + '/' + meta['name'], 'corpus': meta['corpus'],
+               'expected': meta['expected'], 'model': u['model'], 'repeat': u['repeat'],
+               'status': 'HARNESS_ERROR', 'retained': None, 'pre': None, 'narrowed': None,
+               'per_dim': None, 'shrunk': None, 'widened': None, 'empty_interval': None,
+               'parse_error': None, 'model_reply': None, 'served_model': None, 'stub': False,
+               'phases': None, 'calls': 0, 'prompt_tokens': None, 'completion_tokens': None,
+               'seconds': None, 'traceback': tb[-4000:]}
+        save(d / 'outcome.json', row)
+        print(json.dumps({'index': i, 'case': row['case'], 'status': 'HARNESS_ERROR',
+                          'error': tb.strip().splitlines()[-1][:200]}), flush=True)
+        return row
+
+
 def run(out, shard=None, shards=None, workers=4):
     out = Path(out)
     plan, units, _ = load(out)
@@ -576,7 +636,7 @@ def run(out, shard=None, shards=None, workers=4):
     selected = [(i, u) for i, u in enumerate(units) if shards is None or i % shards == shard]
     rows = []
     with ThreadPoolExecutor(workers) as pool:
-        for f in as_completed([pool.submit(one_unit, out, plan, units, i, u) for i, u in selected]):
+        for f in as_completed([pool.submit(_safe_unit, out, plan, units, i, u) for i, u in selected]):
             rows.append(f.result())
             if len(rows) % 10 == 0 or len(rows) == len(selected):
                 print(json.dumps({'captured': len(rows), 'planned': len(selected),
@@ -819,32 +879,35 @@ def write_summary(out, plan, rows, base):
     # is exactly how "795 units, all UNKNOWN" survived a whole run: every cell was green and every
     # cell was empty. Buckets defined by name rather than by "everything else", so the sum below can
     # actually fail -- and a status nobody thought about raises instead of being swept into a bucket.
-    S_STATUSES = ('PROVED', 'UNKNOWN', 'MALFORMED', 'VACUOUS', 'RESOURCE_STOP', 'NOT_VERIFIED')
+    S_STATUSES = ('PROVED', 'UNKNOWN', 'MALFORMED', 'VACUOUS', 'RESOURCE_STOP', 'NOT_VERIFIED',
+                  'HARNESS_ERROR')
     B_STATUSES = ('PROVED', 'UNKNOWN', 'TIMEOUT')
     bad = sorted({r['status'] for r in rows} - set(S_STATUSES))
     assert not bad, 'unnamed status in the S arm: %s' % bad
     bad = sorted({b['status'] for b in base.values()} - set(B_STATUSES))
     assert not bad, 'unnamed status in the B arm: %s' % bad
     L += ['## 按标签 / by label', '',
-          '| 臂 | 证明（真标签） | 证明（假标签＝掩盖了可达溢出） | 未证 | 畸形 | 空区间 | 资源停止 | 合计 |',
-          '| --- | --- | --- | --- | --- | --- | --- | --- |']
+          '| 臂 | 证明（真标签） | 证明（假标签＝掩盖了可达溢出） | 未证 | 畸形 | 空区间 | 资源停止 | 工程故障 | 合计 |',
+          '| --- | --- | --- | --- | --- | --- | --- | --- | --- |']
     s_cells = [count(lambda r: r['expected'] is True, 'PROVED'),
                count(lambda r: r['expected'] is False, 'PROVED'),
                count(lambda r: True, 'UNKNOWN'),
                count(lambda r: True, 'MALFORMED'),
                count(lambda r: True, 'VACUOUS'),
-               count(lambda r: r['status'] in ('RESOURCE_STOP', 'NOT_VERIFIED'))]
+               count(lambda r: r['status'] in ('RESOURCE_STOP', 'NOT_VERIFIED')),
+               count(lambda r: True, 'HARNESS_ERROR')]
     assert sum(s_cells) == len(rows), 'the S row does not add up: %s vs %d' % (s_cells, len(rows))
-    L.append('| **S 模型契约** | %d / %d | **%d / %d** | %d | %d | %d | %d | %d |' % (
-        s_cells[0], n_true, s_cells[1], n_false, s_cells[2], s_cells[3], s_cells[4], s_cells[5], sum(s_cells)))
+    L.append('| **S 模型契约** | %d / %d | **%d / %d** | %d | %d | %d | %d | %d | %d |' % (
+        s_cells[0], n_true, s_cells[1], n_false, s_cells[2], s_cells[3], s_cells[4], s_cells[5],
+        s_cells[6], sum(s_cells)))
     bvals = list(base.values())
     b_cells = [sum(1 for b in bvals if b['status'] == 'PROVED' and b['expected'] is True),
                sum(1 for b in bvals if b['status'] == 'PROVED' and b['expected'] is False),
                sum(1 for b in bvals if b['status'] == 'UNKNOWN'),
                0, 0,
-               sum(1 for b in bvals if b['status'] == 'TIMEOUT')]
+               sum(1 for b in bvals if b['status'] == 'TIMEOUT'), 0]
     assert sum(b_cells) == len(bvals), 'the B row does not add up: %s vs %d' % (b_cells, len(bvals))
-    L.append('| **B 均匀收缩** | %d / %d | %d / %d | %d | — | — | %d | %d |' % (
+    L.append('| **B 均匀收缩** | %d / %d | %d / %d | %d | — | — | %d | — | %d |' % (
         b_cells[0], n_true, b_cells[1], n_false, b_cells[2], b_cells[5], sum(b_cells)))
     L.append('')
 
@@ -949,7 +1012,9 @@ def write_summary(out, plan, rows, base):
           '- 出现区间为空 / at least one empty interval: %d' % sum(1 for r in narrowed if r['empty_interval']),
           '- 试图放宽声明域 / tried to widen: %d' % sum(1 for r in narrowed if r['widened']),
           '- 命名了不存在的参数 / unknown parameter names: %d' % sum(1 for r in narrowed if r['narrowed'] and r['pre'] and
-                                                     set(r['pre']) - set(cases[r['case']]['bounds'])), '']
+                                                     set(r['pre']) - set(cases[r['case']]['bounds'])),
+          '- 用了入口副本写法 `NAME__in`、被当作同名参数 / entry-copy spelling accepted as `NAME`: %d'
+          % sum(1 for r in narrowed if r.get('aliased')), '']
 
     material_s = [c for c in sset if max((per[(m, c)]['repeats'][0]['retained'] or 0) for m in models
                                          if (m, c) in per) >= MATERIAL]
@@ -989,7 +1054,13 @@ def write_summary(out, plan, rows, base):
         L += ['- **掩盖 / masked**: %d 个标签为 false（真会溢出）的用例在模型给的盒子里"证出"了。'
               '这不是工具的不健全——结论本来就以那个盒子为条件——但它是这个任务本身的风险：把一个真实的 bug 收进盒子外面。' % len(masked)]
     L += ['- 保留域低于 %g 的证明 %d 个，不计入任何结论。' % (MATERIAL, len([1 for r in sp if (r['retained'] or 0) < MATERIAL])),
-          '- 结论按预注册规则给出：只有当"仅 S 证出"的用例存在且 McNemar p < 0.05 时，才写"契约有净贡献"。', '']
+          '- 结论按预注册规则给出：只有当"仅 S 证出"的用例存在且 McNemar p < 0.05 时，才写"契约有净贡献"。']
+    if s_cells[6]:
+        L += ['- **工程故障 %d 个单元**：`HARNESS_ERROR` 是驱动自己的错，不是方法的结论。这些单元没有结果，'
+              '也不会被算进任何"能力"分母；每一条的 traceback 都在 `raw/<i>/outcome.json` 里。'
+              '写这一行是因为它真的发生过：一次 IndexError 让 8 个分片全灭（`docs/TOP_TIER_AUDIT.md` §4.6 第 22 条）。'
+              % s_cells[6]]
+    L.append('')
     with open(out / 'summary.md', 'w', encoding='utf-8', newline='\n') as f:
         f.write('\n'.join(L))
     save(out / 'summary.json', {
@@ -1001,6 +1072,7 @@ def write_summary(out, plan, rows, base):
         'material_s': len(material_s),
         'baseline_timeouts': [b['case'] for b in b_to],
         'only_s_control_timeouts_as_provable': only_s_adj, 'mcnemar_p_sensitivity': p_adj,
+        'harness_errors': [r['case'] for r in rows if r['status'] == 'HARNESS_ERROR'],
         'status_counts_s': dict(collections.Counter(r['status'] for r in rows)),
         'status_counts_b': dict(collections.Counter(b['status'] for b in bvals))})
     print(json.dumps(json.loads((out / 'summary.json').read_text()), indent=1)[:2000])

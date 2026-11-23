@@ -51,6 +51,15 @@ jobs:
           python -m pip install -q --upgrade pip
           python -m pip install -q -e '.[test,smt,exp]'
           python -m pip install -q pyyaml psutil
+      - name: The driver's own tests, on the platform they run on
+        # Added after run 45105136591, where one IndexError in `one_unit` took all eight shards down
+        # before a single row was written. `one_unit` is the seam between `ask`/`verify` (tested) and
+        # the row (never tested); its test is skipped on Windows because `resource_capture` needs
+        # `os.wait4`, which means this step is the only place that test ever actually runs. Twenty
+        # seconds here, or another matrix.
+        run: |
+          python -m pytest -q tests/test_spec_v105.py tests/test_check_protocols.py \
+            tests/test_upstream_v105.py
       - name: Freeze the protocol before the first real call
         env:
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}

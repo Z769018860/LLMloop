@@ -10,6 +10,7 @@ failed three times in the previous study (yml as path, dict in a string join, a 
 re-run a no-op).
 """
 import json
+import os
 
 import pytest
 
@@ -162,8 +163,10 @@ def _out(tmp_path, source=PROGRAM, bounds=None, expected=True):
             'abi': 'ILP32', 'source': source, 'bounds': bounds or {'n': [0, 100]}}
     payload = [{'name': 'synthetic/f', 'source': source, 'bounds': case['bounds'], 'abi': 'ILP32'}]
     (out / 'cases_payload.json').write_text(json.dumps(payload))
-    (out / 'protocol.json').write_text(json.dumps({'cases': [case], 'models': ['stub'],
-                                                   'max_tokens': MAXTOK, 'frozen_source_sha256': {}}))
+    (out / 'protocol.json').write_text(json.dumps({
+        'cases': [case], 'models': ['stub'], 'max_tokens': MAXTOK, 'frozen_source_sha256': {},
+        'budgets': {'ask_wall_seconds': 60, 'ask_memory_bytes': 1 << 30,
+                    'verify_wall_seconds': 60, 'verify_memory_bytes': 1 << 30}}))
     (out / 'schedule.json').write_text(json.dumps([{'case': 0, 'model': 'stub', 'repeat': 0}]))
     return out
 
@@ -241,7 +244,8 @@ def test_the_summary_table_adds_up_to_each_arm_denominator(tmp_path):
     b_row = [l for l in md.splitlines() if l.startswith('| **B')][0]
     assert s_row.split('|')[-2].strip() == str(len(rows)), s_row
     assert b_row.split('|')[-2].strip() == str(len(base)), b_row
-    assert '资源停止' in md and s_row.split('|')[-3].strip() == '1', s_row
+    assert '资源停止' in md and s_row.split('|')[-4].strip() == '1', s_row
+    assert s_row.split('|')[-3].strip() == '0', s_row          # 工程故障 / harness errors
 
 
 def test_an_unnamed_status_stops_the_summary_instead_of_hiding_in_a_bucket(tmp_path):
@@ -323,3 +327,63 @@ def test_json_is_written_with_lf_so_a_hash_can_be_compared_across_platforms(tmp_
     save(tmp_path / 'p.json', [{'a': [1, 2]}])
     raw = (tmp_path / 'p.json').read_bytes()
     assert b'\r\n' not in raw and raw.endswith(b'\n')
+
+
+# ------------------------------------------- the seam that cost eight shards and 747 calls
+
+@pytest.mark.skipif(os.name == 'nt',
+                    reason='resource_capture uses os.wait4/killpg: the S-arm plumbing is POSIX-only')
+def test_one_unit_assembles_a_row_with_the_case_from_the_protocol(tmp_path, monkeypatch):
+    """`ask` and `verify` were tested; `one_unit`, which turns their output into a row, was not.
+
+    Run 45105136591: `one_unit` read `load(out)[3][...]` from a 3-tuple, raised IndexError on the
+    first unit of every shard, and all eight shards died before writing a single row. The crash is
+    trivially reproducible here, which is the point -- it would have cost one second instead of a
+    matrix if this test had existed.
+    """
+    from scripts.spec_v105 import _safe_unit, one_unit
+    out = _out(tmp_path)
+    monkeypatch.setenv('SPEC_STUB', '{"pre": {"n": [0, 9]}}')
+    plan, units, _ = json.loads((out / 'protocol.json').read_text()), json.loads((out / 'schedule.json').read_text()), None
+    row = one_unit(out, plan, units, 0, units[0])
+    assert row['case'] == 'synthetic/f' and row['corpus'] == 'synthetic'
+    assert row['expected'] is True and row['model'] == 'stub' and row['repeat'] == 0
+    assert row['status'] in ('PROVED', 'UNKNOWN')
+    assert row['retained'] == pytest.approx(10 / 101)
+
+
+def test_a_fault_in_one_unit_leaves_a_row_instead_of_a_hole(tmp_path, monkeypatch):
+    from scripts.spec_v105 import _safe_unit
+    out = _out(tmp_path)
+    plan = json.loads((out / 'protocol.json').read_text())
+    units = json.loads((out / 'schedule.json').read_text())
+
+    def boom(*a, **k):
+        raise IndexError('tuple index out of range')
+
+    monkeypatch.setattr('scripts.spec_v105.one_unit', boom)
+    row = _safe_unit(out, plan, units, 0, units[0])
+    assert row['status'] == 'HARNESS_ERROR' and row['case'] == 'synthetic/f'
+    assert 'IndexError' in row['traceback']
+    saved = json.loads((out / 'raw/0000/outcome.json').read_text())
+    assert saved['status'] == 'HARNESS_ERROR'
+
+
+# ------------------------------------ the name the model could only have got from the prompt
+
+def test_entry_copy_spelling_is_read_as_the_parameter_it_names():
+    """The first unit ever run on a runner answered with five `q__in`-style names; all five were
+    dropped as unknown and the declared box came back untouched, i.e. the arm had silently become
+    arm D. Accepting the alias is the fair reading: the prompt itself had taught the convention."""
+    got, info = narrow({'n': [-10, 10]}, {'n__in': [-3, 4]})
+    assert got == {'n': [-3, 4]}
+    assert info['aliased'] == ['n__in'] and not info['unknown'] and info['shrunk'] == ['n']
+
+
+def test_a_declared_name_wins_over_its_entry_copy_spelling():
+    # when both are present the declared name is the one that is read, and the spelling is still
+    # recorded -- "how often did the model use `__in`" is a fact about the replies, not about the
+    # arithmetic, and the summary reports it
+    got, info = narrow({'n': [-10, 10]}, {'n': [-2, 2], 'n__in': [-9, 9]})
+    assert got == {'n': [-2, 2]}
+    assert info['aliased'] == ['n__in'] and info['unknown'] == []
