@@ -1,0 +1,158 @@
+name: v1.05 E6, the model writes the contract
+
+# Frozen protocol: experiments/v105/spec/protocol.json (83 cases, 747 units, 8 shards).
+#
+# Every earlier LLM arm here asked for ATOMS -- proof material the verifier grinds down. This one
+# asks for the CONTRACT: state the largest box on the parameters inside which no undefined behaviour
+# occurs. The verifier then proves the property for every value in that box, so the theorem is
+# conditional on the model's box and the summary reports how much of the declared domain was kept.
+#
+# 69 of the 83 cases carry `expected_verdict: false`, i.e. the program really does overflow inside
+# its declared bounds. A contract that "proves" one of those has excluded the inputs that overflow,
+# which is exactly the failure mode this task has and the reason the arm is worth running: the audit
+# needs the number, not an argument.
+#
+# The control is deterministic and needs no model: for each case, shrink every interval towards its
+# midpoint by the same factor s over a pre-registered grid and take the largest s that proves. It
+# gets eleven attempts to the model's one. If the model cannot prove a case that no uniform shrink
+# proves either, the contract carries structure; if it cannot, it is a volume knob with extra steps.
+#
+# That control is computed locally and committed (`baseline/`), because it is deterministic and
+# because paying a runner to recompute it would make the two arms' costs incomparable.
+on:
+  push:
+    branches: [research/v103-exec]
+    paths: ['.github/workflows/v105-spec.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  PYTHONPATH: ${{ github.workspace }}
+
+jobs:
+  freeze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: |
+          python -m pip install -q --upgrade pip
+          python -m pip install -q -e '.[test,smt,exp]'
+          python -m pip install -q pyyaml psutil
+      - name: Freeze the protocol before the first real call
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+        run: |
+          python -u scripts/spec_v105.py freeze --output experiments/v105/spec
+          python - <<'PY'
+          import json, hashlib, pathlib, subprocess
+          p = json.load(open('experiments/v105/spec/protocol.json'))
+          assert len(p['cases']) == 83, len(p['cases'])
+          assert len(p['no_room']) == 18, len(p['no_room'])
+          assert len(p['cases']) * len(p['models']) * p['repeats'] == 747
+          # the payload is the study's input; it is committed, and a re-freeze must not move it, or
+          # the committed baseline (which is keyed on this hash) would silently stop applying
+          got = hashlib.sha256(pathlib.Path('experiments/v105/spec/cases_payload.json').read_bytes()).hexdigest()
+          committed = subprocess.check_output(['git', 'show', 'HEAD:experiments/v105/spec/cases_payload.json'])
+          assert hashlib.sha256(committed).hexdigest() == got, 'the freeze changed the payload'
+          print('frozen cases', len(p['cases']), 'units', len(p['cases']) * 3 * 3)
+          print('served', json.dumps(p['served_model_strings']))
+          for m, s in p['served_model_strings'].items():
+              assert s, 'model %s did not answer the metadata probe' % m
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: spec-frozen
+          path: experiments/v105/spec
+          if-no-files-found: error
+
+  spec:
+    needs: freeze
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: |
+          python -m pip install -q --upgrade pip
+          python -m pip install -q -e '.[test,smt,exp]'
+          python -m pip install -q pyyaml psutil
+      - uses: actions/download-artifact@v4
+        with:
+          name: spec-frozen
+          path: experiments/v105/spec
+      - name: Run the frozen schedule, shard ${{ matrix.shard }} of 8
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+        run: |
+          python -u scripts/spec_v105.py run --output experiments/v105/spec \
+            --shard ${{ matrix.shard }} --shards 8 --workers 4
+      - name: Summarise the shard
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          for f in sorted(pathlib.Path('experiments/v105/spec/shards').glob('shard_*.json')):
+              d = json.loads(f.read_text())
+              print(f.name, d['planned'], json.dumps(d['counts'], sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: spec-shard-${{ matrix.shard }}
+          # the whole directory, not just shards/: when eight CBMC cells came back PROCESS_ERROR in
+          # the v1.04 study there was no stderr to read, because only shards/ had been uploaded
+          path: experiments/v105/spec
+          if-no-files-found: warn
+
+  merge:
+    needs: [freeze, spec]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: |
+          python -m pip install -q --upgrade pip
+          python -m pip install -q -e '.[test,smt,exp]'
+          python -m pip install -q pyyaml psutil
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: spec-shard-*
+          merge-multiple: true
+          path: experiments/v105/spec
+      - name: Merge the shards against the committed control
+        run: python -u scripts/spec_v105.py merge --output experiments/v105/spec
+      - name: Show the summary
+        run: cat experiments/v105/spec/summary.md
+      - name: Trim the logs GitHub will not take
+        run: python -u scripts/trim_logs.py experiments/v105/spec
+      - name: Record evidence and push
+        run: |
+          bash scripts/push_evidence.sh research/v103-exec experiments/v105/spec \
+            "v1.05 E6: the contract arm, 83 cases x 3 models x 3 repeats [skip ci]"
