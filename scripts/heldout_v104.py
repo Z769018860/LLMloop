@@ -72,7 +72,7 @@ def sha_source(p):
     return hashlib.sha256(Path(p).read_bytes().replace(b'\r\n', b'\n')).hexdigest()
 
 
-def repo_path(p):
+def repo_path(p, root=None):
     """Resolve a frozen source key back to a file.
 
     Protocols are frozen on Windows and re-verified on Linux runners. Keys are stored POSIX-style
@@ -81,7 +81,7 @@ def repo_path(p):
     both spellings to one so a cross-platform hash check cannot fail for a reason that has nothing to
     do with the code.
     """
-    return ROOT.joinpath(*str(p).replace('\\', '/').split('/'))
+    return Path(root or ROOT).joinpath(*str(p).replace('\\', '/').split('/'))
 
 
 def source_hashes(files):
@@ -224,6 +224,19 @@ def selection_prose(doc):
                c.get('added_no_overflow_cases', 0) - c.get('run_set', 0)))
 
 
+def case_source(sv, c):
+    """Resolve a frozen case to its program, and refuse anything that is not a program.
+
+    The v1.05 census once stored each case's `.yml` path instead of its source, and every cell of
+    that run -- 795 of them -- was handed a yaml: Ultimate said UNKNOWN, CBMC said PROCESS_ERROR,
+    the translator said "no main" for programs that had one. Both the census and this freeze check
+    the spelling now, and `tests/test_upstream_v105.py` drives both checks.
+    """
+    if str(c['path']).lower().endswith(('.yml', '.yaml')):
+        raise SystemExit('case %s points at a yaml (%s), not at a source file' % (c['name'], c['path']))
+    return sv / c['path']
+
+
 def freeze_cases(external, out, cases_json, svbench_dir, stratum_of=None):
     """Freeze a plan from an explicit case list, for corpora that are not one directory template.
 
@@ -241,9 +254,7 @@ def freeze_cases(external, out, cases_json, svbench_dir, stratum_of=None):
 
     cases = []
     for c in doc['cases']:
-        assert not c['path'].endswith(('.yml', '.yaml')), \
-            'case %s points at a yaml, not at a source file' % c['name']
-        p = sv / c['path']
+        p = case_source(sv, c)
         assert sha_source(p) == c['source_sha256'], 'case %s changed since the census' % c['name']
         cases.append({'corpus': c['corpus'], 'path': c['path'], 'name': c['name'],
                       'property': c['property'], 'expected': c['expected'], 'abi': c['abi'],
@@ -402,21 +413,65 @@ def trial(external, out, plan, i, t):
     return row
 
 
-def check_sources(plan, strict=True):
+def amendments_of(plan):
+    """Every recorded move of a frozen file, oldest first.
+
+    A freeze binds bytes; a file can move more than once afterwards, so the record is a history and
+    not a snapshot. A single `driver_amendment` is still read, because four protocols in this tree
+    were written before the second edit made the difference obvious.
+    """
+    ams = list(plan.get('driver_amendments') or [])
+    if plan.get('driver_amendment') and plan['driver_amendment'] not in ams:
+        ams.insert(0, plan['driver_amendment'])
+    return [a for a in ams if isinstance(a, dict) and a.get('script')]
+
+
+def _amendment_hint(bad):
+    """Say, in the failure itself, that this mismatch was already explained and how to undo it."""
+    covered = [b for b in bad if b.get('covered_by_amendment')]
+    if not covered:
+        return ''
+    note = covered[0].get('amendment') or {}
+    return ('\n\nThis mismatch is recorded in the protocol\'s `driver_amendments` (changed in %s):\n'
+            '  %s\nTo re-run the frozen code: %s'
+            % (covered[0]['covered_by_amendment'], str(note.get('change', ''))[:400],
+               note.get('to_rerun', '<not recorded>')))
+
+
+def check_sources(plan, strict=True, allow_amended=False, root=None):
     """Compare the tree against the freeze, and on mismatch say *which* files moved.
 
     A bare `assert` here costs a full matrix to discover nothing but a path spelling, so it reports
     the offending keys by name and only raises when `strict`.
+
+    A mismatch can be legitimate. A protocol freezes the code that produced its numbers, and a later
+    commit may touch that code without invalidating those numbers: `llm_net` hoisted three constants
+    to environment variables with the same defaults, `heldout` grew a `freeze_cases` entry point for
+    a study whose cases are not a directory template. The remedy is not to rewrite the hash -- that
+    would make the freeze claim something false -- but to record the amendment beside it, which
+    `driver_amendments` does. When a record names the file and its `current_sha256` really is what is
+    on disk, the mismatch is reported as covered; `run` still refuses, because re-running needs the
+    frozen bytes, while `merge` -- which only re-reads results -- may pass `allow_amended=True`.
     """
     want = plan['frozen_source_sha256']
+    ams = amendments_of(plan)
     bad = []
     for p, h in want.items():
-        f = repo_path(p)
+        f = repo_path(p, root)
         got = sha(f) if f.exists() else None
-        if got != h:
-            bad.append({'path': p, 'expected': h, 'found': got or 'MISSING'})
-    if bad and strict:
-        raise SystemExit('code changed since freeze:\n' + json.dumps(bad, indent=1))
+        if got == h:
+            continue
+        entry = {'path': p, 'expected': h, 'found': got or 'MISSING'}
+        for a in ams:
+            if a.get('script') == p and a.get('current_sha256') == got:
+                entry['covered_by_amendment'] = a.get('changed_in')
+                entry['amendment'] = a
+                break
+        bad.append(entry)
+    hard = [b for b in bad if not b.get('covered_by_amendment')]
+    if strict and (hard or (bad and not allow_amended)):
+        raise SystemExit('code changed since freeze:\n' + json.dumps(hard or bad, indent=1)
+                         + _amendment_hint(bad))
     return bad
 
 
@@ -481,8 +536,11 @@ def merge(out):
             by_index[r['index']] = r
     assert len(by_index) == len(tasks), '%d of %d units' % (len(by_index), len(tasks))
     rows = [by_index[i] for i in range(len(tasks))]
+    src = check_sources(plan, strict=False)
     save(out / 'results.json', {'complete_capture': True,
-                                'source_unchanged': not check_sources(plan, strict=False),
+                                'source_unchanged': not src,
+                                'covered_by_amendment': [b['path'] for b in src if b.get('covered_by_amendment')],
+                                'uncovered_source_drift': [b['path'] for b in src if not b.get('covered_by_amendment')],
                                 'counts': dict(collections.Counter('%s|%s|%s' % (r['corpus'], r['tool'], r['status']) for r in rows)),
                                 'rows': rows, 'remote_model_calls': 0, 'merged_from_shards': per_shard,
                                 'schedule_sha256': sha(out / 'schedule.json')})

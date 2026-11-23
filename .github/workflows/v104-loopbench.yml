@@ -107,15 +107,11 @@ jobs:
           fi
           python -u scripts/heldout_v104.py merge --output experiments/v104/loopbench
           cat experiments/v104/loopbench/summary.md
+      - name: Trim the logs GitHub will not take
+        run: python -u scripts/trim_logs.py experiments/v104/loopbench
       - name: Record evidence and push
+        # A retry loop's exit status is the loop's, so three rejected pushes looked like
+        # success in v1.05 (GH001, a 361 MB log). push_evidence.sh checks the remote.
         run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A experiments/v104/loopbench
-          if git diff --cached --quiet; then echo 'no change'; exit 0; fi
-          git commit -q -m "v1.04: the ten c/loop-* suites, 203 cases x 3 tools [skip ci]"
-          for i in 1 2 3; do
-            git pull --rebase --quiet --autostash origin research/v103-exec \
-              && git push -q origin HEAD:refs/heads/research/v103-exec && break
-            sleep 5
-          done
+          bash scripts/push_evidence.sh research/v103-exec experiments/v104/loopbench \
+            "v1.04: the ten c/loop-* suites, 203 cases x 3 tools [skip ci]"

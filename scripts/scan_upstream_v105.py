@@ -64,6 +64,23 @@ def tree(repo):
     return set(x for x in out.splitlines() if x.startswith('c/'))
 
 
+def source_of(rel, inputs):
+    """The program a `.yml` names: its first `input_files` entry, resolved next to the yaml.
+
+    This exists as a function because getting it wrong cost a whole run. The first freeze of the
+    v1.05 study stored the `.yml`'s own path as the case's path, so all 795 cells were handed a yaml
+    -- Ultimate answered UNKNOWN, CBMC answered PROCESS_ERROR, and the translator answered
+    "no main" for programs that plainly had one. A one-line assertion would have caught it, so the
+    assertion lives here, next to the resolution, and a test drives it.
+    """
+    if not inputs:
+        raise ValueError('case %s names no input_files' % rel)
+    src = (Path(rel).parent / inputs[0]).as_posix()
+    if src.lower().endswith(('.yml', '.yaml')):
+        raise ValueError('case %s resolves to a yaml (%s), not to a program' % (rel, src))
+    return src
+
+
 def members(repo):
     """Which `c/...` paths upstream actually runs.
 
