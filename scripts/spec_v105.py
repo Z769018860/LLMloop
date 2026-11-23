@@ -794,7 +794,10 @@ def merge(out):
     rows = [by_index[i] for i in range(len(units))]
     save(out / 'results.json', {'complete_capture': True, 'rows': rows,
                                 'counts': dict(collections.Counter(r['status'] for r in rows)),
-                                'protocol_sha256': sha(out / 'protocol.json')})
+                                # the sha the run used, not the bytes on disk now: a
+                                # `driver_amendments` entry added afterwards edits protocol.json, and
+                                # results.json must keep saying what the shards ran under.
+                                'protocol_sha256': plan.get('protocol_sha256_used') or sha(out / 'protocol.json')})
     base = {}
     shards = sorted((out / 'baseline_shards').glob('shard_*.json'))
     if shards:                                  # the control ran sharded: fold it once, here
