@@ -2213,5 +2213,16 @@
     "llmloop/typed_nested.py": "c33cf716b98d7beb802a1b1b5fd5209e994f97d92fa7d2169e882561668ac8b1",
     "llmloop/typed_recurrence.py": "3a9d942f8e97a0922c6fbd3e793548cc2ae12061efe7563a64221b0af25a8ab5",
     "llmloop/unbounded_memory.py": "1e316db2e4fecd2266be2052dee97d37f9eb9dabfd1b8270c766201b7684f9c5"
-  }
+  },
+  "driver_amendments": [
+    {
+      "script": "scripts/spec_v105.py",
+      "frozen_sha256": "083482e1fdd7074131768c62d4397ab977f84dd455bd76b78dd97ba6bb09ea28",
+      "current_sha256": "842628cc9678f2bf4c8f04045d1600aa7a7f677c56270be3b0c1ddaf06105ea1",
+      "changed_in": "3c89458f",
+      "change": "the summary writer only. The first 46,702 bytes -- everything up to `def write_summary`, i.e. ask, verify, prove, prompt, narrow, volume, baseline, baseline_case, run, merge -- are byte-identical to the frozen file. The real merge died on `unnamed status in the S arm: ['ERROR']`: four units whose frozen pipeline raised, which had no column. So `ERROR` is now a named bucket with its own column, the paired comparison is reported twice (all proofs / proofs above the pre-registered 1e-3 retained floor) with the verdict on the second, empty replies and cap hits are counted per model so a degenerate arm cannot be read as judgement, and the 'why not proved' breakdown is computed instead of described. No verdict in this directory was produced by the changed code: `merge` re-derives summary.md/json from the shard rows and the committed control. Adding `driver_amendments` here edits this file, which changes its sha256 and would break `merge`'s 'the shards ran under this protocol' check on its own evidence, so the sha the run actually used is recorded as `protocol_sha256_used` and `merge` accepts either that or the current bytes.",
+      "to_rerun": "git checkout a4f09efd -- scripts/spec_v105.py, then merge -- but the summary needs the four `ERROR` rows and 1e-3 pairing to be reportable, so re-running the *analysis* with the frozen bytes reproduces the old crash, not the old numbers"
+    }
+  ],
+  "protocol_sha256_used": "3163e0d0ba9db197451825f904a4b5d3f3bd0112c5ad0d5820f96f268536dd55"
 }

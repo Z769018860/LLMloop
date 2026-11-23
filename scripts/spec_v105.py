@@ -773,7 +773,10 @@ def merge(out):
     by_index = {}
     for f in files:
         d = json.loads(f.read_text())
-        assert d['protocol_sha256'] == sha(out / 'protocol.json'), f
+        # Either the bytes on disk, or the bytes the run used as recorded in `protocol_sha256_used`:
+        # adding a `driver_amendments` entry edits this file and changes its hash, and a provenance
+        # note should not be able to make a run's own evidence un-mergeable.
+        assert d['protocol_sha256'] in {sha(out / 'protocol.json'), plan.get('protocol_sha256_used')}, f
         assert d['complete_capture'], 'incomplete shard %s' % f
         assert not d['stub'], 'stubbed shard %s in evidence' % f
         for r in d['rows']:
