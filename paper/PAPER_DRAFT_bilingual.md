@@ -6,7 +6,7 @@
 **中文。** 我们研究 C 循环程序的“无未定义行为”证明：LLM、轨迹拟合器和 Houdini 只提出**不受信的候选**（区间/关系/谓词不变式、可选排名函数），由同一个**未改动的 Z3 验证器**在任意类型化状态上检查入口、归纳与出口义务；候选从不被信任。我们给出七种验证模式（精确轨迹、区间树、关系 `@rel`、分支内循环、单循环谓词模式（含 `unknown()` 非确定性与状态驱动）、多循环组合式、数学整数语义）、受信的规范化（C89 索引、`while`→`for`、循环后索引退出值）、终止性（排名函数）。在合成语料、自动译写的 SV-COMP（264 个循环程序）与 Code2Inv（134 个）上：数学整数语义下 Code2Inv 的 69 个 while 模式程序中 64 个被某个模型认证（Houdini 单独 53 个），期望违反断言的程序在所有阶段 **0 次被认证**；级联（生成器 → LLM → 反馈修复）省约 77% 的 LLM 调用。我们同时报告了否定结果（提示规则无益甚至有害、反馈修复收益很小）、CPAchecker 的更高决断率、真实代码覆盖几乎为零，以及三次自我更正（译写缺陷、提示覆盖、解释器缺陷）。
 **更新(v1.01)，部分被 v1.03 撤回。** 在 SV-COMP NoOverflows 上，结合 LLM 提议的原子、Houdini 弱化与未改动验证器，并配以可重放的证伪见证与 CBMC 独立复核：族不相交的新集合上我们证明 91/93、Ultimate 83/93（p≈0.02）；开发集判定 169 对 156；明确的能力边界是非线性多项式不变式（见 §5b）。 **Update (v1.01), partly retracted by v1.03.** On SV-COMP NoOverflows … we prove 91/93 vs Ultimate's 83/93 (p≈0.02); development set 169 vs 156 decided; the explicit capability boundary is nonlinear polynomial invariants (§5b).
 **更新(v1.03)：上句的"优于"结论已撤回。** 把分母扩到全部 165 个候选、并给所有工具相同的 600 s 上限后：Ultimate 证明 135、我们（无 LLM 的确定性组合）90，配对 8 对 53，精确 McNemar p ≈ 3×10⁻⁹。差异并非来自调参：72 个被前端拒绝的程序里 Ultimate 证明 50 个、我们 2 个；而在 102 个有上游 no-overflow 标签的程序上我们是 89 对 91（p = 0.81；风险差 −0.020，95% CI [−0.098, +0.059]，即排除了 10 个百分点以上的差异，也排除了 5 个点的优势）。我们因此**只声称在带标签子集上的持平、8/165 的独有覆盖，以及"覆盖而非可靠性是瓶颈"**。独立基准（190 NIST + 67 TACLe）上误认证为 0，但无条件证明同样为 0（§4e）。 **Update (v1.03): the "better than" claim above is retracted.** On all 165 candidates with an equal 600 s cap: Ultimate proves 135, ours (deterministic, no LLM) 90; paired 8 vs 53, exact McNemar p ≈ 3×10⁻⁹. The gap is structural, not tuning: of the 72 front-end-rejected programs Ultimate proves 50 and we prove 2; on the 102 upstream-labelled programs it is 89 vs 91 (risk difference −0.020, 95% CI [−0.098, +0.059]: differences beyond 10 points are excluded, and so is a 5-point advantage). We therefore claim only parity on the labelled subset, 8/165 exclusive coverage, and "coverage, not soundness, is the bottleneck". **v1.04 correction (E4, §4e):** scaling the frozen protocol to 400 cases withdraws the labelled-subset parity — 137 vs 165 on the 190 label-true cases (−14.7 points, 95% CI [−22, −8], p = 1.3×10⁻⁴), and 143 vs 224 overall. What remains is fragment-level non-inferiority within 10 points at ±4.3-point resolution (lower bound −7.4 points) and 15/400 exclusive coverage. **v1.04 更正（E4，§4e）：** 扩到 400 例后"标签子集持平"撤回，只余前端片段内 10 个百分点级不劣（分辨率 ±4.3pp，下界 −7.4pp）与 15/400 独有覆盖。 On the independent benchmark (190 NIST + 67 TACLe) false certifications are 0 and unconditional proofs are also 0 (§4e).
-**v1.04 补测（E1/E3）。** 90 个证明全部导出为 SV-COMP 正确性见证，两个与实现无共享代码的验证器复核，**零驳回**，Ultimate 确认 **121/121** 条不变式（§4j）。工业代码上，892 个文件里 2085 个函数含循环，**2067 个第一处阻塞是内存**（指针/数组/成员），8 个进入语法片段、**0 个**证出，且八条失败没有一条是"不变式难找"（§4k）。社区十个 `c/loop-*` 套件（203 例）上我们证出 50、Ultimate 92，其中 **15 个是它证不出的**，误认证 0；在 41 个从未翻译过的预注册排除用例上 11 对 12，25 个真会溢出的用例**一个都没认成 TRUE**（§4l）。 **v1.04 additions (E1/E2/E3):** all 90 proofs exported as SV-COMP correctness witnesses and re-checked by two unrelated validators with zero rejections (121/121 invariants confirmed by Ultimate, §4j); on 892 industrial files, 2067 of 2085 loop-bearing functions are blocked first by memory, 8 reach the fragment and none is proved, and no failure is about invariant search (§4k). On the community's ten `c/loop-*` suites (203 cases) we prove 50 against Ultimate's 92, with 15 proofs Ultimate cannot make and 0 false certifications; on the 41 pre-registered exclusions that no experiment ever translated we prove 11 against 12 with none of the 25 overflow-carrying cases certified (§4l).
+**v1.04 补测（E1/E3）。** 90 个证明全部导出为 SV-COMP 正确性见证，两个与实现无共享代码的验证器复核，**零驳回**，Ultimate 确认 **121/121** 条不变式（§4j）。工业代码上，892 个文件里 2085 个函数含循环，**2067 个第一处阻塞是内存**（指针/数组/成员），8 个进入语法片段、**0 个**证出，且八条失败没有一条是"不变式难找"（§4k）。社区十个 `c/loop-*` 套件（203 例）上我们证出 50、Ultimate 92，其中 **15 个是它证不出的**，误认证 0；在 41 个从未翻译过的预注册排除用例上 11 对 12，25 个真会溢出的用例**一个都没认成 TRUE**（§4l）。**v1.05 把 E2 做完**：我们 2021 年 pin 的那个集合搬到了 GitLab 并新增了 **7,072** 个无溢出用例，跑集 265 例里前端接住 64 例，我们证出 1 例、在 61 个真会溢出的用例上一次都没认成 TRUE，Ultimate 判定 140 例且与标签全部一致（§4m）。 **v1.04 additions (E1/E2/E3):** all 90 proofs exported as SV-COMP correctness witnesses and re-checked by two unrelated validators with zero rejections (121/121 invariants confirmed by Ultimate, §4j); on 892 industrial files, 2067 of 2085 loop-bearing functions are blocked first by memory, 8 reach the fragment and none is proved, and no failure is about invariant search (§4k). On the community's ten `c/loop-*` suites (203 cases) we prove 50 against Ultimate's 92, with 15 proofs Ultimate cannot make and 0 false certifications; on the 41 pre-registered exclusions that no experiment ever translated we prove 11 against 12 with none of the 25 overflow-carrying cases certified (§4l). **v1.05 (E2, completed):** the collection we pinned in 2021 had moved to GitLab and grown by 7,072 no-overflow cases; of the 265 in the eight directories this study runs, the frozen front end admits 64, we prove 1 and certify nothing false on the 61 whose label says overflow is reachable, and Ultimate decides 140 and agrees with every label (§4m).
 **English.** We study proving absence of undefined behaviour for C loop programs: LLMs, a trajectory fitter and Houdini only produce **untrusted candidates** (interval/relational/predicate invariants, optional ranking functions), which the **same unchanged Z3 verifier** checks on ANY typed state (entry, induction, exit); candidates are never trusted. We present seven verification modes (exact trajectory, interval trees, relational `@rel`, loops in branches, a single-loop predicate mode incl. `unknown()` nondeterminism and state-driven loops, compositional multi-loop, mathematical-integer semantics), trusted normalizations (C89 indices, `while`→`for`, post-loop index exit values) and termination via ranking functions. On synthetic corpora and automatically translated SV-COMP (264 loop programs) and Code2Inv (134): under mathematical integers 64 of Code2Inv's 69 while-mode programs are certified by some model (Houdini alone 53) and programs whose assertion fails are **never certified** at any stage; the cascade (generator → LLM → feedback repair) saves ~77% of LLM calls. We also report negative results (prompt rules neutral or harmful, little repair gain), CPAchecker's higher decision rate, near-zero coverage of real code, and three self-corrections (translator, prompt override, interpreter).
 
 ## 1. 方法 / Method
@@ -200,6 +200,50 @@
 
 全体落后（50 vs 92，p = 6.5×10⁻⁷；对 CBMC 50 vs 22，p = 1.3×10⁻⁴），**但 15 个证明 Ultimate 拿不到**，且集中在社区最经典的套件：`loop-lit` **7 vs 6**（7 个全部仅我：`afnp2014`、`cggmp2005`、`cggmp2005b`、`gj2007`、`hhk2008`、`jm2006`、`jm2006_variant`）、`loop-new` **4 vs 3**（`count_by_1`、`count_by_1_variant`、`count_by_2`、`gauss_sum` 全部仅我）、`loop-simple` **6 vs 4**（`nested_5` 是 Ultimate 超时、`nested_6` 是它报错）、`loop-invariants` 7 vs 7 持平；而 `loop-industry-pattern` **0 vs 18**、`loop-zilu` 13 vs 22、`loop-acceleration` 9 vs 17 —— 数组与指针族全军。**115 个用例被前端拒收，理由逐条可点名**：31 条"假设不是变量对常量的合取"（`assume(i < n)` 这种）、29 条数组或指针、**25 条"没有断言"**（这些用例的性质是 termination，我们没有可检查的目标）、8 条语句后的 `assume`、7 条 `goto`、7 条浮点、3 条提前 `return`、2 条调用、1 条 `label`、1 条 `malloc`、1 条非确定赋值。差距来自哪里，这两个数字比"落后 42 个"说得更清楚。
 **明确不声称 / not claimed.** 41 例与开发集**同族**，只支持"没有针对这些程序调过"，**不**支持"能推广到另一个总体"；203 例里 196 个曾被早先实验翻译过，所以是"社区基准总体"而非留出集；属性是混合的，跨工具比较的口径是"各工具按该用例声明的性质"。前沿数字不支持任何"更好"的表述。 The 41 are same-family, so they support "not tuned to these programs" and not generalisation to another population; 196 of the 203 were translated before, so the suites are a population, not a hold-out; the property is per case.
+
+## 4m. pin 之后的上游新增（v1.05 E2 完整版）/ What the community added after our pin (v1.05 E2)
+
+**先把上一节的前提推翻：留出集不是不存在，是我们查错了仓库。** `sosy-lab/sv-benchmarks`（GitHub）在
+我们的 pin `2e1723f`（2021-10-03）处**归档**，README 指向 GitLab；活着的集合是
+`sosy-lab/benchmarking/sv-benchmarks`，到 `5092e58a`（2026-11-20）时 `c/` 下的路径从 130,724 涨到
+**184,209**。这些程序是在这个工具存在之后、由不知道它存在的人写的，正是 E2 要的东西。
+
+**普查（`scripts/scan_upstream_v105.py`，判定无关）。** 三条规则在任何求解器启动前写死：
+被集合自己的 `c/*.set` 列出、声明 `no-overflow.prp` 且带 `expected_verdict`、`input_files` 在 pin 上不存在。
+得到 **7,072 个**新增 no-overflow 用例、**51 个目录**。跑集是其中 **265 个**：pin 上根本不存在的四个目录
+（118）+ 非线性不变式四目录（147），**154 true / 111 false**——本仓库第一个不是一边倒的留出集。
+其余 6,807 个只记入普查、不跑，理由在下面逐条点名。
+
+**前端只接得住 24%。** 冻结的 `svcomp_translate.py` 在 265 例上：接住 **64**（24.2%），拒收 201——
+47 个 pycparser 读不了内联 glibc 的 `.i`、45 个体内有调用（`recursified_*` 的递归辅助）、44 个数组或指针、
+29 个 `main(int argc, char **argv)`、14 个提前 `return`、13 个语句后的 `assume`、4 个假设形式、
+3 个非确定赋值、2 个浮点。这 64 例的标签是 **61 个 false / 3 个 true**：片段把数组与指针挡在外面，
+而"有界循环且不溢出"的程序通常正是靠它们写的。**所以这一批测的是可靠性，不是证明能力。**
+
+| 工具 | 证明 | 反驳 | 未决 | 资源停止 | 出错 | 与标签不一致 |
+| --- | --- | --- | --- | --- | --- | --- |
+| **本工作** | **1** | 0 | 63（+201 前端拒收） | 0 | 0 | **0 / 61** |
+| Ultimate 0.3.2 | 70 | 70 | 37 | 74 | 14 | **0 / 140** |
+| CBMC 6.11 | 10 | 39 | 45 | 157 | 14 | 12 / 22 |
+
+配对 **1 vs 70**（仅我 0 / 仅它 69，精确 McNemar **p = 3.4×10⁻²¹**）；对 CBMC 1 vs 10（p = 0.012）。
+唯一的证明是 `termination-nla/dijkstra2-both-nt`，标签 true。**61 个"确实会溢出"的用例上一次 TRUE 都没有**——
+连同 §4l 的 25 个，本工作在所有没见过的语料上共 **86 个负例、0 次误认证**。
+Ultimate 在它判定的 140 例上**与标签 140/140 一致**，这同时也是这次跑的体检：性质或 ABI 拿错的话，
+不可能两个方向都零错误。CBMC 在 12 个 `recursified_*` 上把 true 判成 FALSE，那是这批语料的已知问题，
+不是本工作的结论。
+
+**不跑的那 6,807 个。** `Juliet_Test` 6,156（CWE190/191 的 `_bad`/`_good` 配对，全场唯一真正平衡的标签集）
+全部是 `main(int argc, char **argv)` 的 harness——随机 12 例实测、12 例都死在这里；`pthread-*` 约 400 个是并发；
+`weaver` 146 个是变异体，拒收理由是"不支持的非确定赋值"。这是抽样加点名，不是普查，按抽样写。
+
+**明确不声称 / not claimed.** 不声称覆盖了 7,072 个（跑 265、接住 64、证出 1）；不声称这批语料平衡
+（61:3，且 3 个正例里 2 个是把上界设成 1 的 `valuebound1`）；不声称去重后的独立样本量（64 例只对应
+40 个程序，4 个程序各带 7 个变体）；不声称这是"SV-COMP 之外"的语料——它仍在 SV-COMP 里，只是在我们
+pin 之后才加进去。唯一能说的一句话是：**在别人写的、我们没见过的程序上，我们没认证过一个错的东西，
+而这也是我们在这批语料上唯一站得住的结论。** We prove 1 of 265, refuse 201 at the front end, and
+certify nothing false on 61 unseen cases where overflow is reachable; Ultimate decides 140 of them and
+agrees with every label, which is also the run's own sanity check. No coverage claim.
 
 ## 5b. 能力边界（明确不声称的）/ Capability boundary (explicitly NOT claimed)
 以下是**当前方法的已知边界**，不是待办的"小问题"；论文把它们作为结果的一部分报告。 / These are **known limits of the current method**, reported as part of the results, not left as minor TODOs.
