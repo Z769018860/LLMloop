@@ -14,11 +14,15 @@ name: v1.05 E6, the model writes the contract
 #
 # The control is deterministic and needs no model: for each case, shrink every interval towards its
 # midpoint by the same factor s over a pre-registered grid and take the largest s that proves. It
-# gets eleven attempts to the model's one. If the model cannot prove a case that no uniform shrink
-# proves either, the contract carries structure; if it cannot, it is a volume knob with extra steps.
+# gets eleven attempts to the model's one, and 900 s of wall clock per case to the model arm's 600 s
+# per verify -- both asymmetries favour the control, which is the direction a control should be
+# biased in. If the model cannot prove a case that no uniform shrink proves either, the contract
+# carries structure; if it cannot, it is a volume knob with extra steps.
 #
-# That control is computed locally and committed (`baseline/`), because it is deterministic and
-# because paying a runner to recompute it would make the two arms' costs incomparable.
+# That control is computed locally and committed (`baseline/`, 83 cases, and `baseline.json`), because
+# it is deterministic and because paying a runner to recompute it would make the two arms' costs
+# incomparable. Its result, recorded before any model call: 6 proved, every one of them a case that
+# really does overflow, three of those at the first rung (s = 0.85). That is the floor here.
 on:
   push:
     branches: [research/v103-exec]
