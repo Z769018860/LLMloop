@@ -322,7 +322,7 @@ E6b 把单参数半区间加进族（切点：中点、0、1、−1），与均�
 The model's only surviving edge was a shape the control could not write. Written, it proves both cases without a model: 6/83 becomes 17/83 with nothing lost, and four of the new proofs are pinning proofs that the ladder prices at zero for every floor above 1e-5.
 
 **判定改为阶梯 / the verdict is now a curve, not a point.** 预注册的规则不再是一个常数：在
-$(0, 10^{-5}, 10^{-4}, 10^{-3}, 10^{-2}, 0.1, 0.25, 0.5)$ 的每一级上算配对，**每一级都要求
+`0 / 1e-5 / 1e-4 / 1e-3 / 1e-2 / 0.1 / 0.25 / 0.5` 的每一级上算配对，**每一级都要求
 "仅 S 多于仅 B 且 McNemar p < 0.05"**，只要有一级不满足，就没有净贡献。这样"选一个让结论翻转的门槛"
 不再是一个可用的动作，而 §4n 里那个 7 对 6 只是这条曲线上的一个点。 No single floor can produce a claim any more; the claim has to survive every rung.
 
