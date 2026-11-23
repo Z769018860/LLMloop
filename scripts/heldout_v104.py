@@ -207,6 +207,23 @@ def freeze(external, out):
                                                            for c in cases))}, indent=1))
 
 
+def selection_prose(doc):
+    """The summary header is a list of lines, so `selection` has to be text.
+
+    The first attempt stored the census's `rule` dict here and the merge step -- after all twenty
+    shards had run and been uploaded -- died on `sequence item 4: expected str instance, dict
+    found`. The rule stays available verbatim under `selection_rule`, and this is only the sentence
+    that goes at the top of summary.md.
+    """
+    c = doc.get('census') or {}
+    return ('every no-overflow case upstream added after the pin, restricted to the directories '
+            'that rule names: %d cases in %d directories run, %d further additions counted and not '
+            'run. Machine-readable form in `selection_rule` and in `census.json`; nothing in the '
+            'selection reads a verdict or a solver result.'
+            % (c.get('run_set', 0), len(c.get('run_set_by_directory') or {}),
+               c.get('added_no_overflow_cases', 0) - c.get('run_set', 0)))
+
+
 def freeze_cases(external, out, cases_json, svbench_dir, stratum_of=None):
     """Freeze a plan from an explicit case list, for corpora that are not one directory template.
 
@@ -246,7 +263,8 @@ def freeze_cases(external, out, cases_json, svbench_dir, stratum_of=None):
         'svbench_pin': doc['new_pin'],
         'svbench_dir': svbench_dir,
         'corpus_url': doc['url'],
-        'selection': doc['rule'],
+        'selection': selection_prose(doc),
+        'selection_rule': doc['rule'],
         'census': doc['census'],
         'labels': 'expected_verdict of no-overflow.prp in the same .yml, for scoring only',
         'llmloop_configuration': 'unchanged front end scripts/svcomp_translate.py with GHOST on and '
