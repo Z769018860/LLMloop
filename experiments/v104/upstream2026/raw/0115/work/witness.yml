@@ -1,0 +1,45 @@
+- entry_type: invariant_set
+  metadata:
+    format_version: '2.2'
+    uuid: 694c3682-ad1f-4266-b9fd-198ecd461fa4
+    creation_time: '2026-11-23T00:15:14Z'
+    producer:
+      name: Automizer
+      version: 0.3.2-dev-c425bfe605
+    task:
+      input_files:
+      - /home/runner/work/_temp/ext/svbench-2026/c/argv-c/antirez_redis_mt19937-64.i
+      input_file_hashes:
+        /home/runner/work/_temp/ext/svbench-2026/c/argv-c/antirez_redis_mt19937-64.i: 025a3677df83e34d4eaeaf59f70bcb5da649aa9f462f9bbd4e4649202e9f4841
+      specification: |
+        CHECK( init(main()), LTL(G ! overflow) )
+      data_model: LP64
+      language: C
+  content:
+  - invariant:
+      type: loop_invariant
+      location:
+        file_name: /home/runner/work/_temp/ext/svbench-2026/c/argv-c/antirez_redis_mt19937-64.i
+        line: 10
+        column: 3
+        function: init_genrand64
+      value: 312 <= \at(mti, Pre) && 1 <= mti
+      format: ext_c_expression
+  - invariant:
+      type: loop_invariant
+      location:
+        file_name: /home/runner/work/_temp/ext/svbench-2026/c/argv-c/antirez_redis_mt19937-64.i
+        line: 53
+        column: 5
+        function: genrand64_int64
+      value: 0 <= 2147483649 + i && 312 <= mti && 0 <= \at(mti, Pre) + 2147483648
+      format: ext_c_expression
+  - invariant:
+      type: loop_invariant
+      location:
+        file_name: /home/runner/work/_temp/ext/svbench-2026/c/argv-c/antirez_redis_mt19937-64.i
+        line: 57
+        column: 5
+        function: genrand64_int64
+      value: 156 <= i && 312 <= mti && 0 <= \at(mti, Pre) + 2147483648
+      format: ext_c_expression

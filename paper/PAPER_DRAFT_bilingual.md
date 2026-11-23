@@ -34,6 +34,7 @@
 | 工业 C 抽样（v1.04 E3）| 892 文件 / 8944 函数 / 2085 个含循环 | busybox 1.36.1、openssl 3.2.1、sqlite 3450100、aws-c-common 0.9.15，按归档 sha256 钉住 |
 | 预注册排除的留出集（v1.04 E2）| 41 例（16 true / 25 false）| `termination-crafted-lit` 中未被 400 例取用的补集，从未翻译 |
 | 社区循环套件（v1.04 E2）| 203 例（`unreach-call` 172 / `no-overflow` 31）| 十个 `c/loop-*` 全部，属性按 `.yml` 声明 |
+| **pin 之后的上游新增（v1.05 E2）** | 普查 **7,072** 例 / 51 目录；跑集 **265** 例（154 true / 111 false）；前端接住 **64** 例 | GitLab `sosy-lab/benchmarking/sv-benchmarks` @ `5092e58a`（2026-11-20）相对我们 pin `2e1723f`（2021-10-03）的新增，按"被 `c/*.set` 列出 + 有 no-overflow 真值 + 输入在 pin 上不存在"普查（`scripts/scan_upstream_v105.py`） |
 译写把断言改写成 `return 1/(cond)`（失败 ⇔ 除零），因此“无未定义行为”⇔“断言成立”；这会改变原性质的表述。 The translation turns assertions into `return 1/(cond)`; this changes how the original property is stated.
 
 ## 3. 结果 / Results
@@ -179,7 +180,7 @@
 12. **工业覆盖的负结果（v1.04 E3）：** §4k 的 892 个工业文件里，2085 个含循环的函数只有 8 个进入语法片段、0 个证出；2067 个第一处阻塞是内存。八条失败没有一条是"不变式难找"。同时披露：v0.79 手写认证的两个 busybox 函数（`gcd`、`isqrt`）就在这 8 个里，自动抽取失败的原因正是当年手工补的两处改写，说明那两张证书的成本包含未计分母的人工改写。 12. **Industrial negative result (v1.04 E3):** 8 of 2085 loop-bearing functions reach the fragment and none is proved; 2067 are stopped by memory. The two functions v0.79 certified by hand are among the eight and fail for exactly the edits hand transcription made.
 
 ## 4l. 留出集与社区基准（v1.04 E2）/ Hold-out and the community's own suites (v1.04 E2)
-**真第三方留出集仍然不存在，这一节说的是在没有它时能做到什么。** 上游 `sv-benchmarks` 的 `master` 仍是我们 pin 的 `2e1723f`（没有"更晚加入"的程序可用）；`c/loops` 与 `c/loops-crafted-1`（119 例）从未被翻译过，但只声明 `termination`/`unreach-call`，**没有 no-overflow 标签**；Code2Inv 是断言安全性、输入语言不同。这三个来源各自为什么不成，审计 §4.8(a) 逐条写了。
+**这一节记的是"当时"能做到什么；它的第一句理由是错的，v1.05 已改。** 我们当时以为上游 `sv-benchmarks` 的 `master` 仍是我们 pin 的 `2e1723f`，因此没有"更晚加入"的程序可用——实际那个仓库 2021 年就已归档，README 指向 GitLab，活着的集合在我们 pin 之后新增了 7,072 个 no-overflow 用例（§4m）。**That premise was wrong and §4m replaces it:** the GitHub mirror is archived at our pin, and the live collection added 7,072 no-overflow cases since；`c/loops` 与 `c/loops-crafted-1`（119 例）从未被翻译过，但只声明 `termination`/`unreach-call`，**没有 no-overflow 标签**；Code2Inv 是断言安全性、输入语言不同。这三个来源各自为什么不成，审计 §4.8(a) 逐条写了。
 **41 例预注册排除 / a pre-registered exclusion set.** 400 例研究在 `termination-crafted-lit` 的 159 个里取 sha256(name) 最小的 118 个，规则在任何结果之前冻结；**补集 41 例**因此不可能被结果影响，且从未被翻译、从未进过任何提示（16 个 `true`、25 个 `false`）。同一目录、同一工具、同样的 600 s / 2 GiB：
 
 | 工具 | 证明 | 反驳 | 未决 | 资源停止 | 误认证 |
@@ -213,9 +214,18 @@
 9. **分母与前端过滤（v1.03）。** 我们**不**声称在全体分母上优于外部工具。前端能接收的比例本身就是能力上界（93/165），在此之外的 72 个程序（`alloca`/`malloc`/提前 `return`/语句后 `assume`）我们只证明 2 个。任何"优于"的表述必须同时给出分母与各工具预算。 We do **not** claim superiority on the full denominator; the front end accepts 93/165 and we prove 2 of the other 72. No superiority claim is admissible without stating the denominator and every tool's budget. **v1.04 的社区套件把这个上界量化了**（§4l）：203 例里 115 例被拒收，其中 31 条是"假设不是变量对常量的合取"、29 条是数组/指针、**25 条是"没有断言"**（性质是 termination，我们没有可检查的目标）、8 条语句后的 `assume`、7 条 `goto`、7 条浮点。前三类占了 85 条，且前两类是可修的语法限制，第三类说明我们根本没有覆盖 termination 性质。 **v1.04 quantifies the ceiling on the community suites:** 115 of 203 are refused, 31 for the form of an assumption, 29 for arrays/pointers, 25 because there is no assertion to check.
 10. **独立基准只支持可靠性证据。** 190 个 NIST int64 程序上无条件证明 0（条件性 10）；TACLe 的参考判定有 27/67 随展开深度改变。故该基准只支持"误认证 0"，**不**支持覆盖率或泛化结论。 On the independent benchmark we can support only the false-certification claim (0), not coverage or generalisation.
 11. **工业代码的覆盖边界（v1.04 E3，§4k）。** 892 个工业文件（busybox/openssl/sqlite/aws-c-common，按归档哈希钉住）里 2085 个函数含循环，其中 **2067 个第一处阻塞是内存**（指针/数组/成员），**8 个**进入语法片段，**0 个**证出。八条失败全部点名，且**没有一条是"不变式难找"**：五条死在前端表示（体内宏、项目 typedef、`assert`、漏判的调用），两条死在未初始化局部变量/类型未脱糖，一条死在采样没走到循环头。本工作**不**声称能用于一般工业 C。 Of 2085 loop-bearing functions in 892 industrial files, 2067 are blocked first by memory, 8 reach the fragment and none is proved; the failures are representational, not about invariant search. No claim of usability on general industrial C is made.
+12. **片段宽度在"别人新写的程序"上被量化了（v1.05 E2，§4m）。** 上游在我们 pin 之后新增 **7,072** 个
+no-overflow 用例，我们的前端只接得住 **265** 个（3.7%），其中再能翻译的 **64** 个（0.9%）。
+拒收理由是**可命名的语法/形状**：47 个 pycparser 读不了内联了 glibc 的 `.i`、45 个体内有调用
+（`recursified_*` 的递归辅助函数）、44 个数组或指针、29 个 `main(int argc, char **argv)`（Juliet 的
+6,156 例全属此类，随机 12 例实测 12 例如此）、14 个提前 `return`、13 个语句后的 `assume`。
+**这不是"不变式难找"，是"程序进不来"**；同时它意味着：任何"在社区新数据上领先"的说法，都必须
+先交代这 3.7% 的分母。 The front end admits 265 of the 7,072 no-overflow cases the community added
+after our pin, and 64 of those translate. The refusals are syntactic and nameable, and 6,156 of the
+7,072 are Juliet harnesses that enter through `main(int argc, char **argv)`.
 
 ## 6. 威胁有效性 / Threats to validity
-合成语料由生成器构造；译写改变性质表述；数学整数结论 ≠ C 语义结论；基准程序小；模型家族数量有限；LLM 输出随机；CPAchecker 比较的性质不同；真实代码覆盖近 0（Juliet 90–95% 函数无循环，其余带 I/O/指针；LIG-MM 为堆结构；v1.04 的工业抽样把这个"近 0"量化成 8/2085，见 §4k）。 Synthetic corpora are generator-built; **the front-end translation is assumed faithful (H1) and only differentially tested, never proved**; the rule itself is proved on paper only (§1b); **the only hold-out we have is same-family**, so "not tuned to these programs" is supported and "generalises to another population" is not; **the CBMC column on the loop suites needed a missing 32-bit header package**, so its first run was an environment failure reported as 110 broken cells and had to be re-run whole; the solver is assumed sound (H2), tested by independent witness validation on 121 invariants; translation changes the property statement; mathematical-integer conclusions are not C-semantics conclusions; benchmarks are small; limited model families; stochastic LLMs; CPAchecker compares a different property; real-code coverage is near zero.
+合成语料由生成器构造；译写改变性质表述；数学整数结论 ≠ C 语义结论；基准程序小；模型家族数量有限；LLM 输出随机；CPAchecker 比较的性质不同；真实代码覆盖近 0（Juliet 90–95% 函数无循环，其余带 I/O/指针；LIG-MM 为堆结构；v1.04 的工业抽样把这个"近 0"量化成 8/2085，见 §4k）。 Synthetic corpora are generator-built; **the front-end translation is assumed faithful (H1) and only differentially tested, never proved**; the rule itself is proved on paper only (§1b); **the two hold-outs we have are (i) same-family** (the 41-case complement) **and (ii) the post-cutoff additions** (§4m), of which the front end admits 64 of 265 and those are 61:3 negative, so they test soundness rather than proving power; "generalises to another population" is still not supported; **the CBMC column on the loop suites needed a missing 32-bit header package**, so its first run was an environment failure reported as 110 broken cells and had to be re-run whole; the solver is assumed sound (H2), tested by independent witness validation on 121 invariants; translation changes the property statement; mathematical-integer conclusions are not C-semantics conclusions; benchmarks are small; limited model families; stochastic LLMs; CPAchecker compares a different property; real-code coverage is near zero.
 
 ## 7. 复现 / Reproducibility
 `python3 -m pytest -q`（见 `docs/PAPER_READINESS.md` 最新条目）；各研究：`scripts/llm_study_*.py {freeze,generate,verify}`，`scripts/llm_repair_cascade.py`，`scripts/cascade_report.py --merged`，`scripts/final_summary_v076.py`；数据与协议在 `experiments/` 与 `experiments/protocols/`（协议在生成前冻结并提交）。API 密钥仅经环境变量传入，未入库。
@@ -223,4 +233,13 @@
 **v1.04 复现：见证批次 / v1.04 reproduction: the witness batch.** `scripts/witness_v104.py make --shard K/20 --column-base 1 --dialect set-20` 导出见证，`validate --validator {cpachecker,ultimate}` 复核，`merge` 折叠；工作流 `.github/workflows/v104-witness-batch.yml` 派发时接受 `shards` / `workers` / `timeout` / `validator` 四个输入，因此个例可以用不同预算重问（§4j 的 13 例就是这样分辨"难"与"截断"的；`validator=ultimate` 则用来跳过会把宿主打死的那一步）。证据在 `experiments/v104/witness/full165/`：每个用例的 `program.c`、`witness.yml`、两个校验器的日志与 `validation-*.json`；`summary.{json,md}` 由 `merge` 生成，四个结局（成立/未决/未校验/驳回）分列。 `tests/test_witness_v104.py` 的 36 个离线测试覆盖方言、列基准、整数加宽、续跑与摘要口径。
 **v1.04 复现：证明规则与定理 / the rule and the theorem.** [`docs/SOUNDNESS.md`](SOUNDNESS.md) 是自足的：片段的语法与约束、带"出错"终态的小步语义、八类义务的推理规则、T1 的证明（含"符号执行是过近似"引理）、T2、两条假设的检验方式、以及义务到代码的逐行对应表（`typed_invariant_loops.py:68/76/101/107/112/115`、`typed_invariant_tree.py:195/196`、`typed_recurrence.py:50/58`）。
 **v1.04 复现：工业覆盖边界 / v1.04 reproduction: the industrial boundary.** `scripts/industrial_v104.py freeze --external EXT` 下载四个按 sha256 钉住的归档、解包、跑各自配置步骤，并按路径哈希升序写出 `protocol.json`（892 个文件，逐文件哈希）；`scan --project P` 用 clang 的 JSON AST 逐文件枚举函数、按第一处阻塞特征分类、抽取片段内候选并重建 harness；`prove --project P` 每个候选一个子进程（进程组超时），`merge` 汇总四级分母。工作流 `.github/workflows/v104-industrial.yml` 以项目为矩阵、每项目独立配置，`limit` 输入只用于探针（不完整的运行不会被提交，`merge` 后有一处完整性检查）。证据在 `experiments/v104/industrial/`：`protocol.json`、每个项目的 `coverage.json`（含 AST 节点直方图）、`candidates.json`（含 harness 源文本）、`proofs/*.json` 与 `summary.{json,md}`。**v1.04 复现：留出集与社区套件 / v1.04 reproduction: hold-out and community suites.** `experiments/v104/holdout41/protocol.json` 是 400 例规则在 `termination-crafted-lit` 里的补集（41 例，逐例哈希），`heldout_v104.py run --shard K/5` 跑三个工具，`merge` 折叠并拒绝不完整捕获；见证由 `witness_v104.py make --protocol ... --svbench svbench-scale` 导出、`validate` 复核、`merge` 折叠。`experiments/v104/loopbench/` 是十个 `c/loop-*` 套件（203 例）的协议，**在 `1a6dd854` 冻结过一次而从未运行**，本次按修好的驱动重新冻结：203 个用例的 name/property/label/ABI/stratum/两个哈希逐项相同，609 个单元的排程逐字节相同，`refrozen` 字段记下原始 commit 与原因。`experiments/v104/loopbench/raw/` 保留每个单元的命令行、退出码与 stderr——CBMC 那 110 个"失败"就是靠它认出来的（`--32` 需要 `gcc-multilib`）。
+**v1.05 复现：pin 之后的上游新增 / reproduction: the post-cutoff additions.** 两条命令就能重算普查：
+`scripts/scan_upstream_v105.py --new <GitLab 检出 @5092e58a> --pin <GitHub 检出 @2e1723f> --out experiments/v104/upstream2026`
+重写 `census.json`（7,072 例 / 51 目录 / 跑集 265），`heldout_v104.py freeze --external EXT --output ... --cases census.json --svbench-dir svbench-2026`
+冻结协议；`heldout_v104.py run --shard K/20 --shards 20` 跑三个工具、`merge` 折叠。输入由
+`ci_setup_v103.sh EXT sv2026` 准备（GitLab 部分克隆 + 只检出这 265 个源文件的稀疏检出，按 SHA 而不是按名字取）。
+证据在 `experiments/v104/upstream2026/`：`census.json`（普查与规则）、`protocol.json`（265 例逐例两个哈希）、
+`raw/<i>/`（每单元的命令行、退出码、stdout/stderr）。两个坑记在协议注释里：`trial` 会返回缓存的
+`outcome.json`，所以**改完输入必须删掉整个 `raw/`**（删坏的单元等于按结果筛选）；用例路径必须是源文件，
+第一版把 `.yml` 当成用例路径，三个工具都在读 yaml。
 `tests/test_industrial_v104.py` 的 9 个离线测试固定了两处曾经算错的计数：typedef 参数按脱糖类型取界、带指针的循环函数不能被读成"没有循环"。

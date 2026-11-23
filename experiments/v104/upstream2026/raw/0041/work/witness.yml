@@ -1,0 +1,72 @@
+- entry_type: invariant_set
+  metadata:
+    format_version: '2.2'
+    uuid: 891c1544-f991-4496-ad57-753a7c47bbec
+    creation_time: '2026-11-23T00:15:21Z'
+    producer:
+      name: Automizer
+      version: 0.3.2-dev-c425bfe605
+    task:
+      input_files:
+      - /home/runner/work/_temp/ext/svbench-2026/c/argv-c/antirez_redis_mt19937-64_array.i
+      input_file_hashes:
+        /home/runner/work/_temp/ext/svbench-2026/c/argv-c/antirez_redis_mt19937-64_array.i: ccb4ebfd182f6873d29a82123e6ba42de714b320d7f6194f61eecb65d2312077
+      specification: |
+        CHECK( init(main()), LTL(G ! overflow) )
+      data_model: LP64
+      language: C
+  content:
+  - invariant:
+      type: loop_invariant
+      location:
+        file_name: /home/runner/work/_temp/ext/svbench-2026/c/argv-c/antirez_redis_mt19937-64_array.i
+        line: 10
+        column: 3
+        function: init_genrand64
+      value: 312 <= \at(mti, Pre) && 0 <= (long) 2147483647 + mti
+      format: ext_c_expression
+  - invariant:
+      type: loop_invariant
+      location:
+        file_name: /home/runner/work/_temp/ext/svbench-2026/c/argv-c/antirez_redis_mt19937-64_array.i
+        line: 21
+        column: 3
+        function: init_by_array64
+      value: key_length == 4 && 312 <= mti
+      format: c_expression
+  - invariant:
+      type: loop_invariant
+      location:
+        file_name: /home/runner/work/_temp/ext/svbench-2026/c/argv-c/antirez_redis_mt19937-64_array.i
+        line: 34
+        column: 3
+        function: init_by_array64
+      value: key_length == 4 && 312 <= mti
+      format: c_expression
+  - invariant:
+      type: loop_invariant
+      location:
+        file_name: /home/runner/work/_temp/ext/svbench-2026/c/argv-c/antirez_redis_mt19937-64_array.i
+        line: 84
+        column: 3
+        function: main
+      value: (i == 0 || 1 <= i) && 312 <= mti
+      format: c_expression
+  - invariant:
+      type: loop_invariant
+      location:
+        file_name: /home/runner/work/_temp/ext/svbench-2026/c/argv-c/antirez_redis_mt19937-64_array.i
+        line: 53
+        column: 5
+        function: genrand64_int64
+      value: 0 <= 2147483649 + i && 312 <= mti && 0 <= \at(mti, Pre) + 2147483648
+      format: ext_c_expression
+  - invariant:
+      type: loop_invariant
+      location:
+        file_name: /home/runner/work/_temp/ext/svbench-2026/c/argv-c/antirez_redis_mt19937-64_array.i
+        line: 57
+        column: 5
+        function: genrand64_int64
+      value: 156 <= i && 312 <= mti && 0 <= \at(mti, Pre) + 2147483648
+      format: ext_c_expression

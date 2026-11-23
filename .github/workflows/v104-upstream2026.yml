@@ -101,15 +101,25 @@ jobs:
           fi
           python -u scripts/heldout_v104.py merge --output experiments/v104/upstream2026
           cat experiments/v104/upstream2026/summary.md
+      - name: Trim the logs GitHub will not take
+        run: python -u scripts/trim_logs.py experiments/v104/upstream2026
       - name: Record evidence and push
         run: |
+          set -e
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A experiments/v104/upstream2026
           if git diff --cached --quiet; then echo 'no change'; exit 0; fi
           git commit -q -m "v1.05: the cases upstream added after our pin, 265 cases x 3 tools [skip ci]"
+          # A loop whose last iteration fails still exits 0, so the first version of this step went
+          # green three times while `git push` was being rejected for a 361 MB log file (GH001) and
+          # nothing was recorded. `pushed` makes "did it actually arrive" the step's exit status.
+          pushed=0
           for i in 1 2 3; do
-            git pull --rebase --quiet --autostash origin research/v103-exec \
-              && git push -q origin HEAD:refs/heads/research/v103-exec && break
+            if git pull --rebase --quiet --autostash origin research/v103-exec \
+               && git push origin HEAD:refs/heads/research/v103-exec; then
+              pushed=1; break
+            fi
             sleep 5
           done
+          [ "$pushed" = 1 ] || { echo 'push failed three times; nothing was recorded' >&2; exit 1; }
