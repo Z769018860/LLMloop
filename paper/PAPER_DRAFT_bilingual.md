@@ -330,7 +330,7 @@ $(0, 10^{-5}, 10^{-4}, 10^{-3}, 10^{-2}, 0.1, 0.25, 0.5)$ 的每一级上算配�
 其余 231 次是 `HTTP 403 Insufficient user quota`（账户余额为负）。那 18 个回答足够回答 §4n 留下的问题：
 中位 completion **7,558** tokens、其中约 8,000 是 `reasoning_content`——**1500 上限截断的是推理，不是判断**，
 所以 §4n 里"退化臂"的正确解释是上限的函数。至于"16k 之后模型能不能写出对照写不出的盒子"，
-**本文不作断言**：那需要 249 次调用，约 1.9 M completion tokens，预检通过后一次调度即可跑完。
+**本文不作断言**：那需要 249 次调用、约 1.5–1.9 M completion tokens（按已答 18 次的均值 6,133 与中位 7,558 外推），预检通过后一次调度即可跑完。
 更重要的是，这 231 次被拒的调用**没有被记成"模型的空回答"**：它们有独立状态 `NOT_ANSWERED`，
 摘要的第一个数字之前就声明"这不是结果"，判定被关掉。把账单写成能力，是这类研究最容易犯、
 也最难被审稿人看出来的错误——§4n 自己就差点犯了一次（"207/249 空内容"）。 The 16k follow-up answered 18 of 249 calls before the account's balance went negative; the 18 show the 1500 cap was truncating reasoning (median 7,558 completion tokens, ~8,000 of them reasoning), which explains §4n's degenerate arm. Whether the model can now write boxes the control cannot is **not claimed here**. The refused calls carry their own status and the summary declares itself void before printing a number.
