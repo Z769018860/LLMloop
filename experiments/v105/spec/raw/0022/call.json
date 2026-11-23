@@ -1,0 +1,60 @@
+{
+  "model_requested": "gpt-4.1-mini",
+  "request": {
+    "model": "gpt-4.1-mini",
+    "temperature": 0.7,
+    "max_tokens": 1500,
+    "messages": [
+      {
+        "role": "system",
+        "content": "You state preconditions. You never prove anything: a separate verifier checks every value in the box you give, and it rejects the program if any of them overflows. Reply with one JSON object and nothing else."
+      },
+      {
+        "role": "user",
+        "content": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int k){\nint y = 0;\nint x = 0;\nint c = 0;\nwhile (1)\n{\n  if (!(((((6 * x) - (((2 * y) * y) * y)) - ((3 * y) * y)) - y) == 0))\n    break;\n  c = c + 1;\n  y = y + 1;\n  x = (y * y) + x;\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"k\": [-2147483648, 2147483647]}"
+      }
+    ]
+  },
+  "started_utc": "2026-11-23T04:28:16Z",
+  "endpoint": "https://api.square16.org/v1",
+  "attempts": [
+    {
+      "attempt": 0,
+      "ok": true,
+      "http_status": 200,
+      "seconds": 2.76
+    }
+  ],
+  "response_text": "{\n  \"id\": \"chatcmpl-EnFx5mS2AAKT8dOozx8uqm44TF8x5\",\n  \"object\": \"chat.completion\",\n  \"created\": 1795408099,\n  \"model\": \"gpt-4.1-mini-2025-04-14\",\n  \"choices\": [\n    {\n      \"index\": 0,\n      \"message\": {\n        \"role\": \"assistant\",\n        \"content\": \"{\\\"pre\\\": {}}\",\n        \"refusal\": null,\n        \"annotations\": []\n      },\n      \"logprobs\": null,\n      \"finish_reason\": \"stop\"\n    }\n  ],\n  \"usage\": {\n    \"prompt_tokens\": 399,\n    \"completion_tokens\": 5,\n    \"total_tokens\": 404,\n    \"prompt_tokens_details\": {\n      \"cached_tokens\": 0,\n      \"audio_tokens\": 0\n    },\n    \"completion_tokens_details\": {\n      \"reasoning_tokens\": 0,\n      \"audio_tokens\": 0,\n      \"accepted_prediction_tokens\": 0,\n      \"rejected_prediction_tokens\": 0\n    },\n    \"latency_checkpoint\": {\n      \"service_ttft_ms\": 212,\n      \"user_visible_ttft_ms\": 111,\n      \"pre_inference_ms\": 101,\n      \"service_tbt_ms\": 4,\n      \"service_ttlt_ms\": 230,\n      \"engine_ttft_ms\": 35,\n      \"engine_ttlt_ms\": 60,\n      \"engine_tbt_ms\": 4\n    }\n  },\n  \"service_tier\": \"default\",\n  \"routing\": {\n    \"serving_pipereplica\": \"d20261105055449-971cef1d-default-r1-dp0-default\"\n  },\n  \"system_fingerprint\": \"fp_8ebcb6c932\"\n}\n",
+  "served_model": "gpt-4.1-mini-2025-04-14",
+  "usage": {
+    "prompt_tokens": 399,
+    "completion_tokens": 5,
+    "total_tokens": 404,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "audio_tokens": 0
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "audio_tokens": 0,
+      "accepted_prediction_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "latency_checkpoint": {
+      "service_ttft_ms": 212,
+      "user_visible_ttft_ms": 111,
+      "pre_inference_ms": 101,
+      "service_tbt_ms": 4,
+      "service_ttlt_ms": 230,
+      "engine_ttft_ms": 35,
+      "engine_ttlt_ms": 60,
+      "engine_tbt_ms": 4
+    }
+  },
+  "content": "{\"pre\": {}}",
+  "finish_reason": "stop",
+  "seconds": 2.76,
+  "prompt_sha256": "388d4c7ae6dd3fd91751037851594385f82e52ce1dba10a9557220cd6a67182c",
+  "prompt_text": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int k){\nint y = 0;\nint x = 0;\nint c = 0;\nwhile (1)\n{\n  if (!(((((6 * x) - (((2 * y) * y) * y)) - ((3 * y) * y)) - y) == 0))\n    break;\n  c = c + 1;\n  y = y + 1;\n  x = (y * y) + x;\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"k\": [-2147483648, 2147483647]}"
+}

@@ -1,0 +1,72 @@
+{
+  "model_requested": "claude-sonnet-4-5-20250929",
+  "request": {
+    "model": "claude-sonnet-4-5-20250929",
+    "temperature": 0.7,
+    "max_tokens": 1500,
+    "messages": [
+      {
+        "role": "system",
+        "content": "You state preconditions. You never prove anything: a separate verifier checks every value in the box you give, and it rejects the program if any of them overflows. Reply with one JSON object and nothing else."
+      },
+      {
+        "role": "user",
+        "content": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int z, int a, int k){\nlong long x = 0;\nlong long y = 0;\nlong long c = 0;\nlong long az = 0;\nx = a;\ny = 1;\nc = 1;\naz = ((long long) a) * z;\nwhile ((counter++) < 20)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + a;\n  y = y * z;\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"a\": [-2147483648, 2147483647], \"k\": [-2147483648, 2147483647], \"z\": [-2147483648, 2147483647]}"
+      }
+    ]
+  },
+  "started_utc": "2026-11-23T04:33:24Z",
+  "endpoint": "https://api.square16.org/v1",
+  "attempts": [
+    {
+      "attempt": 0,
+      "ok": true,
+      "http_status": 200,
+      "seconds": 80.443
+    }
+  ],
+  "response_text": "{\"id\":\"msg_011Cgzg56Xo43pojkVdX2eHR\",\"model\":\"claude-sonnet-4-5-20250929\",\"object\":\"chat.completion\",\"created\":1795408484,\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Looking at the function, I need to find the largest parameter box preventing signed integer overflow in the 64-bit (`long long`) arithmetic.\\n\\nThe key operations are inside the `while` loop:\\n- `x = (x * z) + a` \u2014 64-bit multiply-add\\n- `y = y * z` \u2014 64-bit multiply\\n- `c = c + 1` \u2014 64-bit increment\\n\\nThe loop is bounded two ways: the `counter` global (at most ~20 iterations if it starts near 0, but potentially up to `k-1` iterations if `counter` starts very negative since we can't constrain it) and the break condition `c \\u003e= k` (since `c` starts at 1 and increments by 1, the loop runs at most `k-1` times).\\n\\nFor `k \\u003c= 1`: the break fires immediately \u2014 zero loop iterations. All remaining operations (`x = a` widening, `az = (long long)a * z` where both operands are 32-bit so the product fits in 64-bit) are safe.\\n\\nFor `k = 2`: exactly one iteration regardless of `counter`. We get `x = a*z + a` and `y = z`. The product `a*z` in 64-bit has magnitude at most `(2^31)^2 = 2^62`, and adding `a` (at most `2^31`) keeps it under `2^63`. `y = z` trivially fits. Safe.\\n\\nFor `k = 3`: two iterations. `x = a*(z^2+z+1)`, `y = z^2`. With `a = z = 2^31-1`, `|x| \u2248 2^31 * 2^62 = 2^93` \u2014 massive overflow. Restricting `z` to make this safe (roughly `|z| \\u003c= 65536`) shrinks the box volume by a factor of ~`2^15`, far worse than the tiny gain from extending `k` by one.\\n\\nExtending `k` further only makes the trade-off worse. The optimal box keeps `k \\u003c= 2` with `a` and `z` fully unrestricted \u2014 about 50% of the declared domain.\\n\\n```json\\n{\\\"pre\\\": {\\\"k\\\": [-2147483648, 2]}}\\n```\"},\"finish_reason\":\"length\"}],\"usage\":{\"prompt_tokens\":497,\"completion_tokens\":1500,\"total_tokens\":1997,\"usage_semantic\":\"openai\",\"usage_source\":\"anthropic\",\"billing_usage\":{\"source\":\"claude_messages\",\"semantic\":\"anthropic\",\"claude_usage\":{\"input_tokens\":497,\"cache_creation_input_tokens\":0,\"cache_read_input_tokens\":0,\"output_tokens\":1500,\"cache_creation\":{},\"claude_cache_creation_5_m_tokens\":0,\"claude_cache_creation_1_h_tokens\":0}},\"prompt_tokens_details\":{\"cached_tokens\":0,\"text_tokens\":0,\"audio_tokens\":0,\"image_tokens\":0},\"completion_tokens_details\":{\"text_tokens\":0,\"audio_tokens\":0,\"image_tokens\":0,\"reasoning_tokens\":0},\"input_tokens\":497,\"output_tokens\":0,\"input_tokens_details\":null,\"claude_cache_creation_5_m_tokens\":0,\"claude_cache_creation_1_h_tokens\":0}}",
+  "served_model": "claude-sonnet-4-5-20250929",
+  "usage": {
+    "prompt_tokens": 497,
+    "completion_tokens": 1500,
+    "total_tokens": 1997,
+    "usage_semantic": "openai",
+    "usage_source": "anthropic",
+    "billing_usage": {
+      "source": "claude_messages",
+      "semantic": "anthropic",
+      "claude_usage": {
+        "input_tokens": 497,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 1500,
+        "cache_creation": {},
+        "claude_cache_creation_5_m_tokens": 0,
+        "claude_cache_creation_1_h_tokens": 0
+      }
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "text_tokens": 0,
+      "audio_tokens": 0,
+      "image_tokens": 0
+    },
+    "completion_tokens_details": {
+      "text_tokens": 0,
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "reasoning_tokens": 0
+    },
+    "input_tokens": 497,
+    "output_tokens": 0,
+    "input_tokens_details": null,
+    "claude_cache_creation_5_m_tokens": 0,
+    "claude_cache_creation_1_h_tokens": 0
+  },
+  "content": "Looking at the function, I need to find the largest parameter box preventing signed integer overflow in the 64-bit (`long long`) arithmetic.\n\nThe key operations are inside the `while` loop:\n- `x = (x * z) + a` \u2014 64-bit multiply-add\n- `y = y * z` \u2014 64-bit multiply\n- `c = c + 1` \u2014 64-bit increment\n\nThe loop is bounded two ways: the `counter` global (at most ~20 iterations if it starts near 0, but potentially up to `k-1` iterations if `counter` starts very negative since we can't constrain it) and the break condition `c >= k` (since `c` starts at 1 and increments by 1, the loop runs at most `k-1` times).\n\nFor `k <= 1`: the break fires immediately \u2014 zero loop iterations. All remaining operations (`x = a` widening, `az = (long long)a * z` where both operands are 32-bit so the product fits in 64-bit) are safe.\n\nFor `k = 2`: exactly one iteration regardless of `counter`. We get `x = a*z + a` and `y = z`. The product `a*z` in 64-bit has magnitude at most `(2^31)^2 = 2^62`, and adding `a` (at most `2^31`) keeps it under `2^63`. `y = z` trivially fits. Safe.\n\nFor `k = 3`: two iterations. `x = a*(z^2+z+1)`, `y = z^2`. With `a = z = 2^31-1`, `|x| \u2248 2^31 * 2^62 = 2^93` \u2014 massive overflow. Restricting `z` to make this safe (roughly `|z| <= 65536`) shrinks the box volume by a factor of ~`2^15`, far worse than the tiny gain from extending `k` by one.\n\nExtending `k` further only makes the trade-off worse. The optimal box keeps `k <= 2` with `a` and `z` fully unrestricted \u2014 about 50% of the declared domain.\n\n```json\n{\"pre\": {\"k\": [-2147483648, 2]}}\n```",
+  "finish_reason": "length",
+  "seconds": 80.443,
+  "prompt_sha256": "2615fc61578431e3e2d56e0c10600e88b83547106307dccbe3011c4b7c788271",
+  "prompt_text": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int z, int a, int k){\nlong long x = 0;\nlong long y = 0;\nlong long c = 0;\nlong long az = 0;\nx = a;\ny = 1;\nc = 1;\naz = ((long long) a) * z;\nwhile ((counter++) < 20)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + a;\n  y = y * z;\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"a\": [-2147483648, 2147483647], \"k\": [-2147483648, 2147483647], \"z\": [-2147483648, 2147483647]}"
+}

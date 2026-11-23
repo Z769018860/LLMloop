@@ -1,0 +1,72 @@
+{
+  "model_requested": "claude-sonnet-4-5-20250929",
+  "request": {
+    "model": "claude-sonnet-4-5-20250929",
+    "temperature": 0.7,
+    "max_tokens": 1500,
+    "messages": [
+      {
+        "role": "system",
+        "content": "You state preconditions. You never prove anything: a separate verifier checks every value in the box you give, and it rejects the program if any of them overflows. Reply with one JSON object and nothing else."
+      },
+      {
+        "role": "user",
+        "content": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int n){\nint i = 0;\nint k = 0;\nint __a = 0;\nwhile (i < n)\n{\n  i++;\n  k++;\n}\n\nint j = 0;\nwhile (j < n)\n{\n  __a = 1 / (k > 0);\n  j++;\n  k--;\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"n\": [-2147483648, 2147483647]}"
+      }
+    ]
+  },
+  "started_utc": "2026-11-23T04:32:02Z",
+  "endpoint": "https://api.square16.org/v1",
+  "attempts": [
+    {
+      "attempt": 0,
+      "ok": true,
+      "http_status": 200,
+      "seconds": 38.692
+    }
+  ],
+  "response_text": "{\"id\":\"msg_011CgzfvhkO0AsNRACLiCQe4\",\"model\":\"claude-sonnet-4-5-20250929\",\"object\":\"chat.completion\",\"created\":1795408361,\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"I'll trace the loop invariants to find where undefined behavior could occur, then state the largest safe box.\\n\\nThe first loop runs only when `n \\u003e 0`, incrementing `i` and `k` together from 0 up to `n` (max `INT_MAX`, never past it \u2014 the last `++` lands exactly on `n`, then the guard fails). When `n \\u003c= 0`, neither loop executes, so `k` stays 0 and no division happens.\\n\\nIn the second loop (only runs when `n \\u003e 0`), `k` starts at `n` and the body sees `k = n - t` for iteration `t = 0..n-1`, i.e. `k` ranges from `n` down to `1` \u2014 always positive, so `1 / (k \\u003e 0)` is always `1 / 1`. The decrement bottoms out at 0 (not below `INT_MIN`), and `j` tops out at `n` (not above `INT_MAX`). No overflow, no underflow, no division by zero anywhere in the declared range.\\n\\n{\\\"pre\\\": {}}\"},\"finish_reason\":\"length\"}],\"usage\":{\"prompt_tokens\":423,\"completion_tokens\":1500,\"total_tokens\":1923,\"usage_semantic\":\"openai\",\"usage_source\":\"anthropic\",\"billing_usage\":{\"source\":\"claude_messages\",\"semantic\":\"anthropic\",\"claude_usage\":{\"input_tokens\":423,\"cache_creation_input_tokens\":0,\"cache_read_input_tokens\":0,\"output_tokens\":1500,\"cache_creation\":{},\"claude_cache_creation_5_m_tokens\":0,\"claude_cache_creation_1_h_tokens\":0}},\"prompt_tokens_details\":{\"cached_tokens\":0,\"text_tokens\":0,\"audio_tokens\":0,\"image_tokens\":0},\"completion_tokens_details\":{\"text_tokens\":0,\"audio_tokens\":0,\"image_tokens\":0,\"reasoning_tokens\":0},\"input_tokens\":423,\"output_tokens\":0,\"input_tokens_details\":null,\"claude_cache_creation_5_m_tokens\":0,\"claude_cache_creation_1_h_tokens\":0}}",
+  "served_model": "claude-sonnet-4-5-20250929",
+  "usage": {
+    "prompt_tokens": 423,
+    "completion_tokens": 1500,
+    "total_tokens": 1923,
+    "usage_semantic": "openai",
+    "usage_source": "anthropic",
+    "billing_usage": {
+      "source": "claude_messages",
+      "semantic": "anthropic",
+      "claude_usage": {
+        "input_tokens": 423,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 1500,
+        "cache_creation": {},
+        "claude_cache_creation_5_m_tokens": 0,
+        "claude_cache_creation_1_h_tokens": 0
+      }
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "text_tokens": 0,
+      "audio_tokens": 0,
+      "image_tokens": 0
+    },
+    "completion_tokens_details": {
+      "text_tokens": 0,
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "reasoning_tokens": 0
+    },
+    "input_tokens": 423,
+    "output_tokens": 0,
+    "input_tokens_details": null,
+    "claude_cache_creation_5_m_tokens": 0,
+    "claude_cache_creation_1_h_tokens": 0
+  },
+  "content": "I'll trace the loop invariants to find where undefined behavior could occur, then state the largest safe box.\n\nThe first loop runs only when `n > 0`, incrementing `i` and `k` together from 0 up to `n` (max `INT_MAX`, never past it \u2014 the last `++` lands exactly on `n`, then the guard fails). When `n <= 0`, neither loop executes, so `k` stays 0 and no division happens.\n\nIn the second loop (only runs when `n > 0`), `k` starts at `n` and the body sees `k = n - t` for iteration `t = 0..n-1`, i.e. `k` ranges from `n` down to `1` \u2014 always positive, so `1 / (k > 0)` is always `1 / 1`. The decrement bottoms out at 0 (not below `INT_MIN`), and `j` tops out at `n` (not above `INT_MAX`). No overflow, no underflow, no division by zero anywhere in the declared range.\n\n{\"pre\": {}}",
+  "finish_reason": "length",
+  "seconds": 38.692,
+  "prompt_sha256": "ee8d0badf204b522f6a96f07e4bd9219b90b9efc8a8ea2940c60c886d391882b",
+  "prompt_text": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int n){\nint i = 0;\nint k = 0;\nint __a = 0;\nwhile (i < n)\n{\n  i++;\n  k++;\n}\n\nint j = 0;\nwhile (j < n)\n{\n  __a = 1 / (k > 0);\n  j++;\n  k--;\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"n\": [-2147483648, 2147483647]}"
+}

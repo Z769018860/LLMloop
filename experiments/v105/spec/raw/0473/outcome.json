@@ -1,0 +1,64 @@
+{
+  "index": 473,
+  "case": "upstream2026/nla-digbench-scaling/geo2-ll2_unwindbound50",
+  "corpus": "upstream2026",
+  "expected": false,
+  "model": "claude-sonnet-4-5-20250929",
+  "repeat": 2,
+  "status": "UNKNOWN",
+  "retained": 0.5000000009313226,
+  "pre": {
+    "k": [
+      -2147483648,
+      3
+    ],
+    "z": [
+      -2147483648,
+      2147483647
+    ]
+  },
+  "narrowed": {
+    "z": [
+      -2147483648,
+      2147483647
+    ],
+    "k": [
+      -2147483648,
+      3
+    ]
+  },
+  "per_dim": {
+    "z": 1.0,
+    "k": 0.500000001
+  },
+  "shrunk": [
+    "k"
+  ],
+  "widened": [],
+  "empty_interval": [],
+  "aliased": [],
+  "parse_error": null,
+  "model_reply": "Looking at this function, I need to find the largest parameter box where no signed integer overflow occurs in the `long long` arithmetic.\n\n**Analysis:**\n\nThe loop body executes at most `min(k-1, 50)` times (limited by both the `c < k` break condition and the `counter++ < 50` loop condition). The critical operations are:\n- `x = (x * z) + 1` \u2014 `long long` multiplication and addition\n- `y = y * z` \u2014 `long long` multiplication\n- `c = c + 1` \u2014 always safe (c \u2264 51)\n\n**Key observations:**\n\nFor **k \u2264 1**: The loop breaks immediately (c=1 \u2265 k). Zero iterations. Safe for any z.\n\nFor **k = 2**: One iteration. `x = z + 1`, `y = z`. Since z is `int` (range \u00b12\u00b3\u00b9), both fit in `long long`. Safe for any z.\n\nFor **k = 3**: Two iterations. The critical products are:\n- `x\u2081 * z = (z+1) * z` and `y\u2081 * z = z * z = z\u00b2`\n- Maximum: z = 2147483647 \u2192 `(2\u00b3\u00b9) * (2\u00b3\u00b9-1) = 2\u2076\u00b2 - 2\u00b3\u00b9 \u2248 4.6\u00d710\u00b9\u2078` \u2014 fits in `long long` (max \u2248 9.2\u00d710\u00b9\u2078)\n- z = -2147483648 \u2192 `(\u22122\u00b3\u00b9+1) * (\u22122\u00b3\u00b9) = 2\u2076\u00b2 \u2212 2\u00b3\u00b9` \u2014 fits\n- `z\u00b2 \u2264 (2\u00b3\u00b9)\u00b2 = 2\u2076\u00b2 < 2\u2076\u00b3` \u2014 always fits\n- All intermediate products verified safe across the full `int` range\n\nFor **k = 4**: Three iterations require `z\u00b3` to fit. But `(2\u00b3\u00b9)\u00b3 \u2248 10\u00b2\u2077` \u2014 massive overflow. Would need to restrict z to \u00b12097151, shrinking the z-range from ~4\u00d710\u2079 to ~4\u00d710\u2076 and reducing total box volume from ~2\u2076\u00b3 to ~2\u2075\u00b3.\n\n**Volume comparison:**\n- k \u2208 [\u22122\u00b3\u00b9, 3] with full z: ~2\u00b3\u00b2 \u00d7 (2\u00b3\u00b9+4) \u2248 2\u2076\u00b3 (~50% of declared domain)\n- k \u2208 [\u22122\u00b3\u00b9, 4] with z \u2208 [\u22122097152, 2097151]: ~2\u00b2\u00b2 \u00d7 2\u00b3\u00b9 \u2248 2\u2075\u00b3 (~0.01%)\n- Full k with z \u2208 [\u22122, 2]: ~5 \u00d7 2\u00b3\u00b2 \u2248 2\u00b3\u2074\u00b7\u2075 (~negligible)\n\nThe box with k \u2264 3 and unrestricted z dominates by orders of magnitude.\n\n{\"pre\": {\"k\": [-2147483648, 3], \"z\": [-2147483648, 2147483647]}}",
+  "served_model": "claude-sonnet-4-5-20250929",
+  "stub": false,
+  "phases": [
+    {
+      "poly": false,
+      "status": "STUCK:Unsupported typed C expression or side effect: UnaryOp",
+      "rounds": 4
+    },
+    {
+      "poly": true,
+      "status": "STUCK:Unsupported typed C expression or side effect: UnaryOp",
+      "rounds": 4
+    }
+  ],
+  "calls": 1,
+  "prompt_tokens": 440,
+  "completion_tokens": 1500,
+  "seconds": 177.217,
+  "ask_stop_reason": null,
+  "verify_stop_reason": null,
+  "verify_wall_seconds": 0.8306627909998952,
+  "verify_peak_rss_bytes": 195289088
+}

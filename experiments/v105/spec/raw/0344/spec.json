@@ -1,0 +1,19 @@
+{
+  "index": 344,
+  "case": "upstream2026/termination-nla/geo1-both-t",
+  "expected": false,
+  "model": "claude-sonnet-4-5-20250929",
+  "repeat": 1,
+  "model_reply": "{\"pre\": {\"k\": [-2147483648, 1], \"z\": [-2147483647, 2147483647]}}\n\nReasoning summary: In exact arithmetic the loop's test expression always equals `c` (since `x*(z-1)-y+1+c` with `x_n(z-1)=z^{n+1}-1` and `y_n=z^{n+1}` reduces to `c`), so the loop runs `max(0, k-1)` iterations, growing `x` toward `z^k` and `y` to `z^k`. Signed overflow occurs for `|z|\u22652` once `k` is large (e.g. `z=2` needs `k\u226430`), so no rectangle can keep both large `k` and large `z`. The largest safe box keeps `k \u2264 1`, where the loop body never executes: the only risky operations are `z-1` (overflows at `INT_MIN`, hence `z \u2265 -2147483647`) and the first test's intermediates `z`, `z-1`, both in range for every other `z`. This keeps all of `z` except one value and half of `k`'s declared range, roughly 50% of the declared domain.",
+  "served_model": "claude-sonnet-4-5-20250929",
+  "stub": false,
+  "seconds": 67.024,
+  "tokens": {
+    "prompt": 475,
+    "completion": 1500,
+    "total": 1975,
+    "available": true
+  },
+  "parse_error": "not a JSON object",
+  "pre": null
+}

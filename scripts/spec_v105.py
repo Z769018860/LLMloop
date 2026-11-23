@@ -880,36 +880,73 @@ def write_summary(out, plan, rows, base):
     # cell was empty. Buckets defined by name rather than by "everything else", so the sum below can
     # actually fail -- and a status nobody thought about raises instead of being swept into a bucket.
     S_STATUSES = ('PROVED', 'UNKNOWN', 'MALFORMED', 'VACUOUS', 'RESOURCE_STOP', 'NOT_VERIFIED',
-                  'HARNESS_ERROR')
+                  'ERROR', 'HARNESS_ERROR')
     B_STATUSES = ('PROVED', 'UNKNOWN', 'TIMEOUT')
     bad = sorted({r['status'] for r in rows} - set(S_STATUSES))
-    assert not bad, 'unnamed status in the S arm: %s' % bad
+    assert not bad, ('unnamed status in the S arm: %s -- add it to a named bucket and to the table, '
+                     'do not fold it into UNKNOWN' % bad)
     bad = sorted({b['status'] for b in base.values()} - set(B_STATUSES))
     assert not bad, 'unnamed status in the B arm: %s' % bad
+    # `ERROR` is the frozen pipeline raising, not the model failing and not the harness failing:
+    # `verify` returns it when `houdini_loops` throws. The first real merge died here --
+    # `AssertionError: unnamed status in the S arm: ['ERROR']` -- which is the assertion doing its
+    # job: four units had a status the table had no column for, and the alternative (a default
+    # bucket) is how a status disappears from a result while the table still adds up to the
+    # denominator. It gets its own column because the honest reading of those four units is "we do
+    # not know", which is neither a proof nor a timeout nor a model error.
     L += ['## 按标签 / by label', '',
-          '| 臂 | 证明（真标签） | 证明（假标签＝掩盖了可达溢出） | 未证 | 畸形 | 空区间 | 资源停止 | 工程故障 | 合计 |',
-          '| --- | --- | --- | --- | --- | --- | --- | --- | --- |']
+          '| 臂 | 证明（真标签） | 证明（假标签＝掩盖了可达溢出） | 未证 | 畸形 | 空区间 '
+          '| 资源停止 | 管道异常 | 工程故障 | 合计 |',
+          '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |']
     s_cells = [count(lambda r: r['expected'] is True, 'PROVED'),
                count(lambda r: r['expected'] is False, 'PROVED'),
                count(lambda r: True, 'UNKNOWN'),
                count(lambda r: True, 'MALFORMED'),
                count(lambda r: True, 'VACUOUS'),
                count(lambda r: r['status'] in ('RESOURCE_STOP', 'NOT_VERIFIED')),
+               count(lambda r: True, 'ERROR'),
                count(lambda r: True, 'HARNESS_ERROR')]
     assert sum(s_cells) == len(rows), 'the S row does not add up: %s vs %d' % (s_cells, len(rows))
-    L.append('| **S 模型契约** | %d / %d | **%d / %d** | %d | %d | %d | %d | %d | %d |' % (
-        s_cells[0], n_true, s_cells[1], n_false, s_cells[2], s_cells[3], s_cells[4], s_cells[5],
-        s_cells[6], sum(s_cells)))
+    # Built from a list rather than a hand-written format string: the first version of this line had
+    # ten `%d` for eight values and would have raised on the day it finally ran.
+    s_row = ['%d / %d' % (s_cells[0], n_true), '**%d / %d**' % (s_cells[1], n_false)]
+    s_row += [str(x) for x in s_cells[2:]] + [str(sum(s_cells))]
+    assert len(s_row) == 9, len(s_row)   # nine data cells under a ten-cell header
+    L.append('| **S 模型契约** | ' + ' | '.join(s_row) + ' |')
+
     bvals = list(base.values())
+    # The control maps a pipeline exception to UNKNOWN (`baseline_case`: proved, else done, else
+    # UNKNOWN), so a control case whose every attempt raised looks exactly like one that was tried
+    # and not proved. The per-attempt statuses are still in `tried`, so the count is recoverable --
+    # and it has to be shown, because folding this into UNKNOWN understates the control and the
+    # control is the thing the model has to beat.
+    b_raised = sum(1 for b in bvals
+                   if any(str(t['status']).startswith('ERROR') for t in (b.get('tried') or [])))
+    b_all_raised = sum(1 for b in bvals
+                       if (b.get('tried') or [])
+                       and all(str(t['status']).startswith('ERROR') for t in b['tried']))
     b_cells = [sum(1 for b in bvals if b['status'] == 'PROVED' and b['expected'] is True),
                sum(1 for b in bvals if b['status'] == 'PROVED' and b['expected'] is False),
                sum(1 for b in bvals if b['status'] == 'UNKNOWN'),
                0, 0,
-               sum(1 for b in bvals if b['status'] == 'TIMEOUT'), 0]
+               sum(1 for b in bvals if b['status'] == 'TIMEOUT'),
+               0, 0]
     assert sum(b_cells) == len(bvals), 'the B row does not add up: %s vs %d' % (b_cells, len(bvals))
-    L.append('| **B 均匀收缩** | %d / %d | %d / %d | %d | — | — | %d | — | %d |' % (
-        b_cells[0], n_true, b_cells[1], n_false, b_cells[2], b_cells[5], sum(b_cells)))
+    b_row = ['%d / %d' % (b_cells[0], n_true), '%d / %d' % (b_cells[1], n_false),
+             str(b_cells[2]), '—', '—', str(b_cells[5]), '—', '—', str(sum(b_cells))]
+    assert len(b_row) == 9, len(b_row)
+    L.append('| **B 均匀收缩** | ' + ' | '.join(b_row) + ' |')
     L.append('')
+    if b_raised:
+        # Deliberately not a cell: "at least one attempt raised" overlaps UNKNOWN, and the first
+        # version made it a ninth bucket, so the row summed to 84 of 83 -- which the sum assertion
+        # caught. The control's frozen rows cannot be split further without rewriting evidence, so
+        # the overlap is disclosed in words rather than invented as a bucket.
+        L += ['- B 的 **%d** 个用例至少有一次尝试因管道抛异常（`tried` 里保留着原状态），其中 %d 个是'
+              '**每一次尝试都抛异常**；S 臂把同一情形单列为 `ERROR`。这条不对称**偏向模型臂**：'
+              '对照被低估了，而低估的量无法从已冻结的行里精确算出。'
+              % (b_raised, b_all_raised)]
+        L.append('')
 
     # the two arms are not given the same budget, and the difference favours the control -- say so
     # with the numbers, not with an adjective
@@ -960,6 +997,53 @@ def write_summary(out, plan, rows, base):
                  '仅 S 证出 %d → **%d**，p = %.3g → **%.3g**' % (len(only_s), len(only_s_adj), p, p_adj))
     L.append('')
 
+    # The pre-registered rule has a second half -- "a proof whose retained volume is below MATERIAL
+    # is reported but not counted" -- and it has to be applied to the *pairing*, not only to a count
+    # of invalid proofs at the bottom. Applying it here is what turned 10-vs-6 into 5-vs-6 in the
+    # first real run: ten of the fifteen proved units are below the floor, most of them boxes of
+    # width ~1e-5 of a full 32-bit range. Being permissive to the model arm on purpose: a case counts
+    # as validly proved if ANY repeat with a proof clears the floor, which is the easiest possible
+    # reading of the rule for S. If S still does not win under the easiest reading, the finding does
+    # not depend on how the repeats are aggregated.
+    def best_retained(c):
+        # `per` holds {'repeats': [...]} per (model, case), not a list of rows -- iterating it
+        # directly yields the key string and `r['status']` raises "string indices must be
+        # integers". Caught here, on the first real merge, by the type error rather than by a wrong
+        # number, which is the only good way for this kind of mistake to fail.
+        vals = []
+        for m in models:
+            bucket = per.get((m, c))
+            if not bucket:
+                continue
+            vals += [(r.get('retained') or 0.0) for r in bucket['repeats'] if r.get('status') == 'PROVED']
+        return max(vals) if vals else 0.0
+
+    sset_v = {c for c in sset if best_retained(c) >= MATERIAL}
+    bset_v = {c for c, b in base.items() if b['status'] == 'PROVED' and (b['retained'] or 0) >= MATERIAL}
+    only_s_v, only_b_v = sorted(sset_v - bset_v), sorted(bset_v - sset_v)
+    p_v = mcnemar_exact(len(only_s_v), len(only_b_v))
+    L += ['### 扣掉"保留域低于 %g"的证明之后 / after the retained-volume floor' % MATERIAL, '',
+          '预注册规则的后半句是：保留域低于 `%g` 的证明**报告但不计入**。把它作用在配对上，'
+          '而不仅是数一下有几个无效证明：' % MATERIAL, '',
+          '| | 全部证明 | 只算保留域 ≥ %g |' % MATERIAL,
+          '| --- | --- | --- |',
+          '| S 证出 | %d | **%d** |' % (len(sset), len(sset_v)),
+          '| B 证出 | %d | %d |' % (len(bset), len(bset_v)),
+          '| 仅 S 证出 | %d | **%d** %s' % (len(only_s), len(only_s_v), only_s_v if len(only_s_v) <= 8 else ''),
+          '| 仅 B 证出 | %d | **%d** %s' % (len(only_b), len(only_b_v), only_b_v if len(only_b_v) <= 8 else ''),
+          '| 精确 McNemar p | %.3g | **%.3g** |' % (p, p_v), '']
+    dropped = len(sset) - len(sset_v)
+    if dropped:
+        tiny = sorted((c for c in sset if c not in sset_v), key=best_retained, reverse=True)
+        L += ['- 被这一条去掉的 **%d** 个 S 证明，保留域最大的是 %s。**这不是"模型作弊"的自动结论**：'
+              '对完整的 32 位声明域，"乘法不溢出"这类正确条件的体积本来就极小——`n*n` 不溢出要求 '
+              '`|n| ≤ 46340`，占 `[-2^31, 2^31-1]` 的 **2.2e-5**。`%g` 这个门槛是按"材质体积"设想的，'
+              '它恰好惩罚了这批用例上最有信息量的回答。规则是预注册的，所以**按字面执行并同时给出两个口径**，'
+              '不在看到数据之后改门槛——那正是本审计在记的那类错误。'
+              % (dropped, ', '.join('`%s`（%.2g）' % (c, best_retained(c)) for c in tiny[:5]), MATERIAL), '']
+    L += ['- 判定用哪一列：**右列**。预注册规则里 `%g` 是判定的一部分，不是脚注；左列一并给出，'
+          '是为了让读者看见这个门槛本身在这场比较里挪动了多少。' % MATERIAL, '']
+
     sp = [per[(m, c)]['repeats'][0] for c in cases for m in models if (m, c) in per and majority[(m, c)]]
     L += ['## 保留域 / retained fraction of the declared box (proved units)', '',
           '- S: %s' % json.dumps(_q([r['retained'] for r in sp])),
@@ -989,20 +1073,27 @@ def write_summary(out, plan, rows, base):
               '']
 
     L += ['## 每个模型 / per model', '',
-          '| 模型 | 证明（多数） | 仅它证出 | 保留域中位数 | 调用 | prompt tokens | completion tokens | 生成秒 |',
-          '| --- | --- | --- | --- | --- | --- | --- | --- |']
+          '| 模型 | 证明（多数） | 仅它证出 | 保留域中位数 | 单元（全部） | prompt tokens | completion tokens '
+          '| 生成秒 | 证明单元 |',
+          '| --- | --- | --- | --- | --- | --- | --- | --- | --- |']
     for m in models:
         mine = [c for c in cases if majority.get((m, c))]
         uni = [c for c in mine if not any(majority.get((m2, c)) for m2 in models if m2 != m)]
         rr = [per[(m, c)]['repeats'][0] for c in mine if (m, c) in per]
-        mm = [per[(m, c)]['repeats'] for c in mine if (m, c) in per]
-        calls = sum(len(x) for x in mm)
-        pt = sum((x['prompt_tokens'] or 0) for x in rr)
-        ct = sum((x['completion_tokens'] or 0) for x in rr)
-        secs = sum((x['seconds'] or 0) for x in rr)
-        L.append('| `%s` | %d / %d | %d | %s | %d | %d | %d | %.0f |' % (
-            m, len(mine), len(cases), len(uni), _num(_q([r['retained'] for r in rr]).get('median')), calls, pt, ct, secs))
-    L.append('')
+        # Calls, tokens and seconds are summed over *every* unit of the model, not over the proved
+        # ones. The first version summed `per[...]` for proved cases only, which printed "调用 12"
+        # for a model that had been asked 249 times -- a table that understates the cost of the arm
+        # by a factor of twenty, in the direction that makes the arm look cheap.
+        allm = [r for r in rows if r['model'] == m]
+        calls = len(allm)
+        pt = sum((r.get('prompt_tokens') or 0) for r in allm)
+        ct = sum((r.get('completion_tokens') or 0) for r in allm)
+        secs = sum((r.get('seconds') or 0) for r in allm)
+        L.append('| `%s` | %d / %d | %d | %s | %d | %d | %d | %.0f | %d |' % (
+            m, len(mine), len(cases), len(uni), _num(_q([r['retained'] for r in rr]).get('median')),
+            calls, pt, ct, secs, sum(1 for r in allm if r['status'] == 'PROVED')))
+    L += ['', '- “单元（全部）”与 token/秒都覆盖该模型的**每一次**调用；最后两列只数证出的单元。'
+          '两张表的口径不同，混读会把成本低估一个量级。', '']
 
     # how much did the model narrow, and did it narrow the right thing
     narrowed = [r for r in rows if r['pre'] is not None]
@@ -1016,8 +1107,61 @@ def write_summary(out, plan, rows, base):
           '- 用了入口副本写法 `NAME__in`、被当作同名参数 / entry-copy spelling accepted as `NAME`: %d'
           % sum(1 for r in narrowed if r.get('aliased')), '']
 
-    material_s = [c for c in sset if max((per[(m, c)]['repeats'][0]['retained'] or 0) for m in models
-                                         if (m, c) in per) >= MATERIAL]
+    # Why the S arm did not prove: the frozen pipeline's own status, not a guess. Three families
+    # matter and they mean different things -- `STUCK:*` is the verifier giving up on an obligation,
+    # `NO_SAMPLES` is Houdini never getting a candidate atom inside the box (the pipeline could not
+    # even start), and the rest is "there was no box to verify". The first version of this block
+    # explained `NO_SAMPLES` in prose and the very first real run had none of them; the breakdown is
+    # computed so the paragraph cannot describe a status the data does not contain.
+    why = collections.Counter()
+    for r in rows:
+        ph = r.get('phases') or []
+        why[(ph[0]['status'] if ph else 'no verify run')] += 1
+    stuck = sum(v for k, v in why.items() if str(k).startswith('STUCK'))
+    nosamp = sum(v for k, v in why.items() if str(k).startswith('NO_SAMPLES'))
+    nover = why.get('no verify run', 0)
+    top = why.most_common(5)
+    L += ['## 为什么未证出 / why not proved', '',
+          '- 第一次验证（默认剖面）的状态分布 / status of the first verify phase: '
+          + '；'.join('`%s` %d' % (k, v) for k, v in top),
+          '- 三类分开数 / three families, counted apart: `STUCK:*` **%d**（验证器在管线里对某条义务放弃，'
+          '状态里带着是哪一条）；`NO_SAMPLES` **%d**（Houdini 在盒子里采不到候选原子，管线根本没开始）；'
+          '没有跑到验证的 **%d**（没有可验的盒子）。' % (stuck, nosamp, nover),
+          '- 这两类失败的含义不同：`STUCK` 是"求解器跑了并放弃"，`NO_SAMPLES` 是"我们自己的采样在小盒子里'
+          '启动不了"。**后者不能读成"模型给的盒子不可能证明"**——它可能是我们在更窄的盒子里找不到原子。'
+          '两条臂面对同一个管线，所以这个分布也是对照的分布。', '']
+
+    # A model that returns an empty reply has not answered the question, and an arm made mostly of
+    # empty replies is not evidence about contracts -- v1.04 already had one (`max_tokens` 6000, 220 of
+    # 309 empty) and it was found by hand, long after the numbers were written down. Computed here so
+    # it cannot be missed again: a cap hit is recorded in `completion_tokens`, an empty reply in the
+    # reply itself, and either way the row is not a statement about the model's judgement.
+    cap = plan.get('max_tokens')
+    deg = []
+    for m in models:
+        mine = [r for r in rows if r['model'] == m]
+        empty = sum(1 for r in mine if not (r.get('model_reply') or '').strip())
+        hit = sum(1 for r in mine if (r.get('completion_tokens') or 0) >= (cap or 10 ** 9))
+        deg.append((m, empty, len(mine), hit))
+    worst = [d for d in deg if d[2] and d[1] > 0.2 * d[2]]
+    L += ['## 空回答与 token 上限 / empty replies and the cap', '',
+          '| 模型 | 空回答 | 撞 frozen `max_tokens`（%s） | 单元 |' % cap,
+          '| --- | --- | --- | --- |']
+    for m, empty, n, hit in deg:
+        L.append('| `%s` | %d | %d | %d |' % (m, empty, hit, n))
+    L.append('')
+    for m, empty, n, hit in worst:
+        L += ['- **`%s` 这一臂是退化的**：%d / %d 个单元返回空内容，其中 %d 个的 `completion_tokens` 正好'
+              '等于冻结上限 %s——它把预算全部花在推理上，没有输出。空回答既不是"模型判断不收缩"，'
+              '也不是"模型答错了"；把它读成能力会低估这个模型，把它读成判断会高估其他臂。'
+              'v1.04 的原子臂出过同一件事（6000 上限、309 个里 220 个空），当时是人事后发现的——'
+              '所以现在由摘要算出来。' % (m, empty, n, hit, cap)]
+    if worst:
+        L += ['- 披露而非修补：这个上限是**冻结的**，事后调大会变成另一个研究。' 
+              '下面的对照比较用的是全部三个模型（跨模型取多数），所以结论不依赖退化的那一臂；'
+              '若要让该模型有发言权，需要一个单独冻结的更高预算跟进，与 v1.04 的 16k 跟进同形。', '']
+
+    material_s = sorted(sset_v)          # the proofs the pre-registered floor leaves standing
     L += ['## 这个任务测不出什么 / what this task cannot measure', '',
           '- **正确答案可能得 0 分。** 对 %d 个 true 标签用例，最好的契约是"声明范围内本来就安全"，'
           '而那个答案在这里拿不到证明：臂 D 已经在**同一组边界**上失败过，所以只有**收缩**才可能出证明。'
@@ -1030,36 +1174,47 @@ def write_summary(out, plan, rows, base):
           'v1.04 的原子臂给了 ≤2 轮修复，两臂的调用预算不同，这一点在比较成本时要说清。', '']
 
     L += ['## 结论 / verdict', '']
-    credited = bool(only_s) and p < 0.05
+    credited = bool(only_s_v) and p_v < 0.05
     if credited:
-        L += ['- **契约有净贡献（按预注册规则）**：%d 个用例只有 S 证出，精确 McNemar p = %.3g < 0.05。'
+        L += ['- **契约有净贡献（按预注册规则）**：%d 个用例只有 S 证出、且保留域 ≥ %g，精确 McNemar p = %.3g < 0.05。'
               '均匀收缩是同族的一维搜索，S 能赢只能靠"只收该收的那个参数"，这是结构，不是音量。'
-              % (len(only_s), p)]
+              % (len(only_s_v), MATERIAL, p_v)]
         if b_to:
             L += ['- 这一条**不依赖**对照跑不完：把每一例对照超时都算作"本可证出"，仅 S 证出降到 %d、p 变为 %.3g，'
                   '结论%s。' % (len(only_s_adj), p_adj,
                                 '不变' if p_adj < 0.05 and only_s_adj else '因此**降级为不成立**')]
-    elif only_s:
-        L += ['- **方向对，但不显著**：%d 个用例只有 S 证出、%d 个只有 B 证出，精确 McNemar p = %.3g，'
-              '达不到预注册的 0.05。按规则这**不构成"契约有净贡献"**：模型写出的盒子在这批用例上'
+    elif only_s_v:
+        L += ['- **方向对，但不显著**：%d 个用例只有 S 证出（保留域 ≥ %g）、%d 个只有 B 证出，精确 McNemar '
+              'p = %.3g，达不到预注册的 0.05。按规则这**不构成"契约有净贡献"**：模型写出的盒子在这批用例上'
               '没有跑赢一个一维的音量旋钮，差距小到无法与运气区分。'
               '写"契约更好"就是拿方向当结论——§4.1 的"统计上不可区分"当初就是这么来的。'
-              % (len(only_s), len(only_b), p)]
+              % (len(only_s_v), MATERIAL, len(only_b_v), p_v)]
     else:
-        L += ['- **契约没有带来均匀收缩找不到的证明**（仅 S 证出 0 个）。一个模型写出的盒子，跑不过一个一维的音量旋钮。']
-    if only_b:
-        L += ['- 反过来 B 有 %d 个 S 没证出：模型的一次性猜测漏掉了均匀收缩能命中的盒子。' % len(only_b)]
+        L += ['- **契约没有带来均匀收缩找不到的证明**：扣掉低于保留域门槛的证明之后，仅 S 证出 0 个'
+              '（不扣是 %d 个）。一个模型写出的盒子，跑不过一个一维的音量旋钮。' % len(only_s)]
+    if len(only_s) != len(only_s_v):
+        L += ['- 两个口径的差别是 %d → %d 个"仅 S 证出"。上面两栏（配对、判定）都用右边那个；'
+              '左列保留在表里，因为门槛挪动了多少本身就是结果的一部分。'
+              % (len(only_s), len(only_s_v))]
+    if only_b_v:
+        L += ['- 反过来 B 有 %d 个 S 没证出：模型的一次性猜测漏掉了均匀收缩能命中的盒子。' % len(only_b_v)]
     masked = [r for r in sp if r['expected'] is False]
     if masked:
         L += ['- **掩盖 / masked**: %d 个标签为 false（真会溢出）的用例在模型给的盒子里"证出"了。'
               '这不是工具的不健全——结论本来就以那个盒子为条件——但它是这个任务本身的风险：把一个真实的 bug 收进盒子外面。' % len(masked)]
-    L += ['- 保留域低于 %g 的证明 %d 个，不计入任何结论。' % (MATERIAL, len([1 for r in sp if (r['retained'] or 0) < MATERIAL])),
+    L += ['- 保留域低于 %g 的证明：**%d 个单元**（对应 %d 个用例），不计入任何结论。'
+          '这里数的是单元、上面小表里数的是用例，两个数字不同不是矛盾。'
+          % (MATERIAL, len([1 for r in sp if (r['retained'] or 0) < MATERIAL]), len(sset) - len(sset_v)),
           '- 结论按预注册规则给出：只有当"仅 S 证出"的用例存在且 McNemar p < 0.05 时，才写"契约有净贡献"。']
-    if s_cells[6]:
+    if s_cells[7]:
         L += ['- **工程故障 %d 个单元**：`HARNESS_ERROR` 是驱动自己的错，不是方法的结论。这些单元没有结果，'
               '也不会被算进任何"能力"分母；每一条的 traceback 都在 `raw/<i>/outcome.json` 里。'
               '写这一行是因为它真的发生过：一次 IndexError 让 8 个分片全灭（`docs/TOP_TIER_AUDIT.md` §4.6 第 22 条）。'
-              % s_cells[6]]
+              % s_cells[7]]
+    if s_cells[6]:
+        L += ['- **管道异常 %d 个单元**：`ERROR` 是冻结管线自己抛异常（`houdini_loops` 抛出，状态里带着'
+              '异常类型与消息），既不是证明也不是超时，更不是模型的问题。这些单元**不知道**结果是什么，'
+              '所以它们不进任何一边的分子，也不被算成"模型没答对"。' % s_cells[6]]
     L.append('')
     with open(out / 'summary.md', 'w', encoding='utf-8', newline='\n') as f:
         f.write('\n'.join(L))
@@ -1070,6 +1225,10 @@ def write_summary(out, plan, rows, base):
         'retained_b': _q([b['retained'] for b in base.values() if b['status'] == 'PROVED']),
         'masked_false': [r['case'] for r in sp if r['expected'] is False],
         'material_s': len(material_s),
+        'union_s_valid': sorted(sset_v), 'baseline_valid': sorted(bset_v),
+        'only_s_valid': only_s_v, 'only_b_valid': only_b_v, 'mcnemar_p_valid': p_v,
+        'empty_replies_per_model': {m: e for m, e, n, h in deg},
+        'cap_hits_per_model': {m: h for m, e, n, h in deg},
         'baseline_timeouts': [b['case'] for b in b_to],
         'only_s_control_timeouts_as_provable': only_s_adj, 'mcnemar_p_sensitivity': p_adj,
         'harness_errors': [r['case'] for r in rows if r['status'] == 'HARNESS_ERROR'],

@@ -1,0 +1,60 @@
+{
+  "index": 305,
+  "case": "upstream2026/nla-digbench-scaling/geo1-u2_unwindbound2",
+  "corpus": "upstream2026",
+  "expected": false,
+  "model": "claude-sonnet-4-5-20250929",
+  "repeat": 1,
+  "status": "UNKNOWN",
+  "retained": 0.00048828125,
+  "pre": {
+    "z": [
+      0,
+      2097151
+    ]
+  },
+  "narrowed": {
+    "z": [
+      0,
+      2097151
+    ],
+    "k": [
+      0,
+      4294967295
+    ]
+  },
+  "per_dim": {
+    "z": 0.000488281,
+    "k": 1.0
+  },
+  "shrunk": [
+    "z"
+  ],
+  "widened": [],
+  "empty_interval": [],
+  "aliased": [],
+  "parse_error": null,
+  "model_reply": "Looking at the function, I need to trace the loop execution for different `k` values and check all `long long` arithmetic for signed overflow.\n\nThe loop runs at most 2 iterations (controlled by `counter++ < 2`). The critical path is `k >= 3`, where the loop body executes twice:\n\n- **y**: starts at `z`, then `y = z*z` (iter 1), then `y = z\u00b3` (iter 2). Need `z\u00b3 \u2264 LLONG_MAX` = 2\u2076\u00b3\u22121, so `z \u2264 2097151` (since 2097152\u00b3 = 2\u2076\u00b3 overflows).\n- **x**: after loop = `z\u00b2+z+1`, then `x = x*(z-1) = z\u00b3\u22121`. For `z=2097151`, this is 9223372023640659550 \u2264 2\u2076\u00b3\u22121. Safe.\n\nFor `k=2` (1 iteration): `y=z\u00b2`, `x=z\u00b2\u22121`, needing `z \u2264 3037000499`. For `k\u22641` (0 iterations): `x=z\u22121`, no constraint. The binding case is `k\u22653` requiring `z \u2264 2097151`.\n\nSince a box is a Cartesian product, keeping `k` at full range with `z \u2208 [0, 2097151]` gives the largest box (\u22489007199254740992 combinations), far larger than restricting `k` instead.\n\n{\"pre\": {\"z\": [0, 2097151]}}",
+  "served_model": "claude-sonnet-4-5-20250929",
+  "stub": false,
+  "phases": [
+    {
+      "poly": false,
+      "status": "STUCK:Unsupported typed C expression or side effect: UnaryOp",
+      "rounds": 4
+    },
+    {
+      "poly": true,
+      "status": "STUCK:Unsupported typed C expression or side effect: UnaryOp",
+      "rounds": 6
+    }
+  ],
+  "calls": 1,
+  "prompt_tokens": 459,
+  "completion_tokens": 1500,
+  "seconds": 80.594,
+  "ask_stop_reason": null,
+  "verify_stop_reason": null,
+  "verify_wall_seconds": 0.8488249839999753,
+  "verify_peak_rss_bytes": 196001792
+}

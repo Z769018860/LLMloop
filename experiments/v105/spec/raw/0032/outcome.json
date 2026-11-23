@@ -1,0 +1,60 @@
+{
+  "index": 32,
+  "case": "upstream2026/nla-digbench-scaling/geo1-ll2_unwindbound5",
+  "corpus": "upstream2026",
+  "expected": false,
+  "model": "claude-sonnet-4-5-20250929",
+  "repeat": 2,
+  "status": "UNKNOWN",
+  "retained": 6.738118830480668e-07,
+  "pre": {
+    "z": [
+      1,
+      1447
+    ]
+  },
+  "narrowed": {
+    "z": [
+      1,
+      1447
+    ],
+    "k": [
+      1,
+      2147483647
+    ]
+  },
+  "per_dim": {
+    "z": 6.74e-07,
+    "k": 1.0
+  },
+  "shrunk": [
+    "z"
+  ],
+  "widened": [],
+  "empty_interval": [],
+  "aliased": [],
+  "parse_error": null,
+  "model_reply": "The only risk is `long long` overflow in the loop body and the final multiplication. `counter` is external but the loop runs at most 5 iterations, so the effective iteration count is `min(k-1, 5)`.\n\n**Recurrences (starting from x=1, y=z, c=1, iterating while c < k, at most 5 times):**\n\nAfter n iterations (n \u2264 5):\n- `y = z^(n+1)`\n- `x = z^n + z^(n-1) + ... + 1` (a geometric sum, roughly `z^n`)\n- Final: `x * (z - 1)` \u2248 `z^(n+1)`\n\nThe worst case is 5 full iterations. The largest intermediate value is `x * z` inside the loop at iteration 5, which is on the order of `z^5`, then `x * (z-1)` after the loop on the order of `z^5`.\n\n`long long` max is 2^63 - 1 \u2248 9.22 \u00d7 10^18.\n\nAfter 5 iterations: `x \u2248 z^5`, and `x * z \u2248 z^6` must not overflow. So the binding constraint is `z^6 < 2^63`, giving `z < 2^(63/6) = 2^10.5 \u2248 1448`.\n\nBeing precise: `1448^6 = 1448^2 \u00d7 1448^2 \u00d7 1448^2`. `1448^2 = 2096704`. `2096704^3 \u2248 9.23 \u00d7 10^18` \u2014 right at the edge. Use `z \u2264 1447`: `1447^6 \u2248 9.19 \u00d7 10^18 < 9.22 \u00d7 10^18`. \u2713\n\n`k` has no arithmetic role beyond controlling loop count; its declared bounds are safe.\n\n```json\n{\"pre\": {\"z\": [1, 1447]}}\n```",
+  "served_model": "claude-sonnet-4-5-20250929",
+  "stub": false,
+  "phases": [
+    {
+      "poly": false,
+      "status": "STUCK:Unsupported typed C expression or side effect: UnaryOp",
+      "rounds": 4
+    },
+    {
+      "poly": true,
+      "status": "STUCK:Unsupported typed C expression or side effect: UnaryOp",
+      "rounds": 4
+    }
+  ],
+  "calls": 1,
+  "prompt_tokens": 455,
+  "completion_tokens": 796,
+  "seconds": 7.0,
+  "ask_stop_reason": null,
+  "verify_stop_reason": null,
+  "verify_wall_seconds": 0.9684320649999947,
+  "verify_peak_rss_bytes": 192061440
+}

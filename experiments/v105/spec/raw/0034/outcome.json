@@ -1,0 +1,65 @@
+{
+  "index": 34,
+  "case": "upstream2026/nla-digbench-scaling/geo3-ll2_unwindbound10",
+  "corpus": "upstream2026",
+  "expected": false,
+  "model": "claude-sonnet-4-5-20250929",
+  "repeat": 1,
+  "status": "UNKNOWN",
+  "retained": 0.5000000006984919,
+  "pre": {
+    "k": [
+      -2147483648,
+      2
+    ]
+  },
+  "narrowed": {
+    "z": [
+      -2147483648,
+      2147483647
+    ],
+    "a": [
+      -2147483648,
+      2147483647
+    ],
+    "k": [
+      -2147483648,
+      2
+    ]
+  },
+  "per_dim": {
+    "z": 1.0,
+    "a": 1.0,
+    "k": 0.500000001
+  },
+  "shrunk": [
+    "k"
+  ],
+  "widened": [],
+  "empty_interval": [],
+  "aliased": [],
+  "parse_error": null,
+  "model_reply": "Looking at the function, I need to trace the overflow behavior in the loop.\n\nAll working variables (x, y, c, az) are `long long`, while parameters z, a, k are `int` (32-bit on ILP32). The computation `az = ((long long)a) * z` is always safe since the product of two 32-bit ints fits in 64 bits (max \u2248 2^62 < 2^63).\n\nThe loop body updates `x = (x * z) + a` and `y = y * z`. The number of updates is governed by both `counter` (limiting to ~10 iterations) and the break condition `c >= k`. Since c starts at 1 and increments by 1 each iteration, the break fires when c reaches k, giving `n = min(max(0, k-1), 10)` updates.\n\nWith 1 iteration (k \u2264 2): y = z (fits trivially), x = a\u00b7z + a = a\u00b7(z+1). The maximum |a\u00b7(z+1)| is about 2^62, well within long long range. The intermediate a\u00b7z also fits (max 2^62). Safe for all int values of z and a.\n\nWith 2 iterations (k = 3): x = a\u00b7(z\u00b2 + z + 1), which for z \u2248 2^31 and a \u2248 2^31 gives \u2248 2^93, far exceeding long long range. Not safe with full z, a bounds.\n\nConstraining z to allow k = 3 would require |z| \u2264 ~65536 (a ~0.003% sliver of the int range), making the total box fraction negligible compared to the ~50% kept by constraining only k.\n\nThe largest box keeps z and a at full declared range and constrains k to [-2147483648, 2], limiting the loop to at most 1 update of x and y.\n\n{\"pre\": {\"k\": [-2147483648, 2]}}",
+  "served_model": "claude-sonnet-4-5-20250929",
+  "stub": false,
+  "phases": [
+    {
+      "poly": false,
+      "status": "STUCK:top/loop0: invariant at entry (path 0)",
+      "rounds": 6
+    },
+    {
+      "poly": true,
+      "status": "STUCK:top/loop0: invariant at entry (path 0)",
+      "rounds": 7
+    }
+  ],
+  "calls": 1,
+  "prompt_tokens": 497,
+  "completion_tokens": 1500,
+  "seconds": 152.136,
+  "ask_stop_reason": null,
+  "verify_stop_reason": null,
+  "verify_wall_seconds": 16.463088230999915,
+  "verify_peak_rss_bytes": 256851968
+}

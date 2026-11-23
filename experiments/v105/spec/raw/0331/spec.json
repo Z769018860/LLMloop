@@ -1,0 +1,19 @@
+{
+  "index": 331,
+  "case": "upstream2026/termination-nla/egcd-both-nt",
+  "expected": false,
+  "model": "claude-sonnet-4-5-20250929",
+  "repeat": 2,
+  "model_reply": "Looking at this code, I need to find where signed integer overflow can occur within the declared parameter bounds.\n\nThe function implements a subtractive extended Euclidean algorithm. The `if ((x >= 1) && (y >= 1))` guard means the loop only executes for positive inputs. When x \u2264 0 or y \u2264 0, the function skips all computation and returns 0 \u2014 no overflow possible.\n\nFor any positive x, y, the algorithm has a fundamental problem: the loop condition `b == (x*q + y*s)` checks an invariant that the algorithm maintains exactly. Since the invariant always holds (in exact arithmetic), the loop never terminates naturally. When the algorithm reaches `b = 0` (which it always does \u2014 the subtractive GCD reduces b to 0), the loop continues with `a > b` (since a = gcd \u2265 1), executing `a = a - 0` (unchanged) while `p = p - q` and `r = r - s` grow without bound. The B\u00e9zout coefficients q and s are nonzero at this point (s starts at 1 and is modified during the algorithm), so p and r grow linearly until `p - q` or `r - s` overflows.\n\nEven during the algorithm itself, the products `x * q` and `y * s` in the loop condition can overflow for large inputs (e.g., x = 2000000000, y = 1073741824 causes `y * s` to overflow when s reaches 2).\n\nSo every positive (x, y) pair eventually produces signed integer overflow. The safe region is exactly {x \u2264 0 or y \u2264 0}, an L-shape. The largest rectangular box inside it is a half-strip: restrict one parameter to non-positive values and leave the other at full range, keeping ~50% of the declared domain.\n\n{\"pre\": {\"x\": [-2147483648, 0]}}",
+  "served_model": "claude-sonnet-4-5-20250929",
+  "stub": false,
+  "seconds": 152.516,
+  "tokens": {
+    "prompt": 557,
+    "completion": 1500,
+    "total": 2057,
+    "available": true
+  },
+  "parse_error": "not a JSON object",
+  "pre": null
+}

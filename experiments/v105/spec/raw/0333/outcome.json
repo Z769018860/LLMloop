@@ -1,0 +1,65 @@
+{
+  "index": 333,
+  "case": "loopbench/loop-zilu/benchmark08_conjunctive",
+  "corpus": "loopbench",
+  "expected": false,
+  "model": "claude-sonnet-4-5-20250929",
+  "repeat": 2,
+  "status": "PROVED",
+  "retained": 3.051804378628731e-05,
+  "pre": {
+    "n": [
+      0,
+      65536
+    ]
+  },
+  "narrowed": {
+    "n": [
+      0,
+      65536
+    ],
+    "sum__in": [
+      0,
+      0
+    ],
+    "i__in": [
+      0,
+      0
+    ]
+  },
+  "per_dim": {
+    "n": 3.0518e-05,
+    "sum__in": 1.0,
+    "i__in": 1.0
+  },
+  "shrunk": [
+    "n"
+  ],
+  "widened": [],
+  "empty_interval": [],
+  "aliased": [],
+  "parse_error": null,
+  "model_reply": "Looking at the function: it sums `0 + 1 + 2 + ... + (n-1)` into `sum`, incrementing `i` each iteration. With `i__in=0` and `sum__in=0` fixed, the only overflow risk is `sum = sum + i` when the running total exceeds `INT_MAX` (2147483647 on ILP32).\n\nThe final sum is `n*(n-1)/2`. The largest single addition is at `i = n-1`, producing `n*(n-1)/2`. For `n=65536`: `65536*65535/2 = 2147450880 \u2264 2147483647` \u2713. For `n=65537`: the addition at `i=65536` yields `2147516416 > 2147483647` \u2717. The `i++` increment never overflows since `i` reaches at most `n \u2264 65536`.\n\n```json\n{\"pre\": {\"n\": [0, 65536]}}\n```",
+  "served_model": "claude-sonnet-4-5-20250929",
+  "stub": false,
+  "phases": [
+    {
+      "poly": false,
+      "status": "STUCK:top/loop0/body operations defined",
+      "rounds": 7
+    },
+    {
+      "poly": true,
+      "status": "PROVED",
+      "rounds": 8
+    }
+  ],
+  "calls": 1,
+  "prompt_tokens": 394,
+  "completion_tokens": 1500,
+  "seconds": 29.745,
+  "ask_stop_reason": null,
+  "verify_stop_reason": null,
+  "verify_wall_seconds": 19.357304181000018,
+  "verify_peak_rss_bytes": 226148352
+}

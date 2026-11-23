@@ -1,0 +1,60 @@
+{
+  "model_requested": "gpt-4.1-mini",
+  "request": {
+    "model": "gpt-4.1-mini",
+    "temperature": 0.7,
+    "max_tokens": 1500,
+    "messages": [
+      {
+        "role": "system",
+        "content": "You state preconditions. You never prove anything: a separate verifier checks every value in the box you give, and it rejects the program if any of them overflows. Reply with one JSON object and nothing else."
+      },
+      {
+        "role": "user",
+        "content": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int n){\nint p = 0;\nint q = 1;\nint r = 0;\nint h = 0;\nr = n;\nh = 0;\nif (q > n)\n{\n  while (((((((((h * h) * h) - (((12 * h) * n) * q)) + (((16 * n) * p) * q)) - ((h * q) * q)) - (((4 * p) * q) * q)) + (((12 * h) * q) * r)) - (((16 * p) * q) * r)) == 0)\n  {\n    if (((4 * (q / 4)) == q) && ((2 * (p / 2)) == p))\n    {\n      q = q / 4;\n      h = p + q;\n      p = p / 2;\n      if (r >= h)\n      {\n        p = p + q;\n        r = r - h;\n      }\n    }\n  }\n\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"n\": [-2147483648, 2147483647]}"
+      }
+    ]
+  },
+  "started_utc": "2026-11-23T04:28:19Z",
+  "endpoint": "https://api.square16.org/v1",
+  "attempts": [
+    {
+      "attempt": 0,
+      "ok": true,
+      "http_status": 200,
+      "seconds": 2.898
+    }
+  ],
+  "response_text": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"logprobs\":null,\"message\":{\"annotations\":[],\"content\":\"{\\\"pre\\\":{\\\"n\\\":[-2147483647,2147483647]}}\",\"refusal\":null,\"role\":\"assistant\"}}],\"created\":1795408101,\"id\":\"chatcmpl-EnFx7F0b70ZgYuTEpH1vIwP79tBld\",\"model\":\"gpt-4.1-mini-2025-04-14\",\"object\":\"chat.completion\",\"routing\":{\"serving_pipereplica\":\"d20261105080730-5d9fb8be-default-r0-dp0-default\"},\"service_tier\":\"default\",\"system_fingerprint\":\"fp_8ebcb6c932\",\"usage\":{\"completion_tokens\":17,\"completion_tokens_details\":{\"accepted_prediction_tokens\":0,\"audio_tokens\":0,\"reasoning_tokens\":0,\"rejected_prediction_tokens\":0},\"latency_checkpoint\":{\"engine_tbt_ms\":10,\"engine_ttft_ms\":23,\"engine_ttlt_ms\":209,\"pre_inference_ms\":111,\"service_tbt_ms\":10,\"service_ttft_ms\":184,\"service_ttlt_ms\":357,\"user_visible_ttft_ms\":73},\"prompt_tokens\":517,\"prompt_tokens_details\":{\"audio_tokens\":0,\"cached_tokens\":0},\"total_tokens\":534}}\n",
+  "served_model": "gpt-4.1-mini-2025-04-14",
+  "usage": {
+    "completion_tokens": 17,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": 0,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "latency_checkpoint": {
+      "engine_tbt_ms": 10,
+      "engine_ttft_ms": 23,
+      "engine_ttlt_ms": 209,
+      "pre_inference_ms": 111,
+      "service_tbt_ms": 10,
+      "service_ttft_ms": 184,
+      "service_ttlt_ms": 357,
+      "user_visible_ttft_ms": 73
+    },
+    "prompt_tokens": 517,
+    "prompt_tokens_details": {
+      "audio_tokens": 0,
+      "cached_tokens": 0
+    },
+    "total_tokens": 534
+  },
+  "content": "{\"pre\":{\"n\":[-2147483647,2147483647]}}",
+  "finish_reason": "stop",
+  "seconds": 2.898,
+  "prompt_sha256": "1a3d6f30c88fe0fcffac496fc71370fe7544aeef5186966201723b8b398c6ba2",
+  "prompt_text": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int n){\nint p = 0;\nint q = 1;\nint r = 0;\nint h = 0;\nr = n;\nh = 0;\nif (q > n)\n{\n  while (((((((((h * h) * h) - (((12 * h) * n) * q)) + (((16 * n) * p) * q)) - ((h * q) * q)) - (((4 * p) * q) * q)) + (((12 * h) * q) * r)) - (((16 * p) * q) * r)) == 0)\n  {\n    if (((4 * (q / 4)) == q) && ((2 * (p / 2)) == p))\n    {\n      q = q / 4;\n      h = p + q;\n      p = p / 2;\n      if (r >= h)\n      {\n        p = p + q;\n        r = r - h;\n      }\n    }\n  }\n\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"n\": [-2147483648, 2147483647]}"
+}

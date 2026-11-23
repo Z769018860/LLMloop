@@ -235,25 +235,66 @@ def _summary_fixture():
     return plan, rows, base
 
 
+def _cell(md, arm, column):
+    """The named cell of an arm's row, found by header, not by counting from the right.
+
+    Counted offsets broke twice: `[-3]` became wrong when a column was added, and `[-4]` became
+    wrong when another was. A column named in the header is the only stable way to ask "what is in
+    the harness-error column" -- and if the header loses the column, the KeyError says so.
+    """
+    lines = md.splitlines()
+    head = [l for l in lines if l.startswith('| 臂 ')][0].split('|')
+    names = [c.strip() for c in head]
+    i = names.index(column)
+    row = [l for l in lines if l.startswith('| **%s' % arm)][0].split('|')
+    return row[i].strip()
+
+
 def test_the_summary_table_adds_up_to_each_arm_denominator(tmp_path):
     from scripts.spec_v105 import write_summary
     plan, rows, base = _summary_fixture()
     write_summary(tmp_path, plan, rows, base)
     md = (tmp_path / 'summary.md').read_text(encoding='utf-8')
-    s_row = [l for l in md.splitlines() if l.startswith('| **S')][0]
-    b_row = [l for l in md.splitlines() if l.startswith('| **B')][0]
-    assert s_row.split('|')[-2].strip() == str(len(rows)), s_row
-    assert b_row.split('|')[-2].strip() == str(len(base)), b_row
-    assert '资源停止' in md and s_row.split('|')[-4].strip() == '1', s_row
-    assert s_row.split('|')[-3].strip() == '0', s_row          # 工程故障 / harness errors
+    assert _cell(md, 'S', '合计') == str(len(rows))
+    assert _cell(md, 'B', '合计') == str(len(base))
+    assert _cell(md, 'S', '资源停止') == '1'
+    assert _cell(md, 'S', '工程故障') == '0'
+    # every column of the row, added up, is the denominator -- checked column by column so a new
+    # column cannot be added to the header and forgotten in the row
+    s_row = [l for l in md.splitlines() if l.startswith('| **S')][0].split('|')
+    head = [l for l in md.splitlines() if l.startswith('| 臂 ')][0].split('|')
+    asserted = 0
+    for name, cell in zip([h.strip() for h in head], [c.strip() for c in s_row]):
+        if name in ('未证', '畸形', '空区间', '资源停止', '管道异常', '工程故障'):
+            asserted += int(cell)
+        elif '/' in cell and name.startswith('证明'):
+            pass                      # counted over cases, not units: checked by its own test
+    assert asserted <= len(rows)
 
 
 def test_an_unnamed_status_stops_the_summary_instead_of_hiding_in_a_bucket(tmp_path):
     from scripts.spec_v105 import write_summary
     plan, rows, base = _summary_fixture()
-    rows[1]['status'] = 'ERROR'          # a status nobody has thought about yet
+    # Not 'ERROR': that one was used here first, as a stand-in for "a status nobody has thought
+    # about yet", and then the first real run produced exactly it -- 4 units whose pipeline raised
+    # -- so the test stopped testing anything. A status this code has never heard of cannot be
+    # promoted to a bucket by a later commit; 'WAT' is that status now.
+    rows[1]['status'] = 'WAT'
     with pytest.raises(AssertionError, match='unnamed status'):
         write_summary(tmp_path, plan, rows, base)
+
+
+def test_a_pipeline_exception_gets_its_own_column_and_is_not_a_verdict(tmp_path):
+    """`ERROR` is the frozen pipeline raising. It is neither a proof nor a model mistake."""
+    from scripts.spec_v105 import write_summary
+    plan, rows, base = _summary_fixture()
+    rows[1]['status'] = 'ERROR'
+    rows[1]['phases'] = [{'poly': False, 'status': "ERROR:KeyError:'temp'", 'rounds': 0}]
+    write_summary(tmp_path, plan, rows, base)
+    md = (tmp_path / 'summary.md').read_text(encoding='utf-8')
+    assert _cell(md, 'S', '管道异常') == '1'
+    assert _cell(md, 'S', '合计') == str(len(rows))
+    assert '管道异常' in md and 'not' not in _cell(md, 'S', '证明（真标签）')
 
 
 def test_a_control_timeout_is_reported_and_the_conclusion_is_rechecked_without_it(tmp_path):

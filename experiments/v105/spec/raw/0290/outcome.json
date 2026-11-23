@@ -1,0 +1,48 @@
+{
+  "index": 290,
+  "case": "loopbench/loop-invgen/up",
+  "corpus": "loopbench",
+  "expected": true,
+  "model": "claude-sonnet-4-5-20250929",
+  "repeat": 1,
+  "status": "UNKNOWN",
+  "retained": 1.0,
+  "pre": {},
+  "narrowed": {
+    "n": [
+      -2147483648,
+      2147483647
+    ]
+  },
+  "per_dim": {
+    "n": 1.0
+  },
+  "shrunk": [],
+  "widened": [],
+  "empty_interval": [],
+  "aliased": [],
+  "parse_error": null,
+  "model_reply": "I'll trace the loop invariants to find where undefined behavior could occur, then state the largest safe box.\n\nThe first loop runs only when `n > 0`, incrementing `i` and `k` together from 0 up to `n` (max `INT_MAX`, never past it \u2014 the last `++` lands exactly on `n`, then the guard fails). When `n <= 0`, neither loop executes, so `k` stays 0 and no division happens.\n\nIn the second loop (only runs when `n > 0`), `k` starts at `n` and the body sees `k = n - t` for iteration `t = 0..n-1`, i.e. `k` ranges from `n` down to `1` \u2014 always positive, so `1 / (k > 0)` is always `1 / 1`. The decrement bottoms out at 0 (not below `INT_MIN`), and `j` tops out at `n` (not above `INT_MAX`). No overflow, no underflow, no division by zero anywhere in the declared range.\n\n{\"pre\": {}}",
+  "served_model": "claude-sonnet-4-5-20250929",
+  "stub": false,
+  "phases": [
+    {
+      "poly": false,
+      "status": "STUCK:Unsupported control flow",
+      "rounds": 1
+    },
+    {
+      "poly": true,
+      "status": "STUCK:Unsupported control flow",
+      "rounds": 1
+    }
+  ],
+  "calls": 1,
+  "prompt_tokens": 423,
+  "completion_tokens": 1500,
+  "seconds": 38.692,
+  "ask_stop_reason": null,
+  "verify_stop_reason": null,
+  "verify_wall_seconds": 9.487416616000019,
+  "verify_peak_rss_bytes": 122380288
+}

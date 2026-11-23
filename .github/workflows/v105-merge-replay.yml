@@ -1,0 +1,121 @@
+name: v1.05 E6, replay a merge from a run's artifacts
+
+# Run 45111896858 finished all eight shards and then failed *inside* `merge`, in under a minute, with
+# the evidence never pushed. Every unit had already been paid for -- 747 model calls, ~14 minutes of
+# eight runners -- and the artifacts were sitting there, unreachable: the log endpoint needs admin
+# rights and the artifact zip needs a token, so from this machine the reason for the failure was
+# eight words ("Merge the shards against the committed control: failure") and nothing else.
+#
+# The obvious move is to fix the guess and re-run the whole arm. That costs another 747 calls to
+# learn whether the guess was right, and it can be wrong twice. This workflow exists so the tail of
+# the pipeline -- download, merge, summarise, trim, push -- can be re-executed against an existing
+# run's artifacts, at the price of a two-minute job and zero model calls. It is also the only way to
+# look at a *failed* merge's traceback, because the failure happens before anything is committed.
+#
+# It deliberately writes its log to `docs/ci/` rather than into `experiments/v105/spec/`: a replay
+# that left files inside the evidence directory would be a replay that edited the evidence. On
+# success it pushes the evidence itself, with the same `push_evidence.sh` the real merge uses --
+# including its "look at the remote" ending, so a green step here still means the bytes arrived.
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Run id whose spec-shard-* artifacts should be merged (e.g. 45111896858)'
+        required: true
+      push_evidence:
+        description: 'Push the merged evidence if the merge succeeds'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  PYTHONPATH: ${{ github.workspace }}
+
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: |
+          python -m pip install -q --upgrade pip
+          python -m pip install -q -e '.[test,smt,exp]'
+          python -m pip install -q pyyaml psutil
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: spec-shard-*
+          merge-multiple: true
+          path: experiments/v105/spec
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: What the artifacts actually contain
+        # Printed before the merge: if a shard's file is missing, or two of them carry the same
+        # index, this is the cheapest place to see it. `merge` asserts the same things, but its
+        # message is one line and this is the inventory.
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          root = pathlib.Path('experiments/v105/spec')
+          for name in ('protocol.json', 'schedule.json', 'cases_payload.json', 'baseline.json'):
+              p = root / name
+              print('%-20s %s' % (name, 'present %d bytes' % p.stat().st_size if p.exists() else 'MISSING'))
+          shards = sorted((root / 'shards').glob('shard_*.json'))
+          print('shard files:', len(shards))
+          seen = {}
+          for f in shards:
+              d = json.loads(f.read_text())
+              print('  %s planned=%s rows=%d complete=%s stub=%s counts=%s'
+                    % (f.name, d.get('planned'), len(d.get('rows') or []),
+                       d.get('complete_capture'), d.get('stub'),
+                       json.dumps(d.get('counts'), sort_keys=True)))
+              for r in d.get('rows') or []:
+                  seen.setdefault(r['index'], []).append(f.name)
+          dup = {i: v for i, v in seen.items() if len(v) > 1}
+          print('distinct indexes:', len(seen), 'duplicated:', len(dup))
+          if dup:
+              for i in list(sorted(dup))[:5]:
+                  print('  index %d appears in %s' % (i, dup[i]))
+          raw = sorted(p for p in (root / 'raw').glob('*') if p.is_dir()) if (root / 'raw').exists() else []
+          print('raw unit directories:', len(raw))
+          PY
+      - name: Merge, and keep the traceback either way
+        id: merge
+        run: |
+          set +e
+          python -u scripts/spec_v105.py merge --output experiments/v105/spec \
+            > docs/ci/v105-merge-replay.log 2>&1
+          rc=$?
+          echo "exit=$rc" | tee -a docs/ci/v105-merge-replay.log
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          # exit 0 either way: a failed merge is the thing we came to read, and a red step here
+          # would skip the upload of the log that says why.
+          exit 0
+      - name: The tail of the log, in the job summary
+        if: always()
+        run: |
+          echo '### merge replay' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          tail -60 docs/ci/v105-merge-replay.log >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          tail -40 docs/ci/v105-merge-replay.log || true
+      - name: Record the log and, if the merge worked, the evidence
+        run: |
+          if [ "${{ steps.merge.outputs.rc }}" = "0" ] && [ "${{ inputs.push_evidence }}" = "true" ]; then
+            python -u scripts/trim_logs.py experiments/v105/spec
+            bash scripts/push_evidence.sh research/v103-exec experiments/v105/spec \
+              "v1.05 E6: evidence from run ${{ inputs.run_id }}, merged by replay [skip ci]"
+          else
+            bash scripts/push_evidence.sh research/v103-exec docs/ci \
+              "v1.05 E6: merge of run ${{ inputs.run_id }} failed; log [skip ci]"
+            echo "the merge did not succeed, so the evidence was not pushed; see docs/ci/v105-merge-replay.log" >&2
+            exit 1
+          fi

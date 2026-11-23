@@ -1,0 +1,72 @@
+{
+  "model_requested": "claude-sonnet-4-5-20250929",
+  "request": {
+    "model": "claude-sonnet-4-5-20250929",
+    "temperature": 0.7,
+    "max_tokens": 1500,
+    "messages": [
+      {
+        "role": "system",
+        "content": "You state preconditions. You never prove anything: a separate verifier checks every value in the box you give, and it rejects the program if any of them overflows. Reply with one JSON object and nothing else."
+      },
+      {
+        "role": "user",
+        "content": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int n){\nint p = 0;\nint q = 1;\nint r = 0;\nint h = 0;\nr = n;\nh = 0;\nif (q > n)\n{\n  while (((((((((((h * h) * n) - (((4 * h) * n) * p)) + ((4 * (n * n)) * q)) - ((n * q) * q)) - ((h * h) * r)) + (((4 * h) * p) * r)) - (((8 * n) * q) * r)) + ((q * q) * r)) + (((4 * q) * r) * r)) == 0)\n  {\n    if (((4 * (q / 4)) == q) && ((2 * (p / 2)) == p))\n    {\n      q = q / 4;\n      h = p + q;\n      p = p / 2;\n      if (r >= h)\n      {\n        p = p + q;\n        r = r - h;\n      }\n    }\n  }\n\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"n\": [-2147483648, 2147483647]}"
+      }
+    ]
+  },
+  "started_utc": "2026-11-23T04:32:56Z",
+  "endpoint": "https://api.square16.org/v1",
+  "attempts": [
+    {
+      "attempt": 0,
+      "ok": true,
+      "http_status": 200,
+      "seconds": 3.114
+    }
+  ],
+  "response_text": "{\"id\":\"msg_011CgzfxmEE9iJ6keJIqGUqD\",\"model\":\"claude-sonnet-4-5-20250929\",\"object\":\"chat.completion\",\"created\":1795408379,\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"```json\\n{\\\"pre\\\": {\\\"n\\\": [-46340, 46340]}}\\n```\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":596,\"completion_tokens\":33,\"total_tokens\":629,\"usage_semantic\":\"openai\",\"usage_source\":\"anthropic\",\"billing_usage\":{\"source\":\"claude_messages\",\"semantic\":\"anthropic\",\"claude_usage\":{\"input_tokens\":596,\"cache_creation_input_tokens\":0,\"cache_read_input_tokens\":0,\"output_tokens\":33,\"cache_creation\":{},\"claude_cache_creation_5_m_tokens\":0,\"claude_cache_creation_1_h_tokens\":0}},\"prompt_tokens_details\":{\"cached_tokens\":0,\"text_tokens\":0,\"audio_tokens\":0,\"image_tokens\":0},\"completion_tokens_details\":{\"text_tokens\":0,\"audio_tokens\":0,\"image_tokens\":0,\"reasoning_tokens\":0},\"input_tokens\":596,\"output_tokens\":0,\"input_tokens_details\":null,\"claude_cache_creation_5_m_tokens\":0,\"claude_cache_creation_1_h_tokens\":0}}",
+  "served_model": "claude-sonnet-4-5-20250929",
+  "usage": {
+    "prompt_tokens": 596,
+    "completion_tokens": 33,
+    "total_tokens": 629,
+    "usage_semantic": "openai",
+    "usage_source": "anthropic",
+    "billing_usage": {
+      "source": "claude_messages",
+      "semantic": "anthropic",
+      "claude_usage": {
+        "input_tokens": 596,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 33,
+        "cache_creation": {},
+        "claude_cache_creation_5_m_tokens": 0,
+        "claude_cache_creation_1_h_tokens": 0
+      }
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "text_tokens": 0,
+      "audio_tokens": 0,
+      "image_tokens": 0
+    },
+    "completion_tokens_details": {
+      "text_tokens": 0,
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "reasoning_tokens": 0
+    },
+    "input_tokens": 596,
+    "output_tokens": 0,
+    "input_tokens_details": null,
+    "claude_cache_creation_5_m_tokens": 0,
+    "claude_cache_creation_1_h_tokens": 0
+  },
+  "content": "```json\n{\"pre\": {\"n\": [-46340, 46340]}}\n```",
+  "finish_reason": "stop",
+  "seconds": 3.114,
+  "prompt_sha256": "2dbd0b4076e0f19cf059cc32d5df2594c0c86f728c1dcb3fd2c705a78498d690",
+  "prompt_text": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int n){\nint p = 0;\nint q = 1;\nint r = 0;\nint h = 0;\nr = n;\nh = 0;\nif (q > n)\n{\n  while (((((((((((h * h) * n) - (((4 * h) * n) * p)) + ((4 * (n * n)) * q)) - ((n * q) * q)) - ((h * h) * r)) + (((4 * h) * p) * r)) - (((8 * n) * q) * r)) + ((q * q) * r)) + (((4 * q) * r) * r)) == 0)\n  {\n    if (((4 * (q / 4)) == q) && ((2 * (p / 2)) == p))\n    {\n      q = q / 4;\n      h = p + q;\n      p = p / 2;\n      if (r >= h)\n      {\n        p = p + q;\n        r = r - h;\n      }\n    }\n  }\n\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"n\": [-2147483648, 2147483647]}"
+}

@@ -1,0 +1,51 @@
+{
+  "index": 333,
+  "case": "loopbench/loop-zilu/benchmark08_conjunctive",
+  "expected": false,
+  "model": "claude-sonnet-4-5-20250929",
+  "repeat": 2,
+  "model_reply": "Looking at the function: it sums `0 + 1 + 2 + ... + (n-1)` into `sum`, incrementing `i` each iteration. With `i__in=0` and `sum__in=0` fixed, the only overflow risk is `sum = sum + i` when the running total exceeds `INT_MAX` (2147483647 on ILP32).\n\nThe final sum is `n*(n-1)/2`. The largest single addition is at `i = n-1`, producing `n*(n-1)/2`. For `n=65536`: `65536*65535/2 = 2147450880 \u2264 2147483647` \u2713. For `n=65537`: the addition at `i=65536` yields `2147516416 > 2147483647` \u2717. The `i++` increment never overflows since `i` reaches at most `n \u2264 65536`.\n\n```json\n{\"pre\": {\"n\": [0, 65536]}}\n```",
+  "served_model": "claude-sonnet-4-5-20250929",
+  "stub": false,
+  "seconds": 29.745,
+  "tokens": {
+    "prompt": 394,
+    "completion": 1500,
+    "total": 1894,
+    "available": true
+  },
+  "parse_error": null,
+  "pre": {
+    "n": [
+      0,
+      65536
+    ]
+  },
+  "narrowed": {
+    "n": [
+      0,
+      65536
+    ],
+    "sum__in": [
+      0,
+      0
+    ],
+    "i__in": [
+      0,
+      0
+    ]
+  },
+  "retained": 3.051804378628731e-05,
+  "per_dim": {
+    "n": 3.0518e-05,
+    "sum__in": 1.0,
+    "i__in": 1.0
+  },
+  "widened": [],
+  "unknown_parameters": [],
+  "shrunk": [
+    "n"
+  ],
+  "empty_interval": [],
+  "aliased": []
+}
