@@ -308,3 +308,18 @@ def test_missing_wall_clock_is_reported_as_missing_and_not_as_zero(tmp_path):
     md = (tmp_path / 'summary.md').read_text(encoding='utf-8')
     assert '未记录' in md
     assert '合计 0 s' not in md
+
+
+def test_json_is_written_with_lf_so_a_hash_can_be_compared_across_platforms(tmp_path):
+    """The fault that killed the first paid E6 run in 14 seconds.
+
+    `cases_payload.json` was written in default text mode, so on Windows it came out CRLF and on the
+    Ubuntu runner LF. `cases_payload_sha256` keys the committed control arm, so the runner's freeze
+    produced a different hash for the same content and the assertion that the payload must not move
+    failed -- correctly, and before any model call. This test is the one that would have caught it
+    locally, where the two spellings of the same file are indistinguishable from the outside.
+    """
+    from scripts.spec_v105 import save
+    save(tmp_path / 'p.json', [{'a': [1, 2]}])
+    raw = (tmp_path / 'p.json').read_bytes()
+    assert b'\r\n' not in raw and raw.endswith(b'\n')

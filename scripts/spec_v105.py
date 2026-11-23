@@ -98,7 +98,13 @@ def shatext(t):
 def save(p, x):
     p = Path(p)
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(json.dumps(x, indent=2) + '\n')
+    # newline='\n' is not decoration. These files are hashed and one of those hashes
+    # (`cases_payload_sha256`) keys the committed control arm. Written in default text mode on
+    # Windows they come out CRLF; on the runner they come out LF; so the same freeze produced two
+    # different payloads and the first paid E6 run died after 14 seconds on the assertion that the
+    # payload must not move -- before a single model call, which is the only good news in it.
+    with open(p, 'w', encoding='utf-8', newline='\n') as f:
+        f.write(json.dumps(x, indent=2) + '\n')
 
 
 def repo_path(p):
@@ -322,6 +328,12 @@ def freeze(out):
     payload = [{'name': c['corpus'] + '/' + c['name'], 'source': c['source'],
                 'bounds': c['bounds'], 'abi': c['abi']} for c in cases]
     save(out / 'cases_payload.json', payload)
+    # The payload is the study's input, and its hash keys the committed control arm, so it has to be
+    # byte-identical wherever it is written -- Windows here, Ubuntu on the runner. LF only, asserted
+    # here as well as in `save()` because this is the one file whose hash travels into another
+    # artifact: the first paid E6 run died on exactly this, 14 seconds in, before any model call.
+    assert b'\r\n' not in (out / 'cases_payload.json').read_bytes(), \
+        'payload written with CRLF: its hash would be platform-dependent'
     key, base = os.environ.get('LLM_API_KEY'), os.environ.get('LLM_BASE_URL') or DEFAULT_BASE
     served = {}
     for m in MODELS:
@@ -978,7 +990,8 @@ def write_summary(out, plan, rows, base):
               '这不是工具的不健全——结论本来就以那个盒子为条件——但它是这个任务本身的风险：把一个真实的 bug 收进盒子外面。' % len(masked)]
     L += ['- 保留域低于 %g 的证明 %d 个，不计入任何结论。' % (MATERIAL, len([1 for r in sp if (r['retained'] or 0) < MATERIAL])),
           '- 结论按预注册规则给出：只有当"仅 S 证出"的用例存在且 McNemar p < 0.05 时，才写"契约有净贡献"。', '']
-    (out / 'summary.md').write_text('\n'.join(L), encoding='utf-8')
+    with open(out / 'summary.md', 'w', encoding='utf-8', newline='\n') as f:
+        f.write('\n'.join(L))
     save(out / 'summary.json', {
         'population': len(cases), 'per_model_majority': {m: sum(1 for c in cases if majority.get((m, c))) for m in models},
         'union_s': len(sset), 'baseline': len(bset), 'only_s': only_s, 'only_b': only_b,

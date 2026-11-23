@@ -64,8 +64,13 @@ jobs:
           assert len(p['no_room']) == 18, len(p['no_room'])
           assert len(p['cases']) * len(p['models']) * p['repeats'] == 747
           # the payload is the study's input; it is committed, and a re-freeze must not move it, or
-          # the committed baseline (which is keyed on this hash) would silently stop applying
-          got = hashlib.sha256(pathlib.Path('experiments/v105/spec/cases_payload.json').read_bytes()).hexdigest()
+          # the committed baseline (which is keyed on this hash) would silently stop applying.
+          # It is written with LF everywhere -- the first attempt at this run compared a CRLF file
+          # written on Windows against an LF file written on Linux and failed in 14 seconds, which
+          # is the assertion doing its job; this line would have said which of the two it was.
+          raw = pathlib.Path('experiments/v105/spec/cases_payload.json').read_bytes()
+          assert b'\r\n' not in raw, 'the payload is CRLF: its hash cannot be compared across platforms'
+          got = hashlib.sha256(raw).hexdigest()
           committed = subprocess.check_output(['git', 'show', 'HEAD:experiments/v105/spec/cases_payload.json'])
           assert hashlib.sha256(committed).hexdigest() == got, 'the freeze changed the payload'
           print('frozen cases', len(p['cases']), 'units', len(p['cases']) * 3 * 3)

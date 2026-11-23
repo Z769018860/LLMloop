@@ -1,7 +1,7 @@
 {
   "study": "v105_spec",
   "purpose": "the model writes the contract, not the proof",
-  "base_commit": "27f6e39c4c15e8bdce092d7a058368988f131140",
+  "base_commit": "39162815ba762397450668b31637e235bd7b0bc6",
   "population": "every llmloop unit of the two v1.04 studies that (a) the frozen front end translated -- so the translated source is on disk -- and (b) the frozen pipeline did not prove at the declared bounds, and (c) carries at least one parameter interval of positive width, without which there is nothing to narrow. 101 units satisfy (a) and (b); 18 fail (c) and are listed under no_room; 83 are the population. Nothing filtered on the label: 14 true, 69 false.",
   "task": "the model states a box on the parameters; the frozen pipeline is re-run inside that box; the outcome is conditional on the box and reported with the retained fraction of the declared domain. One call per unit, no repair round, no failed obligation shown to the model.",
   "control": "a model-free search over the one-parameter family \"shrink every interval towards its midpoint by the same factor s\", descending pre-registered grid [1.0, 0.85, 0.7, 0.55, 0.4, 0.28, 0.18, 0.1, 0.05, 0.02, 0.01], taking the first (largest) s that proves. Up to 11 attempts per case against the model arm's one, and 900 s of wall clock per case against the model arm's 600 s per verify: both asymmetries favour the control, which is the direction a control should be biased in. A case that exceeds its budget is recorded as TIMEOUT rather than as a failure of the method, and the summary reports the conclusion again with every timeout counted as provable.",
@@ -2117,9 +2117,9 @@
       "study_index": 195
     }
   ],
-  "cases_payload_sha256": "2b62917c5a72079f0cb848a46633675c55db80d2e4ece6b8b0bdbd4aaf3ca672",
+  "cases_payload_sha256": "1285ffc819b1e805af9d648d774ca95c414360688fa397ec228fb6f5b3fbbef2",
   "frozen_source_sha256": {
-    "scripts/spec_v105.py": "1821d243fd87d72ad8abf92e8a8b29eb3008050ffe9dbc930877dd4c923ad480",
+    "scripts/spec_v105.py": "4d8550ab00fab1442133d60fb39ca3c5c720dffeff4f56df0ba1a063f7f0049d",
     "scripts/resource_capture.py": "53bb121bee8c601f9133a0d89d43976486d6416fccdda36de903ed32807b02e2",
     "llmloop/__init__.py": "86f0a7168338daa9f7f93646152136b3fe6dfeef92c0d1357cafabf4c00c0e95",
     "llmloop/api.py": "b87e7353dda83ded54e23a825d0bfd16c6e7345021694aa9eae42eb2a5b6fb7a",
