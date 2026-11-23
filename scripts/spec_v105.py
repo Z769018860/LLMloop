@@ -626,13 +626,18 @@ def baseline_case(out, i):
 def _control_case(out, i):
     """One control case, as a child process, with the case budget enforced *here*.
 
-    The check inside `baseline_case` only fires between attempts, so a single attempt that never
-    returns is never capped by it -- and the case that motivated the budget, `termination-nla/
-    egcd3-both-t` (two full 32-bit ranges), does not return at s = 1.0. Measured: it was killed by
-    hand after 15 minutes, having produced no attempt at all, i.e. the budget in the protocol was
-    three hundred seconds away from being enforced. A budget that is written down but not enforced is
-    worse than none: it reads as a cap while the arm runs as long as it likes. So the parent takes
-    the decision, and when it kills, it writes the record itself.
+    The check inside `baseline_case` only fires between attempts, so it bounds how many attempts get
+    *started*, never how long one takes. `termination-nla/egcd3-both-t` (two full 32-bit ranges) ran
+    past 900 s and was still going when it was killed by hand at 15 minutes, with nothing in the arm
+    about to stop it: at that point the directory held no outcome and -- because the arm wrote
+    nothing until it finished -- no way to tell "one slow attempt" from "eleven". A budget written
+    down and not enforced is worse than none, because it reads as a gate.
+
+    So the parent holds `subprocess.run(timeout=...)`, kills, and writes the record itself; the child
+    writes `progress.json` before every attempt, which is what makes the record able to say which
+    rung it died on. The first case this produced: four attempts finished at s = 1.0 / 0.85 / 0.7 /
+    0.55, all UNKNOWN, killed inside the fifth at 960 s -- a far more useful row than "timeout",
+    and one the old code could not have written.
     """
     budget = CASE_SECONDS + 60                  # grace for interpreter start-up, nothing else
     t0 = time.monotonic()
@@ -835,18 +840,25 @@ def write_summary(out, plan, rows, base):
     # with the numbers, not with an adjective
     b_to = [b for b in bvals if b['status'] == 'TIMEOUT']
     b_done = [b for b in bvals if b['status'] != 'TIMEOUT']
-    b_sec = sorted((b.get('seconds') or 0.0) for b in b_done)
+    b_timed = [b for b in b_done if b.get('seconds') is not None]
+    b_sec = sorted(b['seconds'] for b in b_timed)
     case_budget = plan['budgets'].get('baseline_case_seconds', CASE_SECONDS)
+    if b_timed:
+        timing = ('- B 实际耗时（不含超时用例）：非超时 %d 例合计 %.0f s，中位 %.0f s、最慢 %.0f s（`%s`）%s。'
+                  % (len(b_timed), sum(b_sec), b_sec[int(round(0.5 * (len(b_sec) - 1)))], b_sec[-1],
+                     max(b_timed, key=lambda b: b['seconds'])['case'],
+                     '' if len(b_timed) == len(b_done) else
+                     '；另有 %d 例的 outcome 里没有这个字段（它是后加的），不在这里' % (len(b_done) - len(b_timed))))
+    else:
+        timing = ('- B 实际耗时：**未记录**。这 %d 例的 `outcome.json` 里没有墙钟字段（它比这些结果更晚才加进'
+                  '驱动），所以这里不给数字——写成 0 会让"跑了多久"看起来像"没花时间"。'
+                  % len(b_done))
     L += ['## 预算与不对称 / budget and asymmetry', '',
           '- **B** 每例上限 **%d s**（`budgets.baseline_case_seconds`，已冻结），最多 %d 次尝试共享这一点预算；'
           '**S** 每次验证上限 **%d s**（`budgets.verify_wall_seconds`），而 S 只有一次机会。'
           '预算不同且**偏向对照**：同一个用例，模型猜一次，音量旋钮可以拧 %d 次。'
           % (case_budget, len(SHRINK_GRID), plan['budgets']['verify_wall_seconds'], len(SHRINK_GRID)),
-          '- B 实际耗时（不含超时用例）：非超时 %d 例合计 %.0f s，中位 %.0f s、最慢 %.0f s%s。'
-          % (len(b_done), sum((b.get('seconds') or 0.0) for b in b_done),
-             b_sec[int(round(0.5 * (len(b_sec) - 1)))] if b_sec else 0.0,
-             b_sec[-1] if b_sec else 0.0,
-             '' if not b_sec else '（`%s`）' % max(b_done, key=lambda b: b.get('seconds') or 0.0)['case']),
+          timing,
           '- B 超时 **%d** 例%s。超时记为"未证出"，所以它**只会让对照更难看**，不会让模型臂更好看；'
           '下面仍按最保守的口径给一个敏感性数字。'
           % (len(b_to), '' if not b_to else '（%s）' % ', '.join('`%s`' % b['case'] for b in b_to[:6])), '']
@@ -929,6 +941,17 @@ def write_summary(out, plan, rows, base):
 
     material_s = [c for c in sset if max((per[(m, c)]['repeats'][0]['retained'] or 0) for m in models
                                          if (m, c) in per) >= MATERIAL]
+    L += ['## 这个任务测不出什么 / what this task cannot measure', '',
+          '- **正确答案可能得 0 分。** 对 %d 个 true 标签用例，最好的契约是"声明范围内本来就安全"，'
+          '而那个答案在这里拿不到证明：臂 D 已经在**同一组边界**上失败过，所以只有**收缩**才可能出证明。'
+          '任务的激励因此永远是"收"，而不是"判断该收多少"。这就是 masked overflow 必须单列计数、'
+          '并且不能把"证明数"当成能力指标的原因。' % n_true,
+          '- **保留域是声明域的分数，不是正确域的分数。** 0.85 可能刚好切掉那次溢出，也可能切掉了 '
+          '15% 本来就安全的输入；这一列分不出这两种情况。这条臂测的是"模型能不能说出一个**可证明**的盒子"，'
+          '不是"能不能说出一个**对的**盒子"——后者需要逐点比对真值域，而那正是本任务没有的东西。',
+          '- **一次调用、无修复轮**：模型看不到失败义务，因此这里测的是"先验判断"，不是"在反馈下收敛"。'
+          'v1.04 的原子臂给了 ≤2 轮修复，两臂的调用预算不同，这一点在比较成本时要说清。', '']
+
     L += ['## 结论 / verdict', '']
     credited = bool(only_s) and p < 0.05
     if credited:

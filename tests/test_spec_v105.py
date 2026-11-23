@@ -294,3 +294,17 @@ def test_a_case_killed_by_the_parent_still_produces_a_record(tmp_path, monkeypat
     # says "TIMEOUT, 900 s" while the process was killed at 960 s is a small lie with a long life
     assert 'budget 900 s' in row['killed_by'] and '60 s start-up grace' in row['killed_by']
     assert 'inside attempt 1 at s = 1.0' in row['killed_by']
+
+
+def test_missing_wall_clock_is_reported_as_missing_and_not_as_zero(tmp_path):
+    # 82 of the 83 control rows were produced before `seconds` existed. Defaulting them to 0 would
+    # print "合计 0 s" -- a number that is not small, it is absent, and the difference matters when
+    # the point of the section is that the two arms were not given the same budget.
+    from scripts.spec_v105 import write_summary
+    plan, rows, base = _summary_fixture()
+    for b in base.values():
+        b.pop('seconds', None)
+    write_summary(tmp_path, plan, rows, base)
+    md = (tmp_path / 'summary.md').read_text(encoding='utf-8')
+    assert '未记录' in md
+    assert '合计 0 s' not in md
