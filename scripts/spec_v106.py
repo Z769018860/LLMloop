@@ -101,6 +101,30 @@ def repo_path(p):
     return ROOT.joinpath(*str(p).replace('\\', '/').split('/'))
 
 
+def median(xs):
+    """The median, for an even count the mean of the two middle values.
+
+    The first version of this file indexed `sorted(xs)[len(xs) // 2]`, which is the upper of the two
+    middle values for even n. On 18 answers spanning 159 to 16384 tokens that reported 7,558 where
+    the median is 5,784 -- 1,774 tokens of a bimodal sample passed off as "the middle". The number
+    then travelled into a cost projection. So: average the middle two, and say which n it came from.
+    """
+    xs = sorted(x for x in xs if x is not None)
+    if not xs:
+        return None
+    n = len(xs)
+    if n % 2:
+        return xs[n // 2]
+    return (xs[n // 2 - 1] + xs[n // 2]) / 2.0
+
+
+def reasoning_tokens(rec):
+    """`reasoning_tokens` from a raw response record, if the provider reports it."""
+    usage = (rec or {}).get('usage') or {}
+    details = usage.get('completion_tokens_details') or {}
+    return details.get('reasoning_tokens')
+
+
 # --------------------------------------------------------------------------------------------------
 # the control family: one-d parameter shrink, plus single-parameter halves
 # --------------------------------------------------------------------------------------------------
@@ -568,6 +592,7 @@ def ask(out, index):
                'model_reply': rec.get('content'), 'served_model': rec.get('served_model'),
                'finish_reason': rec.get('finish_reason'), 'stub': bool(rec.get('stub')),
                'seconds': rec.get('seconds'), 'tokens': v105.tokens(rec.get('usage')),
+               'reasoning_tokens': reasoning_tokens(rec),
                'parse_error': err, 'pre': pre}
     if pre is not None:
         bounds, info = v105.narrow(meta['bounds'], pre)
@@ -643,6 +668,9 @@ def one_unit(out, plan, units, i, u):
            'finish_reason': spec.get('finish_reason'), 'served_model': spec.get('served_model'),
            'stub': spec.get('stub'), 'phases': ver.get('phases'), 'calls': 1 if spec else 0,
            'prompt_tokens': tok.get('prompt'), 'completion_tokens': tok.get('completion'),
+           'reasoning_tokens': (spec.get('reasoning_tokens')
+                                if spec.get('reasoning_tokens') is not None
+                                else reasoning_tokens(call_rec)),
            'seconds': spec.get('seconds'),
            'ask_stop_reason': (ask_run or {}).get('stop_reason'),
            'verify_stop_reason': (ver_run or {}).get('stop_reason'),
@@ -729,7 +757,7 @@ def _q(xs):
     if not xs:
         return {'n': 0}
     n = len(xs)
-    return {'n': n, 'min': xs[0], 'median': xs[n // 2], 'max': xs[-1]}
+    return {'n': n, 'min': xs[0], 'median': median(xs), 'max': xs[-1]}
 
 
 def _num(x):
@@ -738,6 +766,13 @@ def _num(x):
     if x == 0:
         return '0'
     return ('%.3g' % x)
+
+
+def _cnt(x):
+    """A count, written as a count. `%.3g` turns 5,784 tokens into `5.78e+03`."""
+    if x is None:
+        return '—'
+    return '%d' % round(x)
 
 
 def write_summary(out, plan, rows, base, base1):
@@ -1005,17 +1040,30 @@ def write_summary(out, plan, rows, base, base1):
     ans = [r for r in rows if r['status'] != 'NOT_ANSWERED']
     empty = [r for r in ans if not (r.get('model_reply') or '').strip()]
     hit = [r for r in ans if (r.get('completion_tokens') or 0) >= cap]
+    med = median(r.get('completion_tokens') for r in ans)
+    rk = [r for r in ans if r.get('reasoning_tokens') is not None]
+    rmed = median(r.get('reasoning_tokens') for r in rk)
+    rshare = median(r['reasoning_tokens'] / r['completion_tokens'] for r in rk
+                    if r.get('completion_tokens'))
     L += ['## 7. 退化检查：16k 够不够', '',
           '- 已答 / answered: **%d / %d**（其余见文首横幅）。下列比例只在已答的单元上算。'
           % (len(ans), len(rows)),
           '- 空回答 / empty replies: **%d / %d**（v1.05 在 1500 上限下是 207/249）。'
           % (len(empty), len(ans)),
           '- 撞上 frozen 上限 / completion_tokens ≥ %d: **%d / %d**。' % (cap, len(hit), len(ans)),
-          '- 已答单元的中位 completion tokens: **%d**（其中 reasoning 占绝大多数：`deepseek-v4-1-flash-261017` '
-          '把 8k 量级的预算花在 `reasoning_content` 上，这正是 1500 上限下 207 个空回答的机制）。'
-          % sorted((r.get('completion_tokens') or 0) for r in ans)[len(ans) // 2 if ans else 0],
-          '- `finish_reason` 分布（已答单元）：%s' % json.dumps(dict(collections.Counter(
-              str(r.get('finish_reason')) for r in ans)), sort_keys=True)]
+          '- 已答单元的中位 completion tokens: **%s**（n = %d；偶数取两个中间值的平均，'
+          '不是 `sorted[n//2]` 的上中位——那一版在 n=18、右偏分布的样本上会把 5,784 报成 7,558）。'
+          % (_cnt(med), len(ans))]
+    if rk and rmed is not None and rshare is not None:
+        L += ['- reasoning 占比（%d 个单元报了 `completion_tokens_details.reasoning_tokens`）：'
+              '中位 **%.1f%%**，即中位 **%s** tokens。这就是 1500 上限下空回答的机制——'
+              '预算花在 `reasoning_content` 上，`content` 拿到 0；这一条用计量代替了推断。'
+              % (len(rk), 100.0 * rshare, _cnt(rmed))]
+    else:
+        L += ['- reasoning 占比：**这一跑的记录里没有 `reasoning_tokens`**，不能定量；'
+              '只能从 `finish_reason` 与空回答的共现推测。']
+    L += ['- `finish_reason` 分布（已答单元）：%s' % json.dumps(dict(collections.Counter(
+        str(r.get('finish_reason')) for r in ans)), sort_keys=True)]
     if not ans:
         L += ['', '- **没有数据**：一个单元都没有得到回答，这一节无法评价。']
     elif void:
@@ -1035,18 +1083,42 @@ def write_summary(out, plan, rows, base, base1):
     L.append('')
 
     # ---- cost -----------------------------------------------------------------------------------
-    pt = sum((r.get('prompt_tokens') or 0) for r in rows)
-    ct = sum((r.get('completion_tokens') or 0) for r in rows)
+    # Three denominators live in this section and the first version collapsed them into one: requests
+    # (249), answers that actually carry a `usage` block (18), and wall-clock seconds of the process.
+    # Dividing 7,689 prompt tokens by 249 requests gives 31 tokens per call and 1,363 s of "generation
+    # time" that was mostly sleep between retries of refused calls. Both numbers were wrong in a way a
+    # reader can check, so they get their own columns.
+    used = [r for r in rows if r.get('prompt_tokens') is not None]
+    pt = sum((r.get('prompt_tokens') or 0) for r in used)
+    ct = sum((r.get('completion_tokens') or 0) for r in used)
+    rt = sum((r.get('reasoning_tokens') or 0) for r in used)
     secs = sum((r.get('seconds') or 0) for r in rows)
+    secs_used = sum((r.get('seconds') or 0) for r in used)
     attempts = sum((b.get('attempts') or 0) for b in bv)
     L += ['## 8. 成本', '',
-          '| 臂 | 调用 / 尝试 | prompt tokens | completion tokens | 生成耗时 |',
-          '| --- | --- | --- | --- | --- |',
-          '| S16（本机不跑，runner 上 4 分片） | %d | %d | %d | %.0f s = %.1f h |'
-          % (len(rows), pt, ct, secs, secs / 3600),
-          '| B2（本机，无模型） | %d 次验证尝试 | — | — | 见 `baseline.json` 每例 `seconds` |' % attempts,
-          '', '- 两臂的成本**不可直接比**：对照是确定性搜索（%d 次尝试买一个保证），模型是一次判断（%d 次调用）。'
-              '把"谁更便宜"写成结论需要先定义"一次判断值多少"，这里不做。' % (attempts, len(rows)), '']
+          '| 臂 | 请求 / 尝试 | 有 usage 的回答 | prompt tokens | completion tokens | 其中 reasoning | 已答生成耗时 |',
+          '| --- | --- | --- | --- | --- | --- | --- |',
+          '| S16（本机不跑，runner 上 4 分片） | %d | %d | %d | %d | %d | %.0f s |'
+          % (len(rows), len(used), pt, ct, rt, secs_used),
+          '| B2（本机，无模型） | %d 次验证尝试 | — | — | — | — | 见 `baseline.json` 每例 `seconds` |' % attempts,
+          '']
+    if len(used) < len(rows):
+        L += ['- 三列 token 只来自**有 usage 的 %d 次回答**，不是 %d 次请求。把没回答的那 %d 次摊进分母，'
+              '每次请求的 prompt 就会算成 %.0f tokens（真实是 %.0f），"每次调用多贵"会被低估一个数量级。'
+              % (len(used), len(rows), len(rows) - len(used),
+                 pt / max(len(rows), 1), pt / max(len(used), 1))]
+    if secs - secs_used > 0.01 * max(secs, 1):
+        L += ['- 这个臂在墙钟上花了 %.0f s，其中 **%.0f s 是已答单元的生成**，其余 %.0f s 是被拒调用的'
+              '重试退避（产出这些行的那版驱动对每次 403 还会再试 %d 次）。把总和写成"生成耗时"会高估成本，'
+              '所以两列分开。' % (secs, secs_used, secs - secs_used, ATTEMPTS)]
+    if used and len(used) < len(rows):
+        mean_ct, med_ct = ct / len(used), median(r.get('completion_tokens') for r in used)
+        L += ['- 外推到全部 %d 次请求：按均值 %s 是 **%.2f M**，按中位 %s 是 **%.2f M** completion tokens。'
+              '这是"再跑一次"的价格区间，不是已经花掉的钱。'
+              % (len(rows), _cnt(mean_ct), mean_ct * len(rows) / 1e6,
+                 _cnt(med_ct), (med_ct or 0) * len(rows) / 1e6)]
+    L += ['- 两臂的成本**不可直接比**：对照是确定性搜索（%d 次尝试买一个保证），模型是一次判断（%d 次请求）。'
+          '把"谁更便宜"写成结论需要先定义"一次判断值多少"，这里不做。' % (attempts, len(rows)), '']
 
     # ---- what it cannot test --------------------------------------------------------------------
     L += ['## 9. 这个实验测不出什么 / what this cannot measure', '',
@@ -1086,9 +1158,16 @@ def reclassify(out, rows):
     fixed = 0
     for r in rows:
         f = Path(out) / 'raw' / ('%04d' % r['index']) / 'call.json'
-        if not f.exists() or r['status'] in ('PROVED', 'UNKNOWN', 'VACUOUS', 'RESOURCE_STOP'):
+        if not f.exists():
             continue
         rec = json.loads(f.read_text())
+        # Token accounting is re-derived too: the rows written by the first paid run predate the
+        # `reasoning_tokens` column, and a merge that trusts the old rows would keep reporting the
+        # completion total as if the reasoning share had never been measured.
+        if r.get('reasoning_tokens') is None:
+            r['reasoning_tokens'] = reasoning_tokens(rec)
+        if r['status'] in ('PROVED', 'UNKNOWN', 'VACUOUS', 'RESOURCE_STOP'):
+            continue
         te = rec.get('transport_error')
         if not te and rec.get('content') is None:
             te = 'no content and no transport_error: ' + json.dumps(rec.get('attempts'))[:200]

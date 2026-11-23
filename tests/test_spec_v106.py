@@ -284,3 +284,41 @@ def test_a_run_where_most_calls_were_refused_declares_itself_not_a_result(tmp_pa
     i = [h.strip() for h in head].index('未答')
     assert s_row[i].strip() == '21', s_row
     assert s_row[[h.strip() for h in head].index('合计')].strip() == '36'
+
+
+# --------------------------------------------------------------------------------------------------
+# accounting: a median is not the upper of the two middle values, and a request is not an answer
+# --------------------------------------------------------------------------------------------------
+
+def test_the_median_averages_the_middle_two_values():
+    """`sorted(xs)[len(xs)//2]` is the upper middle value for even n.
+
+    On the 18 answers of the first paid run that reported 7,558 where the median is 5,784, and the
+    number was carried into a cost projection. This is the smallest test that fails if it comes back.
+    """
+    from scripts.spec_v106 import median
+    assert median([1, 2, 3, 4]) == 2.5
+    assert median([3]) == 3
+    assert median([]) is None
+    assert median([159, 424, 4009, 7558]) == (424 + 4009) / 2
+
+
+def test_the_cost_table_divides_tokens_by_answers_not_requests(tmp_path):
+    """A request that was refused has no usage block; it must not be a denominator for tokens.
+
+    The first version divided 7,689 prompt tokens by 249 requests and got 31 tokens per call, and it
+    printed the whole wall clock as generation time when most of it was sleep between retries.
+    """
+    from scripts.spec_v106 import write_summary
+    plan, rows, base = _tree(tmp_path)
+    for i, r in enumerate(rows):
+        if i % 2:
+            r.update({'status': 'NOT_ANSWERED', 'prompt_tokens': None, 'completion_tokens': None,
+                      'model_reply': None, 'finish_reason': None, 'seconds': 30.0})
+    write_summary(tmp_path, plan, rows, base, {})
+    md = (tmp_path / 'summary.md').read_text(encoding='utf-8')
+    cells = [c.strip() for c in [l for l in md.splitlines() if l.startswith('| S16')][0].split('|')]
+    assert cells[2] == str(len(rows)), cells
+    assert cells[3] == str(len(rows) // 2), cells
+    assert '只来自**有 usage 的 %d 次回答**' % (len(rows) // 2) in md
+    assert '重试退避' in md, 'wall clock minus generation time is not reported'

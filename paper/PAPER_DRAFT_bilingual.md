@@ -328,12 +328,13 @@ The model's only surviving edge was a shape the control could not write. Written
 
 **这一臂的模型侧没有跑成 / the model side did not run.** 首次调度的 249 次调用里只有 18 次拿到回答，
 其余 231 次是 `HTTP 403 Insufficient user quota`（账户余额为负）。那 18 个回答足够回答 §4n 留下的问题：
-中位 completion **7,558** tokens、其中约 8,000 是 `reasoning_content`——**1500 上限截断的是推理，不是判断**，
+中位 completion **5,784** tokens（均值 6,133），其中 **99.6%** 是 `completion_tokens_details.reasoning_tokens`
+（中位 5,764）——**1500 上限截断的是推理，不是判断**，
 所以 §4n 里"退化臂"的正确解释是上限的函数。至于"16k 之后模型能不能写出对照写不出的盒子"，
-**本文不作断言**：那需要 249 次调用、约 1.5–1.9 M completion tokens（按已答 18 次的均值 6,133 与中位 7,558 外推），预检通过后一次调度即可跑完。
+**本文不作断言**：那需要 249 次调用、约 1.4–1.5 M completion tokens（按已答 18 次的均值 6,133 与中位 5,784 外推；两个单元撞在 16384 上，右尾被截断，故这是下界一侧的估计），预检通过后一次调度即可跑完。
 更重要的是，这 231 次被拒的调用**没有被记成"模型的空回答"**：它们有独立状态 `NOT_ANSWERED`，
 摘要的第一个数字之前就声明"这不是结果"，判定被关掉。把账单写成能力，是这类研究最容易犯、
-也最难被审稿人看出来的错误——§4n 自己就差点犯了一次（"207/249 空内容"）。 The 16k follow-up answered 18 of 249 calls before the account's balance went negative; the 18 show the 1500 cap was truncating reasoning (median 7,558 completion tokens, ~8,000 of them reasoning), which explains §4n's degenerate arm. Whether the model can now write boxes the control cannot is **not claimed here**. The refused calls carry their own status and the summary declares itself void before printing a number.
+也最难被审稿人看出来的错误——§4n 自己就差点犯了一次（"207/249 空内容"）。 The 16k follow-up answered 18 of 249 calls before the account's balance went negative; the 18 show the 1500 cap was truncating reasoning (median 5,784 completion tokens, 99.6% of them reasoning), which explains §4n's degenerate arm. Whether the model can now write boxes the control cannot is **not claimed here**. The refused calls carry their own status and the summary declares itself void before printing a number.
 
 **这一节唯一是硬结论的一句 / the one hard claim.** 把对照族的边界补上之后，
 **"契约能写出对照写不出的盒子"这句话不成立**。§4n 的"没有净贡献"因此更结实了：它的残余信号
@@ -382,4 +383,4 @@ after our pin, and 64 of those translate. The refusals are syntactic and nameabl
 第一版把 `.yml` 当成用例路径，三个工具都在读 yaml。
 `tests/test_industrial_v104.py` 的 9 个离线测试固定了两处曾经算错的计数：typedef 参数按脱糖类型取界、带指针的循环函数不能被读成"没有循环"。
 
-**v1.05 复现：契约臂 / reproduction: the contract arm.** `scripts/spec_v105.py freeze` → `run --shard K --shards 8 --workers 4` → `merge`；协议在任何真实调用之前提交（`a4f09efd` 处冻结，`prompt_template_note` 记下了 `__in` 那次更正在任何一行存在之前发生），747 个单元 × 每单元一次调用、无修复轮。对照是确定性的、已经提交（`baseline/`，83 例），所以 `merge` 不需要任何模型调用就能从分片行重算 `summary.md`；`merge` 也会拒绝不完整的分片、拒绝 `stub`、拒绝索引重复，并断言每一行加起来等于分母。验证过的两条命令：`python scripts/check_protocols.py`（全仓 15 个协议：no-freeze 5 / ok 4 / amended 6 / DRIFT 0）、`python -m pytest -q tests/test_spec_v105.py`（42 个测试）。若 merge 失败，`.github/workflows/v105-merge-replay.yml` 用已有运行的 artifact 重放「下载 → merge → 推送」，两分钟、零模型调用——**一次失败的 merge 不该值另一次 747 次调用**。 The control is deterministic and committed, so `merge` re-derives the summary from the shard rows with no model call, and a replay workflow re-runs download→merge→push against an existing run's artifacts.
+**v1.05 复现：契约臂 / reproduction: the contract arm.** `scripts/spec_v105.py freeze` → `run --shard K --shards 8 --workers 4` → `merge`；协议在任何真实调用之前提交（`a4f09efd` 处冻结，`prompt_template_note` 记下了 `__in` 那次更正在任何一行存在之前发生），747 个单元 × 每单元一次调用、无修复轮。对照是确定性的、已经提交（`baseline/`，83 例），所以 `merge` 不需要任何模型调用就能从分片行重算 `summary.md`；`merge` 也会拒绝不完整的分片、拒绝 `stub`、拒绝索引重复，并断言每一行加起来等于分母。验证过的两条命令：`python scripts/check_protocols.py`（全仓 16 个协议：no-freeze 5 / ok 5 / amended 6 / DRIFT 0）、`python -m pytest -q tests/test_spec_v105.py`（42 个测试）。若 merge 失败，`.github/workflows/v105-merge-replay.yml` 用已有运行的 artifact 重放「下载 → merge → 推送」，两分钟、零模型调用——**一次失败的 merge 不该值另一次 747 次调用**。 The control is deterministic and committed, so `merge` re-derives the summary from the shard rows with no model call, and a replay workflow re-runs download→merge→push against an existing run's artifacts.
