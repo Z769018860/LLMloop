@@ -1,6 +1,6 @@
 # 由不受信的提案生成并经未改动验证器认证的循环安全不变式 / Certified loop-safety invariants from untrusted proposals checked by an unchanged verifier（论文草稿 / paper draft, 中英文）
 
-> 状态 / status（v1.05）: 整合草稿；§4m（pin 之后的上游新增）、§4n（契约臂 E6）与 §5b 为最新，§4e/§4f 为被更正的旧数字（各自段落内写着是怎么被更正的）。v1.01 及更早的"优于外部工具"表述已在 §4e 与 §5 第 9 条撤回。 Consolidated draft; §4m (post-cutoff additions), §4n (the contract arm, E6) and §5b are current; §4e/§4f are superseded numbers whose paragraphs say how and why. The pre-v1.03 "better than" claims are retracted in §4e and §5 item 9.
+> 状态 / status（v1.06）: 整合草稿；§4m（pin 之后的上游新增）、§4n（契约臂 E6）、§4o（补上对照族边界之后 E6 的残余信号消失）与 §5b 为最新；§4e/§4f 为被更正的旧数字（各自段落内写着是怎么被更正的）。v1.01 及更早的"优于外部工具"表述已在 §4e 与 §5 第 9 条撤回。 Consolidated draft; §4m (post-cutoff additions), §4n (the contract arm, E6), §4o (what extending the control's family did to it) and §5b are current; §4e/§4f are superseded numbers whose paragraphs say how and why. The pre-v1.03 "better than" claims are retracted in §4e and §5 item 9.
 
 ## 摘要 / Abstract
 **中文。** 我们研究 C 循环程序的“无未定义行为”证明：LLM、轨迹拟合器和 Houdini 只提出**不受信的候选**（区间/关系/谓词不变式、可选排名函数），由同一个**未改动的 Z3 验证器**在任意类型化状态上检查入口、归纳与出口义务；候选从不被信任。我们给出七种验证模式（精确轨迹、区间树、关系 `@rel`、分支内循环、单循环谓词模式（含 `unknown()` 非确定性与状态驱动）、多循环组合式、数学整数语义）、受信的规范化（C89 索引、`while`→`for`、循环后索引退出值）、终止性（排名函数）。在合成语料、自动译写的 SV-COMP（264 个循环程序）与 Code2Inv（134 个）上：数学整数语义下 Code2Inv 的 69 个 while 模式程序中 64 个被某个模型认证（Houdini 单独 53 个），期望违反断言的程序在所有阶段 **0 次被认证**；级联（生成器 → LLM → 反馈修复）省约 77% 的 LLM 调用。我们同时报告了否定结果（提示规则无益甚至有害、反馈修复收益很小）、CPAchecker 的更高决断率、真实代码覆盖几乎为零，以及三次自我更正（译写缺陷、提示覆盖、解释器缺陷）。
@@ -275,7 +275,7 @@ VACUOUS 9 / ERROR 4**；按用例、跨模型取多数：**S 证出 10/83，对�
 站得住的两个"仅 S 证出"都是**按符号切开**：`gj2007b` 给 `n ∈ [1, 2^31-1]`、`half` 给 `k ∈ [-1e6, -1]`，
 各保留正好 50%，且都是真标签用例。这是均匀收缩**在构造上写不出**的形状（它只能整体缩，不能只留正半轴）。
 对照独有的 `phases_2-1` 模型一次都没提到——s = 0.85 就能命中的盒子被漏掉了。一边 2、一边 1，
-这是"没有区别"，不是"模型更好"。**掩盖**同样一边倒：S 的 15 个证明单元里 **12 个**落在 false 标签上，剩下 3 个正好就是那两个"切半"用例；B 是 **6 个里 6 个**。也就是说两个臂的证明几乎全部是"把真溢出收到盒子外面"，而唯一例外的形状，恰恰是一维对照族表达不出来的那一种。
+这是"没有区别"，不是"模型更好"。**§4o 把这一族补给对照之后，这两个用例也不再是模型的**：它们各自被一个无模型搜索证出。**掩盖**同样一边倒：S 的 15 个证明单元里 **12 个**落在 false 标签上，剩下 3 个正好就是那两个"切半"用例；B 是 **6 个里 6 个**。也就是说两个臂的证明几乎全部是"把真溢出收到盒子外面"，而唯一例外的形状，恰恰是一维对照族表达不出来的那一种。
 
 三条必须披露的偏离，方向**都对模型臂有利**：(i) 对照的驱动把管道异常折进 `UNKNOWN`（848 次尝试里 10 次抛异常）
 而 S 臂单列为 `ERROR`，所以"对照 6 个"是低估的；(ii) 用例的"已证出"取三次重复里的最好成绩；
@@ -305,6 +305,40 @@ by the summary instead of found by hand.
 - **保留域是声明域的分数，不是正确域的分数。** 0.85 可能刚好切掉那次溢出，也可能切掉了 15% 本来就安全的输入；两者在结果里长得一样。这一臂测的是"能不能说出一个**可证明**的盒子"，不是"能不能说出一个对的盒子"——后者要逐点比对真值域，而那正是这个任务没有的东西。 A retained fraction is a fraction of the declared box, not of the true safe set; the two are indistinguishable in the output.
 - **一次调用、无修复轮。** 模型看不到失败义务，所以测的是先验判断，不是"在反馈下收敛"；§4f 的原子臂给了 ≤2 轮修复，两臂调用预算不同，成本比较时必须写清。 One call, no repair rounds: this measures a prior, not convergence under feedback, and the v1.04 atom arm had up to two repairs.
 
+## 4o. 把对照族的边界补上，然后那 2 个用例就不见了（v1.06 E6b）/ Extending the control's family removes the last positive signal (v1.06 E6b)
+
+§4n 的两处偏离在写作时被列为"必须先修，才谈得上结论"。这一节两件事都做了：给模型一个能说完的上限，
+给对照一个能写符号的族；同时把判定从"一个门槛"改成"一条阶梯"，因为 §4n 里最刺眼的一处偏差是
+**结论取决于门槛取在哪**。 §4n named two repairs as prerequisites for any conclusion. Both are done here, and the ruling became a ladder instead of a floor, because §4n's most uncomfortable property was that the verdict depended on where the floor was put.
+
+**对照族的边界才是那个 2 对 1 的原因 / the residual margin was the control's boundary.** v1.05 的对照是
+"所有区间按同一因子向中点收缩"——一个一维的音量旋钮。而它唯一没证出、模型证出的两个用例是
+`n ∈ [1, 2³¹−1]` 与 `k ∈ [−1e6, −1]`：**单个参数按符号切开**，这是"整体缩放"在构造上写不出的形状。
+E6b 把单参数半区间加进族（切点：中点、0、1、−1），与均匀族并成一张按保留域降序的表，规则不变
+（第一个证出即为答案）。结果：对照从 **6 / 83 变成 17 / 83**，新增 11 例、**丢掉 0 例**，而新增的 11 例里
+就包含那两个用例——`half[n]<=1` 与 `half[k]<=1`，各保留 0.5，**没有使用任何模型**。
+同一次扩展还带来 4 个"把参数钉成一个点"的证明（保留域 4.7e-10）；它们留在族里（模型也能写 `[0,0]`），
+并由阶梯计价：同一批数据在 `t = 0` 上给对照 17 个证明，在 `t ≥ 1e-5` 上只给 13 个。
+The model's only surviving edge was a shape the control could not write. Written, it proves both cases without a model: 6/83 becomes 17/83 with nothing lost, and four of the new proofs are pinning proofs that the ladder prices at zero for every floor above 1e-5.
+
+**判定改为阶梯 / the verdict is now a curve, not a point.** 预注册的规则不再是一个常数：在
+$(0, 10^{-5}, 10^{-4}, 10^{-3}, 10^{-2}, 0.1, 0.25, 0.5)$ 的每一级上算配对，**每一级都要求
+"仅 S 多于仅 B 且 McNemar p < 0.05"**，只要有一级不满足，就没有净贡献。这样"选一个让结论翻转的门槛"
+不再是一个可用的动作，而 §4n 里那个 7 对 6 只是这条曲线上的一个点。 No single floor can produce a claim any more; the claim has to survive every rung.
+
+**这一臂的模型侧没有跑成 / the model side did not run.** 首次调度的 249 次调用里只有 18 次拿到回答，
+其余 231 次是 `HTTP 403 Insufficient user quota`（账户余额为负）。那 18 个回答足够回答 §4n 留下的问题：
+中位 completion **7,558** tokens、其中约 8,000 是 `reasoning_content`——**1500 上限截断的是推理，不是判断**，
+所以 §4n 里"退化臂"的正确解释是上限的函数。至于"16k 之后模型能不能写出对照写不出的盒子"，
+**本文不作断言**：那需要 249 次调用，约 1.9 M completion tokens，预检通过后一次调度即可跑完。
+更重要的是，这 231 次被拒的调用**没有被记成"模型的空回答"**：它们有独立状态 `NOT_ANSWERED`，
+摘要的第一个数字之前就声明"这不是结果"，判定被关掉。把账单写成能力，是这类研究最容易犯、
+也最难被审稿人看出来的错误——§4n 自己就差点犯了一次（"207/249 空内容"）。 The 16k follow-up answered 18 of 249 calls before the account's balance went negative; the 18 show the 1500 cap was truncating reasoning (median 7,558 completion tokens, ~8,000 of them reasoning), which explains §4n's degenerate arm. Whether the model can now write boxes the control cannot is **not claimed here**. The refused calls carry their own status and the summary declares itself void before printing a number.
+
+**这一节唯一是硬结论的一句 / the one hard claim.** 把对照族的边界补上之后，
+**"契约能写出对照写不出的盒子"这句话不成立**。§4n 的"没有净贡献"因此更结实了：它的残余信号
+不是被统计吃掉，而是被一个不需要模型的搜索复现。
+
 ## 5b. 能力边界（明确不声称的）/ Capability boundary (explicitly NOT claimed)
 以下是**当前方法的已知边界**，不是待办的"小问题"；论文把它们作为结果的一部分报告。 / These are **known limits of the current method**, reported as part of the results, not left as minor TODOs.
 1. **非线性多项式不变式。** `ps4–ps6`、`hard`、`divbin` 等（次数 ≥4 的幂和、二进制除法循环）**未认证**。我们区分了瓶颈：LLM 混合（4 模型 × 3 轮，带具体反例）全部卡住；对 `ps4` 手工给出几乎完整的不变式，**未改动的验证器**仍返回 UNKNOWN（四次多项式 + 符号分情形的出口义务）。故瓶颈**包含验证器的非线性求解能力**，验证器与其求解配置是约定的信任基，**未为提高数字而修改**。 Nonlinear polynomial invariants (power sums of degree ≥ 4, binary division loops) are **not certified**; the bottleneck includes the verifier's nonlinear solving, not only the generator; the verifier was **not modified** to improve numbers.
@@ -312,7 +346,7 @@ by the summary instead of found by hand.
 3. **未判定的无溢出程序。** `nestedLoop-1`（Ultimate 证出）、`FMCAD2013-Fig1`（无工具判定）。 Undecided: `nestedLoop-1` (Ultimate proves it), `FMCAD2013-Fig1` (no tool decides it).
 4. **复核的性质。** CBMC 复核是我们对证明规则的再实现（位精确引擎），检验验证器实现与算术，**不检验证明规则本身**；按当前引擎（CBMC 6.11）重跑 586 个证书为 559 VERIFIED、0 FAILED、27 超时、0 错误（22 个超时是原判；另有 5 个原为地址空间上限造成的引擎 OOM，把上限放到 14 GB 后仍在 600 s 内未完，按最差计并入超时）。**v1.04 增加了性质不同的一条（§4j）**：两个外部验证器独立确认不变式在源程序上成立——它检验的是**结论**而不是**规则**，所以本条的界限依然成立，只是"只有自家脚本复核过"这个最强的弱点被去掉了。**v1.04 E5 另外补了规则本身**（§1b、[`docs/SOUNDNESS.md`](SOUNDNESS.md)）：证明规则的八类义务被写成推理规则，可靠性定理 T1 以"符号执行是过近似"为中间引理给出证明，并附义务与代码的逐行对应。但这是**纸面证明**，不是机器检验；审稿人若要求 Coq/Isabelle，那是另一个量级的工作，本文不声称有。含 `goto`/`switch` 的循环不支持，详见 §4i 与 [`docs/UNSUPPORTED_AND_JUMPS.md`](../docs/UNSUPPORTED_AND_JUMPS.md)。 The re-check is our re-implementation of the proof rule on a bit-precise engine; it does not test the rule itself. 586 certificates re-checked on CBMC 6.11: 559 verified, 0 failed, 27 timeouts, 0 errors. §4j adds a check of a different kind (two external validators confirm the invariants); it tests the conclusion, not the rule, so this limit stands.
 5. **新集合没有真值标签。** 用交叉一致性（证明与可重放见证不可能并存）+ 独立复核替代；这不能发现"所有方法都错"的情形。 No ground-truth labels on the fresh set; consistency + re-check cannot reveal a case where every method is wrong.
-6. **LLM 的作用有限且不稳定。** 净增量约 0–4 个程序；修复轮边缘；单次采样（温度 0.7）；4 个有效模型（gemini 不可用、glm 不稳定）；可能见过公开基准。**v1.05 的契约臂给了第二种量法**（§4n）：换成"写前置条件盒子"后，模型臂 10/83 对无模型对照 6/83（p = 0.219），扣掉预注册的保留域门槛后 2 对 1（p = 1）——**换任务形状没有把这个数字变显著**，而两个站得住的净新增都是"按符号切半"，一个一维对照族写不出的形状。 The contract arm (§4n) is a second measurement of the same question and does not change the answer: 10-vs-6 raw, 2-vs-1 after the pre-registered floor.
+6. **LLM 的作用有限且不稳定。** 净增量约 0–4 个程序；修复轮边缘；单次采样（温度 0.7）；4 个有效模型（gemini 不可用、glm 不稳定）；可能见过公开基准。**v1.05 的契约臂给了第二种量法**（§4n）：换成"写前置条件盒子"后，模型臂 10/83 对无模型对照 6/83（p = 0.219），扣掉预注册的保留域门槛后 2 对 1（p = 1）——**换任务形状没有把这个数字变显著**，而两个站得住的净新增都是"按符号切半"，一个一维对照族写不出的形状。**这一点在 v1.06 被推翻了一半**（§4o）：把那个形状加进对照族之后，对照从 6/83 变成 17/83，且**不需要任何模型**就证出了那两例——所以 E6 的残余信号不是结构，是族的边界。 The contract arm (§4n) is a second measurement of the same question: 10-vs-6 raw, 2-vs-1 above the pre-registered floor, and §4o shows even that residual was the control family's boundary rather than the model's structure.
 7. **性质差异。** 我们验证"无任何 UB（含除零等）"，比 no-overflow 更严格；工具检查回绕语义下的断言可达性或溢出。
 8. **范围。** 标量整数循环程序（单/嵌套/多循环、非确定性）；不含一般堆、数组/指针算术（内存安全仅为独立的弱契约结果，见 4b）、浮点、并发。 Scope: scalar-integer loop programs only.
 9. **分母与前端过滤（v1.03）。** 我们**不**声称在全体分母上优于外部工具。前端能接收的比例本身就是能力上界（93/165），在此之外的 72 个程序（`alloca`/`malloc`/提前 `return`/语句后 `assume`）我们只证明 2 个。任何"优于"的表述必须同时给出分母与各工具预算。 We do **not** claim superiority on the full denominator; the front end accepts 93/165 and we prove 2 of the other 72. No superiority claim is admissible without stating the denominator and every tool's budget. **v1.04 的社区套件把这个上界量化了**（§4l）：203 例里 115 例被拒收，其中 31 条是"假设不是变量对常量的合取"、29 条是数组/指针、**25 条是"没有断言"**（性质是 termination，我们没有可检查的目标）、8 条语句后的 `assume`、7 条 `goto`、7 条浮点。前三类占了 85 条，且前两类是可修的语法限制，第三类说明我们根本没有覆盖 termination 性质。 **v1.04 quantifies the ceiling on the community suites:** 115 of 203 are refused, 31 for the form of an assumption, 29 for arrays/pointers, 25 because there is no assertion to check.
