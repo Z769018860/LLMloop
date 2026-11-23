@@ -86,6 +86,13 @@ RUNG_CUTS = (None, 0, 1, -1)
 # the most informative answer known to exist here, and 1e-3 (the v1.05 constant) sits inside.
 MATERIAL_LADDER = (0.0, 1e-5, 1e-4, 1e-3, 1e-2, 0.1, 0.25, 0.5)
 CONTROL_STATUSES = ('PROVED', 'UNKNOWN', 'TIMEOUT', 'ERROR')
+# `NOT_ANSWERED` is the model arm's counterpart to the control's ERROR: the call did not come back
+# with an answer. It is not a malformed reply -- 233 rows of the first paid run of this arm were
+# recorded as MALFORMED when the truth was HTTP 403 `Insufficient user quota`, and the summary then
+# printed "233 empty replies" as if the model had been offered a chance and produced nothing. A
+# transport failure folded into a capability column is the exact shape of error this repository
+# keeps finding; it gets a name, a column, and the power to void the verdict.
+STATUSES = v105.STATUSES + ('NOT_ANSWERED',)
 
 save, sha, shatext = v105.save, v105.sha, v105.shatext
 
@@ -510,16 +517,27 @@ def call(model, messages, key, base):
                 parsed = json.loads(raw)
                 rec['served_model'] = parsed.get('model')
                 rec['usage'] = parsed.get('usage')
-                rec['content'] = parsed['choices'][0]['message'].get('content') or ''
-                rec['finish_reason'] = parsed['choices'][0].get('finish_reason')
+                if 'choices' not in parsed:
+                    # A 200 with no choices is a transport-level result, not a reply. Record what the
+                    # server said so nothing downstream has to infer why `content` is missing.
+                    rec['transport_error'] = raw[:600]
+                else:
+                    rec['content'] = parsed['choices'][0]['message'].get('content') or ''
+                    rec['finish_reason'] = parsed['choices'][0].get('finish_reason')
             except Exception as exc:
                 rec['parse_error'] = type(exc).__name__ + ': ' + str(exc)[:200]
             rec['seconds'] = round(sum(a['seconds'] for a in rec['attempts']), 3)
             return rec
         except error.HTTPError as exc:
+            detail = exc.read().decode(errors='replace')[:400]
             rec['attempts'].append({'attempt': attempt, 'ok': False, 'http_status': exc.code,
                                     'seconds': round(time.perf_counter() - start, 3),
-                                    'error': 'HTTPError: ' + exc.read().decode(errors='replace')[:400]})
+                                    'error': 'HTTPError: ' + detail})
+            # 403 with a quota message is terminal: three retries 0.6 s apart cannot fix a balance.
+            if exc.code == 403 and 'quota' in detail.lower():
+                rec['transport_error'] = 'HTTP 403 quota: ' + detail[:300]
+                rec['quota_exhausted'] = True
+                break
         except Exception as exc:
             rec['attempts'].append({'attempt': attempt, 'ok': False,
                                     'seconds': round(time.perf_counter() - start, 3),
@@ -604,9 +622,19 @@ def one_unit(out, plan, units, i, u):
     ver = json.loads((d / 'verify.json').read_text()) if (d / 'verify.json').exists() else {}
     meta = plan['cases'][u['case']]
     tok = spec.get('tokens') or {}
+    call_rec = json.loads((d / 'call.json').read_text()) if (d / 'call.json').exists() else {}
+    transport = call_rec.get('transport_error')
+    if not transport and call_rec and call_rec.get('content') is None:
+        transport = 'no content and no transport_error: ' + json.dumps(call_rec.get('attempts'))[:200]
+    if stop:
+        status = 'RESOURCE_STOP'
+    elif transport:
+        status = 'NOT_ANSWERED'
+    else:
+        status = ver.get('status', 'NOT_VERIFIED')
     row = {'index': i, 'case': meta['corpus'] + '/' + meta['name'], 'corpus': meta['corpus'],
            'expected': meta['expected'], 'model': u['model'], 'repeat': u['repeat'],
-           'status': 'RESOURCE_STOP' if stop else ver.get('status', 'NOT_VERIFIED'),
+           'transport_error': transport, 'status': status,
            'retained': spec.get('retained'), 'pre': spec.get('pre'),
            'narrowed': spec.get('narrowed'), 'per_dim': spec.get('per_dim'),
            'shrunk': spec.get('shrunk'), 'widened': spec.get('widened'),
@@ -718,8 +746,20 @@ def write_summary(out, plan, rows, base, base1):
     n_true = sum(1 for c in plan['cases'] if c['expected'] is True)
     n_false = len(cases) - n_true
     st = collections.Counter(r['status'] for r in rows)
-    bad = sorted(set(st) - set(v105.STATUSES))
+    bad = sorted(set(st) - set(STATUSES))
     assert not bad, 'unnamed status in the S arm: %s' % bad
+    # The request records are the primary evidence for *why* a unit has no answer, so they decide
+    # whether this run is a result at all. A summary is allowed to say "no result"; it is not allowed
+    # to average over calls the server refused.
+    answered = sum(1 for r in rows if r['status'] != 'NOT_ANSWERED')
+    http = collections.Counter()
+    for r in rows:
+        f = Path(out) / 'raw' / ('%04d' % r['index']) / 'call.json'
+        if not f.exists():
+            continue
+        for a in (json.loads(f.read_text()).get('attempts') or []):
+            http[a.get('http_status')] += 1
+    void = bool(st['NOT_ANSWERED'])
     bad = sorted({b['status'] for b in base.values()} - set(CONTROL_STATUSES))
     assert not bad, 'unnamed status in the control arm: %s' % bad
 
@@ -742,7 +782,27 @@ def write_summary(out, plan, rows, base, base1):
          '> 协议 `protocol.json` 在任何一次真实调用之前提交；`freeze --check` 能在 runner 上逐字节复现。'
          '本臂 %d 个单元（%d 例 × 1 模型 × %d 次重复），对照族无模型、在本机跑完并提交。'
          % (len(rows), len(cases), plan['repeats']), '',
-         '## 0. 这次改了什么，以及每一条会不会反过来伤到模型臂', '',
+         ]
+    if plan.get('protocol_sha256_used') and plan['protocol_sha256_used'] != sha(out / 'protocol.json'):
+        L.insert(2, '> **这份协议在跑完之后重新冻结过**：下面的行由 `protocol_sha256_used`（%s）那份字节产生，'
+                    '磁盘上这份是给**下一次**调度用的。差别与原因见 `driver_amendments`；'
+                    '`results.json` 记的是前者，两者的不一致是看得见、可核对的那句"这些行早于这次冻结"。'
+                    % plan['protocol_sha256_used'][:12] + '\n')
+    if void:
+        L += ['> ## 这不是结果 / THIS RUN IS NOT A RESULT', '>',
+              '> **%d / %d 个单元没有得到任何回答**（%s）。HTTP 状态分布：%s。'
+              % (st['NOT_ANSWERED'], len(rows),
+                 '配额耗尽' if any('quota' in str(r.get('transport_error')) for r in rows) else '见各行记录',
+                 json.dumps(dict(http), sort_keys=True)),
+              '>',
+              '> 下面每一个 S16 数字都是在剩下的 %d 个单元上算的，所以**阶梯、配对、判定三节全部无效**：'
+              '它们描述的是"服务器拒绝了多少次调用"，不是模型能不能写契约。'
+              'v1.05 的教训是把这种情况写成"空回答 207/249"、读成退化的模型；这一次是 %d/249，'
+              '而真正的原因在 `raw/*/call.json` 的 `transport_error` 里，逐条可查。'
+              % (answered, st['NOT_ANSWERED']),
+              '>',
+              '> 对照臂 B2 与本节无关：它没有调用模型，它的 17 个证明不受影响。', '']
+    L += ['## 0. 这次改了什么，以及每一条会不会反过来伤到模型臂', '',
          '| # | v1.05 的问题 | 这次的处置 | 是否让模型臂更难赢 |',
          '| --- | --- | --- | --- |',
          '| 1 | `%s` 在 1500 token 上限下 207/249 个单元返回空内容 | 单独冻结一次跟进，上限 **%d**，只这一个模型 | '
@@ -769,8 +829,8 @@ def write_summary(out, plan, rows, base, base1):
 
     # ---- by label -------------------------------------------------------------------------------
     L += ['## 2. 按标签 / by label（单元数）', '',
-          '| 臂 | 证明（真标签） | 证明（假标签＝掩盖了可达溢出） | 未证 | 畸形 | 空区间 | 资源停止 | 管道异常 | 工程故障 | 合计 |',
-          '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |']
+          '| 臂 | 证明（真标签） | 证明（假标签＝掩盖了可达溢出） | 未证 | 畸形 | 空区间 | 资源停止 | 管道异常 | 工程故障 | 未答 | 合计 |',
+          '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |']
 
     def cnt(pred, status):
         return sum(1 for r in rows if pred(r) and r['status'] == status)
@@ -779,15 +839,16 @@ def write_summary(out, plan, rows, base, base1):
              cnt(lambda r: r['expected'] is False, 'PROVED'),
              cnt(lambda r: True, 'UNKNOWN'), cnt(lambda r: True, 'MALFORMED'),
              cnt(lambda r: True, 'VACUOUS'), cnt(lambda r: True, 'RESOURCE_STOP'),
-             cnt(lambda r: True, 'ERROR'), cnt(lambda r: True, 'HARNESS_ERROR')]
+             cnt(lambda r: True, 'ERROR'), cnt(lambda r: True, 'HARNESS_ERROR'),
+             cnt(lambda r: True, 'NOT_ANSWERED')]
     assert sum(cells) == len(rows), 'the S row does not add up: %s vs %d' % (cells, len(rows))
     # The S row is in units and the control row in cases, so each cell carries its own denominator.
     # v1.05 printed units over cases here (`43 / 14` for a 14-case label), which reads as a ratio and
     # is not one; a column whose meaning depends on which row you are looking at has to say so.
     n_true_u, n_false_u = n_true * plan['repeats'], n_false * plan['repeats']
-    L.append('| **S16 契约**（单元） | %d / %d | **%d / %d** | %d | %d | %d | %d | %d | %d | %d |'
+    L.append('| **S16 契约**（单元） | %d / %d | **%d / %d** | %d | %d | %d | %d | %d | %d | %d | %d |'
              % (cells[0], n_true_u, cells[1], n_false_u,
-                cells[2], cells[3], cells[4], cells[5], cells[6], cells[7], sum(cells)))
+                cells[2], cells[3], cells[4], cells[5], cells[6], cells[7], cells[8], sum(cells)))
     bv = list(base.values())
     bcells = [sum(1 for b in bv if b['status'] == 'PROVED' and b['expected'] is True),
               sum(1 for b in bv if b['status'] == 'PROVED' and b['expected'] is False),
@@ -795,7 +856,7 @@ def write_summary(out, plan, rows, base, base1):
               sum(1 for b in bv if b['status'] == 'TIMEOUT'),
               sum(1 for b in bv if b['status'] == 'ERROR')]
     assert sum(bcells) == len(bv), 'the control row does not add up: %s vs %d' % (bcells, len(bv))
-    L.append('| **B2 扩展族**（用例） | %d / %d | %d / %d | %d | — | — | — | %d | — | %d |'
+    L.append('| **B2 扩展族**（用例） | %d / %d | %d / %d | %d | — | — | — | %d | — | — | %d |'
              % (bcells[0], n_true, bcells[1], n_false, bcells[2], bcells[4], sum(bcells)))
     L += ['', 'S16 的"证明"按单元计：%d 例 × %d 次重复，同一个用例可以出现三次。对照每例只有一行，'
               '所以两行**不能直接比**；能直接比的是下面按用例的配对。' % (len(cases), plan['repeats']), '']
@@ -852,7 +913,13 @@ def write_summary(out, plan, rows, base, base1):
     # ---- verdict --------------------------------------------------------------------------------
     v = decide(ladder)
     L += ['## 4. 判定 / verdict', '']
-    if v['claim']:
+    if void:
+        L += ['- **不适用**：%d 个单元没有回答（见文首横幅）。阶梯上的每一个数字都是在剩下的 %d 个单元上算的，'
+              '所以"仅 S 证出 / 仅 B 证出"描述的是传输状况，不是模型。**不给出判定**，'
+              '也不把这次的数据读成"模型不行"——那正是 v1.05 把 207 个空回答读成退化的模型时犯的错，只是量更大。'
+              % (st['NOT_ANSWERED'], answered), '']
+        v = dict(v, claim=False, why='void', verdict_applicable=False)
+    elif v['claim']:
         r0 = [r for r in ladder if r['only_s'] + r['only_b'] > 0]
         L += ['- **契约有净贡献**：在阶梯的**每一级**（%d 级有差异）上，仅 S 证出都多于仅 B 且 p < 0.05。'
               '最强的一级是 t = %g：仅 S %d、仅 B %d、p = %.3g。'
@@ -932,14 +999,31 @@ def write_summary(out, plan, rows, base, base1):
 
     # ---- degenerate check -----------------------------------------------------------------------
     cap = plan['max_tokens']
-    empty = [r for r in rows if not (r.get('model_reply') or '').strip()]
-    hit = [r for r in rows if (r.get('completion_tokens') or 0) >= cap]
+    # Only answered units can say anything about degeneracy. Counting the 231 units the server
+    # refused as "empty replies" is what turned a quota failure into a statement about the model in
+    # the first place, so the denominator here is `answered`, not `len(rows)`.
+    ans = [r for r in rows if r['status'] != 'NOT_ANSWERED']
+    empty = [r for r in ans if not (r.get('model_reply') or '').strip()]
+    hit = [r for r in ans if (r.get('completion_tokens') or 0) >= cap]
     L += ['## 7. 退化检查：16k 够不够', '',
-          '- 空回答 / empty replies: **%d / %d**（v1.05 在 1500 上限下是 207/249）。' % (len(empty), len(rows)),
-          '- 撞上 frozen 上限 / completion_tokens ≥ %d: **%d**。' % (cap, len(hit)),
-          '- `finish_reason` 分布：%s' % json.dumps(dict(collections.Counter(
-              str(r.get('finish_reason')) for r in rows)), sort_keys=True)]
-    if empty or len(hit) > 0.05 * len(rows):
+          '- 已答 / answered: **%d / %d**（其余见文首横幅）。下列比例只在已答的单元上算。'
+          % (len(ans), len(rows)),
+          '- 空回答 / empty replies: **%d / %d**（v1.05 在 1500 上限下是 207/249）。'
+          % (len(empty), len(ans)),
+          '- 撞上 frozen 上限 / completion_tokens ≥ %d: **%d / %d**。' % (cap, len(hit), len(ans)),
+          '- 已答单元的中位 completion tokens: **%d**（其中 reasoning 占绝大多数：`deepseek-v4-1-flash-261017` '
+          '把 8k 量级的预算花在 `reasoning_content` 上，这正是 1500 上限下 207 个空回答的机制）。'
+          % sorted((r.get('completion_tokens') or 0) for r in ans)[len(ans) // 2 if ans else 0],
+          '- `finish_reason` 分布（已答单元）：%s' % json.dumps(dict(collections.Counter(
+              str(r.get('finish_reason')) for r in ans)), sort_keys=True)]
+    if not ans:
+        L += ['', '- **没有数据**：一个单元都没有得到回答，这一节无法评价。']
+    elif void:
+        L += ['', '- **不能评价退化**：%d 个单元没有回答，剩下的 %d 个不足以谈"16k 够不够"。'
+                  '能说的只有一句：已答的单元里空回答 %d 个、撞上限 %d 个，说明 16384 在机制上够用——'
+                  '被拒绝的那 %d 个不是模型的问题，是账户余额的问题。'
+                  % (st['NOT_ANSWERED'], len(ans), len(empty), len(hit), st['NOT_ANSWERED'])]
+    elif empty or len(hit) > 0.05 * len(ans):
         L += ['', '- **这条臂仍然是退化的**：即便在 %d 上限下，仍有 %d 个空回答、%d 个撞上限。'
                   '在这种状态下"模型证出多少"不是在测判断力，摘要里的每个 S16 数字都要按这个打折读；'
                   '正确的下一步不是再抬上限，而是把任务改成要求更短的输出。' % (cap, len(empty), len(hit))]
@@ -984,7 +1068,35 @@ def write_summary(out, plan, rows, base, base1):
     return {'ladder': ladder, 'verdict': v, 'b2_vs_b1': {'b1': sorted(b1), 'b2': sorted(b2),
                                                          'gained': gained, 'lost': lost},
             'only_s_primary': only_s0, 'rows': len(rows), 'counts': dict(st),
-            'empty_replies': len(empty), 'cap_hits': len(hit)}
+            'empty_replies': len(empty), 'cap_hits': len(hit),
+            'answered': answered, 'not_answered': st['NOT_ANSWERED'],
+            'http_statuses': {str(k): n for k, n in http.items()},
+            'verdict_applicable': not void}
+
+
+def reclassify(out, rows):
+    """Re-derive `NOT_ANSWERED` from the request record, so an old row cannot outvote the evidence.
+
+    The first paid run of this arm wrote `MALFORMED` for 233 units whose calls had actually failed
+    with HTTP 403 `Insufficient user quota` -- the classifier at the time only knew "no JSON came
+    back". Re-running the analysis therefore has to re-read `raw/<i>/call.json`, or the summary would
+    inherit a misclassification from a version of the code that has since been fixed, and every
+    re-run would keep reproducing it. The row is not trusted; the request is.
+    """
+    fixed = 0
+    for r in rows:
+        f = Path(out) / 'raw' / ('%04d' % r['index']) / 'call.json'
+        if not f.exists() or r['status'] in ('PROVED', 'UNKNOWN', 'VACUOUS', 'RESOURCE_STOP'):
+            continue
+        rec = json.loads(f.read_text())
+        te = rec.get('transport_error')
+        if not te and rec.get('content') is None:
+            te = 'no content and no transport_error: ' + json.dumps(rec.get('attempts'))[:200]
+        if te and r['status'] != 'NOT_ANSWERED':
+            r['status'] = 'NOT_ANSWERED'
+            r['transport_error'] = te
+            fixed += 1
+    return fixed
 
 
 def merge(out):
@@ -1005,6 +1117,9 @@ def merge(out):
         rows += d['rows']
     planned = len(plan['cases']) * plan['repeats']
     assert len(rows) == planned, 'expected %d units, got %d' % (planned, len(rows))
+    fixed = reclassify(out, rows)
+    if fixed:
+        print(json.dumps({'reclassified_to_not_answered': fixed}), flush=True)
     bfile = out / 'baseline.json'
     assert bfile.exists(), 'the control is not committed; it cannot be computed on the runner by accident'
     base = {b['case']: b for b in json.loads(bfile.read_text())['rows']}
@@ -1021,15 +1136,42 @@ def merge(out):
                                 'verdict': extra['verdict'], 'b2_vs_b1': extra['b2_vs_b1'],
                                 'only_s_primary': extra['only_s_primary'],
                                 'empty_replies': extra['empty_replies'],
-                                'cap_hits': extra['cap_hits']})
+                                'cap_hits': extra['cap_hits'],
+                                'answered': extra['answered'],
+                                'not_answered': extra['not_answered'],
+                                'http_statuses': extra['http_statuses'],
+                                'verdict_applicable': extra['verdict_applicable']})
     print(json.dumps({'units': len(rows), 'counts': extra['counts'],
                       'verdict': extra['verdict']}, indent=1))
+
+
+def preflight(out):
+    """One eight-token call: can the account answer at all, before 249 calls are dispatched?
+
+    The first paid run of this arm spent sixteen calls and then hit HTTP 403 `Insufficient user
+    quota`, after which 231 units were recorded -- by the driver of that day -- as MALFORMED and
+    read, in the summary, as "the model produced empty content". A run that costs money and can be
+    known in advance to fail should be refusable in advance; one call is a cheap way to refuse.
+    """
+    out = Path(out)
+    key, base = os.environ.get('LLM_API_KEY'), os.environ.get('LLM_BASE_URL') or v105.DEFAULT_BASE
+    if not key:
+        print(json.dumps({'quota_ok': False, 'why': 'no LLM_API_KEY'}))
+        return 2
+    rec = call(MODEL, [{'role': 'user', 'content': 'Reply with the single word OK'}], key, base)
+    ok = rec.get('content') is not None and not rec.get('quota_exhausted')
+    save(out / 'preflight.json', {k: rec[k] for k in
+                                  ('model_requested', 'served_model', 'finish_reason', 'usage',
+                                   'quota_exhausted', 'transport_error', 'attempts') if k in rec})
+    print(json.dumps({'quota_ok': ok, 'served': rec.get('served_model'),
+                      'why': rec.get('transport_error') or rec.get('parse_error')}))
+    return 0 if ok else 2
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('cmd', choices=['freeze', 'check', 'control-case', 'control', 'ask', 'verify',
-                                    'run', 'merge'])
+                                    'run', 'merge', 'preflight'])
     ap.add_argument('--output', default=str(OUT))
     ap.add_argument('--index', type=int)
     ap.add_argument('--shard', type=int)
@@ -1053,7 +1195,10 @@ def main():
         run(a.output, shard=a.shard, shards=a.shards, workers=a.workers)
     elif a.cmd == 'merge':
         merge(a.output)
+    elif a.cmd == 'preflight':
+        return preflight(a.output)
+    return 0
 
 
 if __name__ == '__main__':
-    main()
+    raise SystemExit(main())

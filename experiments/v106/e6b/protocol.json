@@ -1,7 +1,7 @@
 {
   "study": "v106_e6b",
   "purpose": "two repairs to the v1.05 contract arm: a token cap the degenerate model can finish inside, and a control family that can express the shape the model used",
-  "base_commit": "33df8f19d8878f6f2d0a329421d963791d1316bc",
+  "base_commit": "9578f15a7a4a055bde25ac03d901faa7b775e92d",
   "follows": "experiments/v105/spec (the E6 arm: 10/83 vs 6/83, 7/83 vs 6/83 above the retained-volume floor, p = 1, verdict: no net contribution)",
   "deviation_from_v105": {
     "max_tokens": {
@@ -2137,7 +2137,7 @@
   ],
   "cases_payload_sha256": "1285ffc819b1e805af9d648d774ca95c414360688fa397ec228fb6f5b3fbbef2",
   "frozen_source_sha256": {
-    "scripts/spec_v106.py": "bc2542bb7a4c15b679dbbd89be1cc861223512def685bb48a903b46fdaee6fb0",
+    "scripts/spec_v106.py": "667bca3bdb1be8335b5ea84cbc9912fc011ed9d98a11e37b40cf59cc96df366d",
     "scripts/spec_v105.py": "0d77ff41159fddbd7375b65f2cfa7cbcd80a6d385ddfbc0e170ce593f274c170",
     "scripts/resource_capture.py": "53bb121bee8c601f9133a0d89d43976486d6416fccdda36de903ed32807b02e2",
     "llmloop/__init__.py": "86f0a7168338daa9f7f93646152136b3fe6dfeef92c0d1357cafabf4c00c0e95",
@@ -2232,5 +2232,17 @@
     "llmloop/typed_nested.py": "c33cf716b98d7beb802a1b1b5fd5209e994f97d92fa7d2169e882561668ac8b1",
     "llmloop/typed_recurrence.py": "3a9d942f8e97a0922c6fbd3e793548cc2ae12061efe7563a64221b0af25a8ab5",
     "llmloop/unbounded_memory.py": "1e316db2e4fecd2266be2052dee97d37f9eb9dabfd1b8270c766201b7684f9c5"
-  }
+  },
+  "protocol_sha256_used": "1d209c7bc8b4bf3adadd0a661a915e2ae3be950dfffd8bd6af07adf616f5082e",
+  "driver_amendments": [
+    {
+      "script": "scripts/spec_v106.py",
+      "frozen_sha256": "bc2542bb7a4c15b679dbbd89be1cc861223512def685bb48a903b46fdaee6fb0",
+      "current_sha256": "667bca3bdb1be8335b5ea84cbc9912fc011ed9d98a11e37b40cf59cc96df366d",
+      "changed_in": "the commit that follows f0d5f0d",
+      "change": "After the first dispatch answered 18 of 249 calls and then got HTTP 403 `Insufficient user quota` for the rest, three defects in this driver were fixed: a refused call was recorded as MALFORMED (a capability column) instead of NOT_ANSWERED; the summary then computed 'empty replies 233/249' over units that were never answered and called the arm degenerate, which is the v1.05 mistake at a larger scale; and 249 calls could be dispatched without asking whether the account could answer. Added: `NOT_ANSWERED` as a status, `reclassify()` so the merge re-derives it from `raw/<i>/call.json` instead of trusting an old row, a void banner with `verdict_applicable: false`, and a `preflight` subcommand the workflow now runs before the shards.",
+      "why_the_freeze_moved": "The freeze was regenerated after the run so that the next dispatch can run at all: `run` refuses to execute under a freeze whose source hashes do not match the tree, which is the gate doing its job. The bytes that produced the rows in this directory are recorded in `protocol_sha256_used`, and `results.json` writes that hash, not the current one -- so the mismatch between `protocol_sha256_used` and sha256(protocol.json) is the visible, checkable statement that these rows predate the freeze that is on disk now. No row in this directory was produced by the code this protocol froze.",
+      "to_rerun": "a new dispatch after the balance is restored; `preflight` will refuse it in one call if the account still cannot answer"
+    }
+  ]
 }

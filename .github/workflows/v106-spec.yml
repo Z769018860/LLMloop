@@ -22,6 +22,13 @@ name: v1.06 E6b, the model gets room and the control gets the shape
 #
 # The control needs no model and is committed (`baseline/`, 83 cases), computed locally, keyed on
 # `cases_payload_sha256`. The runner only pays for the 249 calls.
+#
+# The first dispatch of this workflow (run on f03750329) answered 18 calls and then got
+# `HTTP 403 Insufficient user quota` for the other 231, which the driver of that day recorded as
+# MALFORMED -- a capability column, filled by a billing failure. That is why the job below starts
+# with `preflight`: one eight-token call, and if the account cannot answer, the shards are skipped
+# instead of spending 249 calls to learn the same thing. The merge step also refuses to let a summary
+# that says "THIS RUN IS NOT A RESULT" pass as a green build.
 on:
   push:
     branches: [research/v103-exec]
@@ -77,8 +84,44 @@ jobs:
           path: experiments/v106/e6b
           if-no-files-found: error
 
-  spec:
+  preflight:
     needs: freeze
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      quota: ${{ steps.q.outputs.quota }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: |
+          python -m pip install -q --upgrade pip
+          python -m pip install -q -e '.[test,smt,exp]'
+          python -m pip install -q pyyaml psutil
+      - uses: actions/download-artifact@v4
+        with:
+          name: e6b-frozen
+          path: experiments/v106/e6b
+      - id: q
+        name: One call, to find out whether the account can answer at all
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+        run: |
+          if python -u scripts/spec_v106.py preflight --output experiments/v106/e6b; then
+            echo "quota=ok" >> "$GITHUB_OUTPUT"
+          else
+            echo "quota=out" >> "$GITHUB_OUTPUT"
+            echo "::error::the account cannot answer this model; the 249 calls are not dispatched"
+          fi
+
+  spec:
+    needs: [freeze, preflight]
+    if: needs.preflight.outputs.quota == 'ok'
     runs-on: ubuntu-latest
     timeout-minutes: 240
     strategy:
@@ -157,3 +200,11 @@ jobs:
         run: |
           bash scripts/push_evidence.sh research/v103-exec experiments/v106/e6b \
             "v1.06 E6b: 16384-token follow-up, and a control that can split a sign, 83 cases x 3 [skip ci]"
+      - name: Refuse to go green on a run that declared itself void
+        # Pushing first and failing second is deliberate: the evidence of a broken run is worth
+        # keeping, and a job that hides it to keep the tick green is the failure mode of §4.6.
+        run: |
+          if grep -q "THIS RUN IS NOT A RESULT" experiments/v106/e6b/summary.md; then
+            echo "::error::the summary says this run is not a result; see its first block"
+            exit 1
+          fi

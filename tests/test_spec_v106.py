@@ -236,3 +236,51 @@ def test_an_unnamed_control_status_stops_the_summary(tmp_path):
     base[sorted(base)[0]]['status'] = 'WAT'
     with pytest.raises(AssertionError, match='unnamed status'):
         write_summary(tmp_path, plan, rows, base, {})
+
+
+# --------------------------------------------------------------------------------------------------
+# the transport, which is not a capability
+# --------------------------------------------------------------------------------------------------
+
+def test_a_refused_call_is_reclassified_from_the_request_record_not_from_the_row(tmp_path):
+    """The first paid run wrote MALFORMED for 231 units whose calls were HTTP 403 quota refusals.
+
+    The row said "the model replied with something unparseable". The request record said "the account
+    is out of balance". Re-running the analysis has to prefer the second, or every re-run inherits
+    the first one's mistake -- which is precisely the failure this repository is a list of.
+    """
+    from scripts.spec_v106 import reclassify
+    raw = tmp_path / 'raw'
+    (raw / '0000').mkdir(parents=True)
+    (raw / '0000' / 'call.json').write_text(json.dumps(
+        {'attempts': [{'attempt': 0, 'ok': False, 'http_status': 403,
+                       'error': 'HTTPError: {"error":{"message":"Insufficient user quota"}}'}],
+         'transport_error': 'HTTP 403 quota: Insufficient user quota'}), encoding='utf-8')
+    (raw / '0001').mkdir(parents=True)
+    (raw / '0001' / 'call.json').write_text(json.dumps(
+        {'content': 'not json at all', 'finish_reason': 'stop',
+         'attempts': [{'attempt': 0, 'ok': True, 'http_status': 200}]}), encoding='utf-8')
+    rows = [{'index': 0, 'status': 'MALFORMED'}, {'index': 1, 'status': 'MALFORMED'}]
+    assert reclassify(tmp_path, rows) == 1
+    assert rows[0]['status'] == 'NOT_ANSWERED' and 'quota' in rows[0]['transport_error']
+    assert rows[1]['status'] == 'MALFORMED', 'a reply that arrived and did not parse is still malformed'
+
+
+def test_a_run_where_most_calls_were_refused_declares_itself_not_a_result(tmp_path):
+    from scripts.spec_v106 import write_summary
+    plan, rows, base = _tree(tmp_path)
+    for r in rows[:21]:                       # 21 of 36 units never got an answer
+        r['status'] = 'NOT_ANSWERED'
+        r['transport_error'] = 'HTTP 403 quota'
+        r['retained'] = None
+    extra = write_summary(tmp_path, plan, rows, base, {})
+    md = (tmp_path / 'summary.md').read_text(encoding='utf-8')
+    assert 'THIS RUN IS NOT A RESULT' in md and '配额耗尽' in md
+    assert extra['verdict_applicable'] is False and extra['verdict']['why'] == 'void'
+    assert extra['not_answered'] == 21 and extra['answered'] == 15
+    # the table still adds up, and the new column is the one that carries the refusals
+    s_row = [l for l in md.splitlines() if l.startswith('| **S16')][0].split('|')
+    head = [l for l in md.splitlines() if l.startswith('| 臂 ')][0].split('|')
+    i = [h.strip() for h in head].index('未答')
+    assert s_row[i].strip() == '21', s_row
+    assert s_row[[h.strip() for h in head].index('合计')].strip() == '36'
