@@ -150,7 +150,12 @@ def main():
             census['present at the pin (development data, not an addition)'] += 1
             continue
         opts = doc.get('options') or {}
-        added.append({'corpus': d, 'name': '%s/%s' % (d, y.stem), 'path': rel,
+        # the case's *source*, not its .yml: the tools take the program, and the first freeze of
+        # this study pointed every case at its yaml, which cost a whole run (all 795 cells came
+        # back UNKNOWN/PROCESS_ERROR, because Ultimate and CBMC were handed a .yml)
+        src_rel = (Path(rel).parent / inputs[0]).as_posix()
+        assert not src_rel.endswith(('.yml', '.yaml')), 'case %s resolved to a yaml' % rel
+        added.append({'corpus': d, 'name': '%s/%s' % (d, y.stem), 'path': src_rel,
                       'property': 'no-overflow', 'expected': label['expected_verdict'],
                       'abi': opts.get('data_model') or 'ILP32',
                       'inputs': inputs, '_yml': y})

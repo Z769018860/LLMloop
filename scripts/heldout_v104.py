@@ -241,6 +241,8 @@ def freeze_cases(external, out, cases_json, svbench_dir, stratum_of=None):
 
     cases = []
     for c in doc['cases']:
+        assert not c['path'].endswith(('.yml', '.yaml')), \
+            'case %s points at a yaml, not at a source file' % c['name']
         p = sv / c['path']
         assert sha_source(p) == c['source_sha256'], 'case %s changed since the census' % c['name']
         cases.append({'corpus': c['corpus'], 'path': c['path'], 'name': c['name'],
