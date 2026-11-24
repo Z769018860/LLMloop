@@ -112,11 +112,28 @@ jobs:
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
           LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
         run: |
-          if python -u scripts/spec_v106.py preflight --output experiments/v106/e6b; then
+          set +e
+          out=$(python -u scripts/spec_v106.py preflight --output experiments/v106/e6b 2>&1)
+          rc=$?
+          printf '%s\n' "$out"
+          {
+            echo '### preflight: can the account answer this model?'
+            echo '```json'
+            echo "$out"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$rc" -eq 0 ]; then
             echo "quota=ok" >> "$GITHUB_OUTPUT"
           else
+            # Red on purpose. The second dispatch of this workflow (run 45505864480, 2026-11-25)
+            # finished green with `spec` and `merge` skipped and only an annotation saying the account
+            # could not answer: a reader who skims the run conclusion sees success and a full
+            # 249-call arm that never happened. That is the same shape as the `record evidence and
+            # push` step that pushed nothing. "The experiment did not run" has to be a failed run.
             echo "quota=out" >> "$GITHUB_OUTPUT"
-            echo "::error::the account cannot answer this model; the 249 calls are not dispatched"
+            echo "::error::the account cannot answer this model; the 249 calls were not dispatched, and this run is red so that it cannot be read as a result"
+            exit 1
+          fi
           fi
 
   spec:
