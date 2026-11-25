@@ -317,9 +317,15 @@ by the summary instead of found by hand.
 E6b 把单参数半区间加进族（切点：中点、0、1、−1），与均匀族并成一张按保留域降序的表，规则不变
 （第一个证出即为答案）。结果：对照从 **6 / 83 变成 17 / 83**，新增 11 例、**丢掉 0 例**，而新增的 11 例里
 就包含那两个用例——`half[n]<=1` 与 `half[k]<=1`，各保留 0.5，**没有使用任何模型**。
-同一次扩展还带来 4 个"把参数钉成一个点"的证明（保留域 4.7e-10）；它们留在族里（模型也能写 `[0,0]`），
+同一次扩展还带来 4 个"把参数钉成一个点"的证明（保留域 **2.3×10⁻¹⁰ 到 9.3×10⁻¹⁰**，四个各不相同）；它们留在族里（模型也能写 `[0,0]`），
 并由阶梯计价：同一批数据在 `t = 0` 上给对照 17 个证明，在 `t ≥ 1e-5` 上只给 13 个。
 The model's only surviving edge was a shape the control could not write. Written, it proves both cases without a model: 6/83 becomes 17/83 with nothing lost, and four of the new proofs are pinning proofs that the ladder prices at zero for every floor above 1e-5.
+
+**钟也是旋钮 / the clock is a knob too.** 17/83 里有 5 例是撞了 900 s 的用例预算记作 `TIMEOUT` 的，摘要当时只能写一个假设
+（"把它们当作本可证出 → 仅 B 16 → 21"）。把同样的族、同样的顺序从冻结跑停下的地方继续、每例给 4 倍预算（3600 s）重跑：
+4 例把族走完仍无一证出，第 5 例试了剩余 19 个盒子里的 18 个，也无。所以 17 不是被钟截断的下界，给钟不会涨；
+那个"当作可证出"的敏感性把对照**高估**了 5 个证明——修正方向是把对照算弱，也就是让模型显得没那么差。
+Twenty-seven hundred more seconds of solver time per case does not move the number: four of the five timeouts exhaust the family at 4x budget with no proof, and the fifth tries 18 of its 19 remaining boxes without one. 17/83 is not a clock-limited lower bound, and the sensitivity that assumed otherwise over-credited the control by five proofs.
 
 **判定改为阶梯 / the verdict is now a curve, not a point.** 预注册的规则不再是一个常数：在
 `0 / 1e-5 / 1e-4 / 1e-3 / 1e-2 / 0.1 / 0.25 / 0.5` 的每一级上算配对，**每一级都要求

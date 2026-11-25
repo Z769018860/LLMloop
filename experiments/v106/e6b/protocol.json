@@ -1,7 +1,7 @@
 {
   "study": "v106_e6b",
   "purpose": "two repairs to the v1.05 contract arm: a token cap the degenerate model can finish inside, and a control family that can express the shape the model used",
-  "base_commit": "fe776cc4ead7fa12b56781480971ec63433c860f",
+  "base_commit": "9399b80d3f8a34845e003b2e08493af05aca8228",
   "follows": "experiments/v105/spec (the E6 arm: 10/83 vs 6/83, 7/83 vs 6/83 above the retained-volume floor, p = 1, verdict: no net contribution)",
   "deviation_from_v105": {
     "max_tokens": {
@@ -2137,7 +2137,7 @@
   ],
   "cases_payload_sha256": "1285ffc819b1e805af9d648d774ca95c414360688fa397ec228fb6f5b3fbbef2",
   "frozen_source_sha256": {
-    "scripts/spec_v106.py": "20d922ddad6a83d226c545044e5319af7e1bbec6bab3d83d90999b6a83f579e9",
+    "scripts/spec_v106.py": "1b623b585925d3bcdb970ebb8cecd8a6cee8e8c96d4c7d40c7d1af7a5dea3b39",
     "scripts/spec_v105.py": "0d77ff41159fddbd7375b65f2cfa7cbcd80a6d385ddfbc0e170ce593f274c170",
     "scripts/resource_capture.py": "53bb121bee8c601f9133a0d89d43976486d6416fccdda36de903ed32807b02e2",
     "llmloop/__init__.py": "86f0a7168338daa9f7f93646152136b3fe6dfeef92c0d1357cafabf4c00c0e95",
@@ -2252,6 +2252,15 @@
       "change": "Three reporting defects, no arm logic: (1) the summary took `sorted(xs)[len(xs)//2]` as a median, which is the upper middle value for even n -- on the 18 answers (159..16384 tokens) it printed 7,558 where the median is 5,784, and that number had already been carried into a cost projection; (2) the cost table divided 7,689 prompt tokens and 110,400 completion tokens by 249 requests although only 18 answers carry a usage block, i.e. 31 tokens per call, and it labelled 1,363 s of wall clock as generation time when 745 s of it was retry backoff on refused calls; (3) `completion_tokens_details.reasoning_tokens` was never recorded, so the claim 'the 1500 cap truncated reasoning' was prose. Added a real median, a `reasoning_tokens` column (filled from `raw/*/call.json` on merge for rows that predate it), separate request/answer denominators, and a cost projection stated as the range its two statistics give.",
       "why_the_freeze_moved": "`run` refuses a freeze whose source hashes do not match the tree, and it cannot tell a reporting edit from a treatment edit. So the freeze moves again, and the rows in this directory stay attached to `protocol_sha256_used` (1d209c7b...), not to the bytes now on disk: the banner at the top of summary.md is the checkable statement that they predate it. Freeze regenerated twice before for the same reason; this is the third and it is the same lesson -- a summary function is not a neutral observer of the run it summarises.",
       "to_rerun": "a new dispatch after the balance is restored; `preflight` refuses it in one call if the account still cannot answer"
+    },
+    {
+      "script": "scripts/spec_v106.py",
+      "frozen_sha256": "ca64c2be2de8c43a0931da9387468810cdbc3e610d9052ccf0453e7cc3d321e7",
+      "current_sha256": "1b623b585925d3bcdb970ebb8cecd8a6cee8e8c96d4c7d40c7d1af7a5dea3b39",
+      "changed_in": "the commit that follows 9399b80d3",
+      "change": "One sentence in the summary, and it is a sign: the timeout sensitivity printed 'only B 16 -> 21' and then said the assumption 'only makes the model arm look better'. Counting five control timeouts as proofs can only strengthen the control, i.e. make the model look worse; the numbers in the same sentence said so. No computation changed, and the regenerated summary differs in that sentence only -- 17/83, 13 at t>=1e-5, and the void banner are unchanged. Also fixed a count in the same paragraph: it said three of the four repairs make the model's job harder while its own table marks two as 'yes'; the ladder cuts both ways and the cap only lets the arm speak. It was 'three places' inside row 3 written as 'three of four'.",
+      "why_the_freeze_moved": "Same reason as the other two: `run` compares `frozen_source_sha256`, and it cannot tell a prose fix from a treatment change. Rows stay attached to `protocol_sha256_used` 1d209c7b. The lesson is narrower than the last one: a summary can be right about every number and wrong about which way they point.",
+      "to_rerun": "a new dispatch after the balance is restored; `preflight` now fails the run in one call if the account cannot answer"
     }
   ]
 }

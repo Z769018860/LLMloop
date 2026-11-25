@@ -17,6 +17,7 @@ the clock. It cannot make the arm better than it is: the boxes it tries are exac
 machine would have tried.
 
     python scripts/e6b_budget_sensitivity.py start --seconds 3600 --workers 5
+    python scripts/e6b_budget_sensitivity.py finalize
     python scripts/e6b_budget_sensitivity.py report
 """
 import argparse
@@ -46,45 +47,86 @@ def slug(name):
     return name.replace('/', '__')
 
 
-def one(name, budget):
+def family_size(plan):
+    return {c['corpus'] + '/' + c['name']: len(v106.family(c['bounds'])) for c in plan['cases']}
+
+
+def state(case, tried, budget, elapsed, frozen_attempts):
+    """The one place that decides what an attempt list means. Used by the run and by `finalize`."""
+    proven = next((t for t in tried if t['status'] == 'PROVED'), None)
+    if proven:
+        status, stopped = 'PROVED', 'proof'
+    elif len(tried) >= budget['family']:
+        status, stopped = 'UNKNOWN', 'family'
+    elif elapsed > budget['seconds']:
+        status, stopped = 'TIMEOUT', 'clock'
+    else:
+        status, stopped = 'UNKNOWN', 'interrupted'
+    return {'case': case, 'budget_seconds': budget['seconds'],
+            'continued_from_frozen_attempts': frozen_attempts,
+            'elapsed': round(elapsed, 1), 'finished': stopped != 'interrupted',
+            'stopped_by': None if stopped == 'interrupted' else stopped, 'status': status,
+            'label': proven['label'] if proven else None,
+            'retained': proven['vol'] if proven else None, 'tried': tried}
+
+
+def one(name, seconds):
     plan, base = load()
+    size = family_size(plan)
     idx = next(i for i, c in enumerate(plan['cases']) if c['corpus'] + '/' + c['name'] == name)
     c = plan['cases'][idx]
     before = base[name]
+    frozen_attempts = len(before.get('tried') or [])
     tried = [dict(t) for t in before.get('tried') or []]
     done = {t['label'] for t in tried}
     out = OUT / (slug(name) + '.json')
     OUT.mkdir(parents=True, exist_ok=True)
     start = time.monotonic()
-    timed_out = False
+    budget = {'seconds': seconds, 'family': size[name]}
     for label, box in v106.family(c['bounds']):
         if label in done:
             continue
-        if time.monotonic() - start > budget:
-            timed_out = True
+        if time.monotonic() - start > seconds:
             break
         status, phases = v105.prove(c['source'], box, c['abi'])
         tried.append({'label': label, 'status': status, 'vol': v105.volume(c['bounds'], box),
                       'phases': phases, 'seconds_from_900': round(time.monotonic() - start, 1)})
-        proven = next((t for t in tried if t['status'] == 'PROVED'), None)
-        v106.save(out, {'case': name, 'budget_seconds': budget,
-                        'continued_from_frozen_attempts': len(before.get('tried') or []),
-                        'elapsed': round(time.monotonic() - start, 1), 'timed_out': timed_out,
-                        'status': 'PROVED' if proven else ('TIMEOUT' if timed_out else 'UNKNOWN'),
-                        'label': proven['label'] if proven else None,
-                        'retained': proven['vol'] if proven else None, 'tried': tried})
-        if proven:
-            print('%s PROVED by %s after %.0fs' % (name, proven['label'], time.monotonic() - start),
-                  flush=True)
-            return
-    proven = next((t for t in tried if t['status'] == 'PROVED'), None)
-    print('%s %s after %.0fs (%d attempts, %d new)'
-          % (name, 'PROVED' if proven else ('TIMEOUT' if timed_out else 'UNKNOWN'),
-             time.monotonic() - start, len(tried), len(tried) - len(before.get('tried') or [])),
-          flush=True)
+        v106.save(out, state(name, tried, budget, time.monotonic() - start, frozen_attempts))
+        if tried[-1]['status'] == 'PROVED':
+            break
+    # The final write. The first version only wrote inside the loop, so a case that stopped on the
+    # clock left a file saying `status: UNKNOWN, timed_out: false` while the process printed TIMEOUT:
+    # the artifact contradicted the run that produced it.
+    final = state(name, tried, budget, time.monotonic() - start, frozen_attempts)
+    v106.save(out, final)
+    print('%s %s after %.0fs (%d attempts, %d new, stopped by %s)'
+          % (name, final['status'], time.monotonic() - start, len(tried),
+             len(tried) - frozen_attempts, final['stopped_by']), flush=True)
 
 
-def start(budget, workers):
+def finalize():
+    """Re-derive the final verdict of cases whose last write was a progress snapshot.
+
+    `stopped_by` is computable from the attempt list and the family size: the loop only leaves early
+    on a proof or on the clock, so "tried fewer boxes than the family" with a full budget spent is a
+    clock stop. This exists because the first version of `one()` did not write after the loop, and the
+    five files in this directory were produced by it.
+    """
+    plan, base = load()
+    size = family_size(plan)
+    for f in sorted(OUT.glob('*.json')):
+        d = json.loads(f.read_text())
+        if 'status' not in d:
+            continue
+        budget = {'seconds': d['budget_seconds'], 'family': size[d['case']]}
+        fixed = state(d['case'], d['tried'], budget,
+                      d.get('elapsed') or 0.0, d['continued_from_frozen_attempts'])
+        # `elapsed` is already recorded; passing it keeps the file's own number rather than the clock.
+        v106.save(f, fixed)
+        print('%-45s %-7s stopped_by=%s' % (d['case'], fixed['status'], fixed['stopped_by']))
+
+
+def start(seconds, workers):
     plan, base = load()
     cases = [b['case'] for b in base.values() if b['status'] == 'TIMEOUT']
     cases.sort()
@@ -94,7 +136,7 @@ def start(budget, workers):
         'script_sha256': v106.sha(Path(__file__).resolve()),
         'driver_sha256': v106.sha(ROOT / 'scripts/spec_v106.py'),
         'driver_protocol_sha256_used': plan.get('protocol_sha256_used'),
-        'budget_seconds': budget, 'workers': workers, 'cases': cases,
+        'budget_seconds': seconds, 'workers': workers, 'cases': cases,
         'rule': 'same family, same order, continue from the first box the frozen run never reached'})
     procs = []
     for name in cases:
@@ -102,7 +144,7 @@ def start(budget, workers):
             print('skip (done):', name)
             continue
         procs.append(subprocess.Popen([sys.executable, '-u', str(Path(__file__).resolve()),
-                                       'one', '--case', name, '--seconds', str(budget)]))
+                                       'one', '--case', name, '--seconds', str(seconds)]))
         if len(procs) >= workers:
             for p in procs:
                 p.wait()
@@ -113,20 +155,37 @@ def start(budget, workers):
 
 def report():
     plan, base = load()
+    size = family_size(plan)
     rows = []
     for f in sorted(OUT.glob('*.json')):
         d = json.loads(f.read_text())
+        if 'status' not in d:          # run.json is provenance, not a case
+            continue
         rows.append(d)
     if not rows:
         print('no sensitivity results yet')
         return
+
+    def verdict(d):
+        # A file is written after every attempt, so a case still running looks exactly like one that
+        # finished without a proof. `stopped_by` is what separates them; the fallback exists for
+        # files written before that field existed.
+        if d.get('stopped_by'):
+            return {'proof': 'PROVED', 'clock': 'CLOCK', 'family': 'exhausted'}[d['stopped_by']]
+        if d['status'] == 'PROVED':
+            return 'PROVED'
+        if len(d['tried']) >= size[d['case']]:
+            return 'exhausted'
+        return 'running'
+
     proved = [d for d in rows if d['status'] == 'PROVED']
-    print('%d / %d of the cases the frozen budget cut off are proved at %d s'
-          % (len(proved), len(rows), max(d['budget_seconds'] for d in rows)))
+    done = [d for d in rows if verdict(d) != 'running']
+    print('%d / %d cases finished, %d proved, at %d s per case'
+          % (len(done), len(rows), len(proved), max(d['budget_seconds'] for d in rows)))
     for d in rows:
-        print(' ', d['status'].ljust(7), d['case'], d.get('label'),
-              'retained', d.get('retained'), 'new attempts',
-              len(d['tried']) - d['continued_from_frozen_attempts'])
+        print(' %-10s %-45s new %2d/%2d  label=%s'
+              % (verdict(d), d['case'], len(d['tried']) - d['continued_from_frozen_attempts'],
+                 size[d['case']] - d['continued_from_frozen_attempts'], d.get('label')))
 
 
 def main():
@@ -138,12 +197,15 @@ def main():
     o = sub.add_parser('one')
     o.add_argument('--case', required=True)
     o.add_argument('--seconds', type=int, default=3600)
+    sub.add_parser('finalize')
     sub.add_parser('report')
     a = ap.parse_args()
     if a.cmd == 'start':
         start(a.seconds, a.workers)
     elif a.cmd == 'one':
         one(a.case, a.seconds)
+    elif a.cmd == 'finalize':
+        finalize()
     else:
         report()
 
