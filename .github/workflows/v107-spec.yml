@@ -1,0 +1,215 @@
+name: v1.07 E6c, the same question at a twelfth of the price
+
+# Frozen protocol: experiments/v107/e6c/protocol.json (83 cases, 1 model, 1 sample per case, 83 units).
+#
+# E6b is closed as void: 18 of 249 units answered before the account balance went negative. Re-pricing
+# the same question found that most of that budget was not buying evidence:
+#
+#   * 166 of the 249 calls existed only for the best-of-three column, which v1.06 itself labels a
+#     sensitivity. The pre-registered pairing is the first repeat. 83 units, not 249.
+#   * the expensive part was reasoning: deepseek-v4.1-flash-ark spent a median 5,764 completion tokens
+#     per answer, 99.6% of it `reasoning_content`. A cap that truncates reasoning looks like a
+#     degenerate arm; a model that does not reason does not have that failure. gpt-4.1-mini returned
+#     0 malformed replies in v1.05's 249 units at a 1500-token cap, so this arm is not re-testing a
+#     cap it already passed. Budget 2048, streaming.
+#   * a reply that has been paid for is cached under the hash of the exact request body, including
+#     the endpoint. A unit whose body is already on disk costs zero calls and is reported as a cache
+#     hit. The cache lives in experiments/llm_cache and is uploaded with the artifact.
+#
+# Reused and NOT re-run: the control arm (17/83, 1,527 verification attempts, 0 calls), its five-case
+# 4x-budget sensitivity (0 of 5 proved, 0 calls), and both prior model arms as records (not pooled:
+# different model, different cap -- pooling would be the comparison error this study is about).
+#
+# Expected cost: 83 calls, ~31k prompt + ~83k completion tokens, against 231 remaining calls at
+# ~1.34M completion for the arm that was void anyway. `max_calls` and `max_tokens` in the protocol are
+# checked before every submission, so the run stops at the number rather than reporting it.
+on:
+  push:
+    branches: [research/v103-exec]
+    paths: ['.github/workflows/v107-spec.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  PYTHONPATH: ${{ github.workspace }}
+
+jobs:
+  freeze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: |
+          python -m pip install -q --upgrade pip
+          python -m pip install -q -e '.[test,smt,exp]'
+          python -m pip install -q pyyaml psutil
+      - name: The tests that guard the transport and the ruling
+        run: |
+          python -m pytest -q tests/test_llm_stream.py tests/test_spec_v107.py \
+            tests/test_spec_v106.py tests/test_check_protocols.py
+      - name: Compare the committed freeze with the tree, byte for byte
+        run: |
+          python -u scripts/spec_v107.py check --output experiments/v107/e6c
+          python - <<'PY'
+          import json, pathlib
+          p = json.loads(pathlib.Path('experiments/v107/e6c/protocol.json').read_text())
+          assert p['model'] == 'gpt-4.1-mini', p['model']
+          assert p['max_tokens'] == 2048, p['max_tokens']
+          assert len(p['cases']) == 83 and p['repeats'] == 1
+          raw = pathlib.Path('experiments/v107/e6c/cases_payload.json').read_bytes()
+          assert b'\r\n' not in raw, 'the payload is CRLF: its hash cannot be compared across platforms'
+          ctl = json.loads(pathlib.Path('experiments/v106/e6b/baseline.json').read_text())
+          proved = sum(1 for r in ctl['rows'] if r['status'] == 'PROVED')
+          print('frozen', len(p['cases']), 'cases,', len(p['cases']) * p['repeats'], 'units')
+          print('control reused:', proved, 'of', len(ctl['rows']), 'proved, 0 calls')
+          assert proved == 17, proved
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e6c-frozen
+          path: experiments/v107/e6c
+          if-no-files-found: error
+
+  preflight:
+    needs: freeze
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: |
+          python -m pip install -q --upgrade pip
+          python -m pip install -q -e '.[test,smt,exp]'
+          python -m pip install -q pyyaml psutil
+      - name: One streamed call with a real prompt, capped at 64 tokens
+        # Not "reply with OK": this sends the actual system message and the actual first prompt, so
+        # the prompt-token count it prints is the one the run will pay, and a model that cannot
+        # stream a JSON object fails here instead of in 83 rows.
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+        run: |
+          set +e
+          out=$(python -u scripts/spec_v107.py preflight --output experiments/v107/e6c 2>&1)
+          rc=$?
+          printf '%s\n' "$out"
+          {
+            echo '### preflight: can the account stream this model?'
+            echo '```json'
+            echo "$out"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::the account cannot answer this model; the 83 calls were not dispatched, and this run is red so that it cannot be read as a result"
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e6c-preflight
+          path: experiments/v107/e6c/preflight.json
+          if-no-files-found: warn
+
+  run:
+    needs: [freeze, preflight]
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: |
+          python -m pip install -q --upgrade pip
+          python -m pip install -q -e '.[test,smt,exp]'
+          python -m pip install -q pyyaml psutil
+      - uses: actions/download-artifact@v4
+        with:
+          name: e6c-frozen
+          path: experiments/v107/e6c
+      - name: Run the frozen schedule
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+        run: |
+          python -u scripts/spec_v107.py run --output experiments/v107/e6c --workers 4
+          python -u scripts/spec_v107.py status --output experiments/v107/e6c
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e6c-raw
+          path: experiments/v107/e6c
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e6c-cache
+          path: experiments/llm_cache
+          if-no-files-found: warn
+
+  merge:
+    needs: [freeze, run]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: |
+          python -m pip install -q --upgrade pip
+          python -m pip install -q -e '.[test,smt,exp]'
+          python -m pip install -q pyyaml psutil
+      - uses: actions/download-artifact@v4
+        with:
+          name: e6c-raw
+          path: experiments/v107/e6c
+      - uses: actions/download-artifact@v4
+        with:
+          name: e6c-cache
+          path: experiments/llm_cache
+      - name: Merge against the reused control
+        run: python -u scripts/spec_v107.py merge --output experiments/v107/e6c
+      - name: Show the summary
+        run: cat experiments/v107/e6c/summary.md
+      - name: Trim the logs GitHub will not take
+        run: python -u scripts/trim_logs.py experiments/v107/e6c
+      - name: Record evidence and push
+        # Two commits, because `push_evidence.sh` takes one path and then verifies the remote actually
+        # has it. The cache is committed on purpose: it is what makes "do not pay twice" true on the
+        # next run rather than only within this one.
+        run: |
+          bash scripts/push_evidence.sh research/v103-exec experiments/v107/e6c \
+            "v1.07 E6c: 83 streamed calls on a cheap model, control reused, 0 of the 1,527 attempts re-run [skip ci]"
+          if [ -d experiments/llm_cache ]; then
+            bash scripts/push_evidence.sh research/v103-exec experiments/llm_cache \
+              "v1.07 E6c: the request cache the run paid for [skip ci]"
+          fi
+      - name: Refuse to go green on a run that declared itself void or incomplete
+        run: |
+          if grep -q "THIS RUN IS NOT A RESULT" experiments/v107/e6c/summary.md; then
+            echo "::error::the summary says this run is not a result; see its first block"
+            exit 1
+          fi
+          if grep -q "这一臂还没跑完" experiments/v107/e6c/summary.md; then
+            echo "::error::the arm is incomplete; the ladder in the summary is a partial sample"
+            exit 1
+          fi

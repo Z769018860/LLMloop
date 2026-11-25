@@ -1,6 +1,6 @@
 # 由不受信的提案生成并经未改动验证器认证的循环安全不变式 / Certified loop-safety invariants from untrusted proposals checked by an unchanged verifier（论文草稿 / paper draft, 中英文）
 
-> 状态 / status（v1.06）: 整合草稿；§4m（pin 之后的上游新增）、§4n（契约臂 E6）、§4o（补上对照族边界之后 E6 的残余信号消失）与 §5b 为最新；§4e/§4f 为被更正的旧数字（各自段落内写着是怎么被更正的）。v1.01 及更早的"优于外部工具"表述已在 §4e 与 §5 第 9 条撤回。 Consolidated draft; §4m (post-cutoff additions), §4n (the contract arm, E6), §4o (what extending the control's family did to it) and §5b are current; §4e/§4f are superseded numbers whose paragraphs say how and why. The pre-v1.03 "better than" claims are retracted in §4e and §5 item 9.
+> 状态 / status（v1.07）: 整合草稿；§4m（pin 之后的上游新增）、§4n（契约臂 E6）、§4o（补上对照族边界之后 E6 的残余信号消失）、§4p（同一问题的重新定价，待付费）与 §5b 为最新；§4e/§4f 为被更正的旧数字（各自段落内写着是怎么被更正的）。v1.01 及更早的"优于外部工具"表述已在 §4e 与 §5 第 9 条撤回。 Consolidated draft; §4m (post-cutoff additions), §4n (the contract arm, E6), §4o (what extending the control's family did to it) and §5b are current; §4e/§4f are superseded numbers whose paragraphs say how and why. The pre-v1.03 "better than" claims are retracted in §4e and §5 item 9.
 
 ## 摘要 / Abstract
 **中文。** 我们研究 C 循环程序的“无未定义行为”证明：LLM、轨迹拟合器和 Houdini 只提出**不受信的候选**（区间/关系/谓词不变式、可选排名函数），由同一个**未改动的 Z3 验证器**在任意类型化状态上检查入口、归纳与出口义务；候选从不被信任。我们给出七种验证模式（精确轨迹、区间树、关系 `@rel`、分支内循环、单循环谓词模式（含 `unknown()` 非确定性与状态驱动）、多循环组合式、数学整数语义）、受信的规范化（C89 索引、`while`→`for`、循环后索引退出值）、终止性（排名函数）。在合成语料、自动译写的 SV-COMP（264 个循环程序）与 Code2Inv（134 个）上：数学整数语义下 Code2Inv 的 69 个 while 模式程序中 64 个被某个模型认证（Houdini 单独 53 个），期望违反断言的程序在所有阶段 **0 次被认证**；级联（生成器 → LLM → 反馈修复）省约 77% 的 LLM 调用。我们同时报告了否定结果（提示规则无益甚至有害、反馈修复收益很小）、CPAchecker 的更高决断率、真实代码覆盖几乎为零，以及三次自我更正（译写缺陷、提示覆盖、解释器缺陷）。
@@ -346,6 +346,41 @@ Twenty-seven hundred more seconds of solver time per case does not move the numb
 **"契约能写出对照写不出的盒子"这句话不成立**。§4n 的"没有净贡献"因此更结实了：它的残余信号
 不是被统计吃掉，而是被一个不需要模型的搜索复现。
 
+## 4p. 重新定价：同一个问题，十二分之一的价钱（v1.07 E6c，待付费）/ Re-pricing the same question at a twelfth of the cost (v1.07 E6c, not yet paid)
+
+§4o 的模型侧是 void：249 个单元只有 18 个拿到回答，其余被 `HTTP 403` 拒掉。再跑一次的价格约
+**1.4 M** completion tokens。这一次先不掏钱，而是问：那 249 次调用**在为哪一件事付钱**。三个答案，
+三个都不值。 §4o's model side is void and re-running it costs about 1.4 M completion tokens. Before
+paying again, the question is what those 249 calls were buying. Three answers, none of them worth it.
+
+- **三分之二的调用在给一个敏感性付钱。** 预注册的主口径是每例的第一次重复；第 2、3 次重复只服务
+  于 best-of-3 那一列，而 v1.06 自己把它标成敏感性。主口径需要 **83** 次，不是 249 次。
+- **贵的是推理，而推理只在会推理的模型上是个问题。** 那条臂的 18 个回答中位 **5,764** 个 completion
+  token、其中 **99.6%** 是推理；1500 的上限截的是推理，于是它看起来像退化的臂。换成一个在
+  v1.05 的 249 个单元里 **0 个 malformed**（上限 1500）的便宜模型，就不存在这个混淆：cap 从来没有
+  绑住过它。这不是"降低要求"，是**换一个没有被上限混淆过的仪器**。
+- **已经付过的钱又付一遍。** 请求体（含端点）哈希之后，同一次请求只付一次；命中缓存算 0 次调用，
+  并在摘要里单列。
+
+**复用 / reused, not re-run.** 对照臂（17/83、1,527 次验证尝试）、它的 4 倍钟敏感性（5 例、46 次
+尝试、0 例证出）、以及两条旧模型臂的记录，全部 **0 次调用**。对照是确定性搜索，重跑只会再花
+1,527 次求解；而模型的行换了模型或换了上限就不再是同一次测量，所以那两批**不并入**——把 16k 的
+18 个回答和 2k 的 83 个回答并成"模型的成绩"，正是本文一直在批评的那种跨条件比较。 The control
+is deterministic, so re-running it would buy 1,527 solver attempts and nothing else. The two prior
+model arms are kept as records and are **not pooled**: a different model or a different cap is not
+the same measurement, and pooling would be the very comparison error this paper is about.
+
+**账 / the bill.** 231 次剩余调用、约 1.34 M completion tokens，换成 **83** 次调用、约 **83 k**
+completion + 31 k prompt。约 **12 倍**，而主口径的样本数一个没少（83 例）；少的是敏感性的两次
+重复和推理的 token。 231 calls and ~1.34 M completion tokens become 83 calls and ~114 k tokens in
+total. The primary sample is unchanged at 83 cases; what is gone is the sensitivity repeats and the
+reasoning.
+
+**这一臂不能说什么 / what this arm cannot say.** 它测的是**一个价位**，不是模型的极限。便宜模型
+在后，不能写成"模型不行"，只能写成"在这个价位上，模型没有净贡献"。`deepseek` 在 16k 下能做什么，
+在有人付那 1.4 M 之前**仍然是一个未回答的问题**，本文不作断言。 It measures one price point, not a
+capability ceiling; whether deepseek at 16k would do better remains unanswered and is not claimed.
+
 ## 5b. 能力边界（明确不声称的）/ Capability boundary (explicitly NOT claimed)
 以下是**当前方法的已知边界**，不是待办的"小问题"；论文把它们作为结果的一部分报告。 / These are **known limits of the current method**, reported as part of the results, not left as minor TODOs.
 1. **非线性多项式不变式。** `ps4–ps6`、`hard`、`divbin` 等（次数 ≥4 的幂和、二进制除法循环）**未认证**。我们区分了瓶颈：LLM 混合（4 模型 × 3 轮，带具体反例）全部卡住；对 `ps4` 手工给出几乎完整的不变式，**未改动的验证器**仍返回 UNKNOWN（四次多项式 + 符号分情形的出口义务）。故瓶颈**包含验证器的非线性求解能力**，验证器与其求解配置是约定的信任基，**未为提高数字而修改**。 Nonlinear polynomial invariants (power sums of degree ≥ 4, binary division loops) are **not certified**; the bottleneck includes the verifier's nonlinear solving, not only the generator; the verifier was **not modified** to improve numbers.
@@ -389,4 +424,4 @@ after our pin, and 64 of those translate. The refusals are syntactic and nameabl
 第一版把 `.yml` 当成用例路径，三个工具都在读 yaml。
 `tests/test_industrial_v104.py` 的 9 个离线测试固定了两处曾经算错的计数：typedef 参数按脱糖类型取界、带指针的循环函数不能被读成"没有循环"。
 
-**v1.05 复现：契约臂 / reproduction: the contract arm.** `scripts/spec_v105.py freeze` → `run --shard K --shards 8 --workers 4` → `merge`；协议在任何真实调用之前提交（`a4f09efd` 处冻结，`prompt_template_note` 记下了 `__in` 那次更正在任何一行存在之前发生），747 个单元 × 每单元一次调用、无修复轮。对照是确定性的、已经提交（`baseline/`，83 例），所以 `merge` 不需要任何模型调用就能从分片行重算 `summary.md`；`merge` 也会拒绝不完整的分片、拒绝 `stub`、拒绝索引重复，并断言每一行加起来等于分母。验证过的两条命令：`python scripts/check_protocols.py`（全仓 16 个协议：no-freeze 5 / ok 5 / amended 6 / DRIFT 0）、`python -m pytest -q tests/test_spec_v105.py`（42 个测试）。若 merge 失败，`.github/workflows/v105-merge-replay.yml` 用已有运行的 artifact 重放「下载 → merge → 推送」，两分钟、零模型调用——**一次失败的 merge 不该值另一次 747 次调用**。 The control is deterministic and committed, so `merge` re-derives the summary from the shard rows with no model call, and a replay workflow re-runs download→merge→push against an existing run's artifacts.
+**v1.05 复现：契约臂 / reproduction: the contract arm.** `scripts/spec_v105.py freeze` → `run --shard K --shards 8 --workers 4` → `merge`；协议在任何真实调用之前提交（`a4f09efd` 处冻结，`prompt_template_note` 记下了 `__in` 那次更正在任何一行存在之前发生），747 个单元 × 每单元一次调用、无修复轮。对照是确定性的、已经提交（`baseline/`，83 例），所以 `merge` 不需要任何模型调用就能从分片行重算 `summary.md`；`merge` 也会拒绝不完整的分片、拒绝 `stub`、拒绝索引重复，并断言每一行加起来等于分母。验证过的两条命令：`python scripts/check_protocols.py`（全仓 17 个协议：no-freeze 5 / ok 6 / amended 6 / DRIFT 0）、`python -m pytest -q tests/test_spec_v105.py`（42 个测试）。若 merge 失败，`.github/workflows/v105-merge-replay.yml` 用已有运行的 artifact 重放「下载 → merge → 推送」，两分钟、零模型调用——**一次失败的 merge 不该值另一次 747 次调用**。 The control is deterministic and committed, so `merge` re-derives the summary from the shard rows with no model call, and a replay workflow re-runs download→merge→push against an existing run's artifacts.
