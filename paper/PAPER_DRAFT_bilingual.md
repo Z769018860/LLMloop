@@ -387,6 +387,12 @@ The contract arm proves 5/83 against the control's 17/83: after pairing, 1 only-
 only-control, 4 both, exact McNemar p = 0.0018, and every rung of the ladder points the same way.
 §4n's "no net contribution" (p = 1) becomes significant evidence in the opposite direction.
 
+**重跑是免费的 / re-running is free.** 83 个请求体连同答复一起提交在 `experiments/llm_cache/`（344 KB）。
+按真实端点重算这 83 个哈希，**83/83 命中**：现在再执行一次 `run`，付费调用是 **0**。这既是「不重复付费」
+这条纪律唯一可检验的形式，也意味着这一节的数字可以在一台没有额度的机器上重放。 All 83 request bodies
+are committed with their replies, keyed by body hash including the endpoint; 83 of 83 hit, so re-running
+the arm now costs zero calls.
+
 两处细节决定了这句话能说到多硬 / two details bound how hard that sentence can be pressed:
 模型唯一"仅 S"的那一例是**钉死型**的（`geo1-both-t`，保留域 6.98e-10，盒子把 z 钉成一个点），
 阶梯在 `t ≥ 1e-4` 上把它折价为 0——所以"仅 S 证出"在最严的几级上读作 **0**；而模型不是"少"，
