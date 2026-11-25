@@ -346,7 +346,7 @@ Twenty-seven hundred more seconds of solver time per case does not move the numb
 **"契约能写出对照写不出的盒子"这句话不成立**。§4n 的"没有净贡献"因此更结实了：它的残余信号
 不是被统计吃掉，而是被一个不需要模型的搜索复现。
 
-## 4p. 重新定价：同一个问题，十二分之一的价钱（v1.07 E6c，待付费）/ Re-pricing the same question at a twelfth of the cost (v1.07 E6c, not yet paid)
+## 4p. 重新定价：同一个问题，四十分之一的价钱（v1.07 E6c）/ Re-pricing the same question at a fortieth of the cost (v1.07 E6c)
 
 §4o 的模型侧是 void：249 个单元只有 18 个拿到回答，其余被 `HTTP 403` 拒掉。再跑一次的价格约
 **1.4 M** completion tokens。这一次先不掏钱，而是问：那 249 次调用**在为哪一件事付钱**。三个答案，
@@ -362,24 +362,44 @@ paying again, the question is what those 249 calls were buying. Three answers, n
 - **已经付过的钱又付一遍。** 请求体（含端点）哈希之后，同一次请求只付一次；命中缓存算 0 次调用，
   并在摘要里单列。
 
-**复用 / reused, not re-run.** 对照臂（17/83、1,527 次验证尝试）、它的 4 倍钟敏感性（5 例、46 次
+**复用 / reused, not re-run.** 对照臂（17/83、1,481 次验证尝试）、它的 4 倍钟敏感性（5 例、46 次
 尝试、0 例证出）、以及两条旧模型臂的记录，全部 **0 次调用**。对照是确定性搜索，重跑只会再花
-1,527 次求解；而模型的行换了模型或换了上限就不再是同一次测量，所以那两批**不并入**——把 16k 的
+1,481 次求解（加上那 5 例敏感性共 1,527）；而模型的行换了模型或换了上限就不再是同一次测量，所以那两批**不并入**——把 16k 的
 18 个回答和 2k 的 83 个回答并成"模型的成绩"，正是本文一直在批评的那种跨条件比较。 The control
-is deterministic, so re-running it would buy 1,527 solver attempts and nothing else. The two prior
+is deterministic, so re-running it would buy 1,481 solver attempts and nothing else. The two prior
 model arms are kept as records and are **not pooled**: a different model or a different cap is not
 the same measurement, and pooling would be the very comparison error this paper is about.
 
-**账 / the bill.** 231 次剩余调用、约 1.34 M completion tokens，换成 **83** 次调用、约 **83 k**
-completion + 31 k prompt。约 **12 倍**，而主口径的样本数一个没少（83 例）；少的是敏感性的两次
-重复和推理的 token。 231 calls and ~1.34 M completion tokens become 83 calls and ~114 k tokens in
-total. The primary sample is unchanged at 83 cases; what is gone is the sensitivity repeats and the
-reasoning.
+**账 / the bill.** 231 次剩余调用、约 1.34 M completion tokens，换成 **83** 次调用、**34,555**
+prompt + **1,709** completion tokens，生成耗时 164 s、首 token 延迟中位 1.80 s：约 **40 倍**，
+而主口径的样本数一个没少（83 例）。跑之前的估计是 114 k（按每例约 1,000 completion），实测
+1,709——**估计高了 40 倍**，因为 `gpt-4.1-mini` 不推理，答一个盒子只要 19 个 token。 231 calls
+and ~1.34 M completion tokens become 83 calls and 36.3 k tokens in total: about 40x, with the
+primary sample unchanged at 83 cases. The pre-run estimate was 114 k and was 40x too high, because
+this model does not reason.
+
+**结果：一次干净的否定 / the result: a clean negative.** 83/83 都有回答，0 个畸形、0 个空回答、
+0 个被预算截断。契约臂证出 **5/83**，对照 **17/83**：配对后仅 S **1**、仅 B **13**、都证出 **4**，
+精确 McNemar **p = 0.0018**。阶梯上每一级都是同一个方向（1e-4 及以上仅 S **0**、仅 B 10，
+p = 0.0020；0.5 上是 0 对 12，p = 4.9e-4），判定 `breaks`。§4n 的"没有净贡献"（p = 1）在这里
+变成**显著的反向证据**：一个不需要模型的搜索比这个价位的模型多覆盖 13 个用例。
+The contract arm proves 5/83 against the control's 17/83: after pairing, 1 only-model, 13
+only-control, 4 both, exact McNemar p = 0.0018, and every rung of the ladder points the same way.
+§4n's "no net contribution" (p = 1) becomes significant evidence in the opposite direction.
+
+两处细节决定了这句话能说到多硬 / two details bound how hard that sentence can be pressed:
+模型唯一"仅 S"的那一例是**钉死型**的（`geo1-both-t`，保留域 6.98e-10，盒子把 z 钉成一个点），
+阶梯在 `t ≥ 1e-4` 上把它折价为 0——所以"仅 S 证出"在最严的几级上读作 **0**；而模型不是"少"，
+是"窄"：在 `t = 0.5` 上对照有 12 个证明、模型 **0** 个，它 5 个盒子的保留域全部落在半域以下。
+两臂的证明都主要是掩盖型的（模型 5 个里 3 个、对照 17 个里 13 个落在 false 标签上），与 §4n 一致。
+The model's one unique proof is a pinning proof the ladder prices at zero above 1e-4, and its boxes
+are narrower rather than fewer: at t = 0.5 the control has 12 proofs and the model none.
 
 **这一臂不能说什么 / what this arm cannot say.** 它测的是**一个价位**，不是模型的极限。便宜模型
 在后，不能写成"模型不行"，只能写成"在这个价位上，模型没有净贡献"。`deepseek` 在 16k 下能做什么，
-在有人付那 1.4 M 之前**仍然是一个未回答的问题**，本文不作断言。 It measures one price point, not a
-capability ceiling; whether deepseek at 16k would do better remains unanswered and is not claimed.
+在有人付那 1.4 M 之前**仍然是一个未回答的问题**，本文不作断言；重复间一致性也没有测，那正是
+被砍掉的那 166 次调用。 It measures one price point, not a capability ceiling; whether deepseek at
+16k would do better remains unanswered, and so does run-to-run consistency.
 
 ## 5b. 能力边界（明确不声称的）/ Capability boundary (explicitly NOT claimed)
 以下是**当前方法的已知边界**，不是待办的"小问题"；论文把它们作为结果的一部分报告。 / These are **known limits of the current method**, reported as part of the results, not left as minor TODOs.
@@ -388,7 +408,7 @@ capability ceiling; whether deepseek at 16k would do better remains unanswered a
 3. **未判定的无溢出程序。** `nestedLoop-1`（Ultimate 证出）、`FMCAD2013-Fig1`（无工具判定）。 Undecided: `nestedLoop-1` (Ultimate proves it), `FMCAD2013-Fig1` (no tool decides it).
 4. **复核的性质。** CBMC 复核是我们对证明规则的再实现（位精确引擎），检验验证器实现与算术，**不检验证明规则本身**；按当前引擎（CBMC 6.11）重跑 586 个证书为 559 VERIFIED、0 FAILED、27 超时、0 错误（22 个超时是原判；另有 5 个原为地址空间上限造成的引擎 OOM，把上限放到 14 GB 后仍在 600 s 内未完，按最差计并入超时）。**v1.04 增加了性质不同的一条（§4j）**：两个外部验证器独立确认不变式在源程序上成立——它检验的是**结论**而不是**规则**，所以本条的界限依然成立，只是"只有自家脚本复核过"这个最强的弱点被去掉了。**v1.04 E5 另外补了规则本身**（§1b、[`docs/SOUNDNESS.md`](SOUNDNESS.md)）：证明规则的八类义务被写成推理规则，可靠性定理 T1 以"符号执行是过近似"为中间引理给出证明，并附义务与代码的逐行对应。但这是**纸面证明**，不是机器检验；审稿人若要求 Coq/Isabelle，那是另一个量级的工作，本文不声称有。含 `goto`/`switch` 的循环不支持，详见 §4i 与 [`docs/UNSUPPORTED_AND_JUMPS.md`](../docs/UNSUPPORTED_AND_JUMPS.md)。 The re-check is our re-implementation of the proof rule on a bit-precise engine; it does not test the rule itself. 586 certificates re-checked on CBMC 6.11: 559 verified, 0 failed, 27 timeouts, 0 errors. §4j adds a check of a different kind (two external validators confirm the invariants); it tests the conclusion, not the rule, so this limit stands.
 5. **新集合没有真值标签。** 用交叉一致性（证明与可重放见证不可能并存）+ 独立复核替代；这不能发现"所有方法都错"的情形。 No ground-truth labels on the fresh set; consistency + re-check cannot reveal a case where every method is wrong.
-6. **LLM 的作用有限且不稳定。** 净增量约 0–4 个程序；修复轮边缘；单次采样（温度 0.7）；4 个有效模型（gemini 不可用、glm 不稳定）；可能见过公开基准。**v1.05 的契约臂给了第二种量法**（§4n）：换成"写前置条件盒子"后，模型臂 10/83 对无模型对照 6/83（p = 0.219），扣掉预注册的保留域门槛后 2 对 1（p = 1）——**换任务形状没有把这个数字变显著**，而两个站得住的净新增都是"按符号切半"，一个一维对照族写不出的形状。**这一点在 v1.06 被推翻了一半**（§4o）：把那个形状加进对照族之后，对照从 6/83 变成 17/83，且**不需要任何模型**就证出了那两例——所以 E6 的残余信号不是结构，是族的边界。 The contract arm (§4n) is a second measurement of the same question: 10-vs-6 raw, 2-vs-1 above the pre-registered floor, and §4o shows even that residual was the control family's boundary rather than the model's structure.
+6. **LLM 的作用有限且不稳定。** 净增量约 0–4 个程序；修复轮边缘；单次采样（温度 0.7）；4 个有效模型（gemini 不可用、glm 不稳定）；可能见过公开基准。**v1.05 的契约臂给了第二种量法**（§4n）：换成"写前置条件盒子"后，模型臂 10/83 对无模型对照 6/83（p = 0.219），扣掉预注册的保留域门槛后 2 对 1（p = 1）——**换任务形状没有把这个数字变显著**，而两个站得住的净新增都是"按符号切半"，一个一维对照族写不出的形状。**这一点在 v1.06 被推翻了一半**（§4o）：把那个形状加进对照族之后，对照从 6/83 变成 17/83，且**不需要任何模型**就证出了那两例——所以 E6 的残余信号不是结构，是族的边界。**v1.07 在一个便宜价位上再问一次（§4p）**：5/83 对 17/83，仅 S 1、仅 B 13、p = 0.0018，这一次是显著的反向证据。 The contract arm (§4n) is a second measurement of the same question: 10-vs-6 raw, 2-vs-1 above the pre-registered floor, and §4o shows even that residual was the control family's boundary rather than the model's structure.
 7. **性质差异。** 我们验证"无任何 UB（含除零等）"，比 no-overflow 更严格；工具检查回绕语义下的断言可达性或溢出。
 8. **范围。** 标量整数循环程序（单/嵌套/多循环、非确定性）；不含一般堆、数组/指针算术（内存安全仅为独立的弱契约结果，见 4b）、浮点、并发。 Scope: scalar-integer loop programs only.
 9. **分母与前端过滤（v1.03）。** 我们**不**声称在全体分母上优于外部工具。前端能接收的比例本身就是能力上界（93/165），在此之外的 72 个程序（`alloca`/`malloc`/提前 `return`/语句后 `assume`）我们只证明 2 个。任何"优于"的表述必须同时给出分母与各工具预算。 We do **not** claim superiority on the full denominator; the front end accepts 93/165 and we prove 2 of the other 72. No superiority claim is admissible without stating the denominator and every tool's budget. **v1.04 的社区套件把这个上界量化了**（§4l）：203 例里 115 例被拒收，其中 31 条是"假设不是变量对常量的合取"、29 条是数组/指针、**25 条是"没有断言"**（性质是 termination，我们没有可检查的目标）、8 条语句后的 `assume`、7 条 `goto`、7 条浮点。前三类占了 85 条，且前两类是可修的语法限制，第三类说明我们根本没有覆盖 termination 性质。 **v1.04 quantifies the ceiling on the community suites:** 115 of 203 are refused, 31 for the form of an assumption, 29 for arrays/pointers, 25 because there is no assertion to check.
