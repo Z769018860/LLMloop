@@ -46,3 +46,10 @@ jobs:
         run: python -u scripts/check_protocols.py
       - name: The three-state machine itself
         run: python -m pytest -q tests/test_check_protocols.py
+      # Gate 16: a generated document is only worth its generator. `--check` recomputes the ledger
+      # from the five results.json files and diffs it against the committed markdown, so a number
+      # that stopped being true fails the build instead of waiting to be noticed by a reader.
+      - name: The ledger still matches the data it summarises
+        run: |
+          python -u scripts/llm_ledger.py --check
+          python -m pytest -q tests/test_llm_ledger.py

@@ -1,13 +1,13 @@
 # 由不受信的提案生成并经未改动验证器认证的循环安全不变式 / Certified loop-safety invariants from untrusted proposals checked by an unchanged verifier（论文草稿 / paper draft, 中英文）
 
-> 状态 / status（v1.07）: 整合草稿；§4m（pin 之后的上游新增）、§4n（契约臂 E6）、§4o（补上对照族边界之后 E6 的残余信号消失）、§4p（同一问题的重新定价与结果）与 §5b 为最新；§4e/§4f 为被更正的旧数字（各自段落内写着是怎么被更正的）。v1.01 及更早的"优于外部工具"表述已在 §4e 与 §5 第 9 条撤回。 Consolidated draft; §4m (post-cutoff additions), §4n (the contract arm, E6), §4o (what extending the control's family did to it) and §5b are current; §4e/§4f are superseded numbers whose paragraphs say how and why. The pre-v1.03 "better than" claims are retracted in §4e and §5 item 9.
+> 状态 / status（v1.07）: 整合草稿；§4m（pin 之后的上游新增）、§4n（契约臂 E6）、§4o（补上对照族边界之后 E6 的残余信号消失）、§4p（同一问题的重新定价与结果）与 §5b 为最新；§4e/§4f 为被更正的旧数字（各自段落内写着是怎么被更正的）。v1.01 及更早的"优于外部工具"表述已在 §4e 与 §5b 第 9 条撤回。 Consolidated draft; §4m (post-cutoff additions), §4n (the contract arm, E6), §4o (what extending the control's family did to it) and §5b are current; §4e/§4f are superseded numbers whose paragraphs say how and why. The pre-v1.03 "better than" claims are retracted in §4e and §5b item 9.
 
 ## 摘要 / Abstract
 **中文。** 我们研究 C 循环程序的“无未定义行为”证明：LLM、轨迹拟合器和 Houdini 只提出**不受信的候选**（区间/关系/谓词不变式、可选排名函数），由同一个**未改动的 Z3 验证器**在任意类型化状态上检查入口、归纳与出口义务；候选从不被信任。我们给出七种验证模式（精确轨迹、区间树、关系 `@rel`、分支内循环、单循环谓词模式（含 `unknown()` 非确定性与状态驱动）、多循环组合式、数学整数语义）、受信的规范化（C89 索引、`while`→`for`、循环后索引退出值）、终止性（排名函数）。在合成语料、自动译写的 SV-COMP（264 个循环程序）与 Code2Inv（134 个）上：数学整数语义下 Code2Inv 的 69 个 while 模式程序中 64 个被某个模型认证（Houdini 单独 53 个），期望违反断言的程序在所有阶段 **0 次被认证**；级联（生成器 → LLM → 反馈修复）省约 77% 的 LLM 调用。我们同时报告了否定结果（提示规则无益甚至有害、反馈修复收益很小）、CPAchecker 的更高决断率、真实代码覆盖几乎为零，以及三次自我更正（译写缺陷、提示覆盖、解释器缺陷）。
 **更新(v1.01)，部分被 v1.03 撤回。** 在 SV-COMP NoOverflows 上，结合 LLM 提议的原子、Houdini 弱化与未改动验证器，并配以可重放的证伪见证与 CBMC 独立复核：族不相交的新集合上我们证明 91/93、Ultimate 83/93（p≈0.02）；开发集判定 169 对 156；明确的能力边界是非线性多项式不变式（见 §5b）。 **Update (v1.01), partly retracted by v1.03.** On SV-COMP NoOverflows … we prove 91/93 vs Ultimate's 83/93 (p≈0.02); development set 169 vs 156 decided; the explicit capability boundary is nonlinear polynomial invariants (§5b).
 **更新(v1.03)：上句的"优于"结论已撤回。** 把分母扩到全部 165 个候选、并给所有工具相同的 600 s 上限后：Ultimate 证明 135、我们（无 LLM 的确定性组合）90，配对 8 对 53，精确 McNemar p ≈ 3×10⁻⁹。差异并非来自调参：72 个被前端拒绝的程序里 Ultimate 证明 50 个、我们 2 个；而在 102 个有上游 no-overflow 标签的程序上我们是 89 对 91（p = 0.81；风险差 −0.020，95% CI [−0.098, +0.059]，即排除了 10 个百分点以上的差异，也排除了 5 个点的优势）。我们因此**只声称在带标签子集上的持平、8/165 的独有覆盖，以及"覆盖而非可靠性是瓶颈"**。独立基准（190 NIST + 67 TACLe）上误认证为 0，但无条件证明同样为 0（§4e）。 **Update (v1.03): the "better than" claim above is retracted.** On all 165 candidates with an equal 600 s cap: Ultimate proves 135, ours (deterministic, no LLM) 90; paired 8 vs 53, exact McNemar p ≈ 3×10⁻⁹. The gap is structural, not tuning: of the 72 front-end-rejected programs Ultimate proves 50 and we prove 2; on the 102 upstream-labelled programs it is 89 vs 91 (risk difference −0.020, 95% CI [−0.098, +0.059]: differences beyond 10 points are excluded, and so is a 5-point advantage). We therefore claim only parity on the labelled subset, 8/165 exclusive coverage, and "coverage, not soundness, is the bottleneck". **v1.04 correction (E4, §4e):** scaling the frozen protocol to 400 cases withdraws the labelled-subset parity — 137 vs 165 on the 190 label-true cases (−14.7 points, 95% CI [−22, −8], p = 1.3×10⁻⁴), and 143 vs 224 overall. What remains is fragment-level non-inferiority within 10 points at ±4.3-point resolution (lower bound −7.4 points) and 15/400 exclusive coverage. **v1.04 更正（E4，§4e）：** 扩到 400 例后"标签子集持平"撤回，只余前端片段内 10 个百分点级不劣（分辨率 ±4.3pp，下界 −7.4pp）与 15/400 独有覆盖。 On the independent benchmark (190 NIST + 67 TACLe) false certifications are 0 and unconditional proofs are also 0 (§4e).
 **v1.04 补测（E1/E3）。** 90 个证明全部导出为 SV-COMP 正确性见证，两个与实现无共享代码的验证器复核，**零驳回**，Ultimate 确认 **121/121** 条不变式（§4j）。工业代码上，892 个文件里 2085 个函数含循环，**2067 个第一处阻塞是内存**（指针/数组/成员），8 个进入语法片段、**0 个**证出，且八条失败没有一条是"不变式难找"（§4k）。社区十个 `c/loop-*` 套件（203 例）上我们证出 50、Ultimate 92，其中 **15 个是它证不出的**，误认证 0；在 41 个从未翻译过的预注册排除用例上 11 对 12，25 个真会溢出的用例**一个都没认成 TRUE**（§4l）。**v1.05 把 E2 做完**：我们 2021 年 pin 的那个集合搬到了 GitLab 并新增了 **7,072** 个无溢出用例，跑集 265 例里前端接住 64 例，我们证出 1 例、在 61 个真会溢出的用例上一次都没认成 TRUE，Ultimate 判定 140 例且与标签全部一致（§4m）。 **v1.04 additions (E1/E2/E3):** all 90 proofs exported as SV-COMP correctness witnesses and re-checked by two unrelated validators with zero rejections (121/121 invariants confirmed by Ultimate, §4j); on 892 industrial files, 2067 of 2085 loop-bearing functions are blocked first by memory, 8 reach the fragment and none is proved, and no failure is about invariant search (§4k). On the community's ten `c/loop-*` suites (203 cases) we prove 50 against Ultimate's 92, with 15 proofs Ultimate cannot make and 0 false certifications; on the 41 pre-registered exclusions that no experiment ever translated we prove 11 against 12 with none of the 25 overflow-carrying cases certified (§4l). **v1.05 (E2, completed):** the collection we pinned in 2021 had moved to GitLab and grown by 7,072 no-overflow cases; of the 265 in the eight directories this study runs, the frozen front end admits 64, we prove 1 and certify nothing false on the 61 whose label says overflow is reachable, and Ultimate decides 140 and agrees with every label (§4m).
-**v1.05 契约臂（E6，§4n）。** 把任务从"写不变式原子"换成"写前置条件盒子"——模型给每个参数一个区间，定理变成"盒子里处处无未定义行为"，验证器一行未改：83 例（**69 例的标签是真会溢出**）× 3 模型 × 3 次重复 = 747 单元。模型臂证出 **10/83**，无模型的均匀收缩对照 **6/83**，仅 S 5、仅 B 1，精确 McNemar **p = 0.219**；按预注册的保留域门槛（< `1e-3` 的证明不计）扣除后 **7 vs 6、仅 S 2、仅 B 1、p = 1**，故**不宣称净贡献**。两个站得住的"仅 S"都是**按符号切半**（`n > 0`、`k < 0`，各保留 50%），而均匀收缩在构造上写不出这个形状；两个臂的证明几乎全部落在"真会溢出"的用例上（S 12/12、B 6/6），——12 个在 false 标签上、3 个在 true 上（正好是那两个切半用例），即**掩盖数**而不是能力数。 **v1.05 contract arm (E6, §4n):** the model states a parameter box instead of atoms, so the theorem is conditional on the box and the verifier is unchanged; 10/83 against a model-free uniform shrink's 6/83 (p = 0.219), and 7-vs-6 with p = 1 after the pre-registered retained-volume floor, so no net contribution is claimed. The two surviving cases are sign splits — a shape the control family cannot express — and 12 of its 15 proved units, like 6 of the control's 6, are on cases where overflow is reachable -- the three exceptions being exactly the two sign splits.
+**v1.05 契约臂（E6，§4n）。** 把任务从"写不变式原子"换成"写前置条件盒子"——模型给每个参数一个区间，定理变成"盒子里处处无未定义行为"，验证器一行未改：83 例（**69 例的标签是真会溢出**）× 3 模型 × 3 次重复 = 747 单元。模型臂证出 **10/83**，无模型的均匀收缩对照 **6/83**，仅 S 5、仅 B 1，精确 McNemar **p = 0.219**；按预注册的保留域门槛（< `1e-3` 的证明不计）扣除后 **7 vs 6、仅 S 2、仅 B 1、p = 1**，故**不宣称净贡献**。两个站得住的"仅 S"都是**按符号切半**（`n > 0`、`k < 0`，各保留 50%），而均匀收缩在构造上写不出这个形状；**掩盖数而不是能力数**：S 的 15 个（用例 × 模型）证明单元里 **12 个**落在「真会溢出」的`false` 标签上，B 的 6 个里 **6 个**也是；S 那 3 个例外是两例按符号切半加 `nested-1`。 **v1.05 contract arm (E6, §4n):** the model states a parameter box instead of atoms, so the theorem is conditional on the box and the verifier is unchanged; 10/83 against a model-free uniform shrink's 6/83 (p = 0.219), and 7-vs-6 with p = 1 after the pre-registered retained-volume floor, so no net contribution is claimed. The two surviving cases are sign splits — a shape the control family cannot express. Of the arm's 15 (case, model) proofs, 12 sit on cases labelled `false` (overflow reachable), as do all 6 of the control's; the three exceptions are the two sign splits plus `nested-1`.
 
 **English.** We study proving absence of undefined behaviour for C loop programs: LLMs, a trajectory fitter and Houdini only produce **untrusted candidates** (interval/relational/predicate invariants, optional ranking functions), which the **same unchanged Z3 verifier** checks on ANY typed state (entry, induction, exit); candidates are never trusted. We present seven verification modes (exact trajectory, interval trees, relational `@rel`, loops in branches, a single-loop predicate mode incl. `unknown()` nondeterminism and state-driven loops, compositional multi-loop, mathematical-integer semantics), trusted normalizations (C89 indices, `while`→`for`, post-loop index exit values) and termination via ranking functions. On synthetic corpora and automatically translated SV-COMP (264 loop programs) and Code2Inv (134): under mathematical integers 64 of Code2Inv's 69 while-mode programs are certified by some model (Houdini alone 53) and programs whose assertion fails are **never certified** at any stage; the cascade (generator → LLM → feedback repair) saves ~77% of LLM calls. We also report negative results (prompt rules neutral or harmful, little repair gain), CPAchecker's higher decision rate, near-zero coverage of real code, and three self-corrections (translator, prompt override, interpreter).
 
@@ -275,11 +275,12 @@ VACUOUS 9 / ERROR 4**；按用例、跨模型取多数：**S 证出 10/83，对�
 站得住的两个"仅 S 证出"都是**按符号切开**：`gj2007b` 给 `n ∈ [1, 2^31-1]`、`half` 给 `k ∈ [-1e6, -1]`，
 各保留正好 50%，且都是真标签用例。这是均匀收缩**在构造上写不出**的形状（它只能整体缩，不能只留正半轴）。
 对照独有的 `phases_2-1` 模型一次都没提到——s = 0.85 就能命中的盒子被漏掉了。一边 2、一边 1，
-这是"没有区别"，不是"模型更好"。**§4o 把这一族补给对照之后，这两个用例也不再是模型的**：它们各自被一个无模型搜索证出。**掩盖**同样一边倒：S 的 15 个证明单元里 **12 个**落在 false 标签上，剩下 3 个正好就是那两个"切半"用例；B 是 **6 个里 6 个**。也就是说两个臂的证明几乎全部是"把真溢出收到盒子外面"，而唯一例外的形状，恰恰是一维对照族表达不出来的那一种。
+这是"没有区别"，不是"模型更好"。**§4o 把这一族补给对照之后，这两个用例也不再是模型的**：它们各自被一个无模型搜索证出。**掩盖**同样一边倒：S 的 15 个（用例 × 模型）证明单元里 **12 个**落在 false 标签上，剩下 3 个是两例按符号切半加 `nested-1`；B 是 **6 个里 6 个**（单位是「用例」）。也就是说两个臂的证明几乎全部是"把真溢出收到盒子外面"。三个例外里两个是切半——一维族写不出的形状；第三个 `nested-1` 是嵌套循环，扩族之后对照仍然证不出它，但那是 §4o 的事。
 
-三条必须披露的偏离，方向**都对模型臂有利**：(i) 对照的驱动把管道异常折进 `UNKNOWN`（848 次尝试里 10 次抛异常）
-而 S 臂单列为 `ERROR`，所以"对照 6 个"是低估的；(ii) 用例的"已证出"取三次重复里的最好成绩；
-(iii) 跨模型取并集。再加上保留域门槛那一处，**"没有净贡献"是在四处都偏向模型的口径下得到的**。
+四处必须披露的处置里，**两处明确偏向模型臂**：(i) 对照的驱动把管道异常折进 `UNKNOWN`（848 次尝试里
+10 次抛异常）而 S 臂单列为 `ERROR`，所以"对照 6 个"是低估的；(iii) 跨模型取并集。
+另两处方向不定：(ii) best-of-3 让两臂都取到自己的最好成绩；保留域门槛是一把**两头都切**的尺。
+所以 v1.05 那句"四处都偏向模型"说得过头了——v1.06 逐条重算之后，真正偏向模型的只有两处（§4.10b）。
 
 还有一处退化：`deepseek-v4.1-flash-ark` 在冻结的 1500 token 上限下 **207/249 个单元返回空内容**，
 208 个的 `completion_tokens` 正好等于上限——与 §4f 的原子臂在 6000 上限下的 220/309 是同一件事。
@@ -381,11 +382,30 @@ this model does not reason.
 **结果：一次干净的否定 / the result: a clean negative.** 83/83 都有回答，0 个畸形、0 个空回答、
 0 个被预算截断。契约臂证出 **5/83**，对照 **17/83**：配对后仅 S **1**、仅 B **13**、都证出 **4**，
 精确 McNemar **p = 0.0018**。阶梯上每一级都是同一个方向（1e-4 及以上仅 S **0**、仅 B 10，
-p = 0.0020；0.5 上是 0 对 12，p = 4.9e-4），判定 `breaks`。§4n 的"没有净贡献"（p = 1）在这里
+p = 0.0020；0.5 上是 0 对 12，p = 4.9e-4），判定 `breaks`。§4n 的"没有净贡献"（p = 1）在这一臂上
 变成**显著的反向证据**：一个不需要模型的搜索比这个价位的模型多覆盖 13 个用例。
 The contract arm proves 5/83 against the control's 17/83: after pairing, 1 only-model, 13
 only-control, 4 both, exact McNemar p = 0.0018, and every rung of the ladder points the same way.
-§4n's "no net contribution" (p = 1) becomes significant evidence in the opposite direction.
+§4n's "no net contribution" (p = 1) becomes significant evidence in the opposite direction, for this arm.
+
+**这句话能走多远：换一个更宽的模型臂，它就不显著了 / how far that sentence travels.** 上面那一臂是
+**一个便宜模型、一次采样**。v1.05 用同样 83 例问过**三个模型 × 三次重复**（747 单元），只是配的是
+**窄**对照（6/83）；两次研究之间没有人把"宽臂"与"宽对照（17/83）"配过对。两半都在盘上，配一次对
+零次调用（`experiments/v107/e6c/breakdown.md` §6）：
+
+| t | S（3 模型 × 3 次，并集） | 仅 S | 仅 B | p |
+| --- | --- | --- | --- | --- |
+| 0 | 12 | **3** | **8** | 0.227 |
+| 1e-4 及以上 | 8 | 1 | 6 | 0.125 |
+| 0.5 | 6 | 0 | 6 | **0.031** |
+
+把模型臂从"一个模型一次"换成"三个模型九次"，**t = 0 上的反向证据从 p = 0.0018 掉到 p = 0.227**：
+同一份对照、同一批用例，结论从"显著更差"退化为"无显著差异"。仍然稳的只有一处，而且它比"窄"更窄：
+**在 t = 0.5 上，宽臂一个独有的证明都没有**（它自己那 6 个全部已被对照覆盖，对照另有 6 个，p = 0.031）。
+E6c 那一臂在 0.5 上是 0 个、宽臂是 6 个，所以"盒子窄多少"依赖臂，"一个独有都没有"不依赖。
+The same control against the three-model, nine-sample union: 3 only-model, 8 only-control, p = 0.227.
+The reverse evidence does not survive a wider model arm. What survives is weaker than "narrower boxes":
+above the half-domain rung the wide arm has no exclusive proof at all (0 versus 6, p = 0.031).
 
 **重跑是免费的 / re-running is free.** 83 个请求体连同答复一起提交在 `experiments/llm_cache/`（344 KB）。
 按真实端点重算这 83 个哈希，**83/83 命中**：现在再执行一次 `run`，付费调用是 **0**。这既是「不重复付费」
@@ -414,7 +434,7 @@ are narrower rather than fewer: at t = 0.5 the control has 12 proofs and the mod
 3. **未判定的无溢出程序。** `nestedLoop-1`（Ultimate 证出）、`FMCAD2013-Fig1`（无工具判定）。 Undecided: `nestedLoop-1` (Ultimate proves it), `FMCAD2013-Fig1` (no tool decides it).
 4. **复核的性质。** CBMC 复核是我们对证明规则的再实现（位精确引擎），检验验证器实现与算术，**不检验证明规则本身**；按当前引擎（CBMC 6.11）重跑 586 个证书为 559 VERIFIED、0 FAILED、27 超时、0 错误（22 个超时是原判；另有 5 个原为地址空间上限造成的引擎 OOM，把上限放到 14 GB 后仍在 600 s 内未完，按最差计并入超时）。**v1.04 增加了性质不同的一条（§4j）**：两个外部验证器独立确认不变式在源程序上成立——它检验的是**结论**而不是**规则**，所以本条的界限依然成立，只是"只有自家脚本复核过"这个最强的弱点被去掉了。**v1.04 E5 另外补了规则本身**（§1b、[`docs/SOUNDNESS.md`](SOUNDNESS.md)）：证明规则的八类义务被写成推理规则，可靠性定理 T1 以"符号执行是过近似"为中间引理给出证明，并附义务与代码的逐行对应。但这是**纸面证明**，不是机器检验；审稿人若要求 Coq/Isabelle，那是另一个量级的工作，本文不声称有。含 `goto`/`switch` 的循环不支持，详见 §4i 与 [`docs/UNSUPPORTED_AND_JUMPS.md`](../docs/UNSUPPORTED_AND_JUMPS.md)。 The re-check is our re-implementation of the proof rule on a bit-precise engine; it does not test the rule itself. 586 certificates re-checked on CBMC 6.11: 559 verified, 0 failed, 27 timeouts, 0 errors. §4j adds a check of a different kind (two external validators confirm the invariants); it tests the conclusion, not the rule, so this limit stands.
 5. **新集合没有真值标签。** 用交叉一致性（证明与可重放见证不可能并存）+ 独立复核替代；这不能发现"所有方法都错"的情形。 No ground-truth labels on the fresh set; consistency + re-check cannot reveal a case where every method is wrong.
-6. **LLM 的作用有限且不稳定。** 净增量约 0–4 个程序；修复轮边缘；单次采样（温度 0.7）；4 个有效模型（gemini 不可用、glm 不稳定）；可能见过公开基准。**v1.05 的契约臂给了第二种量法**（§4n）：换成"写前置条件盒子"后，模型臂 10/83 对无模型对照 6/83（p = 0.219），扣掉预注册的保留域门槛后 2 对 1（p = 1）——**换任务形状没有把这个数字变显著**，而两个站得住的净新增都是"按符号切半"，一个一维对照族写不出的形状。**这一点在 v1.06 被推翻了一半**（§4o）：把那个形状加进对照族之后，对照从 6/83 变成 17/83，且**不需要任何模型**就证出了那两例——所以 E6 的残余信号不是结构，是族的边界。**v1.07 在一个便宜价位上再问一次（§4p）**：5/83 对 17/83，仅 S 1、仅 B 13、p = 0.0018，这一次是显著的反向证据。 The contract arm (§4n) is a second measurement of the same question: 10-vs-6 raw, 2-vs-1 above the pre-registered floor, and §4o shows even that residual was the control family's boundary rather than the model's structure.
+6. **LLM 的作用有限且不稳定。** 净增量约 0–4 个程序；修复轮边缘；单次采样（温度 0.7）；4 个有效模型（gemini 不可用、glm 不稳定）；可能见过公开基准。**v1.05 的契约臂给了第二种量法**（§4n）：换成"写前置条件盒子"后，模型臂 10/83 对无模型对照 6/83（p = 0.219），扣掉预注册的保留域门槛后 2 对 1（p = 1）——**换任务形状没有把这个数字变显著**，而两个站得住的净新增都是"按符号切半"，一个一维对照族写不出的形状。**这一点在 v1.06 被推翻了一半**（§4o）：把那个形状加进对照族之后，对照从 6/83 变成 17/83，且**不需要任何模型**就证出了那两例——所以 E6 的残余信号不是结构，是族的边界。**v1.07 在一个便宜价位上再问一次（§4p）**：5/83 对 17/83，仅 S 1、仅 B 13、p = 0.0018——在这一臂上是显著的反向证据；但把同一份对照配上 v1.05 的三模型九次并集，只剩仅 S 3 / 仅 B 8、p = 0.227，**所以只能说「这一臂上模型落后」，不能说「模型更差」**。 The contract arm (§4n) is a second measurement of the same question: 10-vs-6 raw, 2-vs-1 above the pre-registered floor, and §4o shows even that residual was the control family's boundary rather than the model's structure.
 7. **性质差异。** 我们验证"无任何 UB（含除零等）"，比 no-overflow 更严格；工具检查回绕语义下的断言可达性或溢出。
 8. **范围。** 标量整数循环程序（单/嵌套/多循环、非确定性）；不含一般堆、数组/指针算术（内存安全仅为独立的弱契约结果，见 4b）、浮点、并发。 Scope: scalar-integer loop programs only.
 9. **分母与前端过滤（v1.03）。** 我们**不**声称在全体分母上优于外部工具。前端能接收的比例本身就是能力上界（93/165），在此之外的 72 个程序（`alloca`/`malloc`/提前 `return`/语句后 `assume`）我们只证明 2 个。任何"优于"的表述必须同时给出分母与各工具预算。 We do **not** claim superiority on the full denominator; the front end accepts 93/165 and we prove 2 of the other 72. No superiority claim is admissible without stating the denominator and every tool's budget. **v1.04 的社区套件把这个上界量化了**（§4l）：203 例里 115 例被拒收，其中 31 条是"假设不是变量对常量的合取"、29 条是数组/指针、**25 条是"没有断言"**（性质是 termination，我们没有可检查的目标）、8 条语句后的 `assume`、7 条 `goto`、7 条浮点。前三类占了 85 条，且前两类是可修的语法限制，第三类说明我们根本没有覆盖 termination 性质。 **v1.04 quantifies the ceiling on the community suites:** 115 of 203 are refused, 31 for the form of an assumption, 29 for arrays/pointers, 25 because there is no assertion to check.
@@ -451,3 +471,32 @@ after our pin, and 64 of those translate. The refusals are syntactic and nameabl
 `tests/test_industrial_v104.py` 的 9 个离线测试固定了两处曾经算错的计数：typedef 参数按脱糖类型取界、带指针的循环函数不能被读成"没有循环"。
 
 **v1.05 复现：契约臂 / reproduction: the contract arm.** `scripts/spec_v105.py freeze` → `run --shard K --shards 8 --workers 4` → `merge`；协议在任何真实调用之前提交（`a4f09efd` 处冻结，`prompt_template_note` 记下了 `__in` 那次更正在任何一行存在之前发生），747 个单元 × 每单元一次调用、无修复轮。对照是确定性的、已经提交（`baseline/`，83 例），所以 `merge` 不需要任何模型调用就能从分片行重算 `summary.md`；`merge` 也会拒绝不完整的分片、拒绝 `stub`、拒绝索引重复，并断言每一行加起来等于分母。验证过的两条命令：`python scripts/check_protocols.py`（全仓 17 个协议：no-freeze 5 / ok 6 / amended 6 / DRIFT 0）、`python -m pytest -q tests/test_spec_v105.py`（42 个测试）。若 merge 失败，`.github/workflows/v105-merge-replay.yml` 用已有运行的 artifact 重放「下载 → merge → 推送」，两分钟、零模型调用——**一次失败的 merge 不该值另一次 747 次调用**。 The control is deterministic and committed, so `merge` re-derives the summary from the shard rows with no model call, and a replay workflow re-runs download→merge→push against an existing run's artifacts.
+
+## 附录 A. LLM 实验总账 / Appendix A. The whole bill
+
+全文所有 LLM 调用的 token 与开销，按臂列出。每个数字由 `scripts/llm_ledger.py` 从五个
+`results.json` 现算（`--check` 在不一致时非零退出），逐条明细在 `docs/LLM_LEDGER.md`。
+
+| 实验 | 单元 | 调用 | prompt | completion | 生成耗时 | 估算 USD |
+| --- | --- | --- | --- | --- | --- | --- |
+| v1.04 arm L（原子，3 模型 × 3 次） | 837 | 970 | 658,687 | 2,255,652 | 5.27 h | 8.90 |
+| v1.04 追加 16k | 558 | 614 | 421,321 | 3,592,229 | 7.40 h | 14.14 |
+| v1.05 E6（契约臂，3 模型 × 3 次） | 747 | 747 | 329,844 | 438,571 | 2.32 h | 1.82 |
+| v1.06 E6b（void；249 次里 231 次被拒，未计费） | 249 | 249 | 7,689 | 110,400 | 0.17 h | 0.05 |
+| v1.07 E6c（83 次流式） | 83 | 83 | 34,555 | 1,709 | 0.05 h | 0.02 |
+| **合计** | **2,474** | **2,663** | **1,452,096** | **6,398,561** | **15.2 h** | **24.92** |
+
+**金额是估算，不是发票 / an estimate, not an invoice.** 端点是代理，其账单不在仓库里；价目按公开
+价目代入（`gpt-4.1-mini` 0.40/1.60、`claude-sonnet-4-5` 3.00/15.00 USD 每百万 token；
+`deepseek-v4.1-flash-ark` 是内部别名，按公开 DeepSeek 价目 0.28/0.42 代入，**这一项是假设**）。
+价目减半到加倍给出 **$12.46 – $49.85**，所以正确的写法是"十到五十美元量级"。 The endpoint is a
+proxy whose invoice is not in this repository, so the money column is a list-price estimate with a
+2x bracket; the correct statement is "on the order of ten to fifty dollars".
+
+三件事只有这张表能说清 / three things only the table shows. ①**90% 的账单在 `claude-sonnet-4-5`
+的两臂上**（$22.39），从 v1.05 到 v1.07 的全部契约臂实验合计 **$1.89**；贵不贵由"输出单价 ×
+输出长度"决定，不由实验数量决定。②**把 E6b 那个 void 补上不到一美元**（231 次调用、1.34–1.42 M
+completion，$0.59–0.62）——它此前写作"1.4 M token"，读起来像一大笔钱。③**最贵的两臂买的是 3 个
+净新增证明**（p = 0.375 / 0.25），而最便宜的 E6c 买的是本文学到的最尖锐的一个否定结果。
+90% of the bill is two `claude` arms; the whole contract-arm line costs $1.89; the one open question
+costs under a dollar.

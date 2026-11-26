@@ -129,11 +129,56 @@ def breakdown(out=OUT):
               '所以这句话写在这里。' % (ct, med([r['completion_tokens'] for r in paid]),
                                        1_440_000 / max(1, pt + ct)), '']
 
-    L += ['## 6. 这一页不能说明的 / what this page cannot support', '',
+    # ------------------------------------------------------------------------------------------------
+    # The check a reviewer would ask for first: the same control, a *wider* model arm.
+    #
+    # E6c is one cheap model at one sample. v1.05 asked the same 83 cases of three models at three
+    # repeats each (747 units) against the *narrow* control (6/83). Neither the arm nor the control
+    # had been re-paired across the two studies, so "only-control 13" was a number about one sample
+    # that could be read as a number about models. It is 0 calls to fix: both halves are on disk.
+    # The reading rule, stated before looking: if the wider arm still loses, the direction is robust;
+    # if it does not, the claim in the paper must shrink to the arm that was actually measured.
+    v105 = json.loads((ROOT / 'experiments/v105/spec/results.json').read_text(encoding='utf-8'))
+    per_case = collections.defaultdict(list)
+    for x in v105['rows']:
+        per_case[x['case']].append(x)
+    rungs = [0, 1e-5, 1e-4, 1e-3, 1e-2, 0.1, 0.25, 0.5]
+    rows_out = []
+    for t in rungs:
+        wide = {c for c, xs in per_case.items()
+                if any(x['status'] == 'PROVED' and (x.get('retained') or 0) >= t for x in xs)}
+        bt = {c for c, r in B.items() if (r.get('retained') or 0) >= t}
+        o_s, o_b = wide - bt, bt - wide
+        rows_out.append((t, len(wide), len(o_s), len(o_b), len(wide & bt),
+                         v106.mcnemar_exact(len(o_s), len(o_b))))
+    L += ['## 6. 换个更宽的模型臂，反向证据还在不在 / the same control against a wider model arm', '',
+          'E6c 是**一个便宜模型、一次采样**。v1.05 用同样的 83 例问过**三个模型 × 三次重复**（747 单元），'
+          '但那一臂配的是**窄**对照（6/83）。两次研究之间没有人把"宽臂"和"宽对照"配过对，'
+          '于是 "only-B = 13" 这个数字是在一次采样上算出来的，却很容易被读成"模型差这么多"。'
+          '两半都在盘上，配一次对**零次调用**。规则先写在这里：若宽臂仍然落后，方向就是稳的；'
+          '若不再落后，论文里的那句话就必须缩小到"被测量的那一臂"。', '',
+          '| 保留域门槛 t | S（3 模型 × 3 次，并集） | 仅 S | 仅 B | 都证出 | 精确 McNemar p |',
+          '| --- | --- | --- | --- | --- | --- |']
+    for t, n, o_s, o_b, both_n, p in rows_out:
+        star = '**' if p < 0.05 else ''
+        L.append('| %s | %d | %d | %d | %d | %s%.3g%s |'
+                 % ('0（非空即可）' if t == 0 else '%g' % t, n, o_s, o_b, both_n, star, p, star))
+    L += ['',
+          '- 在 t = 0 上，宽臂 **仅 S 3 / 仅 B 8**、p = **%.3g**——**不显著**。E6c 那一臂同一条'
+          '是 1 / 13、p = 0.0018。同一份对照、同一批 83 例，把模型臂从"一个模型一次"换成'
+          '"三个模型九次"，反向证据就掉到不显著。' % rows_out[0][5],
+          '- 唯一还显著的一级是 t = 0.5（0 / 6，p = 0.031）：**即使给模型九个样本，半域之上它一个'
+          '独有证明都没有**（它自己那 6 个全都已经被对照覆盖）。注意别把这条读成"模型很窄"——'
+          'E6c 那一臂在 0.5 上是 0 个，宽臂是 6 个，宽度本身依赖臂；稳的那句只是"一个独有都没有"。'
+          '所以两句话的强度不同：**"模型的盒子比对照窄"的幅度不稳定，"模型显著更差"不成立。**',
+          '- 所以正确的句子分两层：在 E6c 那一臂（便宜模型、单次采样）上，反向证据显著；'
+          '在三模型九次的并集上，它退化为"无显著差异"。把第一层当成第二层来写，就是拿一次采样'
+          '冒充一次测量——这正是这一节要防的错误，哪怕它对我自己不利。', '']
+
+    L += ['## 7. 这一页不能说明的 / what this page cannot support', '',
           '- 它是**一个价位**的读数。`deepseek-v4.1-flash-ark` 在 16k 上能做什么，仍然没有测过：'
-              'E6b 是 void，那 1.44 M 没有人付。',
-          '- `only_b = 13` 不是"模型差 13 个用例"的意思。它和 `both = 4` 一起说明的是：'
-              '在这个基准上，一个不需要模型的搜索已经覆盖了模型能覆盖的一切，并且多覆盖 13 个。',
+              'E6b 是 void，那 1.44 M 没有人付（按公开价目不到一美元，见 `docs/LLM_LEDGER.md`）。',
+          '- `only_b = 13` 不是"模型差 13 个用例"的意思，§6 已经把它按"换宽臂就消失"处理了。',
           '- 单次采样、温度 0.7、一条提示词、一个模型。重复间一致性没有测（那正是被砍掉的那 166 次调用）。', '']
 
     (out / 'breakdown.md').write_text('\n'.join(L), encoding='utf-8')
