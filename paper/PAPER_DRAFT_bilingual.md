@@ -1,15 +1,102 @@
 # 由不受信的提案生成并经未改动验证器认证的循环安全不变式 / Certified loop-safety invariants from untrusted proposals checked by an unchanged verifier（论文草稿 / paper draft, 中英文）
 
-> 状态 / status（v1.07）: 整合草稿；§4m（pin 之后的上游新增）、§4n（契约臂 E6）、§4o（补上对照族边界之后 E6 的残余信号消失）、§4p（同一问题的重新定价与结果）与 §5b 为最新；§4e/§4f 为被更正的旧数字（各自段落内写着是怎么被更正的）。v1.01 及更早的"优于外部工具"表述已在 §4e 与 §5b 第 9 条撤回。**本轮新增 §1c（相关工作，23 条文献）、§8（结论）与文末参考文献**；书目与核验记录在 `paper/REFERENCES.md`，`python scripts/check_references.py --live` 逐条探测 23 个 PDF 链接。**仍缺引言与图。** Consolidated draft; §4m (post-cutoff additions), §4n (the contract arm, E6), §4o (what extending the control's family did to it) and §5b are current; §4e/§4f are superseded numbers whose paragraphs say how and why. The pre-v1.03 "better than" claims are retracted in §4e and §5b item 9. This revision adds §1c (related work, 23 references), §8 (conclusion) and the bibliography; the introduction and the figures are still missing.
+> 状态 / status（v1.07）: 整合草稿；§4m（pin 之后的上游新增）、§4n（契约臂 E6）、§4o（补上对照族边界之后 E6 的残余信号消失）、§4p（同一问题的重新定价与结果）与 §5b 为最新；§4e/§4f 为被更正的旧数字（各自段落内写着是怎么被更正的）。v1.01 及更早的"优于外部工具"表述已在 §4e 与 §5b 第 9 条撤回。**本轮新增摘要与 5 条贡献、引言、§1c（相关工作，23 条文献）、§8（结论）与文末参考文献**；书目与核验记录在 `paper/REFERENCES.md`，`python scripts/check_references.py --live` 逐条探测 23 个 PDF 链接。**仍缺图（两张）。** Consolidated draft; §4m (post-cutoff additions), §4n (the contract arm, E6), §4o (what extending the control's family did to it) and §5b are current; §4e/§4f are superseded numbers whose paragraphs say how and why. The pre-v1.03 "better than" claims are retracted in §4e and §5b item 9. This revision adds §1c (related work, 23 references), §8 (conclusion) and the bibliography; the two figures are still missing.
 
 ## 摘要 / Abstract
-**中文。** 我们研究 C 循环程序的“无未定义行为”证明：LLM、轨迹拟合器和 Houdini 只提出**不受信的候选**（区间/关系/谓词不变式、可选排名函数），由同一个**未改动的 Z3 验证器**在任意类型化状态上检查入口、归纳与出口义务；候选从不被信任。我们给出七种验证模式（精确轨迹、区间树、关系 `@rel`、分支内循环、单循环谓词模式（含 `unknown()` 非确定性与状态驱动）、多循环组合式、数学整数语义）、受信的规范化（C89 索引、`while`→`for`、循环后索引退出值）、终止性（排名函数）。在合成语料、自动译写的 SV-COMP（264 个循环程序）与 Code2Inv（134 个）上：数学整数语义下 Code2Inv 的 69 个 while 模式程序中 64 个被某个模型认证（Houdini 单独 53 个），期望违反断言的程序在所有阶段 **0 次被认证**；级联（生成器 → LLM → 反馈修复）省约 77% 的 LLM 调用。我们同时报告了否定结果（提示规则无益甚至有害、反馈修复收益很小）、CPAchecker 的更高决断率、真实代码覆盖几乎为零，以及三次自我更正（译写缺陷、提示覆盖、解释器缺陷）。
-**更新(v1.01)，部分被 v1.03 撤回。** 在 SV-COMP NoOverflows 上，结合 LLM 提议的原子、Houdini 弱化与未改动验证器，并配以可重放的证伪见证与 CBMC 独立复核：族不相交的新集合上我们证明 91/93、Ultimate 83/93（p≈0.02）；开发集判定 169 对 156；明确的能力边界是非线性多项式不变式（见 §5b）。 **Update (v1.01), partly retracted by v1.03.** On SV-COMP NoOverflows … we prove 91/93 vs Ultimate's 83/93 (p≈0.02); development set 169 vs 156 decided; the explicit capability boundary is nonlinear polynomial invariants (§5b).
-**更新(v1.03)：上句的"优于"结论已撤回。** 把分母扩到全部 165 个候选、并给所有工具相同的 600 s 上限后：Ultimate 证明 135、我们（无 LLM 的确定性组合）90，配对 8 对 53，精确 McNemar p ≈ 3×10⁻⁹。差异并非来自调参：72 个被前端拒绝的程序里 Ultimate 证明 50 个、我们 2 个；而在 102 个有上游 no-overflow 标签的程序上我们是 89 对 91（p = 0.81；风险差 −0.020，95% CI [−0.098, +0.059]，即排除了 10 个百分点以上的差异，也排除了 5 个点的优势）。我们因此**只声称在带标签子集上的持平、8/165 的独有覆盖，以及"覆盖而非可靠性是瓶颈"**。独立基准（190 NIST + 67 TACLe）上误认证为 0，但无条件证明同样为 0（§4e）。 **Update (v1.03): the "better than" claim above is retracted.** On all 165 candidates with an equal 600 s cap: Ultimate proves 135, ours (deterministic, no LLM) 90; paired 8 vs 53, exact McNemar p ≈ 3×10⁻⁹. The gap is structural, not tuning: of the 72 front-end-rejected programs Ultimate proves 50 and we prove 2; on the 102 upstream-labelled programs it is 89 vs 91 (risk difference −0.020, 95% CI [−0.098, +0.059]: differences beyond 10 points are excluded, and so is a 5-point advantage). We therefore claim only parity on the labelled subset, 8/165 exclusive coverage, and "coverage, not soundness, is the bottleneck". **v1.04 correction (E4, §4e):** scaling the frozen protocol to 400 cases withdraws the labelled-subset parity — 137 vs 165 on the 190 label-true cases (−14.7 points, 95% CI [−22, −8], p = 1.3×10⁻⁴), and 143 vs 224 overall. What remains is fragment-level non-inferiority within 10 points at ±4.3-point resolution (lower bound −7.4 points) and 15/400 exclusive coverage. **v1.04 更正（E4，§4e）：** 扩到 400 例后"标签子集持平"撤回，只余前端片段内 10 个百分点级不劣（分辨率 ±4.3pp，下界 −7.4pp）与 15/400 独有覆盖。 On the independent benchmark (190 NIST + 67 TACLe) false certifications are 0 and unconditional proofs are also 0 (§4e).
-**v1.04 补测（E1/E3）。** 90 个证明全部导出为 SV-COMP 正确性见证，两个与实现无共享代码的验证器复核，**零驳回**，Ultimate 确认 **121/121** 条不变式（§4j）。工业代码上，892 个文件里 2085 个函数含循环，**2067 个第一处阻塞是内存**（指针/数组/成员），8 个进入语法片段、**0 个**证出，且八条失败没有一条是"不变式难找"（§4k）。社区十个 `c/loop-*` 套件（203 例）上我们证出 50、Ultimate 92，其中 **15 个是它证不出的**，误认证 0；在 41 个从未翻译过的预注册排除用例上 11 对 12，25 个真会溢出的用例**一个都没认成 TRUE**（§4l）。**v1.05 把 E2 做完**：我们 2021 年 pin 的那个集合搬到了 GitLab 并新增了 **7,072** 个无溢出用例，跑集 265 例里前端接住 64 例，我们证出 1 例、在 61 个真会溢出的用例上一次都没认成 TRUE，Ultimate 判定 140 例且与标签全部一致（§4m）。 **v1.04 additions (E1/E2/E3):** all 90 proofs exported as SV-COMP correctness witnesses and re-checked by two unrelated validators with zero rejections (121/121 invariants confirmed by Ultimate, §4j); on 892 industrial files, 2067 of 2085 loop-bearing functions are blocked first by memory, 8 reach the fragment and none is proved, and no failure is about invariant search (§4k). On the community's ten `c/loop-*` suites (203 cases) we prove 50 against Ultimate's 92, with 15 proofs Ultimate cannot make and 0 false certifications; on the 41 pre-registered exclusions that no experiment ever translated we prove 11 against 12 with none of the 25 overflow-carrying cases certified (§4l). **v1.05 (E2, completed):** the collection we pinned in 2021 had moved to GitLab and grown by 7,072 no-overflow cases; of the 265 in the eight directories this study runs, the frozen front end admits 64, we prove 1 and certify nothing false on the 61 whose label says overflow is reachable, and Ultimate decides 140 and agrees with every label (§4m).
-**v1.05 契约臂（E6，§4n）。** 把任务从"写不变式原子"换成"写前置条件盒子"——模型给每个参数一个区间，定理变成"盒子里处处无未定义行为"，验证器一行未改：83 例（**69 例的标签是真会溢出**）× 3 模型 × 3 次重复 = 747 单元。模型臂证出 **10/83**，无模型的均匀收缩对照 **6/83**，仅 S 5、仅 B 1，精确 McNemar **p = 0.219**；按预注册的保留域门槛（< `1e-3` 的证明不计）扣除后 **7 vs 6、仅 S 2、仅 B 1、p = 1**，故**不宣称净贡献**。两个站得住的"仅 S"都是**按符号切半**（`n > 0`、`k < 0`，各保留 50%），而均匀收缩在构造上写不出这个形状；**掩盖数而不是能力数**：S 的 15 个（用例 × 模型）证明单元里 **12 个**落在「真会溢出」的`false` 标签上，B 的 6 个里 **6 个**也是；S 那 3 个例外是两例按符号切半加 `nested-1`。 **v1.05 contract arm (E6, §4n):** the model states a parameter box instead of atoms, so the theorem is conditional on the box and the verifier is unchanged; 10/83 against a model-free uniform shrink's 6/83 (p = 0.219), and 7-vs-6 with p = 1 after the pre-registered retained-volume floor, so no net contribution is claimed. The two surviving cases are sign splits — a shape the control family cannot express. Of the arm's 15 (case, model) proofs, 12 sit on cases labelled `false` (overflow reachable), as do all 6 of the control's; the three exceptions are the two sign splits plus `nested-1`.
 
-**English.** We study proving absence of undefined behaviour for C loop programs: LLMs, a trajectory fitter and Houdini only produce **untrusted candidates** (interval/relational/predicate invariants, optional ranking functions), which the **same unchanged Z3 verifier** checks on ANY typed state (entry, induction, exit); candidates are never trusted. We present seven verification modes (exact trajectory, interval trees, relational `@rel`, loops in branches, a single-loop predicate mode incl. `unknown()` nondeterminism and state-driven loops, compositional multi-loop, mathematical-integer semantics), trusted normalizations (C89 indices, `while`→`for`, post-loop index exit values) and termination via ranking functions. On synthetic corpora and automatically translated SV-COMP (264 loop programs) and Code2Inv (134): under mathematical integers 64 of Code2Inv's 69 while-mode programs are certified by some model (Houdini alone 53) and programs whose assertion fails are **never certified** at any stage; the cascade (generator → LLM → feedback repair) saves ~77% of LLM calls. We also report negative results (prompt rules neutral or harmful, little repair gain), CPAchecker's higher decision rate, near-zero coverage of real code, and three self-corrections (translator, prompt override, interpreter).
+**中文。** C 循环的"无未定义行为"证明，缺的常常不是求解能力，而是不变式从哪里来。本文让任何来源
+——大语言模型、轨迹拟合器、Houdini 削弱——只提出候选；候选在实现里就是字符串，同一个**未改动的
+Z3 验证器**在任意满足候选的类型化状态上检查入口、归纳与出口，接受与否与候选的来历无关（定理 T2）。
+方法包含七种验证模式、受信规范化与可选排名函数。结果分三层。**可靠性**：在 165、400、203、265 例
+以及 892 个工业文件的抽样上误认证为 **0**；90 个证明导出为 SV-COMP 见证，两个与实现无共享代码的
+校验器**零驳回**，Ultimate 独立确认 **121/121** 条不变式。**覆盖率**：全体 165 例上 Ultimate 证 135、
+我们证 90（精确 McNemar p ≈ 3×10⁻⁹），故只声称 **8/165** 的独有覆盖，并把差距归因于"程序进不来"
+——上游 pin 之后新增的 7,072 例里前端只接住 265 个，工业代码 2,085 个含循环函数里 **2,067** 个第一处
+阻塞是内存。**大模型的边际价值**：三次测量没有一次为正，最贵的两臂买 3 个净新增证明（p = 0.375 /
+0.25），契约臂 10/83 对无模型对照 6/83（p = 0.219，过预注册门槛后 p = 1），便宜价位上 5/83 对 17/83
+（p = 0.0018）在把臂放宽成三模型九次并集后只剩 3 对 8（**p = 0.227**）。2,663 次调用、639.9 万
+completion token 的账单为 **$25.74**（区间 $12.87–51.49），由脚本从原始结果现算。
+
+**English.** Proving absence of undefined behaviour for C loops is usually limited not by the solver
+but by where the invariants come from. We let *any* source — an LLM, a trajectory fitter, Houdini
+weakening — only propose candidates; a candidate is a string, and the **same unchanged Z3 verifier**
+checks the entry, preservation and exit obligations on any typed state that satisfies it, so
+acceptance does not depend on provenance (theorem T2). The method has seven verification modes,
+trusted normalisations and optional ranking functions. Results come in three layers. **Soundness:**
+zero false certifications on 165, 400, 203 and 265 cases and on a sample of 892 industrial files;
+90 proofs exported as SV-COMP witnesses, rejected by neither of two validators that share no code
+with the implementation, and **121/121** invariants independently confirmed by Ultimate.
+**Coverage:** on all 165 cases Ultimate proves 135 and we prove 90 (exact McNemar p ≈ 3×10⁻⁹), so we
+claim only **8/165** exclusive coverage and trace the gap to programs that never enter the fragment —
+the front end admits 265 of the 7,072 cases the community added after our pin, and **2,067 of 2,085**
+loop-bearing functions in industrial code are blocked first by memory. **The LLM's marginal value:**
+three measurements, none positive — the two most expensive arms buy 3 net new proofs (p = 0.375 /
+0.25), the contract arm 10/83 against a model-free control's 6/83 (p = 0.219, p = 1 above the
+pre-registered floor), and a cheap re-run 5/83 against 17/83 (p = 0.0018) that falls to 3 against 8
+(**p = 0.227**) once the arm is widened to three models and nine samples. The bill for 2,663 calls and
+6.40 M completion tokens is **$25.74** (range $12.87–51.49), computed by script from the raw results.
+
+**贡献 / contributions.**
+
+- **C1 可靠性与提议者无关性 / soundness and proposer independence.** 八类义务被写成推理规则，T1
+  与 T2 有证明，义务到代码逐行对应；**证明是纸面的，不是机器检验**（§1b、[`docs/SOUNDNESS.md`](SOUNDNESS.md)）。
+- **C2 七个模式与受信规范化 / seven modes and trusted normalisations.** 精确轨迹、区间树、关系型
+  `@rel`、分支内循环、单循环谓词（含 `unknown()`）、多循环组合式、数学整数语义；C89 索引与
+  `while`→`for` 的改写配原生 UBSan 差分（§1、§4g）。
+- **C3 零误认证，且由别人复核 / zero false certification, checked by others.** 165/400/203/265 与
+  892 个工业文件上 0；90 个见证、两个无共享代码的校验器、**121/121** 条不变式被 Ultimate 确认
+  （§4j）。
+- **C4 覆盖边界被量化 / the coverage boundary, quantified.** 8/165 独有覆盖、93/165 前端可译、
+  64/265 上游新增可译、8/2085 工业函数进入片段，且八条工业失败**没有一条**是"不变式难找"
+  （§4e、§4k、§4l、§4m）。
+- **C5 三次否定测量与可复算账单 / three null measurements, and a reproducible bill.** 含对照族被
+  逐个补齐的过程（§4n→§4o）：模型赢过的形状一旦进入对照族，对照就不需要模型（§4p）。账单由
+  `scripts/llm_ledger.py` 现算，`--check` 不一致即非零退出（附录 A）。
+
+**不声称 / not claimed.** 不优于 Ultimate（§4e）；不外推到别的程序种群（§4l、§4m 的分母写明了）；
+不含非线性多项式不变式（§5b 第 1 条）；不证明终止性；定理未经机器检验（§5b 第 4 条）。
+
+**版本说明 / version note.** 本稿的结论经历过**三次撤回**，历史留在各节里而不是摘要里：v1.01 的
+"SV-COMP NoOverflows 上 91/93 对 83/93"在 v1.03 把分母扩到 165 并给所有工具相同预算后被推翻
+（135 对 90，p ≈ 3×10⁻⁹）；v1.03 的"标签子集持平"在 v1.04 扩到 400 例后撤回（137 对 165）；v1.05 契约
+臂那两个"按符号切半的净新增"在 v1.06 把该形状加进对照族后消失（§4o）。逐条更正写在 §4e、§4f、
+§4o 内，日期与版本号保留在节标题上。 Three retractions, kept in the sections where they happened
+(§4e, §4f, §4o) rather than in the abstract: the "91/93 vs 83/93" claim, the "parity on the labelled
+subset" claim, and the contract arm's two sign-split wins.
+
+## 引言 / Introduction
+
+**问题 / the problem.** 要给一个 C 循环证明"没有未定义行为"，先得有不变式；而不变式从哪来，决定了
+这个证明能不能被信任。工具越强，越依赖一个不受信的前端给出候选——一旦候选可以来自大模型，"它说得
+对不对"就变成了"谁有权说它对"。 Proving UB-freedom for a C loop needs an invariant first, and where
+that invariant comes from decides whether the proof can be trusted at all.
+
+**为什么难 / why it is hard.** 三件事同时成立。
+
+1. **接受必须与来源无关。** 只要验证器为模型放宽一次，整条证据链就变成了对模型的信任。这是 §1b
+   的 T2，也是本文唯一不能让步的设计约束。
+2. **覆盖与可靠性是两件事。** 把验证器做严容易，让它接住真实程序的语法很难：工业抽样 2,085 个含
+   循环函数里 2,067 个第一处阻塞是内存，进入片段的 8 个一个都没证出，而**没有一条失败是"不变式
+   难找"**。审稿人最容易误读的一点是：本文的坏数字大多不是求解能力问题。
+3. **净增量难测。** 模型赢过的形状，往往一个不含模型的搜索族也能写出来，只是没人把它写进对照。
+   §4n 的 10 对 6、§4o 的 17 对 5 就是这个差别的全部：**同一批用例、同一份对照，把"模型会的形状"
+   加进对照族，信号就没了。**
+
+**做法 / the approach.** 一句话：把候选降级成字符串，把接受权交给一个不改的验证器，然后把力气花在
+测**净增量**而不是测准确率上。§1b 把这件事写成推理规则并给出可靠性证明（含它不覆盖什么）；§4n–§4p
+是三次测量，每一次都在补掉一个"模型可能只是运气好"的解释——先补 token 上限，再补对照族，最后换
+价钱重问一遍。 The candidates are strings, the verifier is unchanged, and the effort goes into
+measuring the *net* contribution against a model-free family rather than into accuracy.
+
+**贡献与不声称 / contributions and non-claims.** 见上 C1–C5 与"不声称"四条；它们与 §5b 的十二条
+边界是同一条纪律的两种粒度。
+
+**结构 / structure.** §1 方法与信任基，§1b 规则与定理，§1c 相关工作（23 条，六簇），§2 基准，
+§3 合成语料与 Code2Inv，§4–§4p 逐轮结果（含三处自我更正），§5b 能力边界，§6 威胁有效性，§7 复现
+（罕见地细），§8 结论，附录 A 全部 LLM 开销。 §1 method and trust base; §1b the rule and its
+soundness; §1c related work; §2 benchmarks; §3–§4p results by round, including three
+self-corrections; §5b the capability boundary; §6 threats; §7 reproducibility; §8 conclusion;
+Appendix A the whole bill.
 
 ## 1. 方法 / Method
 - **信任基 / trust base.** 候选只是字符串（同一个分工的先例见 [10]–[12]）；验证器（Z3 + 类型化 C 整数语义引擎）对任意满足候选的类型化状态检查：入口、归纳（一次迭代无未定义行为且保持）、出口（后续代码与返回表达式有定义）。规范化器（`llmloop/loop_index_normalize.py`）属于受信流程，均配原生 UBSan 差分测试。 Candidates are strings; the verifier (Z3 + typed C integer engine) checks entry, preservation (defined iteration) and exit for ANY typed state satisfying them; normalizers are part of the trusted pipeline and have native UBSan differential tests.
