@@ -6,7 +6,7 @@
 - **两项关掉**（第 5 项证明不需要跑，第 4 项诊断清楚并改写了它的估计）；
 - **论文层面五项本轮做完**（摘要重写、引言、参考文献 23 条、相关工作、结论）；
 - **三项要花钱，卡在同一件事上**：这台机器上没有 `LLM_API_KEY`，也没有能派发 Actions 的凭据。
-  三项合计 **约 $2.06**，命令都写好了；作者已恢复余额，缺的只是把密钥放进这台机器的环境变量（或改为 CI 派发）。
+  三项合计 **约 $2.07**，命令都写好了；作者已恢复余额，缺的只是把密钥放进这台机器的环境变量（或改为 CI 派发）。
 
 ---
 
@@ -35,10 +35,10 @@
 
 | # | 缺什么 | 规模 | 估算 | 现在的状态 |
 | --- | --- | --- | --- | --- |
-| 1 | E6b 的 231 次 void 调用（`deepseek` @16k 写契约） | 231 次调用 / ~98.7k prompt / 1.34–1.42 M completion | **$0.82–0.86** | 协议已冻结（`experiments/v106/e6b/`），只需重跑 `run` |
+| 1 | E6b 的 void 调用（`deepseek` @16k 写契约） | **233** 次（实测 `spec.pre is None`）/ ~99.6k prompt / 1.35–1.44 M completion | **$0.83–0.87** | 协议已冻结（`experiments/v106/e6b/`）；需先归档空单元再 `run`，见 §3 |
 | 2 | E6c 的重复间一致性（被砍掉的 best-of-3） | 166 次 | **$0.04** | 需要 `repeats=3` 的新冻结（现协议 `repeats=1`） |
 | 3 | 第二个价位的契约臂（`claude-sonnet-4-5`，83 次） | 83 次 | **$1.2** | 需要新冻结的 `v108` 规格（现无 runner） |
-| | **合计** | **480 次调用** | **≈ $2.06** | |
+| | **合计** | **482 次调用** | **≈ $2.07** | |
 
 **为什么没跑。** 三条都不是"想不想"的问题：
 
@@ -52,8 +52,20 @@
 **钥匙到手后要跑的三条命令**（按此顺序，前两条不改代码）：
 
 ```bash
-# 1) E6b 补 void：先删掉 231 个失败单元的 raw 目录（它们没有内容，留着会被当成"已完成"跳过）
-python scripts/spec_v106.py run --output experiments/v106/e6b --workers 4
+# 1) E6b 补 void。注意：249 个单元目录都已有 spec.json + verify.json，直接 run 会全部跳过
+#    （实测 233 个的 spec.pre 是 None）。所以先把"没答上来"的那些移走——**移进归档，不是删掉**，
+#    因为那 233 条空回答本身就是"余额被扣成负数"这一事件的证据：
+mkdir -p experiments/v106/e6b/raw_void_billing
+python - <<'EOF'
+import json, pathlib, shutil
+raw = pathlib.Path('experiments/v106/e6b/raw'); moved = 0
+for d in sorted(p for p in raw.iterdir() if p.is_dir()):
+    s = d / 'spec.json'
+    if s.exists() and json.loads(s.read_text()).get('pre') is None:
+        shutil.move(str(d), f'experiments/v106/e6b/raw_void_billing/{d.name}'); moved += 1
+print('archived', moved, 'empty units')
+EOF
+python scripts/spec_v106.py run --output experiments/v106/e6b --workers 4   # 233 calls ≈ $0.86
 python scripts/spec_v106.py merge --output experiments/v106/e6b
 
 # 2) E6c 重复一致性：需要先把 repeats 从 1 改成 3 并重新冻结（这会改 protocol.json，属于新实验）
