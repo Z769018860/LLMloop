@@ -26,14 +26,15 @@ ROOT = Path(__file__).resolve().parents[1]
 #   gpt-4.1-mini        OpenAI list price, 2025-04 (input 0.40 / output 1.60)
 #   claude-sonnet-4-5   Anthropic list price (input 3.00 / output 15.00)
 #   deepseek-v4.1-flash-ark
-#                       an internal alias served through the proxy; no public price list exists for
-#                       this string, so it is priced as DeepSeek-V3.2 list (0.28 / 0.42). If the
-#                       proxy charges otherwise, the deepseek rows are the ones that move -- and
-#                       they are 10% of the bill, so the total moves by at most about that.
+#                       an internal alias for the flash family served through the proxy. Priced at
+#                       the provider's published flash rates checked on 2026-11 (input 0.15 / output
+#                       0.60 per million; cache-hit input 0.003). The alias may carry a proxy margin,
+#                       which is one of the reasons the whole bill is reported with a x0.5-x2 bracket
+#                       rather than as a single number.
 PRICES = {
     'gpt-4.1-mini': (0.40, 1.60),
     'claude-sonnet-4-5-20250929': (3.00, 15.00),
-    'deepseek-v4.1-flash-ark': (0.28, 0.42),
+    'deepseek-v4.1-flash-ark': (0.15, 0.60),
 }
 
 ARMS = [
@@ -231,7 +232,7 @@ def render(arms, total):
     L.append('| --- | --- | --- | --- |')
     srcs = {'gpt-4.1-mini': 'OpenAI 公开价目（2025-04）',
             'claude-sonnet-4-5-20250929': 'Anthropic 公开价目',
-            'deepseek-v4.1-flash-ark': '**假设**：代理上的内部别名，按 DeepSeek 公开价目代入'}
+            'deepseek-v4.1-flash-ark': 'DeepSeek 官方 flash 价目（2026-11 核对）；别名可能含代理加价'}
     for m, (pin, pout) in PRICES.items():
         L.append('| `%s` | %.2f | %.2f | %s |' % (m, pin, pout, srcs.get(m, '')))
     L.append('')

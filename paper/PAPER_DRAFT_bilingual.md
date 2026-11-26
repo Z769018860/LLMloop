@@ -479,24 +479,24 @@ after our pin, and 64 of those translate. The refusals are syntactic and nameabl
 
 | 实验 | 单元 | 调用 | prompt | completion | 生成耗时 | 估算 USD |
 | --- | --- | --- | --- | --- | --- | --- |
-| v1.04 arm L（原子，3 模型 × 3 次） | 837 | 970 | 658,687 | 2,255,652 | 5.27 h | 8.90 |
-| v1.04 追加 16k | 558 | 614 | 421,321 | 3,592,229 | 7.40 h | 14.14 |
-| v1.05 E6（契约臂，3 模型 × 3 次） | 747 | 747 | 329,844 | 438,571 | 2.32 h | 1.82 |
-| v1.06 E6b（void；249 次里 231 次被拒，未计费） | 249 | 249 | 7,689 | 110,400 | 0.17 h | 0.05 |
+| v1.04 arm L（原子，3 模型 × 3 次） | 837 | 970 | 658,687 | 2,255,652 | 5.27 h | 9.17 |
+| v1.04 追加 16k | 558 | 614 | 421,321 | 3,592,229 | 7.40 h | 14.62 |
+| v1.05 E6（契约臂，3 模型 × 3 次） | 747 | 747 | 329,844 | 438,571 | 2.32 h | 1.87 |
+| v1.06 E6b（void；249 次里 231 次被拒，未计费） | 249 | 249 | 7,689 | 110,400 | 0.17 h | 0.07 |
 | v1.07 E6c（83 次流式） | 83 | 83 | 34,555 | 1,709 | 0.05 h | 0.02 |
-| **合计** | **2,474** | **2,663** | **1,452,096** | **6,398,561** | **15.2 h** | **24.92** |
+| **合计** | **2,474** | **2,663** | **1,452,096** | **6,398,561** | **15.2 h** | **25.74** |
 
 **金额是估算，不是发票 / an estimate, not an invoice.** 端点是代理，其账单不在仓库里；价目按公开
 价目代入（`gpt-4.1-mini` 0.40/1.60、`claude-sonnet-4-5` 3.00/15.00 USD 每百万 token；
-`deepseek-v4.1-flash-ark` 是内部别名，按公开 DeepSeek 价目 0.28/0.42 代入，**这一项是假设**）。
-价目减半到加倍给出 **$12.46 – $49.85**，所以正确的写法是"十到五十美元量级"。 The endpoint is a
+`deepseek-v4.1-flash-ark` 是内部别名，按 DeepSeek 官方 flash 价目 0.15/0.60 代入（2026-11 核对），
+别名可能含代理加价）。价目减半到加倍给出 **$12.87 – $51.49**，所以正确的写法是"十到五十美元量级"。 The endpoint is a
 proxy whose invoice is not in this repository, so the money column is a list-price estimate with a
 2x bracket; the correct statement is "on the order of ten to fifty dollars".
 
-三件事只有这张表能说清 / three things only the table shows. ①**90% 的账单在 `claude-sonnet-4-5`
-的两臂上**（$22.39），从 v1.05 到 v1.07 的全部契约臂实验合计 **$1.89**；贵不贵由"输出单价 ×
+三件事只有这张表能说清 / three things only the table shows. ①**87% 的账单在 `claude-sonnet-4-5`
+的两臂上**（$22.39），从 v1.05 到 v1.07 的全部契约臂实验合计 **$1.96**；贵不贵由"输出单价 ×
 输出长度"决定，不由实验数量决定。②**把 E6b 那个 void 补上不到一美元**（231 次调用、1.34–1.42 M
-completion，$0.59–0.62）——它此前写作"1.4 M token"，读起来像一大笔钱。③**最贵的两臂买的是 3 个
+completion，$0.82–0.86）——它此前写作"1.4 M token"，读起来像一大笔钱。③**最贵的两臂买的是 3 个
 净新增证明**（p = 0.375 / 0.25），而最便宜的 E6c 买的是本文学到的最尖锐的一个否定结果。
-90% of the bill is two `claude` arms; the whole contract-arm line costs $1.89; the one open question
+87% of the bill is two `claude` arms; the whole contract-arm line costs $1.96; the one open question
 costs under a dollar.
