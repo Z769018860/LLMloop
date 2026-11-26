@@ -50,6 +50,7 @@
 
 - `upstream2026/termination-nla/egcd3-both-nt`：`ERROR`，`ERROR:KeyError:'temp'`（2 个 profile 里 2 个抛同一句）。对照在同例上是 **TIMEOUT**，所以它落在"都未证出"里，不改变任何配对计数；但它本来应该是一个 `UNKNOWN`，这里如实写出来。
 - 这个异常在 v1.05 的 747 行里出现过 4 次（审计 §4.6 第 23 条），是同一个缺陷。
+- **v1.07 诊断（`docs/EGCD3_TEMP.md`，`scripts/diagnose_egcd3.py`）：它不是"一个 bug"。** 同一个程序在三种处理下分别停在三个不同的检查上：原样 → 前端拒绝（循环体内的声明）；把 5 个声明提升到函数头（语义等价）→ `Initialized named scalar locals required`；再给它们 `= 0`（不语义等价，仅诊断）→ 内层循环的定义性义务失败。**第一个才是这里出现的 `KeyError` 的形状**，而它的真正问题不是缺一个键，是**同一份字节在 CI 上给 `ERROR`、在本机给 `STUCK`**——一个被前端拒绝的程序应当稳定地报"片段之外"，不该取决于 pycparser 怎么排语法树。该格的正确标签是 `UNSUPPORTED`，不是 `ERROR`；计数不变（三种都算"未证出"）。修它要动 `llmloop/*.py` 的字节，会让三份已冻结协议 `DRIFT`，而本文的中心主张是"验证器一行未改"——所以本轮只诊断，不改。
 
 ## 5. 价 / what it cost
 

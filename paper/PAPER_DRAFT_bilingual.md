@@ -1,6 +1,6 @@
 # 由不受信的提案生成并经未改动验证器认证的循环安全不变式 / Certified loop-safety invariants from untrusted proposals checked by an unchanged verifier（论文草稿 / paper draft, 中英文）
 
-> 状态 / status（v1.07）: 整合草稿；§4m（pin 之后的上游新增）、§4n（契约臂 E6）、§4o（补上对照族边界之后 E6 的残余信号消失）、§4p（同一问题的重新定价与结果）与 §5b 为最新；§4e/§4f 为被更正的旧数字（各自段落内写着是怎么被更正的）。v1.01 及更早的"优于外部工具"表述已在 §4e 与 §5b 第 9 条撤回。 Consolidated draft; §4m (post-cutoff additions), §4n (the contract arm, E6), §4o (what extending the control's family did to it) and §5b are current; §4e/§4f are superseded numbers whose paragraphs say how and why. The pre-v1.03 "better than" claims are retracted in §4e and §5b item 9.
+> 状态 / status（v1.07）: 整合草稿；§4m（pin 之后的上游新增）、§4n（契约臂 E6）、§4o（补上对照族边界之后 E6 的残余信号消失）、§4p（同一问题的重新定价与结果）与 §5b 为最新；§4e/§4f 为被更正的旧数字（各自段落内写着是怎么被更正的）。v1.01 及更早的"优于外部工具"表述已在 §4e 与 §5b 第 9 条撤回。**本轮新增 §1c（相关工作，23 条文献）、§8（结论）与文末参考文献**；书目与核验记录在 `paper/REFERENCES.md`，`python scripts/check_references.py --live` 逐条探测 23 个 PDF 链接。**仍缺引言与图。** Consolidated draft; §4m (post-cutoff additions), §4n (the contract arm, E6), §4o (what extending the control's family did to it) and §5b are current; §4e/§4f are superseded numbers whose paragraphs say how and why. The pre-v1.03 "better than" claims are retracted in §4e and §5b item 9. This revision adds §1c (related work, 23 references), §8 (conclusion) and the bibliography; the introduction and the figures are still missing.
 
 ## 摘要 / Abstract
 **中文。** 我们研究 C 循环程序的“无未定义行为”证明：LLM、轨迹拟合器和 Houdini 只提出**不受信的候选**（区间/关系/谓词不变式、可选排名函数），由同一个**未改动的 Z3 验证器**在任意类型化状态上检查入口、归纳与出口义务；候选从不被信任。我们给出七种验证模式（精确轨迹、区间树、关系 `@rel`、分支内循环、单循环谓词模式（含 `unknown()` 非确定性与状态驱动）、多循环组合式、数学整数语义）、受信的规范化（C89 索引、`while`→`for`、循环后索引退出值）、终止性（排名函数）。在合成语料、自动译写的 SV-COMP（264 个循环程序）与 Code2Inv（134 个）上：数学整数语义下 Code2Inv 的 69 个 while 模式程序中 64 个被某个模型认证（Houdini 单独 53 个），期望违反断言的程序在所有阶段 **0 次被认证**；级联（生成器 → LLM → 反馈修复）省约 77% 的 LLM 调用。我们同时报告了否定结果（提示规则无益甚至有害、反馈修复收益很小）、CPAchecker 的更高决断率、真实代码覆盖几乎为零，以及三次自我更正（译写缺陷、提示覆盖、解释器缺陷）。
@@ -12,7 +12,7 @@
 **English.** We study proving absence of undefined behaviour for C loop programs: LLMs, a trajectory fitter and Houdini only produce **untrusted candidates** (interval/relational/predicate invariants, optional ranking functions), which the **same unchanged Z3 verifier** checks on ANY typed state (entry, induction, exit); candidates are never trusted. We present seven verification modes (exact trajectory, interval trees, relational `@rel`, loops in branches, a single-loop predicate mode incl. `unknown()` nondeterminism and state-driven loops, compositional multi-loop, mathematical-integer semantics), trusted normalizations (C89 indices, `while`→`for`, post-loop index exit values) and termination via ranking functions. On synthetic corpora and automatically translated SV-COMP (264 loop programs) and Code2Inv (134): under mathematical integers 64 of Code2Inv's 69 while-mode programs are certified by some model (Houdini alone 53) and programs whose assertion fails are **never certified** at any stage; the cascade (generator → LLM → feedback repair) saves ~77% of LLM calls. We also report negative results (prompt rules neutral or harmful, little repair gain), CPAchecker's higher decision rate, near-zero coverage of real code, and three self-corrections (translator, prompt override, interpreter).
 
 ## 1. 方法 / Method
-- **信任基 / trust base.** 候选只是字符串；验证器（Z3 + 类型化 C 整数语义引擎）对任意满足候选的类型化状态检查：入口、归纳（一次迭代无未定义行为且保持）、出口（后续代码与返回表达式有定义）。规范化器（`llmloop/loop_index_normalize.py`）属于受信流程，均配原生 UBSan 差分测试。 Candidates are strings; the verifier (Z3 + typed C integer engine) checks entry, preservation (defined iteration) and exit for ANY typed state satisfying them; normalizers are part of the trusted pipeline and have native UBSan differential tests.
+- **信任基 / trust base.** 候选只是字符串（同一个分工的先例见 [10]–[12]）；验证器（Z3 + 类型化 C 整数语义引擎）对任意满足候选的类型化状态检查：入口、归纳（一次迭代无未定义行为且保持）、出口（后续代码与返回表达式有定义）。规范化器（`llmloop/loop_index_normalize.py`）属于受信流程，均配原生 UBSan 差分测试。 Candidates are strings; the verifier (Z3 + typed C integer engine) checks entry, preservation (defined iteration) and exit for ANY typed state satisfying them; normalizers are part of the trusted pipeline and have native UBSan differential tests.
 - **模式 / modes.** `typed_invariant_tree`（计数循环树，区间 + `@rel` + 分支内循环）；`typed_invariant_while`（单循环谓词合取，`unknown()`/nondet 被改写为全称量化输入，可选 `ranking`，`integer_model` ∈ {c, mathematical}）；`typed_invariant_loops`（多个顺序/嵌套循环的组合式检查）。
 - **生成器 / generators.** LLM（6 个模型，其中 `claude-dsflash-itkk` 是 DeepSeek V4.1 Flash 别名）；轨迹拟合器（精确有理线性代数 + floor/ceil/min/max/指示项基，不受信）；采样 + Houdini（用验证器反例削弱）；LLM 候选原子 + Houdini 的混合方案；级联与反馈修复。
 - **可靠性证据 / soundness evidence.** 全量测试（见 `docs/PAPER_READINESS.md` 最新条目）；对小程序的穷举探索（认证 ⇒ 无可达未定义行为）；原生 UBSan 差分；**违例见证**：被找到具体违例的程序（C 语义 Code2Inv 34 个等）从未被任何生成器认证。 3533 passed / 14 skipped / 0 failed at v1.03; exhaustive exploration of small programs; native differentials; programs with a concrete violation witness were never certified.
@@ -23,6 +23,61 @@
 **定理 T2（提议者无关）/ proposer independence.** `PROVED` 只依赖 *I* 的义务是否成立，与 *I* 的来历无关：采样、Houdini 削弱、LLM 提议只能改变"找到什么"，不能改变"接受什么"。因此 §4f 的消融、§4e 的对照度量的都是**完备性**；`CAP=256` 的截断、`_lean`/`_prio` 的重排同样只损失完备性。证错只可能来自检查器，不可能来自提议者。
 **两条假设 / two hypotheses.** **H1** 前端翻译（`scripts/svcomp_translate.py`）忠实保持未定义行为语义——**没有证明**，只有差分测试（§4g）；**H2** 求解器报 `unsat` 时公式确实不可满足——由 §4j 的第三方复核在 **121 条不变式**上独立检验（两个与实现无共享代码的验证器，零驳回；注意方向：假 `sat` 只损失完备性，假 `unsat` 才不健全）。
 **不证明 / not proved.** 终止性（规则不含 ranking 义务，"无 UB"是关于有限前缀的）、堆与指针（片段之外，E3 的 2067/2085 正死在这里）、*D* 之外的输入、浮点、多函数。完整定义、证明、以及义务与代码的逐行对应见 [`docs/SOUNDNESS.md`](SOUNDNESS.md)。 Full definitions, the proof and a line-by-line obligation-to-code map are in `docs/SOUNDNESS.md`; termination, heap, inputs outside *D*, floating point and multi-function programs are outside the theorem.
+
+## 1c. 相关工作 / Related work
+
+**候选的来历不是本文的发明 / the candidates are not new.** 抽象解释把不变式问题变成抽象域上的
+不动点计算 [1]；Houdini 从一组候选出发、用检查器逐个反驳，剩下的就是最强的可证合取 [2]——**本文的
+无模型对照族（§4n、§4o）就是 [2] 的复刻**，它的每一次尝试都花在求解器上，不花在模型上；Daikon 用
+动态轨迹猜"很可能成立"的不变式 [3]；ICE 从蕴含、反例与样本三类约束里学 [4]。本文与这条线的差别
+不在算法，在**候选的来源**：候选串可以来自 LLM，但接受与否只由 §1b 的义务决定（T2），所以 [1]–[4]
+的任何一条都能原样放进同一个循环。 The model-free control family in §4n/§4o **is** Houdini's
+candidate-weakening loop [2] with every attempt spent on a solver and none on a model; abstract
+interpretation [1], Daikon [3] and ICE [4] are the other three ancestors. What differs is where the
+candidates come from, not what accepts them (T2).
+
+**接受这一侧：见证与第三方复核 / acceptance, and who can check it.** 我们比较的三个工具是
+CBMC [5]、CPAchecker [6] 与 Ultimate Automizer [7]。把"某工具证出来了"变成别人能检查的对象，靠的是
+SV-COMP 的见证格式与校验器 [8] 以及每年一次的横向评测 [9]；§4j 的两个复核器就来自这条线，它们与
+我们的实现没有共享代码，所以检验的是**结论**，不是我们自己的脚本。 The three tools we compare
+against are CBMC [5], CPAchecker [6] and Ultimate [7]; what makes a proof checkable by a third party
+is the witness format and its validators [8] and the annual competition [9], and the two validators
+of §4j come from that line.
+
+**"提议者不受信、接受者不变"有更长的谱系 / the trust structure has a pedigree.** Dafny 把注解交给
+用户、把正确性交给一个不改的验证器 [10]，这是 auto-active 的原始形态；GPT-f 让模型提议证明步、由
+Metamath 的 kernel 判定 [11]；HTPS 把这条线做成在线搜索 [12]。本文的 T2 与它们是同一个分工，只是
+判定对象从"证明步 / kernel"换成了"C 循环上的八类义务 / Z3"。这一点必须说清楚：**我们没有提出新的
+信任结构，只是把它落在一个此前没被量化过的对象上**，而 §5b 第 4 条说明这个落点的代价（规则是纸面
+证明，不是机器检验）。 Dafny [10] hands annotations to the user and correctness to an unchanged
+verifier; GPT-f [11] hands steps to a model and judgement to the Metamath kernel; HTPS [12] turns
+that into search. T2 is the same division of labour with a different judge.
+
+**LLM 写规格与写证明 / LLMs writing specifications and proofs.** 自动形式化 [13]、整证明生成与修复
+[14]、把 LLM 与自动推理器组合成有可靠性证明的演算 [15]、代码/文档/注解的一致性检查 [16]、从自然语言
+意图生成后置条件 [17]、为 SMT 辅助的证明导向语言合成程序 [18]。其中 [15] 与本文方法最接近（同样是
+"LLM + 推理器 + 可靠性论证"），[16] 的主张形状最接近（"误接受为零"）。差别有三处：我们的对象是 C 的
+**无未定义行为**，不是证明助手里的定理或 Dafny 的后置条件；我们把"一次调用值多少"做成可复算的总账
+与配对检验（§4n–§4p、附录 A）；我们报告的是**净增量为零**这一类否定结果。 Of the six, [15] is the
+closest in method (LLM + reasoner + a soundness argument) and [16] the closest in claim shape (zero
+false acceptance); we differ in the object (UB-freedom in C), in costing every call (Appendix A), and
+in reporting a null result.
+
+**大规模"提议—检查" / propose-then-check at scale.** AlphaGeometry [19]、FunSearch [20] 与
+AlphaGeometry2 [21] 说明这条路能走很远，但它们的接受者是**完备的符号引擎**：目标只要能被引擎关闭，
+覆盖率就不是问题。本文的接受者是**有界的验证器**，而 §4e 与 §4m 量到的瓶颈正好在覆盖率（前端接得住
+的程序少）而不是可靠性（误认证为零）。这是两类系统的分界，也是本文只声称"覆盖而非可靠性是瓶颈"的
+原因。 [19]–[21] have a complete symbolic engine as the acceptor, so coverage is not their problem;
+ours is a bounded verifier, and that is why the measured bottleneck is coverage (§4e, §4m).
+
+**最近直接做循环不变式的两条 / the two most recent neighbours.** Quokka [22] 对每条生成的候选直接问
+"它有没有帮上证明"，与本文"候选只是字符串"的口径一致；Akhond 等 [23] 系统测了模型写与修不变式的
+成功率（生成 78%、修复 16%）。它们回答"模型能不能写对"，本文回答"写对之后，相对一个**不含模型**的
+搜索族还有多少净增量"——而 §4o 说明这个差值可以是负的：把模型赢过的那个形状加进对照族之后，对照
+自己就证出了那两例。据我们所知，还没有工作用"把模型赢过的形状逐个吸收进无模型对照族"的办法消解
+净增量。 [22] asks whether a generated invariant helps the proof, [23] measures how often a model
+writes or repairs one; we ask what is left after a model-free family absorbs every shape the model
+won (§4o). To our knowledge no prior work dissolves the net contribution that way.
 
 ## 2. 基准 / Benchmarks
 | 语料 / corpus | 规模 / size | 来源 / source |
@@ -88,7 +143,7 @@
 
 ## 4e. 全体分母、同预算复跑与独立基准（v1.03）/ Full denominator, equal-budget rerun and independent benchmark (v1.03)
 **为什么必须重做 / why this had to be redone.** §4d 的对照只覆盖前端能接收的 93 个程序（且全部来自 `termination-restricted-15` 一个目录），被拒绝的 72 个（主要在 `termination-15` 中带 `alloca`/`malloc`/语句后 `assume`/提前 `return`）没有基线结果。这个裁剪**不是中立的**：Ultimate 在拒绝集里证明 50 个、我们 2 个。 The §4d comparison covered only the 93 front-end-accepted programs from a single directory; the 72 rejected ones had no baselines, and the exclusion was not neutral — Ultimate proves 50 of them, we prove 2.
-**设置 / setup.** 165 个冻结用例 × {Ultimate 0.3.2, CBMC 6.11.0, llmloop 确定性组合} = 495 个单元，**完整捕获为真**：每个单元的完整命令行、stdout/stderr、wait4 CPU、采样 RSS 与判定均已入库，另有 `protocol.json` 记录冻结哈希与只改驱动的修订说明。三类工具共享 600 s 进程组墙钟上限与 2 GiB 采样组内存上限，workers=4，种子 1。**本轮 llmloop 臂不发起任何远程模型调用**（`remote_model_calls = 0`）：它是"默认配置，默认未证明时才启用既有多项式剖面"的确定性组合，所以下面的差值是**能力差距，不是 LLM 的净贡献**。 495 units, complete capture (commands, streams, CPU, RSS, verdicts retained); identical 600 s / 2 GiB caps; the llmloop arm made 0 remote model calls and is a deterministic portfolio.
+**设置 / setup.** 165 个冻结用例 × {Ultimate 0.3.2, CBMC 6.11.0, llmloop 确定性组合}（三个工具见 [5]–[7]，见证格式与校验见 [8, 9]）= 495 个单元，**完整捕获为真**：每个单元的完整命令行、stdout/stderr、wait4 CPU、采样 RSS 与判定均已入库，另有 `protocol.json` 记录冻结哈希与只改驱动的修订说明。三类工具共享 600 s 进程组墙钟上限与 2 GiB 采样组内存上限，workers=4，种子 1。**本轮 llmloop 臂不发起任何远程模型调用**（`remote_model_calls = 0`）：它是"默认配置，默认未证明时才启用既有多项式剖面"的确定性组合，所以下面的差值是**能力差距，不是 LLM 的净贡献**。 495 units, complete capture (commands, streams, CPU, RSS, verdicts retained); identical 600 s / 2 GiB caps; the llmloop arm made 0 remote model calls and is a deterministic portfolio.
 **结果 / results.** 165 分母：Ultimate 证明 **135**（反驳 15、资源停止 15）、llmloop **90**（未决 75、资源停止 0）、CBMC **12**。配对 llmloop 对 Ultimate：仅我们 8、仅 Ultimate 53、双方 82、双方都未证明 22，精确 McNemar **p ≈ 3.0×10⁻⁹**，差值 95% CI [−0.358, −0.188]。 Ultimate 135 / llmloop 90 / CBMC 12; paired 8 vs 53, p ≈ 3×10⁻⁹.
 **分母效应 / the denominator effect.** 同一批运行在 93 子集上是 **88 对 85**（6 对 3，p = 0.51）——与旧数字同向但**不再显著**；在 72 个被拒程序上是 **2 对 50**。故 v0.99/v1.01 的"91 对 83，p≈0.02"两个来源都要撤回：前端可翻译这一过滤，加上旧运行中 Ultimate 更短的预算。在相同 600 s 与全体分母下方向反转。**"不显著"不等于"没有差异"**，所以这里给区间（事后分析，`scripts/equivalence_v104.py`）：风险差 **+0.032，95% CI [−0.032, +0.097]**，即数据**排除了 10 个百分点以上的双向差异**，但也排除了 5 个百分点级别的优势。可写的表述是"在片段内我们不差于（10pp 意义下）"，**不是**"我们更好"。 On the 93 subset 88 vs 85 (p = 0.51); the paired risk difference is +0.032 with 95% CI [−0.032, +0.097], which excludes a difference larger than 10 points in either direction — and also excludes a 5-point advantage. A post-hoc interval, labelled as such.
 **标签分层 / label strata.** 102 个有上游 no-overflow 标签的程序：llmloop **89**、Ultimate **91**（8 对 10，p = 0.81；风险差 **−0.020**，95% CI **[−0.098, +0.059]**，同样只支撑"排除 >10pp"）、CBMC 12（80 对 3，p < 10⁻¹⁵）。63 个无该标签的程序（62 个来自 `termination-15`、1 个在片内）：llmloop **1**、Ultimate **44**（另给 15 个溢出反例、4 个资源停止）、CBMC 0。后者不是空洞的真：Ultimate 在其中 15 个上找到具体溢出，说明这些程序确实带可违反的性质；差距几乎全部落在"超出前端片段"的那一侧。 On the 102 labelled programs 89 vs 91 (p = 0.81, indistinguishable) and 89 vs CBMC 12; on the 63 unlabelled 1 vs 44, where Ultimate also refutes 15 — the gap sits entirely outside the front-end fragment.
@@ -472,6 +527,43 @@ after our pin, and 64 of those translate. The refusals are syntactic and nameabl
 
 **v1.05 复现：契约臂 / reproduction: the contract arm.** `scripts/spec_v105.py freeze` → `run --shard K --shards 8 --workers 4` → `merge`；协议在任何真实调用之前提交（`a4f09efd` 处冻结，`prompt_template_note` 记下了 `__in` 那次更正在任何一行存在之前发生），747 个单元 × 每单元一次调用、无修复轮。对照是确定性的、已经提交（`baseline/`，83 例），所以 `merge` 不需要任何模型调用就能从分片行重算 `summary.md`；`merge` 也会拒绝不完整的分片、拒绝 `stub`、拒绝索引重复，并断言每一行加起来等于分母。验证过的两条命令：`python scripts/check_protocols.py`（全仓 17 个协议：no-freeze 5 / ok 6 / amended 6 / DRIFT 0）、`python -m pytest -q tests/test_spec_v105.py`（42 个测试）。若 merge 失败，`.github/workflows/v105-merge-replay.yml` 用已有运行的 artifact 重放「下载 → merge → 推送」，两分钟、零模型调用——**一次失败的 merge 不该值另一次 747 次调用**。 The control is deterministic and committed, so `merge` re-derives the summary from the shard rows with no model call, and a replay workflow re-runs download→merge→push against an existing run's artifacts.
 
+## 8. 结论 / Conclusion
+
+**C1（信任结构，可复核）。** 候选永远只是字符串：LLM、轨迹拟合器、Houdini 提议，未改动的验证器按
+§1b 的八类义务接受或拒绝，误认证在每一个分母上都是 **0**（165 例、400 例、203 例社区套件、265 例
+上游新增、892 个工业文件的抽样）。90 个证明导出为 SV-COMP 见证，两个与实现无共享代码的校验器复核、
+零驳回，Ultimate 独立确认 **121/121** 条不变式 [8, 9]。这条主张的形状与 Clover [16] 相同，但它落在
+**C 的无未定义行为**上，且验证器一行未改。 Candidates are strings; an unchanged verifier accepts or
+rejects them; false certifications are 0 on every denominator, and 121/121 invariants were confirmed
+by an independent validator.
+
+**C2（瓶颈在覆盖，不在可靠性）。** 在全体 165 例上 Ultimate 证 135、我们证 90（配对 8:53，
+p ≈ 3×10⁻⁹），所以本文**不**声称优于它；能声称的是 **8/165** 的独有覆盖、以及这个差距的来源：72 个
+被前端拒收的程序里 Ultimate 证 50 个、我们 2 个。往上追一层，上游在我们 pin 之后新增 7,072 例，
+前端接住 265 例、能翻译 64 例；工业代码 2,085 个含循环函数里 2,067 个第一处阻塞是内存、进入片段的 8 个
+一个都没证出，且八条失败没有一条是"不变式难找"。**决定成败的是程序能不能进来，不是不变式找不找得到。**
+On the full 165 we prove 90 against Ultimate's 135, so no superiority is claimed; what is claimed is
+8/165 exclusive coverage and its cause: the front end refuses what the other tool accepts, and no
+industrial failure was about finding an invariant.
+
+**C3（LLM 的净贡献：三次测量，三次为零或反向）。** ①v1.04 的原子臂：最贵的两个实验买的是 3 个净新增
+证明（p = 0.375 / 0.25）；②契约臂：10/83 对无模型对照 6/83（p = 0.219），过预注册门槛后 7 对 6
+（p = 1），而把模型赢过的"按符号切半"加进对照族之后，对照**不需要任何模型**就证出了那两例（17/83），
+残余信号消失；③在便宜价位上重问（E6c）：单模型单次 5/83 对 17/83、仅 S 1、仅 B 13、**p = 0.0018**，
+但把同一份对照配上三模型九次的并集只剩 3 对 8、**p = 0.227**——所以只能说"这一臂上模型落后"，
+不能说"模型更差"。三次测量合起来支持一句可检验的话：**在我们这个片段里，模型提议的边际价值低于一个
+不含模型的候选族，而"低多少"随臂而变，这正是必须给对照族与分母的理由。** Three measurements, none
+positive: 3 net proofs at p = 0.375/0.25; a contract arm at p = 0.219 (p = 1 above the floor) whose
+residual vanished once the control could write the shape the model used; and a cheap re-run at
+p = 0.0018 that falls to p = 0.227 when the arm is widened. The defensible sentence is that the
+model's marginal value is below a model-free candidate family in this fragment — not that it is
+worse in general.
+
+**边界 / the boundary, in one sentence.** 我们不声称优于 Ultimate（§4e）、不把结论外推到别的程序
+种群（§4l、§4m 的分母都写明了）、不含非线性多项式不变式（§5b 第 1 条），且可靠性定理是纸面证明、
+不是机器检验（§5b 第 4 条）。 No superiority, no population-level generalisation, no nonlinear
+invariants, and the soundness theorem is proved on paper rather than in a proof assistant.
+
 ## 附录 A. LLM 实验总账 / Appendix A. The whole bill
 
 全文所有 LLM 调用的 token 与开销，按臂列出。每个数字由 `scripts/llm_ledger.py` 从五个
@@ -500,3 +592,102 @@ completion，$0.82–0.86）——它此前写作"1.4 M token"，读起来像一
 净新增证明**（p = 0.375 / 0.25），而最便宜的 E6c 买的是本文学到的最尖锐的一个否定结果。
 87% of the bill is two `claude` arms; the whole contract-arm line costs $1.96; the one open question
 costs under a dollar.
+
+## 参考文献 / References
+
+编号与 `paper/REFERENCES.md` 一致；那份额外记了每条 DOI 的 Crossref 返回值与每个 PDF 的
+HTTP 探测结果（`python scripts/check_references.py --live` 可重跑）。 Numbering matches
+`paper/REFERENCES.md`, which also records how each DOI and each PDF was checked.
+
+[1] P. Cousot, R. Cousot. Abstract interpretation: a unified lattice model for static analysis of
+programs by construction or approximation of fixpoints. *POPL 1977*, 238–252.
+https://doi.org/10.1145/512950.512973 · https://www.di.ens.fr/~cousot/COUSOTpapers/publications.www/CousotCousot-POPL-77-ACM-p238--252-1977.pdf
+
+[2] C. Flanagan, K. R. M. Leino. Houdini, an Annotation Assistant for ESC/Java. *FME 2001*, LNCS,
+500–517. https://doi.org/10.1007/3-540-45251-6_29 ·
+https://ftpmirror.your.org/pub/misc/bitsavers/pdf/dec/tech_reports/SRC-TN-2000-003.pdf
+
+[3] M. D. Ernst, J. H. Perkins, P. J. Guo, S. McCamant, C. Pacheco, M. S. Tschantz, C. Xiao. The
+Daikon system for dynamic detection of likely invariants. *Science of Computer Programming*
+69(1–3):35–45, 2007. https://doi.org/10.1016/j.scico.2007.01.015 ·
+https://homes.cs.washington.edu/~mernst/pubs/daikon-tool-scp2007.pdf
+
+[4] P. Garg, C. Löding, P. Madhusudan, D. Neider. ICE: A Robust Framework for Learning Invariants.
+*CAV 2014*, 69–87. https://doi.org/10.1007/978-3-319-08867-9_5 ·
+https://link.springer.com/content/pdf/10.1007/978-3-319-08867-9_5.pdf
+
+[5] E. Clarke, D. Kroening, F. Lerda. A Tool for Checking ANSI-C Programs. *TACAS 2004*, 168–176.
+https://doi.org/10.1007/978-3-540-24730-2_15 ·
+https://link.springer.com/content/pdf/10.1007/978-3-540-24730-2_15.pdf
+
+[6] D. Beyer, M. E. Keremoglu. CPAchecker: A Tool for Configurable Software Verification. *CAV 2011*,
+184–190. https://doi.org/10.1007/978-3-642-22110-1_16 ·
+https://www.sosy-lab.org/research/pub/2011-CAV.CPAchecker_A_Tool_for_Configurable_Software_Verification.pdf
+
+[7] M. Heizmann, J. Hoenicke, A. Podelski. Software Model Checking for People Who Love Automata.
+*CAV 2013*, 36–52. https://doi.org/10.1007/978-3-642-39799-8_2 ·
+https://link.springer.com/content/pdf/10.1007%2F978-3-642-39799-8_2.pdf
+
+[8] D. Beyer, M. Dangl, D. Dietsch, M. Heizmann, A. Stahlbauer. Witness validation and stepwise
+testification across software verifiers. *ESEC/FSE 2015*, 721–733.
+https://doi.org/10.1145/2786805.2786867 ·
+https://www.sosy-lab.org/research/pub/2015-FSE.Witness_Validation_and_Stepwise_Testification_across_Software_Verifiers.pdf
+
+[9] D. Beyer. State of the Art in Software Verification and Witness Validation: SV-COMP 2024.
+*TACAS 2024*, 299–329. https://doi.org/10.1007/978-3-031-57256-2_15 ·
+https://link.springer.com/content/pdf/10.1007/978-3-031-57256-2_15.pdf
+
+[10] K. R. M. Leino. Dafny: An Automatic Program Verifier for Functional Correctness. *LPAR-16
+2010*, LNCS 6355, 348–370. https://doi.org/10.1007/978-3-642-17511-4_20 ·
+https://www.microsoft.com/en-us/research/wp-content/uploads/2008/12/dafny_krml203.pdf
+
+[11] S. Polu, I. Sutskever. Generative Language Modeling for Automated Theorem Proving.
+arXiv:2009.03393, 2020. https://arxiv.org/abs/2009.03393 · https://arxiv.org/pdf/2009.03393
+
+[12] G. Lample, M.-A. Lachaux, T. Lavril, X. Martinet, A. Hayat, G. Ebner, A. Rodriguez,
+T. Lacroix. HyperTree Proof Search for Neural Theorem Proving. *NeurIPS 35* (2022), 26337–26349.
+https://doi.org/10.52202/068431-1910 · https://arxiv.org/pdf/2205.11491
+
+[13] Y. Wu, A. Q. Jiang, W. Li, M. N. Rabe, C. Staats, M. Jamnik, C. Szegedy. Autoformalization
+with Large Language Models. *NeurIPS 35* (2022), 32353–32368.
+https://doi.org/10.52202/068431-2344 · https://arxiv.org/pdf/2205.12615
+
+[14] E. First, M. N. Rabe, T. Ringer, Y. Brun. Baldur: Whole-Proof Generation and Repair with Large
+Language Models. *ESEC/FSE 2023*, 1229–1241. https://doi.org/10.1145/3611643.3616243 ·
+https://arxiv.org/pdf/2303.04910
+
+[15] H. Wu, C. Barrett, N. Narodytska. Lemur: Integrating Large Language Models in Automated
+Program Verification. *ICLR 2024*. https://arxiv.org/pdf/2310.04870
+
+[16] C. Sun, Y. Sheng, O. Padon, C. Barrett. Clover: Closed-Loop Verifiable Code Generation.
+*AI Verification (AIV 2024)*, LNCS, 134–155. https://doi.org/10.1007/978-3-031-65112-0_7 ·
+https://arxiv.org/pdf/2310.17807
+
+[17] M. Endres, S. Fakhoury, S. Chakraborty, S. K. Lahiri. Can Large Language Models Transform
+Natural Language Intent into Formal Method Postconditions? *Proc. ACM Softw. Eng.* 1(FSE), 2024,
+1889–1912. https://doi.org/10.1145/3660791 · https://arxiv.org/pdf/2310.01831
+
+[18] S. Chakraborty, G. Ebner, S. Bhat, S. Fakhoury, S. Fatima, S. Lahiri, N. Swamy. Towards Neural
+Synthesis for SMT-Assisted Proof-Oriented Programming. *ICSE 2025*, 1755–1767.
+https://doi.org/10.1109/ICSE55347.2025.00002 · https://arxiv.org/pdf/2405.01787
+
+[19] T. H. Trinh, Y. Wu, Q. V. Le, H. He, T. Luong. Solving olympiad geometry without human
+demonstrations. *Nature* 625:476–482, 2024. https://doi.org/10.1038/s41586-023-06747-5 ·
+https://www.nature.com/articles/s41586-023-06747-5.pdf
+
+[20] B. Romera-Paredes, M. Barekatain, A. Novikov, M. Balog, M. P. Kumar, E. Dupont, F. J. R. Ruiz,
+J. S. Ellenberg, P. Wang, O. Fawzi, P. Kohli, A. Fawzi. Mathematical discoveries from program search
+with large language models. *Nature* 625:468–475, 2024.
+https://doi.org/10.1038/s41586-023-06924-6 · https://www.nature.com/articles/s41586-023-06924-6.pdf
+
+[21] Y. Chervonyi, T. H. Trinh, M. Olšák, X. Yang, H. Nguyen, M. Menegali, J. Jung, J. Kim, V. Verma,
+Q. V. Le, T. Luong. Gold-medalist Performance in Solving Olympiad Geometry with AlphaGeometry2.
+arXiv:2502.03544, 2025. https://arxiv.org/abs/2502.03544 · https://arxiv.org/pdf/2502.03544
+
+[22] A. Wei, T. Sun, T. Suresh, H. Wu, K. Wang, A. Aiken. Quokka: Accelerating Program Verification
+with LLMs via Invariant Synthesis. arXiv:2509.21629, 2025.
+https://arxiv.org/abs/2509.21629 · https://arxiv.org/pdf/2509.21629
+
+[23] M. R. Akhond, S. Chakraborty, G. Uddin. LLM For Loop Invariant Generation and Fixing: How Far
+Are We? arXiv:2511.06552, 2025. https://arxiv.org/abs/2511.06552 · https://arxiv.org/pdf/2511.06552
+
