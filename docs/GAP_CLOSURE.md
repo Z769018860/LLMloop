@@ -92,11 +92,13 @@ python scripts/llm_ledger.py              # 总账：2,912 次 / $26.98
 | 参考文献 | **0 条**，正文 0 个 `[n]` | **23 条**，每条有 DOI/arXiv + 开放 PDF，`--live` 23/23 返回 `application/pdf` |
 | 相关工作 | 缺 | §1c，六簇，每簇说清"差在哪"而不是"他们做了 X" |
 | 结论 | 缺（§7 复现被当成结论） | §8，C1–C3 + 一句边界，**不含**"模型更差" |
-| 图 | 0 张 | 仍缺（见下） |
+| 图 | 0 张 | **2 张**（`paper/figures/`，SVG，由 `scripts/make_figures.py` 生成） |
 
-**图仍然缺。** 两张图（流水线、E6c 阶梯）的数据都在仓库里，但作图不属于本轮"补齐缺口"的最小
-闭环；它需要决定排版工具（TikZ 还是 SVG），而这取决于投哪里。**这是唯一一项"知道怎么做、
-但缺少一个上游决定"的**。
+**图：已补（SVG）。** 排版工具定为 **SVG**（作者决定），于是图不再依赖投稿去向：同一份文件
+可以进 LaTeX、进浏览器、进 git diff。两张图都不新做实验——图 1 编码的是 T1–T2（版式是决定，
+复核带与页脚的计数是读的），
+图 2 的每个数字读自四个 `summary.json`，`python scripts/make_figures.py --check` 在图与数据不
+一致时非零退出，`tests/test_figures.py` 把它钉进回归。
 
 ## 5. 状态汇总
 
@@ -110,4 +112,4 @@ python scripts/llm_ledger.py              # 总账：2,912 次 / $26.98
 | 6 | 参考文献 | **关闭** | `paper/REFERENCES.md`、`scripts/check_references.py --live` |
 | 6 | 摘要 / 引言 | **关闭** | 论文 §摘要（含 C1–C5）、§引言 |
 | 6 | 相关工作 / 结论 | **关闭** | 论文 §1c、§8 |
-| 6 | 两张图 | **未做**（缺排版决定） | — |
+| 6 | 两张图 | **关闭**（SVG，`paper/figures/`） | `scripts/make_figures.py --check`、`tests/test_figures.py` |

@@ -107,6 +107,18 @@ def breakdown(out=OUT):
                      % (c, '，`%s`' % ph[0] if same else '，%s' % ph, len(ph),
                         sum(1 for x in ph if x == ph[0]) if ph else 0, base[c]['status']))
         L.append('- 这个异常在 v1.05 的 747 行里出现过 4 次（审计 §4.6 第 23 条），是同一个缺陷。')
+        # This paragraph used to be appended to the generated file by hand, so re-running this
+        # script silently deleted it. Generated text belongs in the generator.
+        L.append('- **v1.07 诊断（`docs/EGCD3_TEMP.md`，`scripts/diagnose_egcd3.py`）：它不是"一个 bug"。** '
+                 '同一个程序在三种处理下分别停在三个不同的检查上：原样 → 前端拒绝（循环体内的声明）；'
+                 '把 5 个声明提升到函数头（语义等价）→ `Initialized named scalar locals required`；'
+                 '再给它们 `= 0`（不语义等价，仅诊断）→ 内层循环的定义性义务失败。'
+                 '**第一个才是这里出现的 `KeyError` 的形状**，而它的真正问题不是缺一个键，'
+                 '是**同一份字节在 CI 上给 `ERROR`、在本机给 `STUCK`**——一个被前端拒绝的程序'
+                 '应当稳定地报"片段之外"，不该取决于 pycparser 怎么排语法树。该格的正确标签是 '
+                 '`UNSUPPORTED`，不是 `ERROR`；计数不变（三种都算"未证出"）。'
+                 '修它要动 `llmloop/*.py` 的字节，会让三份已冻结协议 `DRIFT`，'
+                 '而本文的中心主张是"验证器一行未改"——所以本轮只诊断，不改。')
     else:
         L.append('- 没有 `ERROR` 单元。')
     L.append('')
@@ -182,6 +194,17 @@ def breakdown(out=OUT):
           '- 单次采样、温度 0.7、一条提示词、一个模型。重复间一致性没有测（那正是被砍掉的那 166 次调用）。', '']
 
     (out / 'breakdown.md').write_text('\n'.join(L), encoding='utf-8')
+
+    # The same ladder, as data, so a figure can be drawn from it instead of from a table that was
+    # retyped by hand. One file, one direction: md for people, json for `scripts/make_figures.py`.
+    (out / 'breakdown.json').write_text(json.dumps({
+        'what': 'v1.05 wide arm (3 models x 3 draws, union) paired with the 17/83 control',
+        'cases': len(cases),
+        'control_proved': len(B),
+        'ladder': [{'t': t, 'wide': n, 'only_s': o_s, 'only_b': o_b,
+                    'both': bo, 'p': p} for t, n, o_s, o_b, bo, p in rows_out],
+    }, indent=1, ensure_ascii=False) + '\n', encoding='utf-8')
+
     print(json.dumps({'proved_s': len(S), 'proved_b': len(B), 'both': len(both),
                       'only_s': len(only_s), 'only_b': len(only_b), 'errors': len(errors),
                       'prompt': pt, 'completion': ct, 'wrote': str(out / 'breakdown.md')}, indent=1))

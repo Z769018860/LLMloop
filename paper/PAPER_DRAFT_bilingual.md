@@ -1,6 +1,6 @@
 # 由不受信的提案生成并经未改动验证器认证的循环安全不变式 / Certified loop-safety invariants from untrusted proposals checked by an unchanged verifier（论文草稿 / paper draft, 中英文）
 
-> 状态 / status（v1.08）: 整合草稿；§4m–§4r 与 §5b 为最新。**v1.08 新增 §4q（第二价位 + 三次抽样）与 §4r（补齐 void 之后：上限就是那个变量），两者都改了正文里已有的句子**——§4p 的"t = 0.5 上模型一个独有证明都没有"与 §4q(a) 的"两个价位都落后"都被收紧为"在 2048 上限下"。§4e/§4f 为被更正的旧数字（各自段落内写着是怎么被更正的）。v1.01 及更早的"优于外部工具"表述已在 §4e 与 §5b 第 9 条撤回。参考文献 23 条在文末，核验记录在 `paper/REFERENCES.md`（`--live` 逐条探测 PDF）。**仍缺图（两张）。** This revision adds §4q (a second price point, three draws) and §4r (closing the void: the cap was the variable); both retract sentences that were already in the draft. The two figures are still missing.
+> 状态 / status（v1.10）: 整合草稿；§4m–§4r 与 §5b 为最新。**v1.08 新增 §4q（第二价位 + 三次抽样）与 §4r（补齐 void 之后：上限就是那个变量），两者都改了正文里已有的句子**——§4p 的"t = 0.5 上模型一个独有证明都没有"与 §4q(a) 的"两个价位都落后"都被收紧为"在 2048 上限下"。§4e/§4f 为被更正的旧数字（各自段落内写着是怎么被更正的）。v1.01 及更早的"优于外部工具"表述已在 §4e 与 §5b 第 9 条撤回。参考文献 23 条在文末，核验记录在 `paper/REFERENCES.md`（`--live` 逐条探测 PDF）。**v1.10 补上两张图**（v1.09 是 §4q(b) 的三次抽样）（`figures/fig1_pipeline.svg`、`figures/fig2_ladder.svg`，图 1 在 §1b 末、图 2 在 §4r），两张都由 `scripts/make_figures.py` 生成，图 2 的每个数字读自四个 `summary.json`，`--check` 与数据不一致即非零退出。 This revision adds §4q (a second price point, three draws) and §4r (closing the void: the cap was the variable); both retract sentences that were already in the draft. v1.10 adds the two figures, both generated from the committed data.
 
 ## 摘要 / Abstract
 
@@ -113,6 +113,10 @@ Appendix A the whole bill.
 **定理 T2（提议者无关）/ proposer independence.** `PROVED` 只依赖 *I* 的义务是否成立，与 *I* 的来历无关：采样、Houdini 削弱、LLM 提议只能改变"找到什么"，不能改变"接受什么"。因此 §4f 的消融、§4e 的对照度量的都是**完备性**；`CAP=256` 的截断、`_lean`/`_prio` 的重排同样只损失完备性。证错只可能来自检查器，不可能来自提议者。
 **两条假设 / two hypotheses.** **H1** 前端翻译（`scripts/svcomp_translate.py`）忠实保持未定义行为语义——**没有证明**，只有差分测试（§4g）；**H2** 求解器报 `unsat` 时公式确实不可满足——由 §4j 的第三方复核在 **121 条不变式**上独立检验（两个与实现无共享代码的验证器，零驳回；注意方向：假 `sat` 只损失完备性，假 `unsat` 才不健全）。
 **不证明 / not proved.** 终止性（规则不含 ranking 义务，"无 UB"是关于有限前缀的）、堆与指针（片段之外，E3 的 2067/2085 正死在这里）、*D* 之外的输入、浮点、多函数。完整定义、证明、以及义务与代码的逐行对应见 [`docs/SOUNDNESS.md`](SOUNDNESS.md)。 Full definitions, the proof and a line-by-line obligation-to-code map are in `docs/SOUNDNESS.md`; termination, heap, inputs outside *D*, floating point and multi-function programs are outside the theorem.
+
+![图 1 提议—检查流水线，以及那道越不过去的界线 / Figure 1: the proposal–checking pipeline and the boundary that cannot be crossed](figures/fig1_pipeline.svg)
+
+**图 1. 提议者只提供字符串，接受与否由未改动的验证器决定。/ Figure 1. Proposers supply strings; acceptance is decided by an unchanged verifier.** 三条虚线带子从左到右是三种信任状态：**不受信**（任何来源都能进来，包括本文件没测过的来源）、**受信且对每一臂固定**（规范化器与验证器；它们逐字节不变，换模型、换上限、换价钱都不动）、**独立**（复核代码与我们没有共享行，它只拿见证重跑性质）。红色那条弧线是本图要说明的事：**从提议者到 `PROVED` 没有边**，只有"字符串"越过第一条虚线，而 `PROVED` 只读义务是否成立（T2）。中间两个判决盒子都由验证器产生，`UNKNOWN` 若带反例回到提议者，那是又一次不受信的提议，不是一次放宽。底下一行不是修饰：**0/90 个见证被两个校验器中的任何一个驳回、2,912 次调用 — $26.98**，两个数分别读自 `experiments/v104/witness/full165/` 与 `scripts/llm_ledger.py`。 Figure drawn by `scripts/make_figures.py`. It encodes T1–T2 rather than a measurement, but the four counters under the re-check band and the bill in the footer are read from the witness summary and the ledger, so it cannot disagree with them.
 
 ## 1c. 相关工作 / Related work
 
@@ -532,7 +536,7 @@ this model does not reason.
 **结果：一次干净的否定 / the result: a clean negative.** 83/83 都有回答，0 个畸形、0 个空回答、
 0 个被预算截断。契约臂证出 **5/83**，对照 **17/83**：配对后仅 S **1**、仅 B **13**、都证出 **4**，
 精确 McNemar **p = 0.0018**。阶梯上每一级都是同一个方向（1e-4 及以上仅 S **0**、仅 B 10，
-p = 0.0020；0.5 上是 0 对 12，p = 4.9e-4），判定 `breaks`。§4n 的"没有净贡献"（p = 1）在这一臂上
+p = 0.0020；0.5 上是 0 对 12，p = 4.9e-4），判定 `breaks`（八级逐级画出，见图 2a）。§4n 的"没有净贡献"（p = 1）在这一臂上
 变成**显著的反向证据**：一个不需要模型的搜索比这个价位的模型多覆盖 13 个用例。
 The contract arm proves 5/83 against the control's 17/83: after pairing, 1 only-model, 13
 only-control, 4 both, exact McNemar p = 0.0018, and every rung of the ladder points the same way.
@@ -668,6 +672,10 @@ per case; the sign cannot flip (it would take seven levels), but the counts are 
 The two arms at a 2,048 cap prove 4–5 programs with p ≈ 0.001; the arm at 16,384 proves 13 with
 p = 0.289, against the same 17/83 control. Loosening the cap does not make the model win -- it makes
 the loss insignificant.
+
+![图 2 阶梯与四臂配对 / Figure 2: the ladder and the four paired arms](figures/fig2_ladder.svg)
+
+**图 2. 左：八级门槛上一个臂的成绩；右：同一份对照配四个臂。/ Figure 2. Left: one arm at eight floors. Right: one control against four arms.** 左图是 §4p 那一臂的整条阶梯：**每一级上"仅对照证出"的用例都多于"仅模型证出"**，模型那一列在 `t ≥ 1e-4` 上恒为 0，最宽的一级（`t = 0.5`，保留一半域以上）是 0 对 12、p = 4.9×10⁻⁴。所以判定不是在某一级上取的，而是八级都不过——这正是把"选一个让结论翻转的门槛"从可用动作里删掉的办法。右图是 §4r 的四行：**同一份对照、同一批 83 例，两个 2048 臂是 1 对 13 与 1 对 14（p ≈ 10⁻³），16,384 臂是 2 对 6（p = 0.289）**。三条实心红字都在 2048 上，灰字那两条在更松的上限或更宽的臂上——把上限当无关细节的读法，在这张图上会自己撞墙。柱长是**只有一侧证出**的用例数（两侧都证出的不计，故不构成总数）；数字由 `scripts/make_figures.py` 从四个 `summary.json` 读出，一个没有手填，`--check` 在图上与数据不一致时非零退出。 Bars are only-one-side cases; both-sides cases are omitted. Every number is read from the four summaries by `scripts/make_figures.py`, and `--check` fails if the committed SVG stops matching them.
 
 **这句话修正前面三处 / what this corrects.**
 
