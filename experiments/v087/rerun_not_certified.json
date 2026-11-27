@@ -1,0 +1,536 @@
+[
+ {
+  "suite": "gnulib:lib",
+  "file": "areadlink-with-size.c",
+  "function": "areadlink_with_size",
+  "class": "loop",
+  "src_sha1": "cb4a3ca06d32",
+  "stage": "not_certified",
+  "notes": [
+   "dead trailing return",
+   "hoisted loop-body declaration",
+   "local enumerators substituted",
+   "memory abstraction (memory safety assumed)",
+   "non-scalar return value dropped",
+   "nondeterministic result for readlink",
+   "opaque pointer-returning call dropped: malloc",
+   "opaque pointer-returning call dropped: memcpy",
+   "opaque pointer-returning call dropped: realloc",
+   "opaque void call dropped: free",
+   "pointer parameter abstracted: file",
+   "zero-initialized locals"
+  ],
+  "bounds": {
+   "size": [
+    0,
+    18446744073709551615
+   ]
+  },
+  "transcription": "int f(unsigned long size)\n{\n  long r = 0;\n  unsigned long link_length = 0;\n  long long v__w = 0;\n  unsigned long symlink_max = 1024;\n  unsigned long INITIAL_LIMIT_BOUND = 8 * 1024;\n  unsigned long initial_limit = (symlink_max < INITIAL_LIMIT_BOUND) ? (symlink_max + 1) : (INITIAL_LIMIT_BOUND);\n  unsigned long buf_size = (size == 0) ? (128) : ((size < initial_limit) ? (size + 1) : (initial_limit));\n  while (1)\n  {\n    v__w = 0;\n    if (!((size == 0) && (buf_size == 128)))\n    {\n      if (nondet_int())\n      {\n        v__w = 12;\n        v__w = 0;\n        return 0;\n      }\n    }\n    r = unknown();\n    if (r < 0)\n    {\n      v__w = 0;\n      return 0;\n    }\n    link_length = r;\n    if (link_length < buf_size)\n    {\n      v__w = link_length;\n      v__w = 0;\n      if (nondet_int())\n      {\n        if (nondet_int())\n        {\n          return 0;\n        }\n      }\n      else\n      {\n        if ((link_length + 1) < buf_size)\n        {\n          if (nondet_int() + (0 * 0))\n          {\n          }\n        }\n      }\n      return 0;\n    }\n    if (buf_size <= (((18446744073709551615UL < 9223372036854775807L) ? (18446744073709551615UL) : (9223372036854775807L)) / 2))\n    {\n      buf_size *= 2;\n    }\n    else\n    {\n      if (buf_size < ((18446744073709551615UL < 9223372036854775807L) ? (18446744073709551615UL) : (9223372036854775807L)))\n      {\n        buf_size = (18446744073709551615UL < 9223372036854775807L) ? (18446744073709551615UL) : (9223372036854775807L);\n      }\n      else\n      {\n        v__w = 12;\n        v__w = 0;\n        return 0;\n      }\n    }\n  }\n\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "not applicable (globals or nondeterministic stubs)"
+  },
+  "certification": {
+   "status": "STUCK:Typed C path limit exceeded",
+   "method": "houdini_loops",
+   "invariant": null,
+   "rounds": 4
+  },
+  "seconds_v087": 10.7
+ },
+ {
+  "suite": "gnulib:lib",
+  "file": "amemxfrm.c",
+  "function": "amemxfrm",
+  "class": "loop",
+  "src_sha1": "9628463f470e",
+  "stage": "not_certified",
+  "notes": [
+   "character constants converted",
+   "dead trailing return",
+   "flattened blocks",
+   "for -> while",
+   "gotos eliminated (3)",
+   "hoisted loop-body declaration",
+   "library range: strlen in [0, 2^62]",
+   "memory abstraction (memory safety assumed)",
+   "non-scalar return value dropped",
+   "nondeterministic result for strxfrm",
+   "opaque pointer-returning call dropped: memcpy",
+   "opaque void call dropped: free",
+   "pointer parameter abstracted: lengthp",
+   "pointer parameter abstracted: resultbuf",
+   "pointer parameter abstracted: s",
+   "zero-initialized locals"
+  ],
+  "bounds": {
+   "n": [
+    0,
+    18446744073709551615
+   ]
+  },
+  "transcription": "int f(unsigned long n)\n{\n  unsigned long length = 0;\n  char orig_sentinel = 0;\n  unsigned long v__c0_1 = 0;\n  unsigned long l = 0;\n  unsigned long new_allocated = 0;\n  unsigned long k = 0;\n  unsigned long new_allocated__u1 = 0;\n  long long v__w = 0;\n  unsigned long allocated = 0;\n  int v__gt1 = 0;\n  if ((nondet_int() + (0 * 0)) && (nondet_ulong() > 0))\n  {\n    allocated = nondet_ulong();\n  }\n  else\n  {\n    allocated = (n > 0) ? (n) : (1);\n    if (nondet_int() + (0 * 0))\n    {\n      v__gt1 = 3;\n    }\n  }\n  if (v__gt1 == 0)\n  {\n    length = 0;\n    orig_sentinel = nondet_char() + (0 * n);\n    v__w = n;\n    v__w = 0;\n    v__w = n;\n    v__w = 1;\n    while (1 && (v__gt1 == 0))\n    {\n      v__c0_1 = nondet_ulong();\n      if (v__c0_1 > 4611686018427387904)\n      {\n        v__c0_1 = 4611686018427387904;\n      }\n      l = v__c0_1;\n      while (1 && (v__gt1 == 0))\n      {\n        if ((3 * l) >= (allocated - length))\n        {\n          new_allocated = (length + (3 * l)) + 1;\n          if (new_allocated < (2 * allocated))\n          {\n            new_allocated = 2 * allocated;\n          }\n          if (new_allocated < 64)\n          {\n            new_allocated = 64;\n          }\n          if (nondet_int())\n          {\n          }\n          else\n          {\n          }\n          if (nondet_int() + (0 * 0))\n          {\n            allocated = new_allocated;\n          }\n        }\n        v__w = 0;\n        k = unknown();\n        if (nondet_int() != 0)\n        {\n          v__gt1 = 1;\n        }\n        if (v__gt1 == 0)\n        {\n          if (k >= (allocated - length))\n          {\n            new_allocated__u1 = (length + k) + 1;\n            if (new_allocated__u1 < (2 * allocated))\n            {\n              new_allocated__u1 = 2 * allocated;\n            }\n            if (new_allocated__u1 < 64)\n            {\n              new_allocated__u1 = 64;\n            }\n            if (nondet_int())\n            {\n            }\n            else\n            {\n            }\n            if (nondet_int() + (0 * 0))\n            {\n              v__gt1 = 2;\n            }\n            if (v__gt1 == 0)\n            {\n              allocated = new_allocated__u1;\n            }\n          }\n          else\n          {\n            length += k;\n            break;\n          }\n        }\n      }\n\n      if (v__gt1 == 0)\n      {\n        v__w = l;\n        v__w = 1;\n        if (nondet_int())\n        {\n          break;\n        }\n        v__w = length;\n        v__w = 0;\n        length++;\n      }\n    }\n\n    if (v__gt1 == 0)\n    {\n      if (nondet_int() && ((length + 1) < allocated))\n      {\n        if (((length > 0) ? (length) : (1)) <= nondet_ulong())\n        {\n        }\n        else\n        {\n          if (nondet_int() + (0 * 0))\n          {\n          }\n        }\n      }\n      v__w = n;\n      v__w = orig_sentinel;\n      v__w = length;\n      return 0;\n    }\n  }\n  if ((v__gt1 == 0) || (v__gt1 == 1))\n  {\n    v__gt1 = 0;\n    if (nondet_int())\n    {\n    }\n    v__w = n;\n    v__w = orig_sentinel;\n    v__w = 0;\n    return 0;\n  }\n  if ((v__gt1 == 0) || (v__gt1 == 2))\n  {\n    v__gt1 = 0;\n    if (nondet_int())\n    {\n    }\n    v__w = n;\n    v__w = orig_sentinel;\n  }\n  if ((v__gt1 == 0) || (v__gt1 == 3))\n  {\n    v__gt1 = 0;\n    v__w = 12;\n    v__w = 0;\n    return 0;\n  }\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "not applicable (globals or nondeterministic stubs)"
+  },
+  "certification": {
+   "status": "STUCK:Typed C path limit exceeded",
+   "method": "houdini_loops",
+   "invariant": null,
+   "rounds": 26
+  },
+  "seconds_v087": 10.7
+ },
+ {
+  "suite": "gnulib:lib",
+  "file": "argp-fmtstream.c",
+  "function": "_argp_fmtstream_update",
+  "class": "loop",
+  "src_sha1": "6000306b0fc1",
+  "stage": "not_certified",
+  "notes": [
+   "character constants converted",
+   "dead trailing return",
+   "do-while peeled",
+   "flattened blocks",
+   "for -> while",
+   "hoisted loop-body declaration",
+   "loop-header call hoisted",
+   "memory abstraction (memory safety assumed)",
+   "nondeterministic result for fwrite_unlocked",
+   "nondeterministic result for putc_unlocked",
+   "opaque pointer-returning call dropped: memchr",
+   "opaque pointer-returning call dropped: memmove",
+   "opaque pointer-returning call dropped: memset",
+   "pointer parameter abstracted: fs",
+   "void -> int",
+   "zero-initialized locals"
+  ],
+  "bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "transcription": "int f(int __z)\n{\n  unsigned long r = 0;\n  unsigned long pad = 0;\n  unsigned long i = 0;\n  unsigned long len = 0;\n  int i__u1 = 0;\n  unsigned long mv = 0;\n  long long v__w = 0;\n  v__w = nondet_ulong();\n  while (1)\n  {\n    if (!nondet_int())\n    {\n      break;\n    }\n    if ((nondet_long() == 0) && (nondet_ulong() != 0))\n    {\n      pad = nondet_ulong();\n      if (nondet_int() + (0 * pad))\n      {\n        v__w = pad;\n        v__w = pad;\n      }\n      else\n      {\n        i = 0;\n        while (i < pad)\n        {\n          i++;\n        }\n\n      }\n      v__w = pad;\n    }\n    len = nondet_long();\n    if (nondet_long() < 0)\n    {\n      v__w = 0;\n    }\n    if (nondet_int())\n    {\n      if ((nondet_long() + len) < nondet_ulong())\n      {\n        v__w = nondet_long() + len;\n        break;\n      }\n      else\n      {\n      }\n    }\n    else\n    {\n      if ((nondet_long() + nondet_long()) < ((long) nondet_ulong()))\n      {\n        v__w = 0;\n        v__w = 1;\n        continue;\n      }\n    }\n    r = nondet_ulong() - 1;\n    if (nondet_long() < 0)\n    {\n      if (nondet_int())\n      {\n        v__w = nondet_long() + (0 * (r - nondet_long()));\n        v__w = 0;\n        v__w = r + 1;\n      }\n      else\n      {\n        v__w = nondet_long() + len;\n        v__w = nondet_long() - r;\n        break;\n      }\n    }\n    else\n    {\n      v__w = (r + 1) - nondet_long();\n      while (1)\n      {\n        if (!(nondet_int() && (!((((unsigned char) nondet_char()) == 32) || (((unsigned char) nondet_char()) == 9)))))\n        {\n          break;\n        }\n      }\n\n      v__w = 1;\n      if (nondet_int())\n      {\n        if (nondet_int())\n        {\n          while (1)\n          {\n            if (!(nondet_int() && ((((unsigned char) nondet_char()) == 32) || (((unsigned char) nondet_char()) == 9))))\n            {\n              break;\n            }\n          }\n\n        }\n        v__w = 1;\n      }\n      else\n      {\n        v__w = (r + 1) - nondet_long();\n        if (nondet_int())\n        {\n          while (1)\n          {\n            if (!(nondet_int() && (!((((unsigned char) nondet_char()) == 32) || (((unsigned char) nondet_char()) == 9)))))\n            {\n              break;\n            }\n          }\n\n        }\n        if (nondet_int())\n        {\n          v__w = 0;\n          v__w = 1;\n          continue;\n        }\n        while (1)\n        {\n          if (!((((unsigned char) nondet_char()) == 32) || (((unsigned char) nondet_char()) == 9)))\n          {\n            break;\n          }\n        }\n\n      }\n      if ((((nondet_int() + (0 * len)) + (0 * 1)) ? (nondet_long() < (nondet_long() + 1)) : ((nondet_long() + (0 * 1)) < nondet_long())) && nondet_int())\n      {\n        if (nondet_long() > (nondet_long() + 1))\n        {\n          mv = nondet_long();\n          v__w = 1;\n          v__w = nondet_long();\n          len = nondet_long() + (0 * mv);\n          v__w = 10;\n        }\n        else\n        {\n          if (nondet_int())\n          {\n          }\n          len += nondet_long();\n        }\n      }\n      else\n      {\n        v__w = 10;\n      }\n      if ((nondet_long() >= nondet_long()) || (((nondet_int() + (0 * len)) + (0 * 1)) && (nondet_long() >= nondet_long())))\n      {\n        i__u1 = 0;\n        while (1)\n        {\n          if (!(i__u1 < nondet_long()))\n          {\n            break;\n          }\n          v__w = 32;\n          ++i__u1;\n        }\n\n      }\n      else\n      {\n        i__u1 = 0;\n        while (1)\n        {\n          if (!(i__u1 < nondet_long()))\n          {\n            break;\n          }\n          ++i__u1;\n        }\n\n      }\n      if (nondet_int())\n      {\n      }\n      len -= nondet_long();\n      v__w = len;\n      v__w = (nondet_long()) ? (nondet_long()) : (-1);\n    }\n  }\n\n  v__w = nondet_long();\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "not applicable (globals or nondeterministic stubs)"
+  },
+  "certification": {
+   "status": "ERROR:timeout",
+   "method": "houdini_loops"
+  },
+  "seconds_v087": 202.0
+ },
+ {
+  "suite": "gnulib:lib",
+  "file": "argp-help.c",
+  "function": "indent_to",
+  "class": "loop",
+  "src_sha1": "4ffa3c748d3a",
+  "stage": "not_certified",
+  "notes": [
+   "callee argp_fmtstream_point not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "callee argp_fmtstream_putc not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "character constants converted",
+   "dead trailing return",
+   "hoisted loop-body declaration",
+   "memory abstraction (memory safety assumed)",
+   "nondeterministic result for argp_fmtstream_point",
+   "nondeterministic result for argp_fmtstream_putc",
+   "pointer parameter abstracted: stream",
+   "side effect hoisted out of an expression",
+   "void -> int",
+   "zero-initialized locals"
+  ],
+  "bounds": {
+   "col": [
+    0,
+    4294967295
+   ]
+  },
+  "transcription": "int f(unsigned int col)\n{\n  int v__he1 = 0;\n  int needed = col - unknown();\n  while (1)\n  {\n    v__he1 = needed;\n    needed = needed - 1;\n    if (!(v__he1 > 0))\n    {\n      break;\n    }\n  }\n\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "not applicable (globals or nondeterministic stubs)"
+  },
+  "certification": {
+   "status": "STUCK:top/loop0/body operations defined",
+   "method": "houdini_loops",
+   "invariant": null,
+   "rounds": 7
+  },
+  "seconds_v087": 202.0
+ },
+ {
+  "suite": "gnulib:lib",
+  "file": "argp-help.c",
+  "function": "_help",
+  "class": "loop",
+  "src_sha1": "8b3f0f3f3337",
+  "stage": "not_certified",
+  "notes": [
+   "callee argp_args_levels not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "callee argp_args_usage not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "callee argp_doc not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "callee argp_fmtstream_putc not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "callee argp_fmtstream_puts not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "callee argp_fmtstream_set_lmargin not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "callee argp_fmtstream_set_wmargin not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "callee argp_hol not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "callee fill_in_uparams not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "callee hol_free not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "callee hol_help not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "callee hol_set_group not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "callee hol_sort not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "callee hol_usage not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "character constants converted",
+   "copied mutated parameter flags",
+   "dead trailing return",
+   "do-while peeled",
+   "flattened blocks",
+   "hoisted late declaration",
+   "hoisted loop-body declaration",
+   "implicitly declared function __builtin_alloca (C: returns int)",
+   "memory abstraction (memory safety assumed)",
+   "nondeterministic result for __builtin_alloca",
+   "nondeterministic result for argp_args_levels",
+   "nondeterministic result for argp_args_usage",
+   "nondeterministic result for argp_doc",
+   "nondeterministic result for argp_fmtstream_printf",
+   "nondeterministic result for argp_fmtstream_putc",
+   "nondeterministic result for argp_fmtstream_puts",
+   "nondeterministic result for argp_fmtstream_set_lmargin",
+   "nondeterministic result for argp_fmtstream_set_wmargin",
+   "opaque pointer-returning call dropped: argp_hol",
+   "opaque pointer-returning call dropped: argp_make_fmtstream",
+   "opaque pointer-returning call dropped: memset",
+   "opaque void call dropped: argp_fmtstream_free",
+   "opaque void call dropped: fill_in_uparams",
+   "opaque void call dropped: hol_free",
+   "opaque void call dropped: hol_help",
+   "opaque void call dropped: hol_set_group",
+   "opaque void call dropped: hol_sort",
+   "opaque void call dropped: hol_usage",
+   "pointer parameter abstracted: argp",
+   "pointer parameter abstracted: name",
+   "pointer parameter abstracted: state",
+   "pointer parameter abstracted: stream",
+   "void -> int",
+   "zero-initialized locals"
+  ],
+  "bounds": {
+   "flags_in": [
+    0,
+    4294967295
+   ]
+  },
+  "transcription": "int f(unsigned int flags_in)\n{\n  unsigned int flags = flags_in;\n  int first_pattern = 0;\n  int more_patterns = 0;\n  unsigned long num_pattern_levels = 0;\n  int old_lm = 0;\n  int old_wm = 0;\n  int old_lm__u1 = 0;\n  int old_wm__u2 = 0;\n  long long v__w = 0;\n  int anything = 0;\n  if (nondet_int())\n  {\n    return 0;\n  }\n  if (!nondet_int())\n  {\n  }\n  if (nondet_int())\n  {\n    return 0;\n  }\n  v__w = 0;\n  if (flags & ((1 | 2) | 8))\n  {\n  }\n  anything = 0;\n  if (flags & (1 | 2))\n  {\n    first_pattern = 1;\n    num_pattern_levels = unknown();\n    old_wm = unknown();\n    if (first_pattern)\n    {\n    }\n    else\n    {\n    }\n    old_lm = unknown();\n    if (flags & 2)\n    {\n      if (nondet_uint() > 0)\n      {\n      }\n    }\n    else\n    {\n      flags |= 2;\n    }\n    more_patterns = unknown();\n    anything = 1;\n    first_pattern = 0;\n    while (more_patterns)\n    {\n      old_wm__u2 = unknown();\n      if (first_pattern)\n      {\n      }\n      else\n      {\n      }\n      old_lm__u1 = unknown();\n      if (flags & 2)\n      {\n        if (nondet_uint() > 0)\n        {\n        }\n      }\n      else\n      {\n        flags |= 2;\n      }\n      more_patterns = unknown();\n      anything = 1;\n      first_pattern = 0;\n    }\n\n  }\n  if (flags & 16)\n  {\n    anything |= unknown();\n  }\n  if (flags & 4)\n  {\n    anything = 1;\n  }\n  if (flags & 8)\n  {\n    if (nondet_uint() > 0)\n    {\n      if (anything)\n      {\n      }\n      anything = 1;\n    }\n  }\n  if (flags & 32)\n  {\n    anything |= unknown();\n  }\n  if ((flags & 64) && nondet_int())\n  {\n    if (anything)\n    {\n    }\n    anything = 1;\n  }\n  if (nondet_int())\n  {\n  }\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "not applicable (globals or nondeterministic stubs)"
+  },
+  "certification": {
+   "status": "STUCK:Typed C path limit exceeded",
+   "method": "houdini_loops",
+   "invariant": null,
+   "rounds": 1
+  },
+  "seconds_v087": 4.4
+ },
+ {
+  "suite": "gnulib:lib",
+  "file": "argp-parse.c",
+  "function": "convert_options",
+  "class": "loop",
+  "src_sha1": "f3c06541d2f6",
+  "stage": "not_certified",
+  "notes": [
+   "callee _option_is_end not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "callee _option_is_short not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "callee find_long_option not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "character constants converted",
+   "for -> while",
+   "hoisted loop-body declaration",
+   "loop-header call hoisted",
+   "memory abstraction (memory safety assumed)",
+   "non-scalar return value dropped",
+   "nondeterministic result for _option_is_end",
+   "nondeterministic result for _option_is_short",
+   "nondeterministic result for find_long_option",
+   "opaque pointer-returning call dropped: convert_options",
+   "pointer parameter abstracted: argp",
+   "pointer parameter abstracted: cvt",
+   "pointer parameter abstracted: group",
+   "pointer parameter abstracted: parent",
+   "sizeof evaluated",
+   "zero-initialized locals"
+  ],
+  "bounds": {
+   "parent_index": [
+    0,
+    4294967295
+   ]
+  },
+  "transcription": "int f(unsigned int parent_index)\n{\n  unsigned int num_children = 0;\n  unsigned int index = 0;\n  long long v__w = 0;\n  if (nondet_int() || nondet_int())\n  {\n    if (nondet_int())\n    {\n      while (1)\n      {\n        if (!(!unknown()))\n        {\n          break;\n        }\n        if (!(nondet_int() & 4))\n        {\n        }\n        if (!(nondet_int() & 8))\n        {\n          if (unknown())\n          {\n            v__w = nondet_int();\n            if (nondet_int())\n            {\n              v__w = 58;\n              if (nondet_int() & 1)\n              {\n                v__w = 58;\n              }\n            }\n            v__w = 0;\n          }\n          if (nondet_int() && (unknown() < 0))\n          {\n            v__w = (nondet_int()) ? ((nondet_int() & 1) ? (2) : (1)) : (0);\n            v__w = 0;\n            v__w = (((nondet_int()) ? (nondet_int()) : (nondet_int())) & ((1 << ((4 * 8) - 8)) - 1)) + ((nondet_long() + 1) << ((4 * 8) - 8));\n            v__w = 0;\n          }\n        }\n      }\n\n    }\n    v__w = 0;\n    v__w = parent_index;\n    v__w = 0;\n    v__w = 0;\n    v__w = 0;\n    if (nondet_int())\n    {\n      num_children = 0;\n      while (1)\n      {\n        if (!(nondet_int() + (0 * num_children)))\n        {\n          break;\n        }\n        num_children++;\n      }\n\n      v__w = num_children;\n    }\n  }\n  else\n  {\n    v__w = 0;\n  }\n  if (nondet_int())\n  {\n    index = 0;\n    while (1)\n    {\n      if (!nondet_int())\n      {\n        break;\n      }\n    }\n\n  }\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "not applicable (globals or nondeterministic stubs)"
+  },
+  "certification": {
+   "status": "STUCK:top/then/then/loop0/body operations defined",
+   "method": "houdini_loops",
+   "invariant": null,
+   "rounds": 2
+  },
+  "seconds_v087": 17.0
+ },
+ {
+  "suite": "gnulib:lib",
+  "file": "argp-parse.c",
+  "function": "calc_sizes",
+  "class": "loop",
+  "src_sha1": "035449d2557f",
+  "stage": "not_certified",
+  "notes": [
+   "callee _option_is_end not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "dead trailing return",
+   "hoisted loop-body declaration",
+   "loop-header call hoisted",
+   "memory abstraction (memory safety assumed)",
+   "nondeterministic result for _option_is_end",
+   "opaque void call dropped: calc_sizes",
+   "pointer parameter abstracted: argp",
+   "pointer parameter abstracted: szs",
+   "void -> int",
+   "zero-initialized locals"
+  ],
+  "bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "transcription": "int f(int __z)\n{\n  int num_opts = 0;\n  long long v__w = 0;\n  if (nondet_int() || nondet_int())\n  {\n    v__w = nondet_ulong() + 1;\n    if (nondet_int())\n    {\n      num_opts = 0;\n      while (1)\n      {\n        if (!(!unknown()))\n        {\n          break;\n        }\n        num_opts++;\n      }\n\n      v__w = nondet_ulong() + (num_opts * 3);\n      v__w = nondet_ulong() + num_opts;\n    }\n  }\n  if (nondet_int())\n  {\n    while (1)\n    {\n      if (!nondet_int())\n      {\n        break;\n      }\n      v__w = nondet_ulong() + 1;\n    }\n\n  }\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "not applicable (globals or nondeterministic stubs)"
+  },
+  "certification": {
+   "status": "STUCK:top/then/then/loop0/body operations defined",
+   "method": "houdini_loops",
+   "invariant": null,
+   "rounds": 11
+  },
+  "seconds_v087": 4.2
+ },
+ {
+  "suite": "gnulib:lib",
+  "file": "argp-parse.c",
+  "function": "parser_parse_arg",
+  "class": "loop",
+  "src_sha1": "06bdce0141e8",
+  "stage": "not_certified",
+  "notes": [
+   "callee group_parse not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "for -> while",
+   "loop-header call hoisted",
+   "memory abstraction (memory safety assumed)",
+   "nondeterministic result for group_parse",
+   "pointer parameter abstracted: parser",
+   "pointer parameter abstracted: val"
+  ],
+  "bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "transcription": "int f(int __z)\n{\n  long long v__w = 0;\n  int index = nondet_int();\n  int err = 7;\n  int key = 0;\n  while (1)\n  {\n    if (!(nondet_int() && (err == 7)))\n    {\n      break;\n    }\n    v__w = nondet_int() + 1;\n    key = 0;\n    err = unknown();\n    if (err == 7)\n    {\n      v__w = nondet_int() + 1;\n      key = 16777222;\n      err = unknown();\n    }\n  }\n\n  if (!err)\n  {\n    if (key == 16777222)\n    {\n      v__w = nondet_int();\n    }\n    if (nondet_int() > index)\n    {\n      v__w = nondet_uint() + (nondet_int() - index);\n    }\n    else\n    {\n      v__w = 1;\n    }\n  }\n  return err;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "not applicable (globals or nondeterministic stubs)"
+  },
+  "certification": {
+   "status": "STUCK:top/loop0/body operations defined",
+   "method": "houdini_loops",
+   "invariant": null,
+   "rounds": 9
+  },
+  "seconds_v087": 3.8
+ },
+ {
+  "suite": "gnulib:lib",
+  "file": "base32.c",
+  "function": "decode_8",
+  "class": "loop",
+  "src_sha1": "b3bc1b940c22",
+  "stage": "not_certified",
+  "notes": [
+   "callee isubase32 not inlinable (pointers/arrays/structs): treated as an opaque call",
+   "character constants converted",
+   "do-while(0) flattened",
+   "flattened blocks",
+   "hoisted late declaration",
+   "hoisted loop-body declaration",
+   "inlined isbase32",
+   "inlined to_uchar",
+   "memory abstraction (memory safety assumed)",
+   "nondeterministic result for isubase32",
+   "pointer parameter abstracted: in",
+   "pointer parameter abstracted: outleft",
+   "pointer parameter abstracted: outp",
+   "zero-initialized locals"
+  ],
+  "bounds": {
+   "inlen": [
+    -9223372036854775808,
+    9223372036854775807
+   ]
+  },
+  "transcription": "int f(long inlen)\n{\n  char ch__c0_3 = 0;\n  unsigned char vrv__c0_3 = 0;\n  char ch__c0_4 = 0;\n  unsigned char vrv__c0_4 = 0;\n  char ch__c0_5 = 0;\n  unsigned char vrv__c0_5 = 0;\n  char ch__c0_6 = 0;\n  int vrv__c0_6 = 0;\n  char ch__c0_7 = 0;\n  int vrv__c0_7 = 0;\n  char ch__c0_8 = 0;\n  unsigned char vrv__c0_8 = 0;\n  char ch__c0_9 = 0;\n  unsigned char vrv__c0_9 = 0;\n  char ch__c0_10 = 0;\n  unsigned char vrv__c0_10 = 0;\n  char ch__c0_11 = 0;\n  unsigned char vrv__c0_11 = 0;\n  char ch__c0_12 = 0;\n  int vrv__c0_12 = 0;\n  char ch__c0_13 = 0;\n  unsigned char vrv__c0_13 = 0;\n  char ch__c0_14 = 0;\n  unsigned char vrv__c0_14 = 0;\n  char ch__c0_15 = 0;\n  unsigned char vrv__c0_15 = 0;\n  char ch__c0_16 = 0;\n  int vrv__c0_16 = 0;\n  char ch__c0_17 = 0;\n  int vrv__c0_17 = 0;\n  char ch__c0_18 = 0;\n  unsigned char vrv__c0_18 = 0;\n  char ch__c0_19 = 0;\n  unsigned char vrv__c0_19 = 0;\n  char ch__c0_20 = 0;\n  unsigned char vrv__c0_20 = 0;\n  char ch__c0_21 = 0;\n  int vrv__c0_21 = 0;\n  char ch__c0_22 = 0;\n  unsigned char vrv__c0_22 = 0;\n  char ch__c0_23 = 0;\n  unsigned char vrv__c0_23 = 0;\n  char ch__c0_24 = 0;\n  unsigned char vrv__c0_24 = 0;\n  long long v__w = 0;\n  char ch__c0_1 = 0;\n  int vrv__c0_1 = 0;\n  char ch__c0_2 = 0;\n  int vrv__c0_2 = 0;\n  if (inlen < 8)\n  {\n    return 0;\n  }\n  ch__c0_1 = nondet_char() + (0 * 0);\n  vrv__c0_1 = 0;\n  vrv__c0_1 = unknown();\n  ch__c0_2 = nondet_char() + (0 * 1);\n  vrv__c0_2 = 0;\n  vrv__c0_2 = unknown();\n  if ((!vrv__c0_1) || (!vrv__c0_2))\n  {\n    return 0;\n  }\n  if (nondet_long())\n  {\n    ch__c0_3 = nondet_char() + (0 * 0);\n    vrv__c0_3 = 0;\n    vrv__c0_3 = ch__c0_3;\n    ch__c0_4 = nondet_char() + (0 * 1);\n    vrv__c0_4 = 0;\n    vrv__c0_4 = ch__c0_4;\n    v__w = ((nondet_char() + (0 * vrv__c0_3)) << 3) | ((nondet_char() + (0 * vrv__c0_4)) >> 2);\n    v__w = nondet_long() + 1;\n  }\n  if ((nondet_char() + (0 * 2)) == 61)\n  {\n    if ((((((nondet_char() + (0 * 3)) != 61) || ((nondet_char() + (0 * 4)) != 61)) || ((nondet_char() + (0 * 5)) != 61)) || ((nondet_char() + (0 * 6)) != 61)) || ((nondet_char() + (0 * 7)) != 61))\n    {\n      return 0;\n    }\n    ch__c0_5 = nondet_char() + (0 * 1);\n    vrv__c0_5 = 0;\n    vrv__c0_5 = ch__c0_5;\n    if ((nondet_char() + (0 * vrv__c0_5)) & 3)\n    {\n      return 0;\n    }\n  }\n  else\n  {\n    ch__c0_6 = nondet_char() + (0 * 2);\n    vrv__c0_6 = 0;\n    vrv__c0_6 = unknown();\n    ch__c0_7 = nondet_char() + (0 * 3);\n    vrv__c0_7 = 0;\n    vrv__c0_7 = unknown();\n    if ((!vrv__c0_6) || (!vrv__c0_7))\n    {\n      return 0;\n    }\n    if (nondet_long())\n    {\n      ch__c0_8 = nondet_char() + (0 * 1);\n      vrv__c0_8 = 0;\n      vrv__c0_8 = ch__c0_8;\n      ch__c0_9 = nondet_char() + (0 * 2);\n      vrv__c0_9 = 0;\n      vrv__c0_9 = ch__c0_9;\n      ch__c0_10 = nondet_char() + (0 * 3);\n      vrv__c0_10 = 0;\n      vrv__c0_10 = ch__c0_10;\n      v__w = (((nondet_char() + (0 * vrv__c0_8)) << 6) | ((nondet_char() + (0 * vrv__c0_9)) << 1)) | ((nondet_char() + (0 * vrv__c0_10)) >> 4);\n      v__w = nondet_long() + 1;\n    }\n    if ((nondet_char() + (0 * 4)) == 61)\n    {\n      if ((((nondet_char() + (0 * 5)) != 61) || ((nondet_char() + (0 * 6)) != 61)) || ((nondet_char() + (0 * 7)) != 61))\n      {\n        return 0;\n      }\n      ch__c0_11 = nondet_char() + (0 * 3);\n      vrv__c0_11 = 0;\n      vrv__c0_11 = ch__c0_11;\n      if ((nondet_char() + (0 * vrv__c0_11)) & 15)\n      {\n        return 0;\n      }\n    }\n    else\n    {\n      ch__c0_12 = nondet_char() + (0 * 4);\n      vrv__c0_12 = 0;\n      vrv__c0_12 = unknown();\n      if (!vrv__c0_12)\n      {\n        return 0;\n      }\n      if (nondet_long())\n      {\n        ch__c0_13 = nondet_char() + (0 * 3);\n        vrv__c0_13 = 0;\n        vrv__c0_13 = ch__c0_13;\n        ch__c0_14 = nondet_char() + (0 * 4);\n        vrv__c0_14 = 0;\n        vrv__c0_14 = ch__c0_14;\n        v__w = ((nondet_char() + (0 * vrv__c0_13)) << 4) | ((nondet_char() + (0 * vrv__c0_14)) >> 1);\n        v__w = nondet_long() + 1;\n      }\n      if ((nondet_char() + (0 * 5)) == 61)\n      {\n        if (((nondet_char() + (0 * 6)) != 61) || ((nondet_char() + (0 * 7)) != 61))\n        {\n          return 0;\n        }\n        ch__c0_15 = nondet_char() + (0 * 4);\n        vrv__c0_15 = 0;\n        vrv__c0_15 = ch__c0_15;\n        if ((nondet_char() + (0 * vrv__c0_15)) & 1)\n        {\n          return 0;\n        }\n      }\n      else\n      {\n        ch__c0_16 = nondet_char() + (0 * 5);\n        vrv__c0_16 = 0;\n        vrv__c0_16 = unknown();\n        ch__c0_17 = nondet_char() + (0 * 6);\n        vrv__c0_17 = 0;\n        vrv__c0_17 = unknown();\n        if ((!vrv__c0_16) || (!vrv__c0_17))\n        {\n          return 0;\n        }\n        if (nondet_long())\n        {\n          ch__c0_18 = nondet_char() + (0 * 4);\n          vrv__c0_18 = 0;\n          vrv__c0_18 = ch__c0_18;\n          ch__c0_19 = nondet_char() + (0 * 5);\n          vrv__c0_19 = 0;\n          vrv__c0_19 = ch__c0_19;\n          ch__c0_20 = nondet_char() + (0 * 6);\n          vrv__c0_20 = 0;\n          vrv__c0_20 = ch__c0_20;\n          v__w = (((nondet_char() + (0 * vrv__c0_18)) << 7) | ((nondet_char() + (0 * vrv__c0_19)) << 2)) | ((nondet_char() + (0 * vrv__c0_20)) >> 3);\n          v__w = nondet_long() + 1;\n        }\n        if ((nondet_char() + (0 * 7)) != 61)\n        {\n          ch__c0_21 = nondet_char() + (0 * 7);\n          vrv__c0_21 = 0;\n          vrv__c0_21 = unknown();\n          if (!vrv__c0_21)\n          {\n            return 0;\n          }\n          if (nondet_long())\n          {\n            ch__c0_22 = nondet_char() + (0 * 6);\n            vrv__c0_22 = 0;\n            vrv__c0_22 = ch__c0_22;\n            ch__c0_23 = nondet_char() + (0 * 7);\n            vrv__c0_23 = 0;\n            vrv__c0_23 = ch__c0_23;\n            v__w = ((nondet_char() + (0 * vrv__c0_22)) << 5) | (nondet_char() + (0 * vrv__c0_23));\n            v__w = nondet_long() + 1;\n          }\n        }\n        else\n        {\n          ch__c0_24 = nondet_char() + (0 * 6);\n          vrv__c0_24 = 0;\n          vrv__c0_24 = ch__c0_24;\n          if ((nondet_char() + (0 * vrv__c0_24)) & 7)\n          {\n            return 0;\n          }\n        }\n      }\n    }\n  }\n  return 1;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "not applicable (globals or nondeterministic stubs)"
+  },
+  "certification": {
+   "status": "UNKNOWN",
+   "method": "typed_c_no_loops_after_stubbing",
+   "rounds": 0
+  },
+  "seconds_v087": 2.1
+ },
+ {
+  "suite": "gnulib:lib",
+  "file": "base32.c",
+  "function": "base32_decode_ctx",
+  "class": "loop",
+  "src_sha1": "f993fe1dac7f",
+  "stage": "not_certified",
+  "notes": [
+   "callee decode_8 not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "callee get_8 not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "character constants converted",
+   "copied mutated parameter inlen",
+   "flattened blocks",
+   "hoisted late declaration",
+   "hoisted loop-body declaration",
+   "memory abstraction (memory safety assumed)",
+   "nondeterministic result for decode_8",
+   "opaque pointer-returning call dropped: get_8",
+   "pointer parameter abstracted: ctx",
+   "pointer parameter abstracted: in",
+   "pointer parameter abstracted: out",
+   "pointer parameter abstracted: outlen",
+   "zero-initialized locals"
+  ],
+  "bounds": {
+   "inlen_in": [
+    -9223372036854775808,
+    9223372036854775807
+   ]
+  },
+  "transcription": "int f(long inlen_in)\n{\n  long inlen = inlen_in;\n  long outleft_save = 0;\n  long long v__w = 0;\n  int ignore_newlines = nondet_int() + (0 * 0);\n  int flush_ctx = 0;\n  unsigned int ctx_i = 0;\n  long outleft = 0;\n  if (ignore_newlines)\n  {\n    ctx_i = nondet_int();\n    flush_ctx = inlen == 0;\n  }\n  outleft = nondet_long();\n  while (1)\n  {\n    outleft_save = outleft;\n    if ((ctx_i == 0) && (!flush_ctx))\n    {\n      while (1)\n      {\n        outleft_save = outleft;\n        outleft = nondet_long();\n        if (!unknown())\n        {\n          break;\n        }\n        v__w = 8;\n        inlen -= 8;\n      }\n\n    }\n    if ((inlen == 0) && (!flush_ctx))\n    {\n      break;\n    }\n    if ((inlen && (nondet_char() == 10)) && ignore_newlines)\n    {\n      --inlen;\n    }\n    else\n    {\n      v__w = outleft_save - outleft;\n      outleft = outleft_save;\n      v__w = inlen;\n      if (ignore_newlines)\n      {\n        inlen = nondet_long();\n      }\n      else\n      {\n      }\n      if ((inlen == 0) || (((inlen < 8) && (!flush_ctx)) && ignore_newlines))\n      {\n        inlen = 0;\n        break;\n      }\n      outleft = nondet_long();\n      if (!unknown())\n      {\n        break;\n      }\n      inlen = nondet_long();\n    }\n  }\n\n  v__w = nondet_long() - outleft;\n  return inlen == 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "not applicable (globals or nondeterministic stubs)"
+  },
+  "certification": {
+   "status": "STUCK:initialization defined",
+   "method": "houdini_loops",
+   "invariant": null,
+   "rounds": 1
+  },
+  "seconds_v087": 3.1
+ },
+ {
+  "suite": "gnulib:lib",
+  "file": "bitsetv.c",
+  "function": "bitsetv_alloc",
+  "class": "loop",
+  "src_sha1": "e90c08eecdb8",
+  "stage": "not_certified",
+  "notes": [
+   "for -> while",
+   "hoisted late declaration",
+   "implicitly declared function xzalloc (C: returns int)",
+   "memory abstraction (memory safety assumed)",
+   "non-scalar return value dropped",
+   "nondeterministic result for bitset_bytes",
+   "nondeterministic result for xzalloc",
+   "opaque pointer-returning call dropped: bitset_init",
+   "opaque void call dropped: xalloc_die",
+   "sizeof evaluated",
+   "zero-initialized locals"
+  ],
+  "bounds": {
+   "n_vecs": [
+    0,
+    18446744073709551615
+   ],
+   "n_bits": [
+    0,
+    18446744073709551615
+   ],
+   "type": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "transcription": "int f(unsigned long n_vecs, unsigned long n_bits, int type)\n{\n  long long v__w = 0;\n  unsigned long bytes = unknown();\n  unsigned long vector_bytes = 0;\n  unsigned long i = 0;\n  if ((((unsigned long) (-1)) / (8 + bytes)) <= n_vecs)\n  {\n  }\n  vector_bytes = (((n_vecs + 1) * 8) + bytes) - 1;\n  vector_bytes -= vector_bytes % bytes;\n  i = 0;\n  i = 0;\n  while (i < n_vecs)\n  {\n    v__w = i;\n    v__w = vector_bytes;\n    v__w = i * bytes;\n    i++;\n  }\n\n  v__w = i;\n  v__w = 0;\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "not applicable (globals or nondeterministic stubs)"
+  },
+  "certification": {
+   "status": "STUCK:top operations defined",
+   "method": "houdini_loops",
+   "invariant": null,
+   "rounds": 1
+  },
+  "seconds_v087": 2.7
+ },
+ {
+  "suite": "gnulib:lib",
+  "file": "boot-time.c",
+  "function": "get_linux_uptime",
+  "class": "loop",
+  "src_sha1": "b7b882e1651b",
+  "stage": "not_certified",
+  "notes": [
+   "character constants converted",
+   "for -> while",
+   "hoisted loop-body declaration",
+   "loop-header call hoisted",
+   "memory abstraction (memory safety assumed)",
+   "nondeterministic result for clock_gettime",
+   "nondeterministic result for fclose",
+   "nondeterministic result for fread",
+   "opaque pointer-returning call dropped: fopen",
+   "pointer parameter abstracted: p_uptime",
+   "sizeof evaluated",
+   "zero-initialized locals"
+  ],
+  "bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "transcription": "int f(int __z)\n{\n  unsigned long n = 0;\n  long s = 0;\n  long ns = 0;\n  int i = 0;\n  long long v__w = 0;\n  if (unknown() >= 0)\n  {\n    return 0;\n  }\n  if (nondet_int() + (0 * 0))\n  {\n    n = unknown();\n    if (n > 0)\n    {\n      v__w = n;\n      v__w = 0;\n      s = 0;\n      while (1)\n      {\n        if (!((48 <= nondet_char()) && (nondet_char() <= 57)))\n        {\n          break;\n        }\n        s = (10 * s) + (nondet_char() - 48);\n      }\n\n      if (nondet_int())\n      {\n        ns = 0;\n        if (nondet_char() == 46)\n        {\n          i = 0;\n          while (i < 9)\n          {\n            ns = (10 * ns) + (((48 <= nondet_char()) && (nondet_char() <= 57)) ? (nondet_char() - 48) : (0));\n            i++;\n          }\n\n        }\n        v__w = s;\n        v__w = ns;\n        return 0;\n      }\n    }\n  }\n  return -1;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "not applicable (globals or nondeterministic stubs)"
+  },
+  "certification": {
+   "status": "NO_SAMPLES",
+   "method": "houdini_loops",
+   "invariant": null,
+   "rounds": 0
+  },
+  "seconds_v087": 2.6
+ }
+]

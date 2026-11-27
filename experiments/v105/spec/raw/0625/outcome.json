@@ -1,0 +1,60 @@
+{
+  "index": 625,
+  "case": "upstream2026/nla-digbench-scaling/geo1-u2_unwindbound50",
+  "corpus": "upstream2026",
+  "expected": false,
+  "model": "claude-sonnet-4-5-20250929",
+  "repeat": 1,
+  "status": "UNKNOWN",
+  "retained": 6.984919309616089e-10,
+  "pre": {
+    "z": [
+      0,
+      2
+    ]
+  },
+  "narrowed": {
+    "z": [
+      0,
+      2
+    ],
+    "k": [
+      0,
+      4294967295
+    ]
+  },
+  "per_dim": {
+    "z": 1e-09,
+    "k": 1.0
+  },
+  "shrunk": [
+    "z"
+  ],
+  "widened": [],
+  "empty_interval": [],
+  "aliased": [],
+  "parse_error": null,
+  "model_reply": "Looking at the function, I need to find where signed integer overflow can occur in the `long long` (64-bit signed) variables `x` and `y`.\n\n**Key operations that can overflow:**\n- `x = (x * z) + 1` inside the loop (long long \u00d7 unsigned int \u2192 long long)\n- `y = y * z` inside the loop\n- `x = x * (z - 1)` after the loop\n\n**Loop iteration count:** The loop runs `n = min(k-1, 50)` times for `k >= 1`, and 0 times for `k = 0` (the `counter < 50` cap dominates for large k).\n\n**Growth analysis for z \u2265 2:** After `n` iterations, `y = z^(n+1)` and `x = (z^(n+1)-1)/(z-1)`. The final `x = x*(z-1) = z^(n+1)-1`. The binding constraint is `y = z^(n+1) \u2264 2^63 - 1`.\n\n**Checking z = 0, 1, 2 for all k (worst case n=50):**\n- **z=0:** x stays 1, y stays 0. Final: `1 * (0-1)` = `1 * 4294967295` = 4294967295. Safe.\n- **z=1:** x = 51 max, y = 1. Final: `51 * 0 = 0`. Safe.\n- **z=2:** y = 2^51 = 2251799813685248, x = 2^51 - 1. Both well under 2^63 - 1. Safe.\n\n**z=3 fails:** 3^51 \u2248 2.15\u00d710^24, far exceeding 2^63 - 1 \u2248 9.22\u00d710^18.\n\n**Maximizing the box volume:** Keeping z \u2208 [0, 2] with full k range gives volume `3 \u00d7 4294967296`. Any box with z \u2265 3 requires restricting k drastically (e.g., z=3 needs k \u2264 39), yielding much smaller volume. Restricting k to [0,1] with full z gives only `4294967296 \u00d7 2`, which is also smaller.\n\n{\"pre\": {\"z\": [0, 2]}}",
+  "served_model": "claude-sonnet-4-5-20250929",
+  "stub": false,
+  "phases": [
+    {
+      "poly": false,
+      "status": "STUCK:Unsupported typed C expression or side effect: UnaryOp",
+      "rounds": 4
+    },
+    {
+      "poly": true,
+      "status": "STUCK:Unsupported typed C expression or side effect: UnaryOp",
+      "rounds": 5
+    }
+  ],
+  "calls": 1,
+  "prompt_tokens": 460,
+  "completion_tokens": 1500,
+  "seconds": 160.026,
+  "ask_stop_reason": null,
+  "verify_stop_reason": null,
+  "verify_wall_seconds": 0.7225139980000677,
+  "verify_peak_rss_bytes": 177119232
+}

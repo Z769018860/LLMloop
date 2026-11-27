@@ -1,0 +1,53 @@
+{
+  "milestone": "v064",
+  "all_p0_complete": false,
+  "items": [
+    {
+      "id": "P0-03",
+      "requirement": "外部基线",
+      "status": "partial_malice_run_narrow_projection",
+      "completed_evidence": [
+        "MALICE 论文（PMLR 306）、代码仓库（论文脚注）、固定提交 4675d37c、论文 PDF 与三个 QCP 二进制的 SHA-256 已记录",
+        "在用户允许后运行固定版本 MALICE（仓库代码未改）：13 个程序（8 安全 + 5 不安全控制）× 2 个模型；仅预测 1/8，开启 QCP 反馈修正后 7/8；两者在不安全控制上均为 0",
+        "42 个修正后文件用另一检查器 symexec 独立复核 42/42 一致",
+        "与 LLMloop 在同一批程序上对齐（契约不同，不报统一成功率）"
+      ],
+      "remaining_acceptance": [
+        "MALICE 在其目标任务（堆形状不变式、LIG-MM+）上的评估",
+        "glm-5.3-ark 无法在 MALICE 的调用方式下评估",
+        "更大的共同投影与 pass@8、更多模型家族（QCP 不支持无符号类型限制了范围）",
+        "会议版 LoopSCC artifact 仍无法获取"
+      ],
+      "execution_status": "MALICE executed (narrow common projection, two models)",
+      "evidence_paths": [
+        "malice_provenance.json",
+        "malice_results/compare_with_llmloop.json",
+        "malice_results/refined_independent_symexec_verify.json",
+        "../../paper/external_and_ablation_report_v064_zh.md"
+      ]
+    },
+    {
+      "id": "P0-04",
+      "requirement": "消融",
+      "status": "substantially_addressed_with_open_items",
+      "completed_evidence": [
+        "通用性与类型化义务：367 个候选，有界测试（C）20 个确定性假接受，数学整数测试 9–13 个假接受且 17 个假拒绝",
+        "组合机制：8 个嵌套程序仅完整嵌套摘要可证明，去外层/内层/压平/有界均 0/8",
+        "规模扩展：有界展开在 S≥64 为 0/30，摘要验证 30/30 且时间恒定；420 次运行，0 超时",
+        "候选组合与回退归因：第 1 个候选贡献 160/162、150/152、129/140；回退 0"
+      ],
+      "remaining_acceptance": [
+        "“有不变式但无加速”的 sound 对照（需要新的验证入口与提案提示）",
+        "会议版 LoopSCC 参考配置"
+      ],
+      "evidence_paths": [
+        "ablation_semantics.json",
+        "ablation_composition.json",
+        "ablation_scaling.json",
+        "attribution_candidates.json"
+      ]
+    }
+  ],
+  "no_speedup_claimed": true,
+  "note": "摘要验证时间与迭代次数无关，但未含候选生成成本，不构成端到端加速结论。"
+}

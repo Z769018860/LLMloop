@@ -1,0 +1,46 @@
+{
+  "model_requested": "deepseek-v4.1-flash-ark",
+  "request": {
+    "model": "deepseek-v4.1-flash-ark",
+    "temperature": 0.7,
+    "max_tokens": 1500,
+    "messages": [
+      {
+        "role": "system",
+        "content": "You state preconditions. You never prove anything: a separate verifier checks every value in the box you give, and it rejects the program if any of them overflows. Reply with one JSON object and nothing else."
+      },
+      {
+        "role": "user",
+        "content": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int n){\nint k = 0;\nint i = 0;\nint __a = 0;\nwhile (i < n)\n{\n  i++;\n  k++;\n}\n\nint j = n;\nwhile (j > 0)\n{\n  __a = 1 / (k > 0);\n  j--;\n  k--;\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"n\": [-2147483648, 2147483647]}"
+      }
+    ]
+  },
+  "started_utc": "2026-11-23T04:30:35Z",
+  "endpoint": "https://api.square16.org/v1",
+  "attempts": [
+    {
+      "attempt": 0,
+      "ok": true,
+      "http_status": 200,
+      "seconds": 6.335
+    }
+  ],
+  "response_text": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"logprobs\":null,\"message\":{\"content\":\"{\\\"pre\\\": {}}\",\"reasoning_content\":\"We need answer JSON only. Need determine precondition largest box preventing undefined behavior signed overflow/div zero/bad shifts. Function with int n, ILP32. Need analyze.\\n\\nCode:\\nint f(int n){\\n int k=0; int i=0; int __a=0;\\n while (i\\u003cn){ i++; k++; }\\n int j=n;\\n while(j\\u003e0){ __a = 1/(k\\u003e0); j--; k--; }\\n return 0;\\n}\\n\\nDeclared n full int.\\n\\nUB possibilities:\\nFirst loop while (i\\u003cn). If n positive up to INT_MAX, i++ and k++ repeatedly. i increments from 0 to n. If n = INT_MAX, i will eventually? Condition i \\u003c n. When i = INT_MAX-1 \\u003c INT_MAX, body i++ =\\u003e INT_MAX (valid), k++ =\\u003e n? k initially increments n times from 0 to INT_MAX? Let's carefully for n=INT_MAX: iterations while i\\u003cn. i starts 0, each iter i++, k++. It executes for i=0..INT_MAX-1, count INT_MAX. After count INT_MAX, i=INT_MAX, k=INT_MAX. Condition i\\u003cn false (equal). No overflow. k max INT_MAX. Then j=n=INT_MAX. Second loop while j\\u003e0: __a=1/(k\\u003e0). k=INT_MAX positive. j-- decrements to INT_MAX-1, k-- to INT_MAX-1. Repeat positive. After n iterations? Need k decremented each iter and j from n to 0. At start j=n, k=n. Iter count n. k after n decrements = 0. During each iteration denominator k\\u003e0. For last iteration when j=1, before body k=1, k\\u003e0 true. After body k-- -\\u003e0, j-- -\\u003e0. Fine. No division zero. For n=INT_MAX, no overflow? First loop k increments INT_MAX times: k starts 0, after INT_MAX increments = INT_MAX. Last increment from INT_MAX-1 to INT_MAX no overflow. i similarly. j initialized n. k-- from INT_MAX down to 0, no underflow. So n=INT_MAX safe? Wait if n = INT_MAX, condition i\\u003cn at i=INT_MAX-1 true, body increments i to INT_MAX. It does not execute at i=INT_MAX. So k also INT_MAX. Safe.\\n\\nFor n negative? First loop while i\\u003cn: i=0 \\u003c negative? false. k=0. Second: j=n negative, while(j\\u003e0) false. No division. No overflow. All negative safe? j=n negative, no loop. return. n=0 safe. So full declared domain may be safe? Need consider signed overflow in first loop for n positive? Max n INT_MAX gives count INT_MAX, no overflow. k no overflow. For n maybe INT_MAX? safe as above. No i++ overflow since stops at INT_MAX. k max INT_MAX. Second loop k starts n (after first loop if n\\u003e0, k=n). Then decrements n times to 0. No negative. If n negative, second loop not run, k=0. j negative no decrement? no. Safe. Division denominator (k\\u003e0) is 0 or 1, never zero. So no division by zero. Bad shifts none.\\n\\nBut wait is there subtle signed overflow when n positive? First loop i++ and k++ each iteration. For n=INT_MAX, k reaches INT_MAX. safe. For n less safe. For n full. No UB. Empty precondition.\\n\\nNeed ensure no undefined behavior from 1/(k\\u003e0) when k\\u003e0 false denominator 0. Could k be \\u003c=0 when j\\u003e0? If n positive, after first loop k=n (since i increments n times for n\\u003e0). j=n. During second loop j decreases, k decreases in lockstep; while j\\u003e0, k = j? Let's derive: after first loop for n\\u003e0, i=n, k=n. j=n. Each second iter body uses k=j, then decrements both. So k\\u003e0 whenever j\\u003e0. Safe. For n\\u003c=0, j=n\\u003c=0, loop not entered; no division. Safe.\\n\\nThus full declared bounds already safe. Output empty precondition. But schema: {\\\"pre\\\": {}}.\\n\\nNeed final only JSON.\",\"role\":\"assistant\"}}],\"created\":1795408241,\"id\":\"0217954082362203694b53d1b7644bc84f9058822e8eff2a1bfa6\",\"model\":\"deepseek-v4-1-flash-261017\",\"service_tier\":\"default\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":928,\"prompt_tokens\":400,\"total_tokens\":1328,\"prompt_tokens_details\":{\"cached_tokens\":256},\"completion_tokens_details\":{\"reasoning_tokens\":922}}}",
+  "served_model": "deepseek-v4-1-flash-261017",
+  "usage": {
+    "completion_tokens": 928,
+    "prompt_tokens": 400,
+    "total_tokens": 1328,
+    "prompt_tokens_details": {
+      "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 922
+    }
+  },
+  "content": "{\"pre\": {}}",
+  "finish_reason": "stop",
+  "seconds": 6.335,
+  "prompt_sha256": "6b437a01de967a10153824e212e53e0614a0c473f643d592f66e758da9360bee",
+  "prompt_text": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int n){\nint k = 0;\nint i = 0;\nint __a = 0;\nwhile (i < n)\n{\n  i++;\n  k++;\n}\n\nint j = n;\nwhile (j > 0)\n{\n  __a = 1 / (k > 0);\n  j--;\n  k--;\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"n\": [-2147483648, 2147483647]}"
+}

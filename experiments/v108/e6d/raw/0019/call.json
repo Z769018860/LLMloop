@@ -1,0 +1,66 @@
+{
+  "model_requested": "claude-sonnet-4-5-20250929",
+  "cache_key": "79afd02ba99d3c47faabc61ea506a3b579abf2d3eb71f552af70dde59ff283ed",
+  "endpoint": "https://api.square16.org/v1",
+  "started_utc": "2026-11-27T00:59:05Z",
+  "stream": true,
+  "chunks": 6,
+  "ttft": 2.828,
+  "seconds": 2.916,
+  "aborted": null,
+  "messages_sha256": "4d4e2385eebf35302503caf09f469b43b5a1d3bcc41ceb34dfe6f7ea7ad8d93c",
+  "request": {
+    "model": "claude-sonnet-4-5-20250929",
+    "temperature": 0.7,
+    "max_tokens": 2048,
+    "stream": true,
+    "stream_options": {
+      "include_usage": true
+    }
+  },
+  "cached": false,
+  "served_model": "claude-sonnet-4-5-20250929",
+  "finish_reason": "stop",
+  "usage": {
+    "prompt_tokens": 392,
+    "completion_tokens": 9,
+    "total_tokens": 401,
+    "usage_semantic": "openai",
+    "usage_source": "anthropic",
+    "billing_usage": {
+      "source": "claude_messages",
+      "semantic": "anthropic",
+      "claude_usage": {
+        "input_tokens": 392,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 9,
+        "claude_cache_creation_5_m_tokens": 0,
+        "claude_cache_creation_1_h_tokens": 0
+      }
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "text_tokens": 0,
+      "audio_tokens": 0,
+      "image_tokens": 0
+    },
+    "completion_tokens_details": {
+      "text_tokens": 0,
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "reasoning_tokens": 0
+    },
+    "input_tokens": 392,
+    "output_tokens": 0,
+    "input_tokens_details": null,
+    "claude_cache_creation_5_m_tokens": 0,
+    "claude_cache_creation_1_h_tokens": 0
+  },
+  "done": true,
+  "http_status": 200,
+  "content": "{\"pre\": {}}",
+  "reasoning_content": "",
+  "prompt_sha256": "b383a458951dfc732126915f32e2c50ebd89fdba7dc769142f6739914b5ac3f5",
+  "prompt_text": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int i__in, int k__in){\nint k = k__in;\nint i = i__in;\nwhile (__VERIFIER_nondet_bool())\n{\n  i = i + 1;\n  k = k - 1;\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"i__in\": [1, 1], \"k__in\": [0, 1]}"
+}

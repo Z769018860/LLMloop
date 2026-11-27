@@ -1,0 +1,66 @@
+{
+  "model_requested": "claude-sonnet-4-5-20250929",
+  "cache_key": "93d4d963a8ea9785f867bbcd1d14e8e02a74aeb33e23279b51ccf2764d73f239",
+  "endpoint": "https://api.square16.org/v1",
+  "started_utc": "2026-11-27T01:04:24Z",
+  "stream": true,
+  "chunks": 9,
+  "ttft": 2.122,
+  "seconds": 2.222,
+  "aborted": null,
+  "messages_sha256": "3f02245ed3870bb01b3ae5f2984fef566752ab5929379c5f8d5a84c79ce482a5",
+  "request": {
+    "model": "claude-sonnet-4-5-20250929",
+    "temperature": 0.7,
+    "max_tokens": 2048,
+    "stream": true,
+    "stream_options": {
+      "include_usage": true
+    }
+  },
+  "cached": false,
+  "served_model": "claude-sonnet-4-5-20250929",
+  "finish_reason": "stop",
+  "usage": {
+    "prompt_tokens": 567,
+    "completion_tokens": 32,
+    "total_tokens": 599,
+    "usage_semantic": "openai",
+    "usage_source": "anthropic",
+    "billing_usage": {
+      "source": "claude_messages",
+      "semantic": "anthropic",
+      "claude_usage": {
+        "input_tokens": 567,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 32,
+        "claude_cache_creation_5_m_tokens": 0,
+        "claude_cache_creation_1_h_tokens": 0
+      }
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "text_tokens": 0,
+      "audio_tokens": 0,
+      "image_tokens": 0
+    },
+    "completion_tokens_details": {
+      "text_tokens": 0,
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "reasoning_tokens": 0
+    },
+    "input_tokens": 567,
+    "output_tokens": 0,
+    "input_tokens_details": null,
+    "claude_cache_creation_5_m_tokens": 0,
+    "claude_cache_creation_1_h_tokens": 0
+  },
+  "done": true,
+  "http_status": 200,
+  "content": "{\"pre\": {\"x\": [1, 46340], \"y\": [1, 46340]}}",
+  "reasoning_content": "",
+  "prompt_sha256": "29a2d5ff7b165b61f460ca005e4c8f3afdc8f734dd77b7afd810df87c9efcd85",
+  "prompt_text": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int x, int y){\nint a = 0;\nint b = 0;\nint p = 0;\nint q = 0;\nint r = 0;\nint s = 0;\nif ((x >= 1) && (y >= 1))\n{\n  a = x;\n  b = y;\n  p = 1;\n  q = 0;\n  r = 0;\n  s = 1;\n  while (((y * r) + (x * p)) != ((x * q) + (y * s)))\n  {\n    if (a > b)\n    {\n      a = a - b;\n      p = p - q;\n      r = r - s;\n    }\n    else\n    {\n      b = b - a;\n      q = q - p;\n      s = s - r;\n    }\n  }\n\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"x\": [-2147483648, 2147483647], \"y\": [-2147483648, 2147483647]}"
+}

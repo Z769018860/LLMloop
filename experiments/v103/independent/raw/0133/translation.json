@@ -1,0 +1,24 @@
+{
+  "original_function": "void CWE190_Integer_Overflow__int64_t_max_square_15_bad() {\n    long data;\n    data = 0LL;\n    switch (6) {\n      case 6:\n        data = 9223372036854775807LL;\n        break;\n      default:\n        printLine(\"Benign, fixed string\");\n        break;\n    }\n    switch (7) {\n      case 7:\n        {\n            long result = data * data;\n            printLongLongLine(result);\n        }\n        break;\n      default:\n        printLine(\"Benign, fixed string\");\n        break;\n    }\n}",
+  "source": "int f(int __z)\n{\n  long result = 0;\n  long data = 0;\n  long long v__sw1 = 0;\n  long long v__sw2 = 0;\n  data = 0LL;\n  v__sw1 = 6;\n  if (v__sw1 == 6)\n  {\n    data = 9223372036854775807LL;\n  }\n  else\n  {\n  }\n  v__sw2 = 7;\n  if (v__sw2 == 7)\n  {\n    result = data * data;\n  }\n  else\n  {\n  }\n  return 0;\n}\n\n",
+  "bounds": {
+    "__z": [
+      0,
+      0
+    ]
+  },
+  "notes": [
+    "dead trailing return",
+    "flattened blocks",
+    "hoisted late declaration",
+    "hoisted loop-body declaration",
+    "memory abstraction (memory safety assumed)",
+    "opaque void call dropped: printLine",
+    "opaque void call dropped: printLongLongLine",
+    "switch -> if chain",
+    "void -> int",
+    "zero-initialized locals"
+  ],
+  "extra": "[]",
+  "nondet": "False"
+}

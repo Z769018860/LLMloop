@@ -1,0 +1,27 @@
+- entry_type: invariant_set
+  metadata:
+    format_version: '2.2'
+    uuid: 3e9ad413-f2b4-4a07-9444-b5c4bc499da8
+    creation_time: '2026-11-22T19:11:36Z'
+    producer:
+      name: Automizer
+      version: 0.3.2-dev-c425bfe605
+    task:
+      input_files:
+      - /home/runner/work/_temp/ext/svbench-loop/c/loop-acceleration/diamond_1-1.c
+      input_file_hashes:
+        /home/runner/work/_temp/ext/svbench-loop/c/loop-acceleration/diamond_1-1.c: bd9be28702be20fbd75b67eebfdc5f85895ff340c238c235c391c2a8578e7b23
+      specification: |
+        CHECK( init(main()), LTL(G ! call(__VERIFIER_error())) )
+      data_model: ILP32
+      language: C
+  content:
+  - invariant:
+      type: loop_invariant
+      location:
+        file_name: /home/runner/work/_temp/ext/svbench-loop/c/loop-acceleration/diamond_1-1.c
+        line: 17
+        column: 3
+        function: main
+      value: (x % 2 == 0 && x <= 49 + x / 2) || x % 2 == y % 2
+      format: c_expression

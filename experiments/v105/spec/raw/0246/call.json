@@ -1,0 +1,46 @@
+{
+  "model_requested": "deepseek-v4.1-flash-ark",
+  "request": {
+    "model": "deepseek-v4.1-flash-ark",
+    "temperature": 0.7,
+    "max_tokens": 1500,
+    "messages": [
+      {
+        "role": "system",
+        "content": "You state preconditions. You never prove anything: a separate verifier checks every value in the box you give, and it rejects the program if any of them overflows. Reply with one JSON object and nothing else."
+      },
+      {
+        "role": "user",
+        "content": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int n, int m){\nint k = 0;\nint i = 0;\nint j = 0;\nfor (i = 0; i < n; i++)\n{\n  for (j = 0; j < m; j++)\n  {\n    k++;\n  }\n\n}\n\nreturn 1/((k >= 100));\n}\n\n\nABI: ILP32\nDeclared bounds: {\"m\": [10, 10000], \"n\": [10, 10000]}"
+      }
+    ]
+  },
+  "started_utc": "2026-11-23T04:31:56Z",
+  "endpoint": "https://api.square16.org/v1",
+  "attempts": [
+    {
+      "attempt": 0,
+      "ok": true,
+      "http_status": 200,
+      "seconds": 3.085
+    }
+  ],
+  "response_text": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"logprobs\":null,\"message\":{\"content\":\"{\\\"pre\\\": {}}\",\"reasoning_content\":\"We need answer JSON only. Need determine largest box on n,m with no signed overflow and no division by zero. Function: k=0 increments n*m times (n,m positive within declared). k is int. Overflow if n*m \\u003e INT_MAX (2^31-1). Division by zero: return 1/((k\\u003e=100)); denominator is boolean 0 or 1. If k\\u003e=100 true =\\u003e1, false=\\u003e0 division by zero. Need ensure k\\u003e=100. Since n,m \\u003e=10, n*m \\u003e=100 exactly if n=10,m=10 gives 100. So k\\u003e=100 always within declared (min 10*10=100). Good.\\n\\nNeed largest box inside declared bounds such that n*m \\u003c= INT_MAX. Declared m [10,10000], n [10,10000]. Product max 1e8 \\u003c 2.147e9. So no overflow anywhere. Declared bounds already safe. Return empty precondition. Need consider loop counters i,j? i increments to n, n up to 10000 safe; j up to 10000 safe; k up to 1e8 safe. Division by zero no. So empty pre {}. Format {\\\"pre\\\": {}}.\\n\\nNeed ensure no parameter? \\\"Leave out a parameter to keep declared bounds.\\\" Empty precondition if declared bounds safe. So output exactly.\",\"role\":\"assistant\"}}],\"created\":1795408318,\"id\":\"0217954083166933694b53d1b7644bc84f9058822e8eff2d043db\",\"model\":\"deepseek-v4-1-flash-261017\",\"service_tier\":\"default\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":285,\"prompt_tokens\":402,\"total_tokens\":687,\"prompt_tokens_details\":{\"cached_tokens\":256},\"completion_tokens_details\":{\"reasoning_tokens\":279}}}",
+  "served_model": "deepseek-v4-1-flash-261017",
+  "usage": {
+    "completion_tokens": 285,
+    "prompt_tokens": 402,
+    "total_tokens": 687,
+    "prompt_tokens_details": {
+      "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 279
+    }
+  },
+  "content": "{\"pre\": {}}",
+  "finish_reason": "stop",
+  "seconds": 3.085,
+  "prompt_sha256": "de481cbe3f5f9d145c767e9ed103224038d822330499f10684106b483b29769f",
+  "prompt_text": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int n, int m){\nint k = 0;\nint i = 0;\nint j = 0;\nfor (i = 0; i < n; i++)\n{\n  for (j = 0; j < m; j++)\n  {\n    k++;\n  }\n\n}\n\nreturn 1/((k >= 100));\n}\n\n\nABI: ILP32\nDeclared bounds: {\"m\": [10, 10000], \"n\": [10, 10000]}"
+}

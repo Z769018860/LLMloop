@@ -13,7 +13,7 @@ def analyze_request(request: dict) -> dict:
     try:
         if not isinstance(request, dict):raise SMTGraphError('Request must be an object')
         allowed = {'ir', 'source', 'source_file', 'clang', 'proof', 'function', 'parameter_bounds', 'max_unroll',
-                   'max_paths', 'whole_function', 'invariants', 'verify_steps', 'assertion', 'ranking', 'synthesize_ranking', 'frontend', 'int_bits', 'parameter_mins', 'inputs', 'memory_layout', 'abi', 'char_signed', 'closed_forms', 'loop_summaries', 'max_steps', 'allocation_failure', 'max_call_depth', 'allow_recursion','functional','proposals','summary_backend','fallback'}
+                   'max_paths', 'integer_model', 'whole_function', 'invariants', 'verify_steps', 'assertion', 'ranking', 'synthesize_ranking', 'frontend', 'int_bits', 'parameter_mins', 'inputs', 'memory_layout', 'abi', 'char_signed', 'closed_forms', 'range_invariants', 'solver_timeout_ms', 'solver_profile', 'loop_summaries', 'max_steps', 'allocation_failure', 'max_call_depth', 'allow_recursion','functional','proposals','summary_backend','fallback'}
         if set(request)-allowed:raise SMTGraphError('Unknown request fields: '+', '.join(sorted(set(request)-allowed)))
         if request.get('frontend')=='typed_summary_portfolio':
             from .summary_portfolio import analyze_portfolio
@@ -39,7 +39,10 @@ def analyze_request(request: dict) -> dict:
             if 'functional' in request and frontend not in ('typed_bv_cfg','typed_bv_calls'):raise SMTGraphError('Functional strategies require a scalar BV CFG frontend')
             if 'loop_summaries' in request and frontend not in ('typed_nested','typed_memory'):raise SMTGraphError('loop_summaries requires typed_nested')
             if 'closed_forms' in request and frontend not in ('guarded_scalar','typed_recurrence'):raise SMTGraphError('closed_forms requires guarded_scalar or typed_recurrence frontend')
-            if (set(request)&{'abi','char_signed'}) and frontend not in ('typed_c','typed_recurrence','typed_nested','typed_memory','typed_cfg_heap','typed_cfg_calls','typed_bv_cfg','typed_bv_calls'):raise SMTGraphError('ABI options require typed_c or typed_recurrence frontend')
+            if 'range_invariants' in request and frontend not in ('typed_invariant','typed_invariant_nested','typed_invariant_tree','typed_invariant_while','typed_invariant_loops'):raise SMTGraphError('range_invariants requires a typed_invariant* frontend')
+            if 'integer_model' in request and frontend not in ('typed_invariant_while','typed_invariant_loops'):raise SMTGraphError('integer_model requires the typed_invariant_while frontend')
+            if (set(request)&{'solver_timeout_ms','solver_profile'}) and frontend not in ('typed_recurrence','typed_invariant','typed_invariant_nested','typed_invariant_tree','typed_invariant_while','typed_invariant_loops'):raise SMTGraphError('solver_timeout_ms/solver_profile require typed_recurrence or typed_invariant frontends')
+            if (set(request)&{'abi','char_signed'}) and frontend not in ('typed_c','typed_recurrence','typed_invariant','typed_invariant_nested','typed_invariant_tree','typed_invariant_while','typed_invariant_loops','typed_nested','typed_memory','typed_cfg_heap','typed_cfg_calls','typed_bv_cfg','typed_bv_calls'):raise SMTGraphError('ABI options require typed_c or typed_recurrence frontend')
             if 'memory_layout' in request and frontend!='sweep_memory':raise SMTGraphError('memory_layout requires sweep_memory frontend')
             if (set(request)&{'max_steps','allocation_failure'}) and frontend not in ('typed_cfg_heap','typed_cfg_calls','typed_bv_cfg','typed_bv_calls'):raise SMTGraphError('CFG/heap options require typed_cfg_heap or typed_cfg_calls')
             if (set(request)&{'max_call_depth','allow_recursion'}) and frontend not in ('typed_cfg_calls','typed_bv_calls'):raise SMTGraphError('Call depth requires typed_cfg_calls')
@@ -78,10 +81,30 @@ def analyze_request(request: dict) -> dict:
                 if set(request)-{'source','function','frontend','parameter_bounds','loop_summaries','abi','char_signed','max_paths','inputs'}:raise SMTGraphError('Invalid typed nested options')
                 from .typed_nested import TypedCNested
                 return {'schema_version':1,**TypedCNested(request['source'],request.get('loop_summaries'),function=request.get('function'),parameter_bounds=request.get('parameter_bounds'),abi=request.get('abi','LP64'),char_signed=request.get('char_signed',True),max_paths=request.get('max_paths',48)).report(request.get('inputs'))}
+            elif frontend=='typed_invariant_loops':
+                if set(request)-{'source','function','frontend','parameter_bounds','range_invariants','abi','char_signed','max_paths','inputs','solver_timeout_ms','solver_profile','integer_model'}:raise SMTGraphError('Invalid typed invariant loops options')
+                from .typed_invariant_loops import TypedCInvariantLoops
+                return {'schema_version':1,**TypedCInvariantLoops(request['source'],request.get('range_invariants'),function=request.get('function'),parameter_bounds=request.get('parameter_bounds'),abi=request.get('abi','LP64'),char_signed=request.get('char_signed',True),max_paths=request.get('max_paths',64),solver_timeout_ms=request.get('solver_timeout_ms',5000),solver_profile=request.get('solver_profile','default'),integer_model=request.get('integer_model','c')).report(request.get('inputs'))}
+            elif frontend=='typed_invariant_while':
+                if set(request)-{'source','function','frontend','parameter_bounds','range_invariants','abi','char_signed','max_paths','inputs','solver_timeout_ms','solver_profile','integer_model'}:raise SMTGraphError('Invalid typed invariant while options')
+                from .typed_invariant_while import TypedCInvariantWhile
+                return {'schema_version':1,**TypedCInvariantWhile(request['source'],request.get('range_invariants'),function=request.get('function'),parameter_bounds=request.get('parameter_bounds'),abi=request.get('abi','LP64'),char_signed=request.get('char_signed',True),max_paths=request.get('max_paths',64),solver_timeout_ms=request.get('solver_timeout_ms',5000),solver_profile=request.get('solver_profile','default'),integer_model=request.get('integer_model','c')).report(request.get('inputs'))}
+            elif frontend=='typed_invariant_tree':
+                if set(request)-{'source','function','frontend','parameter_bounds','range_invariants','abi','char_signed','max_paths','inputs','solver_timeout_ms','solver_profile'}:raise SMTGraphError('Invalid typed invariant tree options')
+                from .typed_invariant_tree import TypedCInvariantTree
+                return {'schema_version':1,**TypedCInvariantTree(request['source'],request.get('range_invariants'),function=request.get('function'),parameter_bounds=request.get('parameter_bounds'),abi=request.get('abi','LP64'),char_signed=request.get('char_signed',True),max_paths=request.get('max_paths',64),solver_timeout_ms=request.get('solver_timeout_ms',5000),solver_profile=request.get('solver_profile','default')).report(request.get('inputs'))}
+            elif frontend=='typed_invariant_nested':
+                if set(request)-{'source','function','frontend','parameter_bounds','range_invariants','abi','char_signed','max_paths','inputs','solver_timeout_ms','solver_profile'}:raise SMTGraphError('Invalid typed nested invariant options')
+                from .typed_invariant_nested import TypedCInvariantNested
+                return {'schema_version':1,**TypedCInvariantNested(request['source'],request.get('range_invariants'),function=request.get('function'),parameter_bounds=request.get('parameter_bounds'),abi=request.get('abi','LP64'),char_signed=request.get('char_signed',True),max_paths=request.get('max_paths',48),solver_timeout_ms=request.get('solver_timeout_ms',5000),solver_profile=request.get('solver_profile','default')).report(request.get('inputs'))}
+            elif frontend=='typed_invariant':
+                if set(request)-{'source','function','frontend','parameter_bounds','range_invariants','abi','char_signed','max_paths','inputs','solver_timeout_ms','solver_profile'}:raise SMTGraphError('Invalid typed invariant options')
+                from .typed_invariant import TypedCInvariant
+                return {'schema_version':1,**TypedCInvariant(request['source'],request.get('range_invariants'),function=request.get('function'),parameter_bounds=request.get('parameter_bounds'),abi=request.get('abi','LP64'),char_signed=request.get('char_signed',True),max_paths=request.get('max_paths',48),solver_timeout_ms=request.get('solver_timeout_ms',5000),solver_profile=request.get('solver_profile','default')).report(request.get('inputs'))}
             elif frontend=='typed_recurrence':
-                if set(request)-{'source','function','frontend','parameter_bounds','closed_forms','abi','char_signed','max_paths','inputs'}:raise SMTGraphError('Invalid typed recurrence options')
+                if set(request)-{'source','function','frontend','parameter_bounds','closed_forms','abi','char_signed','max_paths','inputs','solver_timeout_ms','solver_profile'}:raise SMTGraphError('Invalid typed recurrence options')
                 from .typed_recurrence import TypedCRecurrence
-                return {'schema_version':1,**TypedCRecurrence(request['source'],request.get('closed_forms'),function=request.get('function'),parameter_bounds=request.get('parameter_bounds'),abi=request.get('abi','LP64'),char_signed=request.get('char_signed',True),max_paths=request.get('max_paths',48)).report(request.get('inputs'))}
+                return {'schema_version':1,**TypedCRecurrence(request['source'],request.get('closed_forms'),function=request.get('function'),parameter_bounds=request.get('parameter_bounds'),abi=request.get('abi','LP64'),char_signed=request.get('char_signed',True),max_paths=request.get('max_paths',48),solver_timeout_ms=request.get('solver_timeout_ms',5000),solver_profile=request.get('solver_profile','default')).report(request.get('inputs'))}
             elif frontend=='guarded_scalar':
                 if set(request)-{'source','function','frontend','parameter_bounds','closed_forms'}:raise SMTGraphError('Invalid guarded scalar C options')
                 from .periodic_c import analyze_guarded_c

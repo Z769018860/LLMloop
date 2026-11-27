@@ -1,0 +1,287 @@
+{
+  "schema_version": 1,
+  "study": "v074_study_w",
+  "seed": 20270120,
+  "models": [
+    "deepseek-v4.1-flash-ark",
+    "glm-5.3-ark",
+    "deepseek-v4.1-flash-itkk",
+    "gpt-4.1-mini",
+    "claude-dsflash-itkk",
+    "gemini-3-flash"
+  ],
+  "arms": [
+    "if"
+  ],
+  "reps": 1,
+  "temperature": 0.7,
+  "max_tokens": 12000,
+  "corpus_seed": 20261201,
+  "roles": {
+    "heldout:nla-digbench_cohencu-ll.c": "provable_safe",
+    "heldout:nla-digbench_egcd-ll.c": "provable_safe",
+    "heldout:nla-digbench_geo1-ll.c": "provable_safe",
+    "heldout:nla-digbench_geo1-u.c": "unsafe_source_control",
+    "heldout:nla-digbench_geo2-ll.c": "provable_safe",
+    "heldout:nla-digbench_geo3-ll.c": "provable_safe",
+    "heldout:nla-digbench_lcm2.c": "provable_safe",
+    "heldout:nla-digbench_prod4br-ll.c": "provable_safe",
+    "heldout:nla-digbench_prodbin-ll.c": "provable_safe",
+    "heldout:nla-digbench_ps2-ll.c": "provable_safe",
+    "heldout:nla-digbench_ps3-ll.c": "provable_safe",
+    "heldout:nla-digbench_ps4-ll.c": "provable_safe",
+    "heldout:nla-digbench_ps5-ll.c": "provable_safe",
+    "heldout:nla-digbench_ps6-ll.c": "provable_safe",
+    "heldout:nla-digbench_sqrt1-ll.c": "provable_safe",
+    "heldout:loops-crafted-1_Mono1_1-1.c": "unsafe_source_control",
+    "heldout:loops-crafted-1_Mono1_1-2.c": "provable_safe",
+    "heldout:loops-crafted-1_Mono4_1.c": "unsafe_source_control",
+    "heldout:loops-crafted-1_Mono5_1.c": "unsafe_source_control",
+    "heldout:loops-crafted-1_Mono6_1.c": "unsafe_source_control",
+    "heldout:loops-crafted-1_mono-crafted_10.c": "provable_safe",
+    "heldout:loops-crafted-1_mono-crafted_11.c": "provable_safe",
+    "heldout:loops-crafted-1_mono-crafted_12.c": "provable_safe",
+    "heldout:loops-crafted-1_mono-crafted_6.c": "provable_safe",
+    "heldout:loops-crafted-1_mono-crafted_8.c": "provable_safe",
+    "heldout:loops-crafted-1_mono-crafted_9.c": "provable_safe"
+  },
+  "hypothesis": "H1: models certify a substantial share of safe if-loop programs (descriptive). H2: 0 unsafe controls certified. Exploratory: per-family/model.",
+  "note": "The worked example (branch-selected loops, constant increments) resembles the I_branch family; claude-dsflash-itkk is a DeepSeek V4.1 Flash alias. Unsafe controls confirmed natively (UBSan). Exact references certified for all safe programs.",
+  "verifier": "typed_summary_portfolio backend typed_invariant_tree, solver_profile auto, no fallback",
+  "programs": [
+    {
+      "name": "heldout:nla-digbench_cohencu-ll.c",
+      "family": "heldout_nla-digbench",
+      "role": "provable_safe",
+      "source_sha256": "b871e2a46324da29b2ed79ebe011dcf7ea7b6180a5e368cc3f5d9411769d54e0",
+      "prompt_sha256": {
+        "if": "b64957047407264c57276babdcb93c5d916f6bb24aaf6b5d144c72fbf576ff3b"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench_egcd-ll.c",
+      "family": "heldout_nla-digbench",
+      "role": "provable_safe",
+      "source_sha256": "f15ffc6d934025fd19b1609d08d69f3e1d22485cd2c4de573493162523ab8ad7",
+      "prompt_sha256": {
+        "if": "c42d4ecbc4dcd2b1f1d879ac18773f4cce5d29c64ae331e61f33c5a8c9a14a1d"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench_geo1-ll.c",
+      "family": "heldout_nla-digbench",
+      "role": "provable_safe",
+      "source_sha256": "a9ce2cdd8c092c27119ab6e7a5b1dd40417e83c48fe88e2e888d4ecc1222d220",
+      "prompt_sha256": {
+        "if": "a607e9009e3525205ed0ab64561f86b6d3cdc781ed242a5a4ce6a6560a019dbf"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench_geo1-u.c",
+      "family": "heldout_nla-digbench",
+      "role": "unsafe_source_control",
+      "source_sha256": "1898776b792c5d7383da07f1443bd6d5ab2667fb82f9ed5fa6ae388101380bc0",
+      "prompt_sha256": {
+        "if": "f602226e668dfb8d08fbf2ec8809585ac5874ccbb8214db7f5a98ffce0fb1b11"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench_geo2-ll.c",
+      "family": "heldout_nla-digbench",
+      "role": "provable_safe",
+      "source_sha256": "7e8afcf01ba5f157fafa5b314db33b76cdf443a11172c8b4cd47a41bfbcb1627",
+      "prompt_sha256": {
+        "if": "1b8174359964ed9b1dfcb7c909c31976c5e9b982e4ff99c05e73130b17fc584a"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench_geo3-ll.c",
+      "family": "heldout_nla-digbench",
+      "role": "provable_safe",
+      "source_sha256": "7ae2e016a42e5dc8f661485cfd4fbeea0ba48e04d3950d6762b99118fc404284",
+      "prompt_sha256": {
+        "if": "a52e2844cefe9c88975126c1519b61b2bb4ae6d061c5d489e0132af22a5407f9"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench_lcm2.c",
+      "family": "heldout_nla-digbench",
+      "role": "provable_safe",
+      "source_sha256": "03d11a54bf1979c6a2fe6f8bea83ab9fcff5d7843f2206bb0a79435f8674908d",
+      "prompt_sha256": {
+        "if": "fd5ae8155d4e07b82a680a748a20e6a69876da5eca27cb91d5c2822d61c1b79b"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench_prod4br-ll.c",
+      "family": "heldout_nla-digbench",
+      "role": "provable_safe",
+      "source_sha256": "5e46be1e7fb5b9e10513238d6ed790abdf8c079bde3f9938f42b0d579cb0a2a5",
+      "prompt_sha256": {
+        "if": "a750c0bc3fa73ab9a7ecf90360748d75bf79c6408732324a17c19511ae4b8a36"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench_prodbin-ll.c",
+      "family": "heldout_nla-digbench",
+      "role": "provable_safe",
+      "source_sha256": "710b96aeb58c0e49b007c8a5e6f5be91c408729a9f7bbf47bace0356f93a6f72",
+      "prompt_sha256": {
+        "if": "99c2663a6de02284983adbf50aa34c9878d0753fb5b630a4a97d6524aacb7312"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench_ps2-ll.c",
+      "family": "heldout_nla-digbench",
+      "role": "provable_safe",
+      "source_sha256": "98d6a63a27184962bf3c9889781add2d803c1d8f82d964145a787ed4b612c93b",
+      "prompt_sha256": {
+        "if": "58968596d638355a355d7a9f9e0e9f443450f9ac0ffc1bc64e87d81dd704e5ca"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench_ps3-ll.c",
+      "family": "heldout_nla-digbench",
+      "role": "provable_safe",
+      "source_sha256": "b519a441239ff74b72870295b90981d003e1f924f0fa075cbda456bb7936f625",
+      "prompt_sha256": {
+        "if": "c51900363ecdb7265dedbd5bbac2f3e6c9427b65856ba65bf892a5acfa783c01"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench_ps4-ll.c",
+      "family": "heldout_nla-digbench",
+      "role": "provable_safe",
+      "source_sha256": "2199d561da65ec797ce75cdb4cdeed21abdbceecc5c092d534409174ea65aebc",
+      "prompt_sha256": {
+        "if": "9387fc20ec8de66c18a14fa7555bf66347eb195d4144d7a02fe5553b77932de1"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench_ps5-ll.c",
+      "family": "heldout_nla-digbench",
+      "role": "provable_safe",
+      "source_sha256": "94eba4606b92e4c7419d7e773acdc96cbaee4ab64e9a78115040f52a89712ffb",
+      "prompt_sha256": {
+        "if": "1e4e30de2875c6960b01862a877396ae372f8d6109ed2217fe4d8b83c166de26"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench_ps6-ll.c",
+      "family": "heldout_nla-digbench",
+      "role": "provable_safe",
+      "source_sha256": "bb40a01b7aded4a906fa62ad416a09562e49c4b343b74d34620aa5d85fad2c4d",
+      "prompt_sha256": {
+        "if": "0e76b0ad1aa31a1a36d15c6adfb9ba000242a0b275991195f1bf6872e691102a"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench_sqrt1-ll.c",
+      "family": "heldout_nla-digbench",
+      "role": "provable_safe",
+      "source_sha256": "3d600c49cf3afcb2df30f5da4723bd8287055fd938dee50f7d4347bea8a0a13c",
+      "prompt_sha256": {
+        "if": "c4c440b7921ddaef98e16a934735092ac0d7134cc9ba36c330b8e1f08c7b104a"
+      }
+    },
+    {
+      "name": "heldout:loops-crafted-1_Mono1_1-1.c",
+      "family": "heldout_loops-crafted-1",
+      "role": "unsafe_source_control",
+      "source_sha256": "1bcaff86768a3f1327821d0181a54ea013d740f33b320a400e0e718db7a31982",
+      "prompt_sha256": {
+        "if": "4529fea47d888026c7f9e176e9dbbc25af67abd22e2de678a3816debfe9ff9c4"
+      }
+    },
+    {
+      "name": "heldout:loops-crafted-1_Mono1_1-2.c",
+      "family": "heldout_loops-crafted-1",
+      "role": "provable_safe",
+      "source_sha256": "29123efe5e5265245d234e092267c5d5a33e36616582b8f504ad3100846ad532",
+      "prompt_sha256": {
+        "if": "a97d19be6162ed2b5b0b3a287d1b8c0751e71ebdddb6d5fcdeb7ca1f721fe96e"
+      }
+    },
+    {
+      "name": "heldout:loops-crafted-1_Mono4_1.c",
+      "family": "heldout_loops-crafted-1",
+      "role": "unsafe_source_control",
+      "source_sha256": "99c1b4d52f81739261ab9d0c20485c6685e8970666b5d9124a42ea41e69b2154",
+      "prompt_sha256": {
+        "if": "d7eefd256a52485f47bb897e227af3d84c4b8e8fc88c94eec63cbe7010c64595"
+      }
+    },
+    {
+      "name": "heldout:loops-crafted-1_Mono5_1.c",
+      "family": "heldout_loops-crafted-1",
+      "role": "unsafe_source_control",
+      "source_sha256": "f76f373f90cad459a03fc585211eaffc1d90a1bd0d2ed4bd0ff57de15fe5e197",
+      "prompt_sha256": {
+        "if": "e6673a3eda9916d138df13dddff5731c3bd931413dcb54c1ab7499a26c855134"
+      }
+    },
+    {
+      "name": "heldout:loops-crafted-1_Mono6_1.c",
+      "family": "heldout_loops-crafted-1",
+      "role": "unsafe_source_control",
+      "source_sha256": "b0743e29d5545cd52e6184a99c2887f90fbed09fd5bad2353387112b0cba6dbd",
+      "prompt_sha256": {
+        "if": "3db18ecbf3b195ad20b83df5e9c57dd2988979714a2bd96bf3f65ec1c58d3974"
+      }
+    },
+    {
+      "name": "heldout:loops-crafted-1_mono-crafted_10.c",
+      "family": "heldout_loops-crafted-1",
+      "role": "provable_safe",
+      "source_sha256": "c56d6cb9b1acd84179c7d1b7353c749a4e0b22219a14be0116658fcccb571f84",
+      "prompt_sha256": {
+        "if": "763a5fffb28020154118db93e21c3da1ed95e3b2684076ac095bcbcff33bdb52"
+      }
+    },
+    {
+      "name": "heldout:loops-crafted-1_mono-crafted_11.c",
+      "family": "heldout_loops-crafted-1",
+      "role": "provable_safe",
+      "source_sha256": "f85137f85030e8b8c27571b49d16fdaea5e851bcef1015b6a29b33ab535cab4d",
+      "prompt_sha256": {
+        "if": "e6cbcf8d3fe8a0bc05b7e9c04e933e5968022573fc7178496fbaff3e96f568ef"
+      }
+    },
+    {
+      "name": "heldout:loops-crafted-1_mono-crafted_12.c",
+      "family": "heldout_loops-crafted-1",
+      "role": "provable_safe",
+      "source_sha256": "9d07f2c53b8ceac3a9b760f905e6b69493e509eff8f672dac4da33aaa83be9a5",
+      "prompt_sha256": {
+        "if": "728bb511d9b2b6ed45e1910639be3bf335b977d6f7c3485b649da589f16cdcd8"
+      }
+    },
+    {
+      "name": "heldout:loops-crafted-1_mono-crafted_6.c",
+      "family": "heldout_loops-crafted-1",
+      "role": "provable_safe",
+      "source_sha256": "e489259830ec02c1aaff10ac17cb9b2b6b21b08ecf1fa8168ae8acf0f9ff3f2a",
+      "prompt_sha256": {
+        "if": "5e31144ed142865069baf55270468ed433115f084acd3c6fadca43dd3854502d"
+      }
+    },
+    {
+      "name": "heldout:loops-crafted-1_mono-crafted_8.c",
+      "family": "heldout_loops-crafted-1",
+      "role": "provable_safe",
+      "source_sha256": "4ff70961d60d1549f65cad69ae5bd82068d2aab6186b1e0ceea5491df7a0c6a1",
+      "prompt_sha256": {
+        "if": "1543c578bacc19c459ec23818623e6fd879b904ec25cd4f9cb3abf40627bc190"
+      }
+    },
+    {
+      "name": "heldout:loops-crafted-1_mono-crafted_9.c",
+      "family": "heldout_loops-crafted-1",
+      "role": "provable_safe",
+      "source_sha256": "57003db525435e203a3171d29b260c2d3b6b5a6241baa642a6276123cb285d1b",
+      "prompt_sha256": {
+        "if": "950d9c09ea2c565fc131f47e3cf619fc2450e1db447a91dd80eddb3bad971a6d"
+      }
+    }
+  ]
+}

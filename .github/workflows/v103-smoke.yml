@@ -1,0 +1,47 @@
+name: v1.03 execution smoke
+# Purpose: verify the pinned tool/benchmark setup and the three execution paths (llmloop, CBMC, Ultimate)
+# on one scheduled unit each, before the full sharded study starts. Nothing is committed.
+on:
+  push:
+    branches: [research/v103-exec]
+    paths: ['.github/workflows/v103-smoke.yml', 'scripts/smoke_v103.py']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Cache pinned external inputs
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/ext
+          key: ext-v103-${{ hashFiles('scripts/ci_setup_v103.sh') }}
+      - name: Install package
+        run: python -m pip install -q -e '.[test,smt,exp]'
+      - name: Prepare pinned inputs
+        run: |
+          chmod +x scripts/ci_setup_v103.sh
+          EXT="${{ runner.temp }}/ext"
+          scripts/ci_setup_v103.sh "$EXT" svbench
+          scripts/ci_setup_v103.sh "$EXT" tools
+      - name: Three-path smoke run
+        env:
+          SMOKE_DIR: ${{ runner.temp }}/smoke-out
+        run: python -u scripts/smoke_v103.py "${{ runner.temp }}/ext"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v103-smoke
+          path: ${{ runner.temp }}/smoke-out
+          if-no-files-found: warn
+          retention-days: 7

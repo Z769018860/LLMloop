@@ -10,9 +10,15 @@ import time
 from .smt_spath import SMTGraphError
 
 
-BASE={'source','function','parameter_bounds','abi','char_signed','max_paths','inputs'}
+BASE={'source','function','parameter_bounds','abi','char_signed','max_paths','inputs','solver_timeout_ms','solver_profile','integer_model'}
 BACKENDS={'typed_recurrence':('closed_forms','PROVED_DEFINED_TYPED_C_RECURRENCE'),
-          'typed_nested':('loop_summaries','PROVED_DEFINED_TYPED_C_NESTED')}
+          'typed_nested':('loop_summaries','PROVED_DEFINED_TYPED_C_NESTED'),
+          'typed_invariant':('range_invariants','PROVED_DEFINED_TYPED_C_INVARIANT'),
+          'typed_invariant_nested':('range_invariants','PROVED_DEFINED_TYPED_C_INVARIANT_NESTED'),
+          'typed_invariant_tree':('range_invariants','PROVED_DEFINED_TYPED_C_INVARIANT_TREE'),
+          'typed_invariant_while':('range_invariants','PROVED_DEFINED_TYPED_C_INVARIANT_WHILE'),
+          'typed_invariant_loops':('range_invariants','PROVED_DEFINED_TYPED_C_INVARIANT_LOOPS')}
+SAFETY_ONLY={'typed_invariant_while','typed_invariant_loops'}  # partial correctness: termination is not proved and not required
 
 
 def analyze_portfolio(request,analyze):
@@ -21,7 +27,7 @@ def analyze_portfolio(request,analyze):
     if not isinstance(request.get('source'),str) or not request['source'] or len(request['source'])>200000:
         raise SMTGraphError('Portfolio source must be a nonempty string of at most 200000 characters')
     backend=request.get('summary_backend','typed_recurrence')
-    if not isinstance(backend,str) or backend not in BACKENDS:raise SMTGraphError('Portfolio requires typed_recurrence or typed_nested')
+    if not isinstance(backend,str) or backend not in BACKENDS:raise SMTGraphError('Portfolio requires typed_recurrence, typed_nested or a typed_invariant* backend')
     proposals=request.get('proposals')
     if not isinstance(proposals,list) or not 1<=len(proposals)<=8:raise SMTGraphError('Portfolio requires 1..8 supplied proposals')
     # Validate every envelope before solving; candidates cannot replace source,
@@ -34,6 +40,28 @@ def analyze_portfolio(request,analyze):
         seen.add(name)
         if not isinstance(summary,dict) or len(summary)>16:raise SMTGraphError('Proposal summary must be a map with at most 16 coordinates/loops')
         maps=[summary] if backend=='typed_recurrence' else list(summary.values())
+        if backend=='typed_invariant_loops':
+            lists=summary.get('invariants') if set(summary)=={'invariants'} else None
+            if not isinstance(lists,list) or not 1<=len(lists)<=8 or any(not isinstance(l,list) or not 1<=len(l)<=256 or any(not isinstance(f,str) or not 1<=len(f)<=1000 for f in l) for l in lists):raise SMTGraphError('typed_invariant_loops proposals require {"invariants": [[formula strings], ...]}')
+            maps=[]
+        if backend=='typed_invariant_while':
+            forms=summary.get('invariant') if {'invariant'}<=set(summary)<={'invariant','ranking'} and isinstance(summary.get('ranking',''),str) else None
+            if isinstance(forms,str):forms=[forms]
+            if not isinstance(forms,list) or not 1<=len(forms)<=1024 or any(not isinstance(f,str) or not 1<=len(f)<=1000 for f in forms):raise SMTGraphError('typed_invariant_while proposals require {"invariant": [formula strings]}')
+            maps=[]
+        if backend in ('typed_invariant_nested','typed_invariant_tree'):
+            for level in summary.values():
+                if not isinstance(level,dict) or len(level)>16:raise SMTGraphError('Nested invariant proposals require one coordinate map per loop')
+                for coord,mapping in level.items():
+                    if backend=='typed_invariant_tree' and coord=='@rel':
+                        if not isinstance(mapping,dict) or not mapping or set(mapping)-{'eq','le'} or any(not isinstance(v,list) or any(not isinstance(f,str) or not 1<=len(f)<=5000 for f in v) for v in mapping.values()) or sum(len(v) for v in mapping.values())>8:raise SMTGraphError('@rel requires eq/le lists of at most 8 formula strings')
+                        continue
+                    if not isinstance(mapping,dict) or not mapping or set(mapping)-{'lo','hi'} or any(not isinstance(v,str) or not 1<=len(v)<=5000 for v in mapping.values()):raise SMTGraphError('Invariant proposals require {lo,hi} formula strings per coordinate')
+            maps=[]
+        if backend=='typed_invariant':
+            for mapping in summary.values():
+                if not isinstance(mapping,dict) or not mapping or set(mapping)-{'lo','hi'} or any(not isinstance(v,str) or not 1<=len(v)<=5000 for v in mapping.values()):raise SMTGraphError('Invariant proposals require {lo,hi} formula strings per coordinate')
+            maps=[]
         if any(not isinstance(k,str) or not 1<=len(k)<=128 for k in summary):raise SMTGraphError('Invalid summary coordinate/loop name')
         for mapping in maps:
             if not isinstance(mapping,dict) or len(mapping)>16:raise SMTGraphError('Nested proposals require coordinate maps, not automatic mode')
@@ -57,6 +85,8 @@ def analyze_portfolio(request,analyze):
     if 'function' in request and (not isinstance(request['function'],str) or not 1<=len(request['function'])<=128):raise SMTGraphError('Invalid portfolio function')
     if 'abi' in request and (not isinstance(request['abi'],str) or request['abi'] not in ('LP64','ILP32','LLP64')):raise SMTGraphError('Invalid portfolio ABI')
     if 'char_signed' in request and type(request['char_signed']) is not bool:raise SMTGraphError('Invalid portfolio char policy')
+    if 'solver_profile' in request and request['solver_profile'] not in ('default','native_division','auto'):raise SMTGraphError('Invalid portfolio solver profile')
+    if 'solver_timeout_ms' in request and (type(request['solver_timeout_ms']) is not int or not 1000<=request['solver_timeout_ms']<=120000):raise SMTGraphError('Invalid portfolio solver timeout')
     if 'max_paths' in request and (type(request['max_paths']) is not int or not 1<=request['max_paths']<=512):raise SMTGraphError('Invalid portfolio path limit')
     base=copy.deepcopy({k:v for k,v in request.items() if k in BASE})
     started=time.perf_counter();trials=[]
@@ -65,7 +95,7 @@ def analyze_portfolio(request,analyze):
               'summary_backend':backend,'proposal_origin':'supplied_untrusted',
               'remote_model_called':False,'policy':'first_certified_in_supplied_order',
               'certified_summary':False,'fallback_used':False,'trials':trials,
-              'candidate_limit':8,'per_query_budget_increased':False,
+              'candidate_limit':8,'per_query_budget_increased':request.get('solver_timeout_ms',5000)!=5000,'solver_profile':request.get('solver_profile','default'),
               'notice':'Candidate failure/UNKNOWN is not a source-undefinedness proof. Bounded fallback is not an accelerated summary.'}
     field,success=BACKENDS[backend]
     def finish(result):
@@ -74,10 +104,18 @@ def analyze_portfolio(request,analyze):
         return {**result,'schema_version':1,'summary_portfolio':metadata}
     for p in proposals:
         tick=time.perf_counter()
-        result=analyze({**copy.deepcopy(base),'frontend':backend,field:copy.deepcopy(p['summary'])})
-        accepted=(result.get('status')==success and result.get('c_overflow_verified') is True and result.get('termination_proved') is True)
+        profile=request.get('solver_profile','default')
+        base_c=copy.deepcopy(base);base_c.pop('solver_profile',None)
+        can_profile=backend in ('typed_recurrence','typed_invariant','typed_invariant_nested','typed_invariant_tree','typed_invariant_while','typed_invariant_loops')
+        first={'solver_profile':'native_division'} if (profile=='native_division' and can_profile) else {}
+        result=analyze({**base_c,**first,'frontend':backend,field:copy.deepcopy(p['summary'])})
+        profiles_tried=['native_division' if first else 'default']
+        if profile=='auto' and can_profile and result.get('status')=='UNKNOWN' and result.get('reason')=='timeout':
+            result=analyze({**base_c,'solver_profile':'native_division','frontend':backend,field:copy.deepcopy(p['summary'])});profiles_tried.append('native_division')
+        math_mode=backend in ('typed_invariant_while','typed_invariant_loops') and request.get('integer_model')=='mathematical'
+        accepted=((result.get('status')==('PROVED_MATH_INT_TYPED_C_INVARIANT_WHILE' if backend=='typed_invariant_while' else 'PROVED_MATH_INT_TYPED_C_INVARIANT_LOOPS') if math_mode else (result.get('status')==success and result.get('c_overflow_verified') is True)) and (result.get('termination_proved') is True or backend in SAFETY_ONLY))
         trials.append({'id':p['id'],'summary_sha256':hashlib.sha256(json.dumps(p['summary'],sort_keys=True).encode()).hexdigest(),
-                       'certified':accepted,'verification_seconds':time.perf_counter()-tick,'result':copy.deepcopy(result)})
+                       'certified':accepted,'verification_seconds':time.perf_counter()-tick,'profiles_tried':profiles_tried,'result':copy.deepcopy(result)})
         if accepted:
             metadata.update(certified_summary=True,selected_id=p['id'])
             return finish(result)

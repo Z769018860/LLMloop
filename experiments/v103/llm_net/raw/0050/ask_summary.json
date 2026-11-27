@@ -1,0 +1,85 @@
+{
+  "index": 50,
+  "case": "termination-restricted-15/McCarthyIterative.c",
+  "model": "gpt-4.1-mini",
+  "repeat": 2,
+  "status": "PROVED",
+  "rounds": [
+    {
+      "round": 0,
+      "proposed": 29,
+      "atoms_total": 29,
+      "status": "STUCK:top/loop0/body operations defined",
+      "phases": [
+        {
+          "poly": false,
+          "status": "STUCK:top/loop0/body operations defined",
+          "rounds": 17,
+          "invariant_size": 1
+        },
+        {
+          "poly": true,
+          "status": "STUCK:top/loop0/body operations defined",
+          "rounds": 23,
+          "invariant_size": 1
+        }
+      ],
+      "transport_ok": true,
+      "repair": {
+        "stuck": "STUCK:top/loop0/body operations defined",
+        "atoms": [
+          "c >= 1",
+          "c <= x__in + 11",
+          "x >= x__in - 10 * (x__in // 10 + 1)",
+          "x <= x__in + 11 * (100 - x__in + 1)",
+          "x > 90 implies c <= 10",
+          "x <= 100 implies c >= 1",
+          "x > 100 or x <= 100",
+          "x - 11 * c == x__in + 1",
+          "x + 10 * c == x__in + 11",
+          "c > 0 implies c <= 1000",
+          "abs(x) <= 1000",
+          "c == 1 or c > 1",
+          "x <= 110",
+          "x >= 90",
+          "c <= 100",
+          "x + 10 * c >= x__in",
+          "x - 11 * c <= x__in",
+          "x__in - 10 * c <= x",
+          "c >= 1",
+          "x - x__in + 10 * c == 0",
+          "c >= 1 and c <= 1000",
+          "c > 0 and c <= 1000",
+          "x >= 0 or x < 0",
+          "x >= 90 and x <= 110",
+          "c >= 1 and c <= 100",
+          "c > 0 and c <= 100",
+          "x >= x__in - 100",
+          "x <= x__in + 110",
+          "c == 1 or c > 1"
+        ]
+      }
+    },
+    {
+      "round": 1,
+      "proposed": 27,
+      "atoms_total": 52,
+      "status": "PROVED",
+      "phases": [
+        {
+          "poly": false,
+          "status": "PROVED",
+          "rounds": 24,
+          "invariant_size": 1
+        }
+      ],
+      "transport_ok": true,
+      "repair": null
+    }
+  ],
+  "calls": 2,
+  "generation_seconds": 7.172,
+  "prompt_tokens": 1534,
+  "completion_tokens": 624,
+  "tokens_available": true
+}

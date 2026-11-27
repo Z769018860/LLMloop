@@ -12,6 +12,8 @@ from .finite_choices import integer_choices, choice_value
 
 
 class IntegerLift:
+    signed_overflow_is_ub = True   # False: 'mathematical' signed int/long (no range obligation, no wrap); unsigned and narrow types keep C semantics
+
     def __init__(self, abi='LP64', char_signed=True):
         self.abi = IntegerABI(abi,char_signed)
         self.variables = {}
@@ -23,7 +25,8 @@ class IntegerLift:
     def convert(self, term, target):
         value = term.value
         if target.name == '_Bool':value = z3.If(value != 0,z3.IntVal(1),z3.IntVal(0))
-        elif target.signed:value = (value-target.minimum) % (1 << target.bits)+target.minimum
+        elif target.signed:
+            if self.signed_overflow_is_ub or not (target.bits >= 32 and term.type.signed):value = (value-target.minimum) % (1 << target.bits)+target.minimum
         else:value = value % (1 << target.bits)
         value=z3.simplify(value)
         choices=integer_choices(value,max_cases=4)
@@ -79,7 +82,7 @@ class IntegerLift:
             a=self.promoted(a);value=a.value;safe=a.safe
             if op == '-':
                 value=-value
-                if a.type.signed:safe=z3.And(safe,value>=a.type.minimum,value<=a.type.maximum)
+                if a.type.signed and self.signed_overflow_is_ub:safe=z3.And(safe,value>=a.type.minimum,value<=a.type.maximum)
             elif op == '~':value=-value-1
             if not a.type.signed:value=value % (1 << a.type.bits)
             return TypedTerm(z3.simplify(value),a.type,safe)
@@ -101,20 +104,21 @@ class IntegerLift:
             for shift,guard in shifts:
                 term=x*(1 << shift) if op == '<<' else self.right_shift_value(x,shift,a.type)
                 value=z3.If(guard,term,value)
-            if op == '<<' and a.type.signed:safe=z3.And(safe,x>=0,value<=a.type.maximum)
+            if op == '<<' and a.type.signed and self.signed_overflow_is_ub:safe=z3.And(safe,x>=0,value<=a.type.maximum)
             if not a.type.signed:value=value % (1 << a.type.bits)
             return TypedTerm(z3.simplify(value),a.type,safe)
         a,b=self.common(a,b);x,y=a.value,b.value;t=a.type;safe=z3.And(a.safe,b.safe)
         if op in ('+','-','*'):
             value=x+y if op == '+' else x-y if op == '-' else x*y
-            if t.signed:safe=z3.And(safe,value>=t.minimum,value<=t.maximum)
+            if t.signed:
+                if self.signed_overflow_is_ub:safe=z3.And(safe,value>=t.minimum,value<=t.maximum)
             else:value=value % (1 << t.bits)
             return TypedTerm(z3.simplify(value),t,safe)
         if op in ('/','%'):
             ax=z3.If(x>=0,x,-x);ay=z3.If(y>=0,y,-y)
             magnitude=ax/ay;quotient=z3.If((x<0)==(y<0),magnitude,-magnitude)
             safe=z3.And(safe,y!=0)
-            if t.signed:safe=z3.And(safe,z3.Not(z3.And(x==t.minimum,y==-1)))
+            if t.signed and self.signed_overflow_is_ub:safe=z3.And(safe,z3.Not(z3.And(x==t.minimum,y==-1)))
             value=quotient if op == '/' else x-quotient*y
             return TypedTerm(z3.simplify(value),t,safe)
         if op in ('&','|','^'):
@@ -155,6 +159,12 @@ class TypedWordIntegers(IntegerLift):
                     result=z3.If(guard,part,result)
                 return z3.simplify(result)
         return None
+
+
+class MathWordIntegers(TypedWordIntegers):
+    """Signed int/long behave as mathematical integers (the semantics assumed by Code2Inv/ZILU-style benchmarks): signed overflow is NOT an obligation and values are not wrapped;
+    unsigned and narrow types keep their C semantics; division/modulo by zero and bad shifts remain undefined."""
+    signed_overflow_is_ub = False
 
 
 class WideningIntegerLift(TypedWordIntegers):

@@ -1,0 +1,69 @@
+name: v1.04 witness probe 3
+
+# Which shape of correctness witness does a third-party validator actually confirm?
+#
+# The rounds that got here:
+#   45007628049 / 45007989891 -- CPAchecker 4.2.2: "The Witness format found for ... is currently
+#     not supported" for `entry_type: loop_invariant` at format_version 0.1 (the sv-witnesses README
+#     shape), both through --config and through --witnessValidation;
+#   45007989891 / 45008782977 -- Ultimate matched that entry only with a one-based column (its own
+#     witness uses `column: 5` for a `while` at zero-based column 4) and then said UNKNOWN for a true
+#     and a false invariant alike;
+#   45009169721 -- Ultimate printed its own correctness witness: `entry_type: invariant_set`,
+#     `format_version: '2.2'`, invariants under `content[].invariant` with `type: loop_invariant`,
+#     `location`, `value` and `format: c_expression`. Handed that file, CPAchecker reached
+#     `AutomatonWitnessV2d0Parser` and died in `Optional.orElseThrow` -- it has a 2.0 parser and
+#     does not know 2.2.
+#
+# So the two dimensions are the entry shape and the declared version. This job crosses both with
+# both validators, and each cell carries two invariants: one that must be confirmed and one that must
+# be rejected. Six cells, and the format question is closed.
+on:
+  push:
+    paths: ['.github/workflows/v104-witness-probe3.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    strategy:
+      fail-fast: false
+      matrix:
+        validator: [cpachecker, ultimate]
+        dialect: [entries-01, set-20, set-22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '21'}
+      - name: Install package
+        run: python -m pip install -q -e '.[test,smt,exp]'
+      - name: Fetch CPAchecker and Ultimate
+        run: |
+          EXT="${{ runner.temp }}/ext"
+          mkdir -p "$EXT"
+          curl -fsSL --retry 3 -o "$EXT/cpa.zip" https://cpachecker.sosy-lab.org/CPAchecker-4.2.2-unix.zip
+          echo "183adce15ced2641784dd16dd1dda3c4d88bb463674d8adb688fb28c3656525f  $EXT/cpa.zip" | sha256sum -c -
+          unzip -q -o "$EXT/cpa.zip" -d "$EXT"
+          chmod +x scripts/ci_setup_v103.sh
+          scripts/ci_setup_v103.sh "$EXT" tools
+      - name: selftest -- ${{ matrix.validator }} / ${{ matrix.dialect }}
+        continue-on-error: true
+        run: |
+          python -u scripts/witness_v104.py selftest \
+            --external "${{ runner.temp }}/ext" \
+            --output "experiments/v104/witness/probe/${{ matrix.validator }}_${{ matrix.dialect }}" \
+            --validator ${{ matrix.validator }} --dialect ${{ matrix.dialect }}
+      - name: Show the witness under test and the validator's answer
+        if: always()
+        run: |
+          D="experiments/v104/witness/probe/${{ matrix.validator }}_${{ matrix.dialect }}"
+          echo "===== witness (true)"; cat "$D"/cases/selftest/witness_true.yml 2>/dev/null || true
+          echo "===== result"; grep -E '"label"|"result"|"want"' "$D"/selftest.json 2>/dev/null || true
+          echo "===== validator output"
+          for f in "$D"/logs/*.txt; do echo "--- $f"; tail -18 "$f" 2>/dev/null; done

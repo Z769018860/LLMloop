@@ -1,0 +1,42 @@
+name: v1.03 certificate re-check probe
+
+# One question: on CBMC 6.11, does the frozen stub preamble (prototypes without bodies) turn the
+# v1.00 VERIFIED certificates into FAILED, and do explicit nondeterministic bodies fix that? The
+# answer decides whether the 14 FAILED rows of the unresolved re-run mean anything.
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/v103-exec]
+    paths: ['.github/workflows/v103-certprobe.yml', 'scripts/cert_probe_v103.py']
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install package
+        run: python -m pip install -q -e '.[test,smt,exp]'
+      - name: Prepare pinned inputs
+        run: |
+          chmod +x scripts/ci_setup_v103.sh
+          EXT="${{ runner.temp }}/ext"
+          scripts/ci_setup_v103.sh "$EXT" certbench
+          scripts/ci_setup_v103.sh "$EXT" cbmc
+          echo "LLMLOOP_SVBENCH=$EXT/svbench-cert/c" >> "$GITHUB_ENV"
+          echo "$EXT/ native/usr/bin" >/dev/null
+          echo "$EXT/native/usr/bin" >> "$GITHUB_PATH"
+      - name: Probe the preamble
+        run: python -u scripts/cert_probe_v103.py 2 2 | tee probe.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cert-probe
+          path: probe.json

@@ -1,0 +1,49 @@
+[
+  {
+    "model_requested": "deepseek-v4.1-flash-ark",
+    "request": {
+      "model": "deepseek-v4.1-flash-ark",
+      "temperature": 0.7,
+      "max_tokens": 6000,
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a loop-summary hypothesis generator. You only PROPOSE candidates; a separate verifier checks them against the real C semantics and rejects wrong ones. Reply with one JSON object and nothing else."
+        },
+        {
+          "role": "user",
+          "content": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int __z){\nint i = 0;\nwhile (i < 100)\n{\n  i = i + 1;\n  i = i - 1;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"__z\": [0, 0]}"
+        }
+      ]
+    },
+    "started_utc": "2026-11-22T00:35:02Z",
+    "endpoint": "https://api.square16.org/v1",
+    "attempts": [
+      {
+        "attempt": 0,
+        "ok": true,
+        "http_status": 200,
+        "seconds": 4.453
+      }
+    ],
+    "seconds": 4.453,
+    "response_text": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"logprobs\":null,\"message\":{\"content\":\"{\\\"atoms\\\": [\\\"i == 0\\\", \\\"i \\u003c= 0\\\", \\\"i \\u003e= 0\\\", \\\"i \\u003c 100\\\", \\\"i \\u003c= 100\\\", \\\"__z == 0\\\", \\\"__z \\u003e= 0\\\", \\\"__z \\u003c= 0\\\", \\\"i == __z\\\", \\\"i - __z == 0\\\", \\\"i + __z == 0\\\", \\\"i \\u003c= __z\\\", \\\"i \\u003e= __z\\\", \\\"i \\u003c= 1\\\", \\\"i \\u003e= -1\\\", \\\"i \\u003c 1\\\", \\\"i \\u003e -1\\\", \\\"2*i == 0\\\", \\\"i*i == 0\\\", \\\"i*i \\u003c= 0\\\", \\\"abs(i) == 0\\\", \\\"abs(i) \\u003c= 0\\\", \\\"min(i, 0) == i\\\", \\\"max(i, 0) == 0\\\", \\\"i % 1 == 0\\\", \\\"i + 1 \\u003c= 100\\\", \\\"i - 1 \\u003e= -1\\\", \\\"i + 1 \\u003e= 0\\\", \\\"i - 1 \\u003c= 0\\\", \\\"i + __z + 1 \\u003c= 100\\\"]}\",\"reasoning_content\":\"The function: i=0; while(i\\u003c100){ i=i+1; i=i-1; } \u2014 i stays 0 forever. Loop condition i\\u003c100 always true \u2192 infinite loop, but no UB. i = i+1 (0\u21921), i=i-1 (1\u21920). No overflow since i stays 0/1.\\n\\nAtoms: i == 0, i == i__in? No, i initialized to 0, no entry copy named i__in... actually parameter is __z. Locals: i. Entry parameter __z with __z == 0.\\n\\nPropose atoms:\\n- \\\"i == 0\\\"\\n- \\\"i \\u003c= 0\\\"\\n- \\\"i \\u003e= 0\\\"\\n- \\\"i \\u003c 100\\\"\\n- \\\"i \\u003c= 100\\\"\\n- \\\"__z == 0\\\"\\n- \\\"i + __z == 0\\\"\\n- \\\"i == __z\\\"\\n- \\\"abs(i) \\u003c= 0\\\"\\n- \\\"i % 1 == 0\\\"\\n- \\\"i \\u003e= -1\\\"\\n- \\\"i \\u003c= 1\\\"\\n- \\\"2*i == 0\\\"\\n- \\\"i*i == 0\\\"\\n- \\\"i - __z == 0\\\"\\n- \\\"__z \\u003e= 0\\\"\\n- \\\"__z \\u003c= 0\\\"\\n- \\\"i \\u003c= __z\\\"\\n- \\\"i \\u003e= __z\\\"\\n- \\\"min(i,0) == i\\\"\\n- \\\"max(i,0) == 0\\\"\\n- \\\"i \\u003c 1\\\"\\n- \\\"i \\u003e -1\\\"\\n- \\\"i + 1 \\u003c= 100\\\"\\n- \\\"i - 1 \\u003e= -1\\\"\\n- \\\"i*i \\u003c= 0\\\"\\n- \\\"(i if i\\u003e0 else -i) == 0\\\"\\n\\nThat's enough.\",\"role\":\"assistant\"}}],\"created\":1795307706,\"id\":\"0217953077029952cb8822a4864991e162f30172d7ae7b6178589\",\"model\":\"deepseek-v4-1-flash-261017\",\"service_tier\":\"default\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":587,\"prompt_tokens\":550,\"total_tokens\":1137,\"prompt_tokens_details\":{\"cached_tokens\":512},\"completion_tokens_details\":{\"reasoning_tokens\":358}}}",
+    "served_model": "deepseek-v4-1-flash-261017",
+    "usage": {
+      "completion_tokens": 587,
+      "prompt_tokens": 550,
+      "total_tokens": 1137,
+      "prompt_tokens_details": {
+        "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 358
+      }
+    },
+    "content": "{\"atoms\": [\"i == 0\", \"i <= 0\", \"i >= 0\", \"i < 100\", \"i <= 100\", \"__z == 0\", \"__z >= 0\", \"__z <= 0\", \"i == __z\", \"i - __z == 0\", \"i + __z == 0\", \"i <= __z\", \"i >= __z\", \"i <= 1\", \"i >= -1\", \"i < 1\", \"i > -1\", \"2*i == 0\", \"i*i == 0\", \"i*i <= 0\", \"abs(i) == 0\", \"abs(i) <= 0\", \"min(i, 0) == i\", \"max(i, 0) == 0\", \"i % 1 == 0\", \"i + 1 <= 100\", \"i - 1 >= -1\", \"i + 1 >= 0\", \"i - 1 <= 0\", \"i + __z + 1 <= 100\"]}",
+    "finish_reason": "stop",
+    "round": 0,
+    "prompt_sha256": "bab2dc14ebd2fc77ffc8cc0f2280211fd53f58ba51bb04fdb94583575a4db007",
+    "prompt_text": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int __z){\nint i = 0;\nwhile (i < 100)\n{\n  i = i + 1;\n  i = i - 1;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"__z\": [0, 0]}"
+  }
+]

@@ -1,0 +1,63 @@
+[
+  {
+    "model_requested": "gpt-4.1-mini",
+    "request": {
+      "model": "gpt-4.1-mini",
+      "temperature": 0.7,
+      "max_tokens": 6000,
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a loop-summary hypothesis generator. You only PROPOSE candidates; a separate verifier checks them against the real C semantics and rejects wrong ones. Reply with one JSON object and nothing else."
+        },
+        {
+          "role": "user",
+          "content": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int x__in, int y, int z__in){\nint z = z__in;\nint x = x__in;\nint c = 0;\nwhile ((x < y) && (z < 2147483647))\n{\n  if (x < z)\n  {\n    x = x + 1;\n  }\n  else\n  {\n    z = z + 1;\n  }\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"x__in\": [-2147483648, 2147483647], \"y\": [-2147483648, 2147483647], \"z__in\": [-2147483648, 2147483647]}"
+        }
+      ]
+    },
+    "started_utc": "2026-11-22T00:29:28Z",
+    "endpoint": "https://api.square16.org/v1",
+    "attempts": [
+      {
+        "attempt": 0,
+        "ok": true,
+        "http_status": 200,
+        "seconds": 4.605
+      }
+    ],
+    "seconds": 4.605,
+    "response_text": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"logprobs\":null,\"message\":{\"annotations\":[],\"content\":\"{\\\"atoms\\\": [\\\"-2147483648 \\u003c= x \\u003c= 2147483647\\\", \\\"-2147483648 \\u003c= y \\u003c= 2147483647\\\", \\\"-2147483648 \\u003c= z \\u003c= 2147483647\\\", \\\"x == x__in or x == x__in + c\\\", \\\"z \\u003e= z__in and z \\u003c= 2147483647\\\", \\\"c \\u003e= 0\\\", \\\"c == (x - x__in) + (z - z__in)\\\", \\\"x \\u003c= y\\\", \\\"z \\u003c 2147483647\\\", \\\"x \\u003c= z + (y - z)  # since x \\u003c y and loop condition\\\", \\\"c \\u003c= 2147483647 - z__in + 2147483647 - x__in  # conservative upper bound\\\", \\\"not (x == 2147483647 and x \\u003c y)  # to avoid overflow on x+1\\\", \\\"not (z == 2147483647)  # to avoid overflow on z+1\\\", \\\"x \\u003e= x__in\\\", \\\"z \\u003e= z__in\\\", \\\"x \\u003c= y\\\", \\\"x \\u003c y or z \\u003e= 2147483647  # loop exit condition\\\", \\\"(x - x__in) + (z - z__in) == c\\\", \\\"x \\u003c= z or x == z + 1  # from increments\\\", \\\"if x \\u003c z: x + 1 \\u003c= y else: z + 1 \\u003c 2147483647\\\", \\\"x - x__in \\u003c= y - x__in\\\", \\\"z - z__in \\u003c= 2147483647 - z__in\\\", \\\"c == (x - x__in) + (z - z__in)\\\", \\\"x \\u003e= -2147483648\\\", \\\"z \\u003e= -2147483648\\\"]}\",\"refusal\":null,\"role\":\"assistant\"}}],\"created\":1795307369,\"id\":\"chatcmpl-EmpkP1UHKOwUpMPntxvT93IlUbBrD\",\"model\":\"gpt-4.1-mini-2025-04-14\",\"object\":\"chat.completion\",\"routing\":{\"serving_pipereplica\":\"d20261106070809-0ed8f405-default-r0-dp0-default\"},\"service_tier\":\"default\",\"system_fingerprint\":\"fp_36de3d5958\",\"usage\":{\"completion_tokens\":371,\"completion_tokens_details\":{\"accepted_prediction_tokens\":0,\"audio_tokens\":0,\"reasoning_tokens\":0,\"rejected_prediction_tokens\":0},\"latency_checkpoint\":{\"engine_tbt_ms\":7,\"engine_ttft_ms\":30,\"engine_ttlt_ms\":2453,\"pre_inference_ms\":135,\"service_tbt_ms\":6,\"service_ttft_ms\":246,\"service_ttlt_ms\":2630,\"user_visible_ttft_ms\":111},\"prompt_tokens\":609,\"prompt_tokens_details\":{\"audio_tokens\":0,\"cached_tokens\":0},\"total_tokens\":980}}\n",
+    "served_model": "gpt-4.1-mini-2025-04-14",
+    "usage": {
+      "completion_tokens": 371,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "latency_checkpoint": {
+        "engine_tbt_ms": 7,
+        "engine_ttft_ms": 30,
+        "engine_ttlt_ms": 2453,
+        "pre_inference_ms": 135,
+        "service_tbt_ms": 6,
+        "service_ttft_ms": 246,
+        "service_ttlt_ms": 2630,
+        "user_visible_ttft_ms": 111
+      },
+      "prompt_tokens": 609,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0
+      },
+      "total_tokens": 980
+    },
+    "content": "{\"atoms\": [\"-2147483648 <= x <= 2147483647\", \"-2147483648 <= y <= 2147483647\", \"-2147483648 <= z <= 2147483647\", \"x == x__in or x == x__in + c\", \"z >= z__in and z <= 2147483647\", \"c >= 0\", \"c == (x - x__in) + (z - z__in)\", \"x <= y\", \"z < 2147483647\", \"x <= z + (y - z)  # since x < y and loop condition\", \"c <= 2147483647 - z__in + 2147483647 - x__in  # conservative upper bound\", \"not (x == 2147483647 and x < y)  # to avoid overflow on x+1\", \"not (z == 2147483647)  # to avoid overflow on z+1\", \"x >= x__in\", \"z >= z__in\", \"x <= y\", \"x < y or z >= 2147483647  # loop exit condition\", \"(x - x__in) + (z - z__in) == c\", \"x <= z or x == z + 1  # from increments\", \"if x < z: x + 1 <= y else: z + 1 < 2147483647\", \"x - x__in <= y - x__in\", \"z - z__in <= 2147483647 - z__in\", \"c == (x - x__in) + (z - z__in)\", \"x >= -2147483648\", \"z >= -2147483648\"]}",
+    "finish_reason": "stop",
+    "round": 0,
+    "prompt_sha256": "467f0ddaec77c2a68e06137cf6ca996154d79084800ed425783c072df51798d6",
+    "prompt_text": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int x__in, int y, int z__in){\nint z = z__in;\nint x = x__in;\nint c = 0;\nwhile ((x < y) && (z < 2147483647))\n{\n  if (x < z)\n  {\n    x = x + 1;\n  }\n  else\n  {\n    z = z + 1;\n  }\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"x__in\": [-2147483648, 2147483647], \"y\": [-2147483648, 2147483647], \"z__in\": [-2147483648, 2147483647]}"
+  }
+]

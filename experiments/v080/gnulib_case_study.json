@@ -1,0 +1,29 @@
+{
+ "gnulib_gettime_res_gcd": {
+  "status": "PROVED_DEFINED_TYPED_C_INVARIANT_WHILE",
+  "termination_proved": true,
+  "reason": null,
+  "failed_obligation": null,
+  "native_equivalent": true,
+  "native_cases": 30,
+  "note": "no UB for 0<=a,b<=2^62 (the call site in gettime_res passes resolutions); termination via ranking b"
+ },
+ "coreutils_make_prime_list_binvert": {
+  "status": "PROVED_DEFINED_TYPED_C_INVARIANT_WHILE",
+  "termination_proved": false,
+  "reason": null,
+  "failed_obligation": null,
+  "native_equivalent": true,
+  "native_cases": 9,
+  "note": "the dead `return 0` after for(;;) is added (the loop exits only by return); unsigned arithmetic only (no UB for any a); odd a only is terminating in the original (a even loops forever - not undefined behaviour)"
+ },
+ "gnulib_next_prime_is_prime": {
+  "status": "PROVED_DEFINED_TYPED_C_INVARIANT_WHILE",
+  "termination_proved": false,
+  "reason": null,
+  "failed_obligation": null,
+  "native_equivalent": true,
+  "native_cases": 9,
+  "note": "precondition candidate <= 2^62 (for larger candidates square wraps and the loop would need ~2^63 iterations before divisor could wrap to 0, which the verifier cannot exclude): then no UB"
+ }
+}

@@ -1,0 +1,45 @@
+{
+  "model_requested": "gpt-4.1-mini",
+  "cache_key": "5cb52036c4bc17688616ada7aa890ed8c88cbc692343b494631a048aaabdd6db",
+  "endpoint": "https://api.square16.org/v1",
+  "started_utc": "2026-11-25T02:35:15Z",
+  "stream": true,
+  "chunks": 29,
+  "ttft": 2.028,
+  "seconds": 2.04,
+  "aborted": null,
+  "messages_sha256": "cd38a218581fac8bb268791ea5452fcf069f78b8bc9591b304da71360d6f11a0",
+  "request": {
+    "model": "gpt-4.1-mini",
+    "temperature": 0.7,
+    "max_tokens": 2048,
+    "stream": true,
+    "stream_options": {
+      "include_usage": true
+    }
+  },
+  "cached": false,
+  "served_model": "gpt-4.1-mini-2025-04-14",
+  "finish_reason": "stop",
+  "usage": {
+    "completion_tokens": 26,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": 0,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "prompt_tokens": 426,
+    "prompt_tokens_details": {
+      "audio_tokens": 0,
+      "cached_tokens": 0
+    },
+    "total_tokens": 452
+  },
+  "done": true,
+  "http_status": 200,
+  "content": "{\"pre\": {\"n0\": [0, 999999], \"n1\": [0, 999999]}}",
+  "reasoning_content": "",
+  "prompt_sha256": "c6873ba717b3c3a3396f1ee94a89c8b91b5718c94a1b3c57b11f6151e0279cd6",
+  "prompt_text": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int n0, int n1){\nint i0 = 0;\nint k = 0;\nint __a = 0;\nwhile (i0 < n0)\n{\n  i0++;\n  k++;\n}\n\nint i1 = 0;\nwhile (i1 < n1)\n{\n  i1++;\n  k++;\n}\n\nint j1 = 0;\nwhile (j1 < (n0 + n1))\n{\n  __a = 1 / (k > 0);\n  j1++;\n  k--;\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"n0\": [-1000000, 999999], \"n1\": [-1000000, 999999]}"
+}

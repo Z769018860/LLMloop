@@ -1,0 +1,37 @@
+- entry_type: invariant_set
+  metadata:
+    format_version: '2.0'
+    uuid: c9ce976c-3136-503e-b5ad-726412b6713b
+    creation_time: '2026-11-22T00:00:00+00:00'
+    producer:
+      name: llmloop
+      version: 1.04
+      configuration: llmloop v1.04 deterministic pipeline, invariants exported as loop heads
+    task:
+      input_files:
+      - program.c
+      input_file_hashes:
+        program.c: 2ae43013b845a9ff0ed6dcdc56607945351e9ff43b720a09c2f94a38c40bb187
+      specification: |
+        CHECK( init(main()), LTL(G ! overflow) )
+      data_model: LP64
+      language: C
+  content:
+  - invariant:
+      type: loop_invariant
+      location:
+        file_name: program.c
+        line: 7
+        column: 3
+        function: f
+      value: '(z >= 0) && (i >= 0) && (i <= 2147483647) && (((long long)x + (long long)y) <= 4294967294) && (((long long)x - (long long)z) >= 0) && (((long long)x - (long long)z) <= 2147483647) && (((long long)x + (long long)z) >= 1) && (x >= z) && (((long long)x - (long long)i) >= 0) && (((long long)x + (long long)i) >= 1) && (((long long)x + (long long)i) <= 4294967294) && (x >= i) && (((long long)y - (long long)z) <= 2147483647) && (((long long)y + (long long)i) <= 4294967294) && (((long long)z - (long long)i) >= -2147483647) && (((long long)z + (long long)i) >= 1) && (((long long)z + (long long)i) <= 2147483647) && (-1*x + 1*z + 1*i == 0) && (z >= -1) && (i >= -1)'
+      format: c_expression
+  - invariant:
+      type: loop_invariant
+      location:
+        file_name: program.c
+        line: 13
+        column: 3
+        function: f
+      value: '(i >= 0) && (i <= 2147483647) && (((long long)x + (long long)y) <= 4294967294) && (((long long)x - (long long)z) >= 0) && (((long long)x - (long long)z) <= 2147483647) && (x >= z) && (((long long)x + (long long)i) >= 1) && (((long long)x + (long long)i) <= 4294967294) && (((long long)y + (long long)i) <= 4294967294) && (((long long)z + (long long)i) >= 1) && (((long long)z + (long long)i) <= 2147483647) && (-1*x + 1*z + 1*i == 0) && (i >= -1)'
+      format: c_expression

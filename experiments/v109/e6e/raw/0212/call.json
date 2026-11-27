@@ -1,0 +1,45 @@
+{
+  "model_requested": "gpt-4.1-mini",
+  "cache_key": "734c4d2211e6ef9a24cfbdfd5aece3b6b425cccc50e12345d2e1d66363a7f4b4",
+  "endpoint": "https://api.square16.org/v1",
+  "started_utc": "2026-11-27T01:14:30Z",
+  "stream": true,
+  "chunks": 27,
+  "ttft": 0.737,
+  "seconds": 0.954,
+  "aborted": null,
+  "messages_sha256": "b7f383280f17df9e3155ecd009033440066b5440003612661bf373ed7ee44036",
+  "request": {
+    "model": "gpt-4.1-mini",
+    "temperature": 0.7,
+    "max_tokens": 2048,
+    "stream": true,
+    "stream_options": {
+      "include_usage": true
+    }
+  },
+  "cached": false,
+  "served_model": "gpt-4.1-mini-2025-04-14",
+  "finish_reason": "stop",
+  "usage": {
+    "prompt_tokens": 424,
+    "completion_tokens": 24,
+    "total_tokens": 448,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "audio_tokens": 0
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "audio_tokens": 0,
+      "accepted_prediction_tokens": 0,
+      "rejected_prediction_tokens": 0
+    }
+  },
+  "done": true,
+  "http_status": 200,
+  "content": "{\"pre\":{\"z\":[-2,1],\"k\":[-2147483648,2147483647]}}",
+  "reasoning_content": "",
+  "prompt_sha256": "669a82f19cdfa2d74249d13157c2c1b29ed6a7538cd7042d352b635b2fc7c87a",
+  "prompt_text": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int z, int k){\nint x = 1;\nint y = 0;\nint c = 0;\ny = z;\nc = 1;\nwhile (1)\n{\n  if (!((((((x * z) - x) - y) + 1) + c) < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"k\": [-2147483648, 2147483647], \"z\": [-2147483648, 2147483647]}"
+}

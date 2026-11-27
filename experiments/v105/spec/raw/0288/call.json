@@ -1,0 +1,46 @@
+{
+  "model_requested": "deepseek-v4.1-flash-ark",
+  "request": {
+    "model": "deepseek-v4.1-flash-ark",
+    "temperature": 0.7,
+    "max_tokens": 1500,
+    "messages": [
+      {
+        "role": "system",
+        "content": "You state preconditions. You never prove anything: a separate verifier checks every value in the box you give, and it rejects the program if any of them overflows. Reply with one JSON object and nothing else."
+      },
+      {
+        "role": "user",
+        "content": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int n0, int n1){\nint i0 = 0;\nint k = 0;\nint __a = 0;\nwhile (i0 < n0)\n{\n  i0++;\n  k++;\n}\n\nint i1 = 0;\nwhile (i1 < n1)\n{\n  i1++;\n  k++;\n}\n\nint j1 = 0;\nwhile (j1 < (n0 + n1))\n{\n  __a = 1 / (k > 0);\n  j1++;\n  k--;\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"n0\": [-1000000, 999999], \"n1\": [-1000000, 999999]}"
+      }
+    ]
+  },
+  "started_utc": "2026-11-23T04:30:24Z",
+  "endpoint": "https://api.square16.org/v1",
+  "attempts": [
+    {
+      "attempt": 0,
+      "ok": true,
+      "http_status": 200,
+      "seconds": 8.362
+    }
+  ],
+  "response_text": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"logprobs\":null,\"message\":{\"content\":\"{\\\"pre\\\": {}}\",\"reasoning_content\":\"We need answer JSON only. Need analyze C function for undefined behavior signed integer overflow, division by zero, bad shifts. Need state precondition box on n0,n1 within declared bounds largest safe. Need understand code.\\n\\nFunction f(int n0,int n1). ILP32 int 32-bit signed. Declared n0,n1 range [-1,000,000,999,999] roughly.\\n\\nVariables i0,k,__a int. First while (i0 \\u003c n0) { i0++; k++; } i0 starts 0. If n0 positive, executes n0 times? i0 increments until i0\\u003cn0 false. If n0 \\u003e0, loop n0 times; if n0\\u003c=0, zero iterations. k increments. So k = max(n0,0)? Actually i0 from 0 to n0; for n0 positive yes n0 iterations. For n0=0 none. Negative none. k = max(n0,0).\\n\\nSecond while (i1 \\u003c n1) { i1++; k++; } i1 starts 0. If n1 positive, n1 iterations; else zero. k = max(n0,0)+max(n1,0). Within bounds -, could be up to 1,999,998, safe.\\n\\nThird loop j1=0; while (j1 \\u003c (n0 + n1)) { __a = 1/(k\\u003e0); j1++; k--; } Need check n0+n1 signed overflow? n0,n1 each within [-1e6,999999], sum range [-2,000,000, 1,999,998], safe. So no overflow there.\\n\\nDivision: 1 / (k \\u003e 0). Denominator is boolean 0 or1. If k\\u003e0 then 1, else 0. Division by zero if k \\u003c= 0. Important: In C, (k\\u003e0) yields int 0 or 1; 1/0 undefined. The loop body executes if j1 \\u003c n0+n1. If n0+n1 \\u003e0, loop runs some iterations. k initially max(n0,0)+max(n1,0). For n0+n1 positive, is k \\u003e0 always? Let's see n0+n1 \\u003e0. If one positive, max sum positive. If both? At least one positive -\\u003e k positive. If sum \\u003e0 implies not both \\u003c=0. If one positive, max positive. So k\\u003e0 initially. As loop runs L=n0+n1 times (if positive). k starts K=max(n0,0)+max(n1,0), decrements each iteration. Need k\\u003e0 for each iteration before division. The loop body: __a = 1/(k\\u003e0); then k--. At iteration t (0-index), before division k = K - t. Need K - t \\u003e 0 for t=0..L-1. That requires K - (L-1) \\u003e0 =\\u003e K \\u003e= L. Since K = max(n0,0)+max(n1,0). L=n0+n1 if positive. Compare K and L. If both n0,n1 positive, K = n0+n1 = L, so K-t \\u003e=1 for t up to L-1, ok. If one positive one negative: say n0\\u003e0, n1\\u003c0. K=n0. L=n0+n1 positive. K \\u003e= L iff n0 \\u003e= n0+n1 iff 0\\u003e=n1 true since n1 negative. So ok. If n1\\u003e0,n0\\u003c0 similarly. If one zero: K=max positive, L=positive equal. So for L\\u003e0, is K \\u003e= L always? Let P=max(n0,0)+max(n1,0). L=n0+n1. Difference P-L = max(n0,0)-n0 + max(n1,0)-n1 = max(-n0,0)? Actually max(a,0)-a = if a\\u003e=0 0, if a\\u003c0 -a. Sum of negative parts nonnegative. So P\\u003e=L. For L\\u003e0, P\\u003e=L\\u003e0. At last t=L-1, P-t \\u003e= P-L+1 \\u003e=1. So k\\u003e0 each division, no div zero.\\n\\nBut wait after loop k becomes K - L = sum of negative parts = -(min(n0,0)+min(n1,0))? Could be negative but no use.\\n\\nSigned overflow: loops increment i0 and k. i0 increments n0 times; n0 \\u003c=999999, safe. k increments up to ~2e6 safe. Third loop j1 increments L times. L \\u003c=1,999,998 safe. k-- each iteration from K up to 2e6 to K-L \\u003e=0? Actually could be nonnegative difference sum negative parts, up to 2e6. Safe. n0+n1 safe due bounds as above. Division denominator safe. No shifts.\\n\\nSo likely entire declared bounds are safe? Need check potential overflow in expression (n0 + n1) within while condition. Since n0,n1 declared [-1000000,999999], sum in [-2,000,000,1,999,998], fits 32-bit. No overflow. i1 etc safe. Thus empty precondition.\\n\\nBut need be careful: C int overflow in loop counters? Max iterations for first loop if n0=999999 -\\u003e i0 increments to 999999, safe. k increments to 999999. Second n1=999999 -\\u003e k to 1,999,998. Third L=n0+n1 max? n0,n1 both max 999999 =\\u003e 1,999,998. If one -1e6 and other 999999 =\\u003e -1, no loop. Max loop L when both 999999. j1 increments up to 1,999,998 safe. k decrements from K=1,999,998 down to 0 after loop. In body at t=1,999,997 (last), k=1 before division, then k-- to 0. Safe. No overflow. __a assigned 1 each iteration.\\n\\nSo answer {\\\"pre\\\": {}}? Schema says output {\\\"pre\\\": {\\\"\\u003cparameter\\u003e\\\": ...}} and empty precondition if declared safe. So {\\\"pre\\\": {}}.\\n\\nNeed just JSON. Ensure no extra.\",\"role\":\"assistant\"}}],\"created\":1795408233,\"id\":\"0217954082255273694b53d1b7644bc84f9058822e8eff25dcf9d\",\"model\":\"deepseek-v4-1-flash-261017\",\"service_tier\":\"default\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":1338,\"prompt_tokens\":452,\"total_tokens\":1790,\"prompt_tokens_details\":{\"cached_tokens\":256},\"completion_tokens_details\":{\"reasoning_tokens\":1332}}}",
+  "served_model": "deepseek-v4-1-flash-261017",
+  "usage": {
+    "completion_tokens": 1338,
+    "prompt_tokens": 452,
+    "total_tokens": 1790,
+    "prompt_tokens_details": {
+      "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 1332
+    }
+  },
+  "content": "{\"pre\": {}}",
+  "finish_reason": "stop",
+  "seconds": 8.362,
+  "prompt_sha256": "c6873ba717b3c3a3396f1ee94a89c8b91b5718c94a1b3c57b11f6151e0279cd6",
+  "prompt_text": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int n0, int n1){\nint i0 = 0;\nint k = 0;\nint __a = 0;\nwhile (i0 < n0)\n{\n  i0++;\n  k++;\n}\n\nint i1 = 0;\nwhile (i1 < n1)\n{\n  i1++;\n  k++;\n}\n\nint j1 = 0;\nwhile (j1 < (n0 + n1))\n{\n  __a = 1 / (k > 0);\n  j1++;\n  k--;\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"n0\": [-1000000, 999999], \"n1\": [-1000000, 999999]}"
+}

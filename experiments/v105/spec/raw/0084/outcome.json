@@ -1,0 +1,60 @@
+{
+  "index": 84,
+  "case": "loopbench/loop-new/nested-1",
+  "corpus": "loopbench",
+  "expected": true,
+  "model": "claude-sonnet-4-5-20250929",
+  "repeat": 0,
+  "status": "PROVED",
+  "retained": 1.001802432919284e-08,
+  "pre": {
+    "m": [
+      10,
+      10
+    ],
+    "n": [
+      10,
+      10
+    ]
+  },
+  "narrowed": {
+    "n": [
+      10,
+      10
+    ],
+    "m": [
+      10,
+      10
+    ]
+  },
+  "per_dim": {
+    "n": 0.00010009,
+    "m": 0.00010009
+  },
+  "shrunk": [
+    "n",
+    "m"
+  ],
+  "widened": [],
+  "empty_interval": [],
+  "aliased": [],
+  "parse_error": null,
+  "model_reply": "```json\n{\"pre\": {\"m\": [10, 10], \"n\": [10, 10]}}\n```\n\nWait \u2014 let me reason carefully.\n\n**Overflow in `k`:** `k` accumulates `n * m` increments. With ILP32, `int` is 32-bit signed, max `2147483647`. At the declared ceiling `n = m = 10000`, `k` reaches `100,000,000`, well within range. No overflow there.\n\n**Division by zero:** `1/((k >= 100))` divides by the boolean result of `k >= 100`. That result is `0` when `k < 100`, i.e., when `n * m < 100`. With the declared floor `n = m = 10`, the minimum `k` is `10 * 10 = 100`, so `k >= 100` is always `true` (value `1`) across the entire declared box. No division by zero anywhere in the declared domain.\n\n**Conclusion:** The declared bounds are already safe on both counts.\n\n```json\n{\"pre\": {}}\n```",
+  "served_model": "claude-sonnet-4-5-20250929",
+  "stub": false,
+  "phases": [
+    {
+      "poly": false,
+      "status": "PROVED",
+      "rounds": 14
+    }
+  ],
+  "calls": 1,
+  "prompt_tokens": 415,
+  "completion_tokens": 530,
+  "seconds": 5.684,
+  "ask_stop_reason": null,
+  "verify_stop_reason": null,
+  "verify_wall_seconds": 7.9240181250000035,
+  "verify_peak_rss_bytes": 276566016
+}

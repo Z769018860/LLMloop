@@ -87,3 +87,223 @@ v0.60 时仅定位了 ELBA 和 LIFT artifact 版本；v0.61 已实际运行，�
 原始 API 适配遗漏了部分坐标转换；原始 33 个点不一致保留。事后入口审计将 39 点识别为入口不兼容；入口兼容的 111 点中，69 完成比较且一致、42 缺失。原样脚本补充保留作者转换。不得把对象返回、原样脚本退出或事后兼容子集称为代表性正确率。
 
 [完整报告](../paper/experiment_progress_zh.md)、[P0 清单](../experiments/v061/p0_ledger.json) 和 [形式化/新颖性审计](../experiments/v061/novelty_audit.md) 已同步。P0 仍有真实模型、广泛共同任务、许可、MALICE artifact、ICSE 2026 对应关系、全部消融和生成成本测量等缺口。35 条公开语料的族分割只是未来模型评估登记，不是模型留出结果。不能声称全部 P0 完成。
+
+
+## v0.62 真实 LLM 实验更新
+
+此前“真实 LLM”因无端点/凭据被标为 blocked。现已完成三个真实模型的两项研究：153 次 typed 轨迹提案
+（17 个源码不相交程序，经未修改验证器认证）与 120 次周期全周期映射提案（项目自带接口）。
+结果：推理型模型在 12 个可证明程序上 36/36 认证，超出确定性 `auto` 生成器的 `alternating`、`toggle`；
+不安全控制 0 误认证、认证值与原生 UBSan 0 不符；不验证直接采信首个候选会错误接受 5/2/17 个响应。
+**没有加速结论**（生成延迟比验证高 1–2 个数量级），语料小、非族不相交、可能被训练数据污染，
+frontier 程序上的 0 认证主要是 8000 token 截断。P0-02 由 blocked 改为“已取得部分证据”，
+仍缺族不相交留出集、消融和外部工具对比；其余 P0 项不变。见
+[完整报告](../paper/llm_experiment_report_zh.md) 与 [台账更新](../experiments/v062/p0_ledger_update.json)。
+
+
+## v0.63 针对 v0.62 局限的扩展实验
+
+48 个程序化生成程序（8 族，随机常数）× 3 模型 × 3 提示变体共 720 次响应，加 360 次生成周期系统、反例修复先导，
+均经未修改验证器认证并做 134 个候选的原生差分测试（0 不一致，不安全源码 0 误认证）。
+零样本、族不相交子集上推理模型仍有 0.92–0.97；零样本总体下降主要来自嵌套摘要格式；三个模型在少样本下统计上不可区分；
+预设的“前沿无闭式”标签被证伪（3/8 被认证，短周期查表）。MALICE/会议版 LoopSCC artifact 仍无法获取，机制消融仍缺，
+无加速结论。见 [v0.63 报告](../paper/llm_experiment_report_v063_zh.md) 与
+[台账更新](../experiments/v063/p0_ledger_update.json)。
+
+
+## v0.64 外部工具与机制消融
+
+MALICE 已定位（论文脚注与 PMLR 页面），仓库固定到提交 `4675d37c`，并在用户允许执行其第三方预编译 QCP 二进制后，
+在一个**窄投影**（`int/long` 标量循环的安全性，8 个安全程序 + 5 个不安全控制）上运行：仅预测 1/8，开启 QCP 反馈修正后 7/8
+（ark 与 itkk 相同，仅 `h_two_counters` 失败），42 个修正后文件用另一检查器独立复核 42/42；LLMloop 在同一批安全程序上 8/8；
+两者在不安全控制上均为 0。**契约不同**（QCP 为安全不变式，LLMloop 为精确轨迹），不能解读为谁更好；glm-5.3-ark 在 MALICE 的调用方式下无法评估；
+运行中作废了三类无效尝试（并发、共享工作目录、硬编码 loopinv 路径），均已披露。机制消融完成四组：
+有界测试（C 语义）会接受验证器给出确定反例的候选（20 个，含 14 个未定义行为）；数学整数测试既多接受又错误拒绝 17 个正确的 wrap 候选；
+只有完整嵌套摘要能证明嵌套程序（8/8，去外层/内层/压平/有界均 0/8）；有界展开在域 ≥64 时 0/30，摘要验证时间不随域增长
+（不含生成成本，不构成端到端加速）。“有不变式但无加速”对照与会议版 LoopSCC 参考配置仍缺。见
+[v0.64 报告](../paper/external_and_ablation_report_v064_zh.md) 与 [台账更新](../experiments/v064/p0_ledger_update.json)。
+
+
+## v0.65 LLMloop 缺陷修复与同契约对比
+
+新增区间不变式安全模式（`typed_invariant`），使 LLMloop 能在与 MALICE 相同的契约（只证安全）下比较，并补上无闭式程序的缺口：
+40 个程序、3 个模型，ark/glm 认证 34/34 个安全程序，54 个不安全响应 0 误认证，76 个被认证不变式经运行时断言 + UBSan 复核 74 个 0 违反。
+同契约 13 个共同程序：LLMloop 8/8，MALICE 修正后 7/8（**统计上不可区分**，p=1.0）。强契约（精确返回值）下 QCP 对同一规格只有 1/8 的真值可验证
+（分段轨迹被 QCP 以“invariant case is branching”拒绝），LLMloop 8/8；18 个无符号/窄类型程序 LLMloop 18/18、QCP 此构建 2/18。
+嵌套摘要失败的机制被更正（多写而非漏写坐标），主机侧丢弃后留出实验 glm 0→12/16；语法规范化与 6 倍求解器预算产出为 0（负结果）。
+**不能声称 LLMloop 总体优于 MALICE**：堆形状任务未测，MALICE 在安全契约下修正后与 LLMloop 无差异，区间模式是为弥补对比缺口而事后设计的。见
+[v0.65 报告](../paper/llm_experiment_report_v065_zh.md) 与 [台账更新](../experiments/v065/p0_ledger_update.json)。
+
+
+## v0.66 新增模型、其他工具、优势区间与修复
+
+新增 `gpt-4.1-mini`、`gemini-3-flash`（新家族）与 `claude-dsflash-itkk`（实为 DeepSeek V4.1 Flash 别名，非独立 Claude）。新增 CBMC 与 Z3 Spacer 两个非 LLM 工具
+（ESBMC/CPAchecker/Ultimate 下载被拒，未运行）。**区间图**：大域（上界 10⁴–10⁷）CBMC 证明 0/42、LLMloop 34/34（单层）与 8/8（嵌套）；小域（≤1024 的单层）CBMC 与 LLMloop 打平；
+**找 bug 是 CBMC 的强项**；Spacer 对范围型不变式秒证、对关系型（如 x=n−i）超时。修复：嵌套区间不变式模式；规范化扩展（H2 留出：ark 6→16/16、glm 0→11/16、gpt-4.1-mini 0→7/16）；
+`native_division` 编码（404 候选找回 10、丢失 1、0 可靠性翻转）与 `auto` 策略。不安全控制在所有模型、所有模式下 0 次认证。MALICE 在新模型上修正后（独立复核）1/7/4 of 8。
+见 [v0.66 报告](../paper/llm_experiment_report_v066_zh.md) 与 [台账更新](../experiments/v066/p0_ledger_update.json)。
+
+## v0.67：循环树区间不变式
+新增 `typed_invariant_tree`（任意深度/顺序/步长循环）。Study T（6 模型×33 程序×2 重复）：27/27 安全程序至少被一个模型认证，不安全控制 0/72 认证，规范化器无增益；反馈修复仅 +1～+2/27；CBMC 完整域 0/27。仍不支持状态相关内层边界、关系型不变式、while。见 [v0.67 报告](../paper/llm_experiment_report_v067_zh.md) 与 [台账](../experiments/v067/p0_ledger_update.json)。
+
+全量测试：3295 passed（v0.67 提交后）。
+
+## v0.68：关系型不变式 @rel 与级联
+Study Rel（648 次生成）：@rel 提示臂安全程序认证 203/264 vs 区间臂 80/264（配对 129:6，聚类 bootstrap +46.6pp），不安全 0/120 认证。披露：首次验证因 portfolio 信封缺陷无效（已修复并对同批生成重验）、rel 示例邻近、提示联合效应、精确箱形参考存在。Spacer 优先级联省 52% LLM 调用。见 [v0.68 报告](../paper/llm_experiment_report_v068_zh.md)、[规划](EXPERIMENT_PLAN_v068_zh.md)。
+
+全量测试（v0.69，含 if-循环）：3311 passed。
+
+## v0.69 Study If：分支内循环
+288 次生成：安全 149/228（65.4%），19/19 程序至少一个模型认证，不安全 0/60；I_branch 71/72，I_nested 仅 11/60（待跟进）。单臂描述性研究。见 [中英文报告](../paper/report_v069_study_if_bilingual.md)。
+
+## v0.69.1：I_nested 跟进、SV-COMP 覆盖率、循环索引规范化
+累积规则提示留出确认为**否定结果**（151 vs 148 /228，p=0.71）；反馈修复安全 5/26；SV-COMP 静态覆盖率 155 程序，规范化后规范 for 循环 3→115/164，仍被 while（65）与数组/指针（48）阻塞。见 [报告](../paper/report_v0691_bilingual.md)。
+
+全量测试（v0.69.1，含循环索引规范化）：3323 passed。
+
+## v0.69.2：while 规范化
+受信的 while→for 改写（含索引提升）；SV-COMP 规范 for 3→121/202，完全落入片段程序 0→5，剩余 while 程序 37。见 [报告](../paper/report_v0692_bilingual.md)。
+
+全量测试（v0.69.2，含 while 规范化）：3330 passed。
+
+## v0.70：SV-COMP 派生程序与 I_nested 诊断
+手工译写 10 个 SV-COMP 程序；LLM 安全 26/72，6/6 程序至少一个模型认证，违反程序 0/48；CBMC 完整域证明 4/6（基线 unwind 缺陷已修复）。I_nested：75/96 失败响应含轨迹正确但非归纳的候选。见 [报告](../paper/report_v070_bilingual.md)。
+
+全量测试（v0.70）：3333 passed。
+
+## v0.71：精确区间/入口一致性提示（否定）
+Study ES：base 154/228 vs exact 123/228（p=3e-6，I_nested 15→2/60），不安全 0/120。结合 IfR（无差异）与 Rel（显著有益），结论：改进验证器表达力优于改提示。见 [报告](../paper/report_v071_bilingual.md)。
+
+## v0.72：SV-COMP 自动译写覆盖率与 LLM-free 轨迹拟合
+264 个 SV-COMP 循环程序（含 zilu/invgen）仅 11 个（4.2%）可自动译写并落入片段；LLM-free 拟合器（不受信，同一验证器）留出集：循环树 17/27、关系型 18/22、if-循环 5/19，不安全 0。见 [报告](../paper/report_v072_bilingual.md)。
+
+全量测试（v0.72，含轨迹拟合与 SV-COMP 译写证据）：3345 passed。
+
+## v0.73：公认基准（SV-COMP、Code2Inv）
+扩展规范化后自动译写：SV-COMP 20/264、Code2Inv 42/134 落入片段。LLM 研究：SV-COMP 20/66、Code2Inv 38/252（27/42 程序至少一次），违反程序 0/54；拟合器 ∪ LLM 认证 Code2Inv 30/42，未认证的 12 个中 11 个找到 C 语义下的具体违例。见 [报告](../paper/report_v073_bilingual.md)。
+
+全量测试（v0.73，含扩展规范化与公认基准证据）：3355 passed。
+
+## v0.74：非确定性循环模式、端到端级联、真实代码覆盖
+`typed_invariant_while`（单循环，安全性）+ Houdini：Code2Inv 24/69、SV-COMP 10/32；LLM（Study W）Code2Inv 122/414、SV-COMP 122/192，违反程序 0/54；34 个 Code2Inv 程序在 C 语义下有违例见证；级联省 LLM 调用但对认证数增益有限；Juliet/LIG-MM 覆盖 0。披露：Study W 首次运行无效（提示覆盖）、解释器缺陷修复（拟合器结果未变）。见 [报告](../paper/report_v074_bilingual.md) 与 [缺失与下一步](EXPERIMENT_PLAN_v075_bilingual.md)。
+
+全量测试（v0.74，含非确定性循环模式、Houdini、级联证据）：3393 passed。
+
+## v0.75–v0.76：数学整数模式、终止性、混合方案、CPAchecker、Juliet，以及 Code2Inv 译写更正
+**更正：** Code2Inv 译写脚本曾丢弃声明初始值（28 个程序受影响），v0.73/v0.74 的 Code2Inv 数字作废，v0.76 合并结果：数学语义 while 模式 Code2Inv 64/69 个程序被认证（Houdini 53）、C 语义 41/69（Houdini 32）；违反程序 0/54。混合方案 131/192 vs LLM 直接 91/192；级联省 LLM 调用 77%；终止性 9（C）/13（数学）；CPAchecker 决断率更高但性质不同；Juliet 子集 120/120 分类正确。见 [报告](../paper/report_v076_bilingual.md) 与 [缺失与下一步](EXPERIMENT_PLAN_v077_bilingual.md)。
+
+全量测试（v0.76）：3405 passed。
+
+## v0.77：多循环模式、拟合器 v2、CPAchecker 逐程序比较、Juliet 全变体、重复与成本、论文草稿
+多循环模式（验证器+测试，覆盖增益很小）；拟合器 v2 在计数模式开发集 54/60（无回退）；CPAchecker 比较：我们认证 Code2Inv 108/118、SV-COMP 41/43，对其中 22+6 个 CPAchecker 返回 UNKNOWN，但它找违例更强（14/18）；Juliet 全变体 1500 个函数无误判；WM 3 次重复：ark 0.92、glm 0.89，其余 0.38–0.62，pass@3 增益 ≤0.12，违反程序 0/162。论文草稿已成稿。见 [报告](../paper/report_v077_bilingual.md)、[论文草稿](../paper/PAPER_DRAFT_bilingual.md)。
+
+全量测试（v0.77）：3428 passed。
+
+## v0.78：Ultimate/ESBMC 对比、数组有界模式、真实库函数、多循环真实程序、缺陷修复
+Ultimate Automizer 是最强工具（Code2Inv 110/118 TRUE，无超时），ESBMC 29，CPAchecker 86，我们（并集）108；我们的价值在可检查证书与未定义行为检查。Juliet CWE121/129 数组下标 150 个函数无误判；zlib `bi_reverse` 在文档前提下被证明无未定义行为且终止，无前提时有真实溢出；多循环模式在 6 个真实 SV-COMP 程序上 14/61 认证（gemini 11/12 传输失败）；修复循环前普通语句崩溃的缺陷。见 [报告](../paper/report_v078_bilingual.md)。
+
+全量测试（v0.78）：3435 passed。
+
+## v0.79 (中/EN)
+- 新增：堆有界模式（Juliet CWE122/129：150 函数，22 个 bad 被标出，80 个 good 被证明，0 错判）；多循环 Houdini（`llmloop/houdini_loops.py`，按循环取样 + 反例状态削弱，验证器未改动；顺序/嵌套循环证明，不安全程序不被认证）。
+- 未完成/Not done: 属性对齐的溢出工具运行（结果文件未生成，进程被重启中断）；coreutils/busybox 真实代码（`git clone busybox`+`make defconfig` 被权限分类器拒绝，等待用户决定）；指针算术（CWE124/126/127）仍不支持。
+- v0.79 追加：busybox 覆盖（966 函数，约 330 含循环，4 个标量候选）与 gcd/isqrt 认证；溢出属性对齐对比（CPAchecker 54、Ultimate 82 判安全；我们 C 模式 54；无误判，大量超时）；形参修改修复。报告 paper/report_v079_bilingual.md。
+- 全量测试（v0.79）：3452 passed
+- v0.79 追加2：指针算术 Juliet CWE124/126/127（变体 01+17：bad 164/164 标出，good 172/172 证明，0 错判；全部变体可翻译子集 280/398，0 错判）；多循环 Houdini 整体评测（多循环 5/6，单循环对照 25/42，不安全 0 认证）。
+- v0.80：Juliet CWE124/126/127 全变体 6828 个函数（bad 2792 标出、good 3999 证明、0 错判；曾发现并修复 2 个 bad 误证明）；指针动态偏移/比较微基准 10/10；多循环 Houdini 6/6（析取/蕴含原子）；gnulib/coreutils 覆盖（1124+147 文件 0 解析失败）与 3 个真实函数认证。报告 paper/report_v080_bilingual.md。
+- 全量测试（v0.80）：3459 passed
+- v0.81：Juliet CWE124/126/127 全入口函数 7146 个（bad 2898 标出、good 4219 证明、0 错判）；符号边界指针/整数循环首尾迭代检查（18/18，对抗性 4 个被拒绝）；自动转写+内联 gnulib/coreutils 122 个候选（7 个带循环函数被认证，67 个桩化后无循环，41 拒绝，7 未认证）。报告 paper/report_v081_bilingual.md。
+- 全量测试（v0.81）：3461 passed
+- v0.82：jump_eliminate 支持任意位置 return 与 do-while；自动转写支持带循环的被调用函数内联、循环头调用提升、库函数规格（abs/ctype/ranges，对真实 libc 差分）；合成集 10/11 认证且全部本机差分一致；真实候选带循环可转写 17、认证 8、差分一致 9。报告 paper/report_v082_bilingual.md。
+- v0.82b：内存抽象（标量算术 UB，假设内存安全）+ switch/continue/副作用/字符常量等扩展；gnulib+coreutils 全部含循环函数 2759 行：被拒绝 2496→1223（44.3%），认证 105→1107，按源码去重 1783 个：拒绝 983、认证 520；候选模式 122 个：拒绝 41→7、认证 106；25 个合成函数（3 个故意不安全的内存抽象对照均未认证）；memabs 单元测试。
+- 全量测试（v0.82b）：3476 passed
+- v0.83：求解器卡死的真因（Houdini 原子枚举，非 z3）与修复；越界检查（指针=整数偏移、字符串语义、长度契约；ASan 验证 0 个"证明但报错"；真实函数上仅 14/1034 可证明，927 不适用）；forward goto、全局匿名结构体、GNU 解析（解析失败 179→42）；全量 2758 行：拒绝 1236、认证 1124、未认证 398（拒绝总数未降）。报告 paper/report_v083_bilingual.md。
+- 全量测试（v0.83）：3482 passed
+- v0.84：空指针/释放后使用/重复释放/memcpy 重叠与库函数区间/`void*`/结构体指针的越界检查（24 个合成函数 ASan 交叉验证 0 个"证明但报错"；全量 39/1043 可证明，886 不适用）；goto 按列表消除（拒绝 88→16）与 asm havoc（语句表达式未做）；读值假设推断（92 个函数：16 个在最小假设下认证，50 个不能）；全量 2758 行：拒绝 1214、认证 1138、未认证 406。报告 paper/report_v084_bilingual.md。
+- 全量测试（v0.84）：3493 passed
+- v0.85：语句表达式（MAX/MIN 形状）；越界检查扩展到嵌套结构体/数组字段、`char**`、堆对象来源（malloc/calloc/x*alloc）、不同指针参数的重叠契约、同文件被调函数的契约摘要（37 个合成函数 ASan 0 个"证明但报错"；全量 117/1044 可证明，上一版 39；其中 104 个是"非空+len≥1"）；跳入 if 分支的 goto（未消除 16→11）；参数前置条件推断（92 个函数：18 个在最小假设下认证，44 个不能）；全量 2758 行：拒绝 1213、认证 1139、未认证 406。报告 paper/report_v085_bilingual.md。
+- 全量测试（v0.85）：3499 passed
+- v0.86：已加载指针（`argv[i]`、链表游标）、`realloc`、被调函数摘要深度 3、goto 跳入 else/循环体、关系型前置条件 `a<=b`。memsafe：PROVED 117→120（无丢失）；关系型前置条件仅使 44 个中的 2 个可认证。首次重跑曾回归 63 个函数，已通过"先 v0.85 模式、再回退"修复。无新增 ASan 合成用例；191 个翻译单元错误函数未修复。报告：`paper/report_v086_bilingual.md`。
+- 全量测试（v0.86）：3505 passed
+- v0.87：更正 v0.86——内存安全"已证明"拆分为完整证明 19 与仅检查子集 100（未跟踪解引用单列 `PROVED_CHECKED_SUBSET`）；验证器 256 条不变式上限导致关系原子被截断，改为按优先级排序；指针数组元素 NULL 前置条件 `__enull`；goto 跳入任意深度嵌套；翻译单元错误 191→14 认证/5 未认证/172 仍拒绝；关系前置条件与重新认证几乎无收益（0 与 +1）；链表证明仍依赖"已加载非 NULL 指针有效"假设。报告：`paper/report_v087_bilingual.md`。
+- 全量测试（v0.87）：3512 passed
+
+## v0.89
+memsafe 全量重跑:完整 42 / 子集 89 / NOT_PROVED 250 / NOT_APPLICABLE 617;8 个树函数由完整降为子集(纠正)。合成 49 例无不安全判定。报告 paper/report_v089_bilingual.md。
+全量测试（v0.89）：3515 passed
+
+## v0.90
+翻译单元回退(C23 + 占位头):126 行中 7 认证/7 未认证,73 行仍为 TU 错误(33 windows.h、10 片段、2 NEON、28 生成数据头/gmp,不做数据头空桩)。字符常量重跑 20 行:8 认证。`loaded_paths` 写入结果。已加载指针假设与关系前置条件未解决。报告 paper/report_v090_bilingual.md。
+全量测试（v0.90）：3518 passed
+
+## v0.91
+CBMC 独立复核 238/241;存量认证复核:C 286→282、数学 409→405(形参修改缺陷);留出集(冻结 ea0aa25):我方 2/22,Ultimate 8/22,CPAchecker 5/22,ESBMC 1/22,无误判;事后翻译修复 4/42。多项式挖掘未成功(默认关)。留出 LLM 实验受阻(无凭据)。报告 paper/report_v091_bilingual.md。
+全量测试（v0.91）：3523 passed
+
+v0.91b 留出集 LLM(Study HO,协议冻结在前):不安全 0/25;安全 9/21 被认证(并 Houdini 12);CBMC 复核 23/26;同任务 15 程序 LLM 8 / Ultimate 7 / CPAchecker 4 / ESBMC 0。gemini 不可用,glm 缺 10 响应。
+
+## v0.92
+多项式/条件原子配置(默认关闭):scaling 集 13→46/63(CPAchecker 63、ESBMC 45、Ultimate 34,我们独有 0);集合 A 并集 12 对 Ultimate 8(该配置在 A 上已非留出)。证据不支持"优于最好工具"。报告 paper/report_v092_bilingual.md。
+
+## v0.93
+SV-COMP NoOverflows 族不相交留出集(冻结在前):预期无溢出 61 个 — Ultimate 52、我们 47(Houdini 34/多项式 29/LLM 44)、CPAchecker 41、CBMC 5、ESBMC 2;有溢出 91 个我们 0 被认证;证书 CBMC 复核 113/119 通过 0 失败。未超过 Ultimate。报告 paper/report_v093_bilingual.md。
+
+## v0.96
+NoOverflows(翻译/性质对齐修正后,开发后数字):67 个无溢出 — 我们 57(无 LLM 55)、Ultimate 56、CPAchecker 42、CBMC 7、ESBMC 4;配对 6 对 5 持平;有溢出 106 个我们 0 被认证;CBMC 复核 376 次 0 失败。Ultimate 超时 10,420 s 重跑只多证 1。报告 paper/report_v096_bilingual.md。
+
+## v0.97
+LLM 提议原子 + Houdini + 修复(Study HY,协议冻结在前):NoOverflows 692 次运行,有溢出 0/424 被认证;无溢出 57/67 至少一个模型(各模型 52–57),并集 59 对 Ultimate 56;修复轮仅 3/213 起作用。CBMC 复核脚手架改为忠实的语法树翻译,旧复核全部重跑:0 个矛盾 FAILED。报告 paper/report_v097_bilingual.md。
+
+## v0.98
+可重放的动态证伪器:有溢出 106 个中 100 个见证(全部重放确认),无溢出 67 个 0 见证;证明+见证合计我们 159/173、Ultimate 156/173(配对 9 对 6 持平)、ESBMC 105、CBMC 99、CPAchecker 42。报告 paper/report_v098_bilingual.md。
+
+## v0.99
+族不相交新集合(termination-15、termination-restricted-15,冻结后未调):我们 91 证明+1 见证=92/93,Ultimate 83(10 超时),CPAchecker 67,ESBMC/CBMC 10;配对 9 对 1,p≈0.02,0 矛盾。Ultimate 见证经 CPAchecker 验证 51/52。两个 SV-COMP 标签错误(见证);parity 解决;修复轮仍边缘。单循环证书复核 149/149,多循环 46 FAILED 根因未明。报告 paper/report_v099_bilingual.md。
+
+## v1.00
+多循环 CBMC 复核失败(46)根因:CBMC 契约机制对嵌套循环与我们的证明规则不等价;无契约复核(证明规则显式展开)586 个证书 556 VERIFIED/0 FAILED/29 超时;新集合 91 个证明程序中 90 个有独立复核证书。证伪器持久选择遍 +2;累计 4 个 SV-COMP 标签错误;开发集 63 无溢出/110 有溢出,我们判定 169 对 Ultimate 156。仍未解决:修复轮边缘、nla 幂和、nestedLoop-1/FMCAD2013-Fig1。报告 paper/report_v100_bilingual.md。
+
+## v1.01
+nla 幂和程序(ps4–ps6、hard、divbin)瓶颈定性:析取界原子无增益;LLM 混合(4 模型×3 轮,带反例)全部 STUCK;手工近乎完整的不变式交给未改动验证器仍 UNKNOWN → 瓶颈含验证器的非线性求解能力,保持未解决。报告 paper/report_v100_bilingual.md 补充节。
+
+## 能力边界(v1.01 决定)
+非线性多项式不变式(ps4–ps6、hard、divbin)、nestedLoop-1、FMCAD2013-Fig1 作为明确能力边界写入论文草稿 §5b;不修改验证器。
+
+## v1.03：全体分母、同预算复跑、独立基准（本轮）
+
+三轮证据全部入库（`experiments/v103/`，原始单元含命令行、stdout/stderr、wait4 CPU、采样 RSS、判定），协议与驱动哈希见各 `protocol.json`；驱动为适配 6 h 作业上限做了分片改造，改动**在任何结果产生之前**写入 `protocol_amendment`，用例/排程/命令行/时限/内存/种子/结果派生均不变。
+
+| 研究 | 规模 | 关键结果 |
+| --- | --- | --- |
+| `full165` | 165 用例 × 3 工具 = 495 单元，600 s / 2 GiB | Ultimate 135、llmloop 90、CBMC 12；配对 8 对 53，p≈3.0e-09；93 子集 88 对 85（p=0.51）；72 个被拒程序 2 对 50 |
+| `independent` | 257 程序 × 2 工具 = 514 单元，60 s / 512 MiB | NIST 190：参考 CBMC 80 证明/95 反驳/15 宿主超时；llmloop 无条件 0、条件性 10、UNKNOWN 180、误认证 0 |
+| `tacle_reference256` | 67 个 TACLe，unwind 256 | TRUE 21、FALSE 3、UNKNOWN 21、内存上限 9、进程错误 11、宿主超时 2；27 个结论相对 unwind 16 改变 |
+| `regression` | 全量 pytest | **3533 passed、14 skipped、0 failed**（816.6 s，`experiments/v103/regression/summary.json`）；唯一的失败项（缺 CBMC 工具链的证书复核测试）已改为 skip |
+
+**三项必须写进论文的判断**
+
+1. **撤回“优于 Ultimate”。** 旧结论 91 对 83（p≈0.02）同时依赖“只取前端可接收的 93 项”和“旧运行中 Ultimate 预算更短”。全体分母 + 相同 600 s 下方向反转（90 对 135，p≈3e-09）。已写入 `paper/PAPER_DRAFT_bilingual.md` §4e 与 §5 第 9 条。
+2. **差距是能力边界，不是调参。** 72 个被拒程序（`alloca`/`malloc`/提前 `return`/语句后 `assume`）Ultimate 证 50、我们 2；102 个有上游标签的程序上是 89 对 91（p=0.81，不可区分）。**可声称的是“带标签子集持平 + 8/165 独有覆盖”。**
+3. **瓶颈是覆盖而非可靠性。** 独立基准上误认证 0（再次未被推翻），但无条件证明也是 0（10 个条件性）；TACLe 参考标签本身随 unwind 深度变化（27/67），只宜作一致性子集。
+
+**四项投稿前事项的现状**
+
+| 事项 | 现状 |
+| --- | --- |
+| 1 全体分母与公平比较 | **已完成**：165 全量、同预算、资源与原始日志留存；结论已改为主稿 §4e |
+| 2 独立且有真值的新基准 | **部分完成**：190 个 NIST 有真值、误认证 0，但覆盖 0；TACLe 参考标签不稳定。仍缺真正的第三方 held-out（非本仓库译写）覆盖率证据 |
+| 3 LLM 净收益与成本 | **已完成（v1.04，预注册）**：93 个前端可接收用例，臂 D（v1.03 冻结单元，0 次调用）= **88/93**；臂 L（仅原子 + Houdini + 未改动验证器）3 模型 × 3 重复，多数判定分别 88 / 85 / 87，跨模型并集 **90/93、净新增 2**（`McCarthyIterative.c`、`java_Sequence.c`），最小 McNemar p = 0.375，故**不宣称净收益**；成本 970 次调用 / 2.91 M token / 5.27 h 生成换 2 个净新增。原子还会**移除**已有证明（`gpt-4.1-mini` 每轮丢 6 个），只有取并集才回到 90/93。三个模型中 `deepseek-v4.1-flash-ark` 的 309 次调用有 220 次返回空内容（撞 6000 token 上限），该臂**在构造上等于臂 D**，已单列披露，并另开 v1.05（16k 预算，事后追加，单独冻结）复跑两个撞上限的模型 |
+| 4 正确性与工程验证 | **已完成**：回归全绿（3533 passed / 14 skipped / 0 failed）。证书复核发现并纠正了一个**引擎相关缺陷**：v1.00 的验证条件用"只有原型、没有函数体"的 `nd_*` 助手，CBMC 6.11 把这种调用当作 FAILURE 属性，所以同一批证书在 6.11 上会全判 FAILED——探针（`scripts/cert_probe_v103.py`）证明连 v1.00 判为 VERIFIED 的证书在冻结桩下也 FAILED、补上显式非确定函数体后恢复 VERIFIED。已按当前引擎对全部 586 个证书重跑：首轮 **557 VERIFIED、0 FAILED、22 TIMEOUT、7 ERROR**（7 个 ERROR 全是本地 `ulimit -v 6G` 造成的 CBMC 自身 OOM）。把上限放到 14 GB 单独重跑这 7 个后，`NO_04.c`、`ex3a.c` 变为 VERIFIED，其余 5 个仍在 600 s 内未完（不再崩，但超时），定稿计 **559 VERIFIED、0 FAILED、27 TIMEOUT、0 ERROR**；5 个同名双证书的重跑无法逐条归属，按最差计（只可能低估），逐条记录在 `experiments/v103/cert_recheck_v103/overrides/`。翻译差分已完成（`docs/TRANSLATION_DIFF.md`）：整数语义 1200 例中 1199 一致、危险方向 0；循环翻译 80 程序 × 16 输入，域内 1095 次全部一致、0 不一致。含跳转循环的处置已完成（`docs/UNSUPPORTED_AND_JUMPS.md`）：语料里 `goto`/`switch` 均为 0，跳转限制的净代价是 2/165。组件消融已完成（`experiments/v103/ablation/`，6 臂 × 165 例，协议冻结后运行，主稿 §4h）：`full` 独立复现 **90**；去掉多项式回退 −2、去掉 ghost 入口值 −2、Houdini 只走一轮 **−33**、采样降到 1 次 **−13**；把义务换成无界整数的可靠性消融 **+6**（含 `ex3a.c`、`java_Sequence.c`——正是 §4f 中 LLM 在类型化语义下拿到的净新增） |
+
+**仍未解决 / still open**：第三方 held-out 覆盖（非本仓库译写的程序上，我们仍是 0 覆盖率证据）。翻译差分、组件消融、跳转/UNSUPPORTED、证书 7 个未决项四项已补齐，不再是待办。在上述齐备前，**不得**出现"总体优于现有工具"的表述。
+
+## v1.04–v1.05 LLM 净收益与成本（证据：`experiments/v103/llm_net/`、`experiments/v103/llm_net16k/`）
+
+协议在任何真实调用之前冻结并提交（`3f1dbfb`），`remote_model_calls` 记为 837 个计划单元；生成与验证分别计时、分别设上限（生成 900 s / 1 GiB，验证沿用 600 s / 2 GiB）。全部请求体、响应全文、每次尝试、tokens、端点实际服务模型串与时间戳均入库。
+
+- **主结论**：确定性组合（臂 D）已证明 88/93；加入 LLM 原子后，跨三个模型取多数并集只到 90/93，净新增 **2/93**，最小 p = 0.375。按冻结前写死的判定规则，**不宣称净收益**，只报净新增与成本。
+- **代价**：970 次调用、2.91 M token、5.27 h 生成换来 2 个净新增证明（≈485 次调用 / 1.46 M token / 2.6 h 每个）；臂 D 为 0 次调用。
+- **原子不是白拿的**：`gpt-4.1-mini` 每次重复都丢掉臂 D 的 6 个证明（`DivMinus2`、`Ex08`、`GCD-1`、`Log`、`c.01-no-inv`、`java_Nested`），换来 1 个；`claude-sonnet-4-5` 每次丢 3 个。不能写“多加原子不会更差”。
+- **退化臂已披露**：`deepseek-v4.1-flash-ark` 309 次调用中 220 次空内容、226 次撞 6000 token 上限 → 该臂等于臂 D，不作为“原子无用”的证据。v1.05 用 16k 预算只复跑这两个撞上限的模型，结果单列，不并入预注册数字。
+- **稳定性**：重复间判定不一致的用例 `gpt-4.1-mini` 12 个、`claude-sonnet-4-5` 6 个。
+- **v1.05 事后追加（16k 预算，单独冻结在 `experiments/v103/llm_net16k/`）**：只重跑两个撞上限的模型。`deepseek-v4.1-flash-ark` 从退化的 88 升到 **90**（净新增 2：`ex3a.c`、`java_Sequence.c`，0 丢失，p = 0.5），`claude-sonnet-4-5` 仍 **87**（3 丢 2 得）；两模型并集 **91/93、净新增 3**（+`McCarthyIterative.c`），0 丢失，p = 0.25。追加研究自身 614 次调用 / 4.01 M token / 7.4 h；两次合计 1584 次调用 / 6.92 M token / 12.7 h 换 3 个净新增证明。**结论不变：净增不显著，不能宣称净收益，更不能折算成加速。**

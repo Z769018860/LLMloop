@@ -1,0 +1,22 @@
+{
+  "original_function": "void CWE190_Integer_Overflow__int64_t_max_preinc_17_bad() {\n    int i, j;\n    long data;\n    data = 0LL;\n    for (i = 0; i < 1; i++) {\n        data = 9223372036854775807LL;\n    }\n    for (j = 0; j < 1; j++) {\n        {\n            ++data;\n            long result = data;\n            printLongLongLine(result);\n        }\n    }\n}",
+  "source": "int f(int __z)\n{\n  long result = 0;\n  int i = 0;\n  int j = 0;\n  long data = 0;\n  data = 0LL;\n  i = 0;\n  while (i < 1)\n  {\n    data = 9223372036854775807LL;\n    i++;\n  }\n\n  j = 0;\n  while (j < 1)\n  {\n    ++data;\n    result = data;\n    j++;\n  }\n\n  return 0;\n}\n\n",
+  "bounds": {
+    "__z": [
+      0,
+      0
+    ]
+  },
+  "notes": [
+    "dead trailing return",
+    "flattened blocks",
+    "for -> while",
+    "hoisted loop-body declaration",
+    "memory abstraction (memory safety assumed)",
+    "opaque void call dropped: printLongLongLine",
+    "void -> int",
+    "zero-initialized locals"
+  ],
+  "extra": "[]",
+  "nondet": "False"
+}

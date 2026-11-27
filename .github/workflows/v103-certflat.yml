@@ -1,0 +1,91 @@
+name: v1.03 certificate re-check on CBMC 6.11
+
+# Redo of the v1.00 contract-free re-check on the engine this project now pins. The v1.00 VCs call
+# nd_* helpers that have prototypes but no bodies; CBMC 6.11 reports such a call as a FAILURE
+# property, so on the current engine every one of those VCs is FAILED, including certificates that
+# v1.00 recorded as VERIFIED. scripts/cert_probe_v103.py showed this, and showed that giving the
+# helpers an uninitialised-local body (CBMC's nondeterministic value) restores VERIFIED. This
+# workflow re-runs all 586 certificates with that single preamble change, 600 s each.
+on:
+  workflow_dispatch:
+  # deliberately only this file: editing the driver used to re-run all 586 certificates, which is
+  # both expensive and, for a cosmetic change, an unwanted new commit to the evidence directory.
+  push:
+    branches: [research/v103-exec]
+    paths: ['.github/workflows/v103-certflat.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  certs:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        study: [fresh, fresh_hybrid, nooverflow, hybrid]
+        shard: [0, 1]
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+      STUDY: ${{ matrix.study }}
+      SHARD: ${{ matrix.shard }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install package
+        run: python -m pip install -q -e '.[test,smt,exp]'
+      - name: Prepare pinned inputs
+        run: |
+          chmod +x scripts/ci_setup_v103.sh
+          EXT="${{ runner.temp }}/ext"
+          scripts/ci_setup_v103.sh "$EXT" certbench
+          scripts/ci_setup_v103.sh "$EXT" cbmc
+          echo "LLMLOOP_SVBENCH=$EXT/svbench-cert/c" >> "$GITHUB_ENV"
+          echo "LLMLOOP_EXT=$EXT" >> "$GITHUB_ENV"
+          echo "$EXT/native/usr/bin" >> "$GITHUB_PATH"
+      - name: Re-check ${{ matrix.study }} shard ${{ matrix.shard }}
+        run: |
+          bash -c 'ulimit -v 6000000; exec python -u scripts/cert_recheck_flat_v103.py run "$STUDY" all --timeout 600 --workers 2 --shard "$SHARD" --shards 2'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: certflat-${{ matrix.study }}-${{ matrix.shard }}
+          path: experiments/v103/cert_recheck_v103/
+          if-no-files-found: warn
+
+  merge:
+    needs: certs
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: certflat-*
+          merge-multiple: true
+          path: experiments/v103/cert_recheck_v103
+      - name: Merge, summarise and record
+        run: |
+          ls -l experiments/v103/cert_recheck_v103
+          for s in fresh fresh_hybrid nooverflow hybrid; do
+            python -u scripts/cert_recheck_flat_v103.py merge "$s" all
+          done
+          python -u scripts/cert_recheck_flat_v103.py summary
+          rm -f experiments/v103/cert_recheck_v103/*_shard*.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A experiments/v103/cert_recheck_v103
+          if git diff --cached --quiet; then echo 'no change'; exit 0; fi
+          git commit -q -m "v1.03: certificate re-check redone on CBMC 6.11 with nondeterministic stub bodies [skip ci]"
+          for i in 1 2 3; do
+            git pull --rebase --quiet --autostash origin research/v103-exec && git push -q origin HEAD:refs/heads/research/v103-exec && break
+            sleep 5
+          done

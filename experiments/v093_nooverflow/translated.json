@@ -1,0 +1,5052 @@
+[
+ {
+  "dir": "signedintegeroverflow-regression",
+  "file": "AdditionIntMax.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: printf"
+ },
+ {
+  "dir": "signedintegeroverflow-regression",
+  "file": "AdditionIntMin.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: printf"
+ },
+ {
+  "dir": "signedintegeroverflow-regression",
+  "file": "ConversionToSignedInt.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: printf"
+ },
+ {
+  "dir": "signedintegeroverflow-regression",
+  "file": "Division-1.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: printf"
+ },
+ {
+  "dir": "signedintegeroverflow-regression",
+  "file": "IntegerPromotion-1.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: printf"
+ },
+ {
+  "dir": "signedintegeroverflow-regression",
+  "file": "Multiplication-1.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: printf"
+ },
+ {
+  "dir": "signedintegeroverflow-regression",
+  "file": "Multiplication-2.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: printf"
+ },
+ {
+  "dir": "signedintegeroverflow-regression",
+  "file": "NoConversion.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: printf"
+ },
+ {
+  "dir": "signedintegeroverflow-regression",
+  "file": "NoNegativeIntegerConstant.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: printf"
+ },
+ {
+  "dir": "signedintegeroverflow-regression",
+  "file": "PostfixDecrement.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: printf"
+ },
+ {
+  "dir": "signedintegeroverflow-regression",
+  "file": "PostfixIncrement.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: printf"
+ },
+ {
+  "dir": "signedintegeroverflow-regression",
+  "file": "PrefixDecrement.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: printf"
+ },
+ {
+  "dir": "signedintegeroverflow-regression",
+  "file": "PrefixIncrement.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: printf"
+ },
+ {
+  "dir": "signedintegeroverflow-regression",
+  "file": "UnaryMinus.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: printf"
+ },
+ {
+  "dir": "signedintegeroverflow-regression",
+  "file": "UsualArithmeticConversions.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: printf"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "2Nested-1.c",
+  "expected_unreach": null,
+  "source": "int f(int x, int y){\nwhile (x >= 0)\n{\n  x = x + y;\n  y = y - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    65534
+   ],
+   "y": [
+    -65534,
+    65534
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "2Nested-2.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nwhile (x >= 0)\n{\n  x = x + y;\n  y = y - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "4BitCounterPointer.c",
+  "expected_unreach": "true",
+  "stage": "reject:arrays or pointers"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "4NestedWith3Variables-1.c",
+  "expected_unreach": null,
+  "source": "int f(int q, int a, int b){\nint olda;\nwhile (q > 0)\n{\n  q = (q + a) - 1;\n  olda = a;\n  a = (3 * olda) - (4 * b);\n  b = (4 * olda) + (3 * b);\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "q": [
+    -524287,
+    524287
+   ],
+   "a": [
+    -524287,
+    524287
+   ],
+   "b": [
+    -524287,
+    524287
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "4NestedWith3Variables-2.c",
+  "expected_unreach": "false",
+  "source": "int f(int q, int a, int b){\nint olda;\nwhile (q > 0)\n{\n  q = (q + a) - 1;\n  olda = a;\n  a = (3 * olda) - (4 * b);\n  b = (4 * olda) + (3 * b);\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "q": [
+    -2147483648,
+    2147483647
+   ],
+   "a": [
+    -2147483648,
+    2147483647
+   ],
+   "b": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Ackermann-1.c",
+  "expected_unreach": "false",
+  "stage": "reject:early return in body"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Ackermann-2.c",
+  "expected_unreach": null,
+  "stage": "reject:early return in body"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Arrays01-EquivalentConstantIndices-1.c",
+  "expected_unreach": "true",
+  "stage": "reject:arrays or pointers"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Arrays01-EquivalentConstantIndices-2.c",
+  "expected_unreach": null,
+  "stage": "reject:arrays or pointers"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Arrays02-EquivalentConstantIndices.c",
+  "expected_unreach": "true",
+  "stage": "reject:arrays or pointers"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Arrays03-ValueRestictsIndex-1.c",
+  "expected_unreach": null,
+  "stage": "reject:arrays or pointers"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Arrays03-ValueRestictsIndex-2.c",
+  "expected_unreach": "true",
+  "stage": "reject:arrays or pointers"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Bangalore-1.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nif (y < 1)\n{\n  while (x >= 0)\n  {\n    x = x - y;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Bangalore-2.c",
+  "expected_unreach": "true",
+  "source": "int f(int x, int y){\nif (y >= 1)\n{\n  while (x >= 0)\n  {\n    x = x - y;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Bangalore_v2.c",
+  "expected_unreach": "true",
+  "source": "int f(int x, int y){\nif (y >= 0)\n{\n  while (x >= 0)\n  {\n    x = x - y;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Bangalore_v3.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nif (y <= x)\n{\n  while (x >= 0)\n  {\n    x = x - y;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Bangalore_v4.c",
+  "expected_unreach": "true",
+  "source": "int f(int x, int y){\nif (y > x)\n{\n  while (x >= 0)\n  {\n    x = x - y;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Benghazi.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nint x = 0;\nint d1 = 73;\nint d2 = 74;\nint d1old;\nx = __VERIFIER_nondet_int();\nwhile (x >= 0)\n{\n  x = x - d1;\n  d1old = d1;\n  d1 = d2 + 1;\n  d2 = d1old + 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "structural:tree:Initialized named scalar locals required | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Benghazi_nondet-1.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int d1, int d2){\nint d1old;\nwhile (x >= 0)\n{\n  x = x - d1;\n  d1old = d1;\n  d1 = d2 + 1;\n  d2 = d1old + 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "d1": [
+    -2147483648,
+    2147483647
+   ],
+   "d2": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Benghazi_nondet-2.c",
+  "expected_unreach": null,
+  "source": "int f(int x, int d1, int d2){\nint d1old;\nwhile (x >= 0)\n{\n  x = x - d1;\n  d1old = d1;\n  d1 = d2 + 1;\n  d2 = d1old + 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -1048575,
+    1048575
+   ],
+   "d1": [
+    -1048575,
+    1048575
+   ],
+   "d2": [
+    -1048575,
+    1048575
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Binary_Search-1.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: bsearch"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Binary_Search-2.c",
+  "expected_unreach": null,
+  "stage": "reject:call inside program body: bsearch"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Cairo.c",
+  "expected_unreach": "true",
+  "source": "int f(int x){\nif (x > 0)\n{\n  while (x != 0)\n  {\n    x = x - 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Cairo_nondet.c",
+  "expected_unreach": "false",
+  "source": "int f(int x){\nif (x > __VERIFIER_nondet_int())\n{\n  while (x != 0)\n  {\n    x = x - 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Cairo_step2-1.c",
+  "expected_unreach": "true",
+  "source": "int f(int x){\nif (x > 0)\n{\n  while ((x != 0) && (x != (-1)))\n  {\n    x = x - 2;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Cairo_step2-2.c",
+  "expected_unreach": "false",
+  "source": "int f(int x){\nif (x > 0)\n{\n  while (x != 0)\n  {\n    x = x - 2;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Cairo_step2-3.c",
+  "expected_unreach": "true",
+  "source": "int f(unsigned int x){\nif (x > 0)\n{\n  while (x != 0)\n  {\n    x = x - 2;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    0,
+    4294967295
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Collatz.c",
+  "expected_unreach": "false",
+  "source": "int f(int y){\nwhile (y > 1)\n{\n  if ((y % 2) == 0)\n  {\n    y = y / 2;\n  }\n  else\n  {\n    y = (3 * y) + 1;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Copenhagen.c",
+  "expected_unreach": "true",
+  "source": "int f(int x, int y){\nint oldx;\nwhile ((x >= 0) && (y >= 0))\n{\n  oldx = x;\n  x = y - 1;\n  y = oldx - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Copenhagen_disj-1.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nint oldx;\nwhile ((x >= 0) || (y >= 0))\n{\n  oldx = x;\n  x = y - 1;\n  y = oldx - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Copenhagen_disj-2.c",
+  "expected_unreach": null,
+  "source": "int f(int x, int y){\nint oldx;\nwhile ((x >= 0) || (y >= 0))\n{\n  oldx = x;\n  x = y - 1;\n  y = oldx - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -1073741823,
+    1073741823
+   ],
+   "y": [
+    -1073741823,
+    1073741823
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Division-2.c",
+  "expected_unreach": "true",
+  "source": "int f(int y){\nwhile ((y >= 0) && (y <= 10))\n{\n  y = ((2 * y) + 1) / 2;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Gothenburg-1.c",
+  "expected_unreach": null,
+  "source": "int f(int a, int b, int x, int y){\nif (a == b)\n{\n  while ((x >= 0) || (y >= 0))\n  {\n    x = ((x + a) - b) - 1;\n    y = ((y + b) - a) - 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "a": [
+    -268435455,
+    268435455
+   ],
+   "b": [
+    -268435455,
+    268435455
+   ],
+   "x": [
+    -268435455,
+    268435455
+   ],
+   "y": [
+    -268435455,
+    268435455
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Gothenburg-2.c",
+  "expected_unreach": "false",
+  "source": "int f(int a, int b, int x, int y){\nif (a == b)\n{\n  while ((x >= 0) || (y >= 0))\n  {\n    x = ((x + a) - b) - 1;\n    y = ((y + b) - a) - 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "a": [
+    -2147483648,
+    2147483647
+   ],
+   "b": [
+    -2147483648,
+    2147483647
+   ],
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Gothenburg_v2-1.c",
+  "expected_unreach": null,
+  "source": "int f(int a, int b, int x, int y){\nif ((a == (b + 1)) && (x < 0))\n{\n  while ((x >= 0) || (y >= 0))\n  {\n    x = ((x + a) - b) - 1;\n    y = ((y + b) - a) - 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "a": [
+    -268435455,
+    268435455
+   ],
+   "b": [
+    -268435455,
+    268435455
+   ],
+   "x": [
+    -268435455,
+    268435455
+   ],
+   "y": [
+    -268435455,
+    268435455
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Gothenburg_v2-2.c",
+  "expected_unreach": "false",
+  "source": "int f(int a, int b, int x, int y){\nif ((a == (b + 1)) && (x < 0))\n{\n  while ((x >= 0) || (y >= 0))\n  {\n    x = ((x + a) - b) - 1;\n    y = ((y + b) - a) - 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "a": [
+    -2147483648,
+    2147483647
+   ],
+   "b": [
+    -2147483648,
+    2147483647
+   ],
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Hanoi_2vars.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nwhile (x > 0)\n{\n  x = x + y;\n  y = y + 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Hanoi_3vars.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y, int z){\nwhile (x > 0)\n{\n  x = x + y;\n  y = y + z;\n  z = z + 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Hanoi_plus.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y, int z){\nwhile (x > 0)\n{\n  x = x + y;\n  y = y + z;\n  z = z + x;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "LexIndexValue-Array-1.c",
+  "expected_unreach": "true",
+  "stage": "reject:arrays or pointers"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "LexIndexValue-Array-2.c",
+  "expected_unreach": null,
+  "stage": "reject:arrays or pointers"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "LexIndexValue-Pointer-1.c",
+  "expected_unreach": "true",
+  "stage": "reject:arrays or pointers"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "LexIndexValue-Pointer-2.c",
+  "expected_unreach": null,
+  "stage": "reject:arrays or pointers"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "LexIndexValue-Pointer-3.c",
+  "expected_unreach": null,
+  "stage": "reject:arrays or pointers"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Lobnya-Boolean-Reordered-1.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int b){\nwhile (b != 0)\n{\n  b = __VERIFIER_nondet_int();\n  x = x - 1;\n  if (x >= 0)\n  {\n    b = 1;\n  }\n  else\n  {\n    b = 0;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "b": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Lobnya-Boolean-Reordered-2.c",
+  "expected_unreach": null,
+  "source": "int f(int x, int b){\nwhile (b != 0)\n{\n  b = __VERIFIER_nondet_int();\n  x = x - 1;\n  if (x >= 0)\n  {\n    b = 1;\n  }\n  else\n  {\n    b = 0;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483647,
+    2147483647
+   ],
+   "b": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Madrid.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nint x = 7;\nwhile (true)\n{\n  x = 2;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "structural:tree:Loop condition must compare the index with a bound | while:Unknown lifted integer variable"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "McCarthy91_Iteration.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nint c = 1;\nint n = 0;\nn = __VERIFIER_nondet_int();\nwhile (c > 0)\n{\n  if (n > 100)\n  {\n    n = n - 10;\n    c = c - 1;\n  }\n  else\n  {\n    n = n + 11;\n    c = c + 1;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "McCarthy91_Recursion.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: mc91"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "MenloPark.c",
+  "expected_unreach": "true",
+  "source": "int f(int x){\nint y = 100;\nint z = 1;\nwhile (x >= 0)\n{\n  x = x - y;\n  y = y - z;\n  z = -z;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "MutualRecursion_1a.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: g"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "MutualRecursion_1b.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: g"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Mysore-1.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int c){\nif (c >= 2)\n{\n  while ((x + c) >= 0)\n  {\n    x = x - c;\n    c = c + 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "c": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Mysore-2.c",
+  "expected_unreach": null,
+  "source": "int f(int x, int c){\nif (c >= 2)\n{\n  while ((x + c) >= 0)\n  {\n    x = x - c;\n    c = c + 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -65535,
+    65535
+   ],
+   "c": [
+    -65535,
+    65535
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Mysore-3.c",
+  "expected_unreach": null,
+  "source": "int f(int x, int c){\nif (c < 0)\n{\n  while ((x + c) >= 0)\n  {\n    x = x - c;\n    c = c - 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -65535,
+    65535
+   ],
+   "c": [
+    -65535,
+    65535
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "NestedRecursion_1a-1.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: rec2"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "NestedRecursion_1a-2.c",
+  "expected_unreach": null,
+  "stage": "reject:call inside program body: rec2"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "NestedRecursion_1b.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: rec2"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "NestedRecursion_1c.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: rec2"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "NestedRecursion_1d.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: rec2"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "NestedRecursion_2a.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: g"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "NestedRecursion_2b.c",
+  "expected_unreach": "true",
+  "stage": "reject:early return in body"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "NestedRecursion_2c.c",
+  "expected_unreach": "true",
+  "stage": "reject:early return in body"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "NonTermination1.c",
+  "expected_unreach": "false",
+  "source": "int f(int x){\nwhile (x > 1)\n{\n  x = 2 * x;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "NonTermination2.c",
+  "expected_unreach": "false",
+  "source": "int f(int x){\nint oldx;\nwhile ((x > 1) && (x >= (2 * oldx)))\n{\n  oldx = x;\n  x = __VERIFIER_nondet_int();\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "NonTermination3-1.c",
+  "expected_unreach": null,
+  "stage": "reject:arrays or pointers"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "NonTermination3-2.c",
+  "expected_unreach": "true",
+  "stage": "reject:arrays or pointers"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "NonTermination4.c",
+  "expected_unreach": "false",
+  "source": "int f(int __z){\nint x = 1;\nint y = 1;\nwhile (x >= 0)\n{\n  x = 2 * x;\n  y = 3 * y;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "NonTerminationSimple2.c",
+  "expected_unreach": "false",
+  "source": "int f(int x){\nwhile (x >= 0)\n{\n  x = x + 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "NonTerminationSimple3.c",
+  "expected_unreach": "false",
+  "source": "int f(int c, int x){\nwhile (x >= 0)\n{\n  x = x + c;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "c": [
+    -2147483648,
+    2147483647
+   ],
+   "x": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "NonTerminationSimple4.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nif (y >= 5)\n{\n  while (x >= 0)\n  {\n    y = y - 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "NonTerminationSimple5.c",
+  "expected_unreach": "false",
+  "source": "int f(int x){\nwhile (x >= 0)\n{\n  if (__VERIFIER_nondet_int() != 0)\n  {\n    x = x - 1;\n  }\n  else\n  {\n    x = x + 1;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "NonTerminationSimple6.c",
+  "expected_unreach": "false",
+  "source": "int f(int __z){\nint c = 5;\nint x = 0;\nx = __VERIFIER_nondet_int();\nwhile (x >= 0)\n{\n  x = x + c;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "NonTerminationSimple7.c",
+  "expected_unreach": "true",
+  "source": "int f(int x, int c){\nif (c == 0)\n{\n  while (x >= 0)\n  {\n    x = x + c;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "c": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "NonTerminationSimple8.c",
+  "expected_unreach": "false",
+  "source": "int f(int x){\nwhile (x >= 0)\n{\n  if (__VERIFIER_nondet_int() != 0)\n  {\n    x = x + 1;\n  }\n  else\n  {\n    if (__VERIFIER_nondet_int() != 0)\n    {\n      x = x + 2;\n    }\n    else\n    {\n      if (__VERIFIER_nondet_int() != 0)\n      {\n        x = x + 3;\n      }\n      else\n      {\n        if (__VERIFIER_nondet_int() != 0)\n        {\n          x = x + 4;\n        }\n        else\n        {\n          x = -1;\n        }\n      }\n    }\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "NonTerminationSimple9.c",
+  "expected_unreach": "false",
+  "source": "int f(int x){\nwhile (x >= 0)\n{\n  x = x + __VERIFIER_nondet_int();\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Nyala-2lex-1.c",
+  "expected_unreach": null,
+  "source": "int f(int __z){\nint x;\nint y;\nwhile ((x >= 0) && (y >= 0))\n{\n  y = y - 1;\n  if (y < 0)\n  {\n    x = x - 1;\n    y = __VERIFIER_nondet_int();\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Nyala-2lex-2.c",
+  "expected_unreach": "true",
+  "source": "int f(int x, int y){\nwhile ((x >= 0) && (y >= 0))\n{\n  y = y - 1;\n  if (y < 0)\n  {\n    x = x - 1;\n    y = __VERIFIER_nondet_int();\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Parallel.c",
+  "expected_unreach": "true",
+  "source": "int f(int x, int y){\nwhile ((x >= 0) || (y >= 0))\n{\n  if (x >= 0)\n  {\n    x = x - 1;\n  }\n  else\n  {\n    y = y - 1;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Piecewise.c",
+  "expected_unreach": "true",
+  "source": "int f(int q, int p){\nwhile (((q > 0) && (p > 0)) && (p != q))\n{\n  if (q < p)\n  {\n    q = q - 1;\n    p = __VERIFIER_nondet_int();\n  }\n  else\n  {\n    if (p < q)\n    {\n      p = p - 1;\n      q = __VERIFIER_nondet_int();\n    }\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "q": [
+    -2147483648,
+    2147483647
+   ],
+   "p": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Pure2Phase-1.c",
+  "expected_unreach": null,
+  "stage": "reject:early return in body"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Pure2Phase-2.c",
+  "expected_unreach": "false",
+  "source": "int f(int y, int z){\nwhile (z >= 0)\n{\n  y = y - 1;\n  if (y >= 0)\n  {\n    z = __VERIFIER_nondet_int();\n  }\n  else\n  {\n    z = z - 1;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Pure3Phase-1.c",
+  "expected_unreach": null,
+  "source": "int f(int x, int y, int z){\nwhile (x >= 0)\n{\n  if (__VERIFIER_nondet_int() != 0)\n  {\n    x = x + y;\n  }\n  else\n  {\n    x = x + z;\n  }\n  y = y + z;\n  z = z - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    65535
+   ],
+   "y": [
+    -65535,
+    65535
+   ],
+   "z": [
+    -65535,
+    65535
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Pure3Phase-2.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y, int z){\nwhile (x >= 0)\n{\n  if (__VERIFIER_nondet_int() != 0)\n  {\n    x = x + y;\n  }\n  else\n  {\n    x = x + z;\n  }\n  y = y + z;\n  z = z - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "RecursiveMultiplication-1.c",
+  "expected_unreach": null,
+  "stage": "reject:call inside program body: mult"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "RecursiveMultiplication-2.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: mult"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "RecursiveNonterminating-1.c",
+  "expected_unreach": null,
+  "stage": "reject:call inside program body: rec"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "RecursiveNonterminating-2.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: rec"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Rotation180-1.c",
+  "expected_unreach": null,
+  "source": "int f(int x, int y){\nint oldx;\nwhile (true)\n{\n  oldx = x;\n  x = -y;\n  y = oldx;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483647,
+    2147483647
+   ],
+   "y": [
+    -2147483647,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Rotation180-2.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nint oldx;\nwhile (true)\n{\n  oldx = x;\n  x = -y;\n  y = oldx;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Singapore-1.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nif ((x + y) <= 0)\n{\n  while (x > 0)\n  {\n    x = (x + x) + y;\n    y = y - 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Singapore-2.c",
+  "expected_unreach": null,
+  "source": "int f(int x, int y){\nif ((x + y) <= 0)\n{\n  while (x > 0)\n  {\n    x = (x + x) + y;\n    y = y - 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -65535,
+    65535
+   ],
+   "y": [
+    -65535,
+    65535
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Singapore_plus.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nif ((x + y) >= 0)\n{\n  while (x > 0)\n  {\n    x = (x + x) + y;\n    y = y + 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Singapore_v1.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nif ((x + y) > 0)\n{\n  while (x > 0)\n  {\n    x = (x + x) + y;\n    y = y - 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Singapore_v2.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nif ((x + y) > 1)\n{\n  while (x > 0)\n  {\n    x = (x + x) + y;\n    y = y - 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Stockholm-1.c",
+  "expected_unreach": null,
+  "source": "int f(int x, int a, int b){\nif (a == b)\n{\n  while (x >= 0)\n  {\n    x = ((x + a) - b) - 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -268435455,
+    268435455
+   ],
+   "a": [
+    -268435455,
+    268435455
+   ],
+   "b": [
+    -268435455,
+    268435455
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Stockholm-2.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int a, int b){\nif (a == b)\n{\n  while (x >= 0)\n  {\n    x = ((x + a) - b) - 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "a": [
+    -2147483648,
+    2147483647
+   ],
+   "b": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "SyntaxSupportPointer01-1.c",
+  "expected_unreach": null,
+  "stage": "reject:arrays or pointers"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "SyntaxSupportPointer01-2.c",
+  "expected_unreach": "true",
+  "stage": "reject:arrays or pointers"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "SyntaxSupportPointer01-3.c",
+  "expected_unreach": null,
+  "stage": "reject:arrays or pointers"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "TelAviv-Amir-Minimum.c",
+  "expected_unreach": "true",
+  "source": "int f(int x, int y){\nwhile ((x > 0) && (y > 0))\n{\n  if (__VERIFIER_nondet_int() != 0)\n  {\n    if (x < y)\n    {\n      y = x - 1;\n    }\n    else\n    {\n      y = y - 1;\n    }\n    x = __VERIFIER_nondet_int();\n  }\n  else\n  {\n    if (x < y)\n    {\n      x = x - 1;\n    }\n    else\n    {\n      x = y - 1;\n    }\n    y = __VERIFIER_nondet_int();\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Thun-1.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nwhile (x >= 0)\n{\n  x = x + y;\n  y = ((-2) * y) - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Thun-2.c",
+  "expected_unreach": null,
+  "source": "int f(int x, int y){\nwhile (x >= 0)\n{\n  x = x + y;\n  y = ((-2) * y) - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -65535,
+    65535
+   ],
+   "y": [
+    -65535,
+    65535
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Toulouse-BranchesToLoop-1.c",
+  "expected_unreach": "false",
+  "source": "int f(int y, int z){\nint x;\nif (__VERIFIER_nondet_int() != 0)\n{\n  x = 1;\n}\nelse\n{\n  x = -1;\n}\n\nwhile ((y < 100) && (z < 100))\n{\n  y = y + x;\n  z = z - x;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Toulouse-BranchesToLoop-2.c",
+  "expected_unreach": null,
+  "source": "int f(int y, int z){\nint x;\nif (__VERIFIER_nondet_int() != 0)\n{\n  x = 1;\n}\nelse\n{\n  x = -1;\n}\n\nwhile ((y < 100) && (z < 100))\n{\n  y = y + x;\n  z = z - x;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "y": [
+    -268435455,
+    2147483647
+   ],
+   "z": [
+    -268435455,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Toulouse-MultiBranchesToLoop-1.c",
+  "expected_unreach": "false",
+  "source": "int f(int y, int z){\nint x;\nif (__VERIFIER_nondet_int() != 0)\n{\n  x = 1;\n}\nelse\n{\n  x = -1;\n}\n\nif (x > 0)\n{\n  x = x + 1;\n}\nelse\n{\n  x = x - 1;\n}\n\nif (x > 0)\n{\n  x = x + 1;\n}\nelse\n{\n  x = x - 1;\n}\n\nif (x > 0)\n{\n  x = x + 1;\n}\nelse\n{\n  x = x - 1;\n}\n\nif (x > 0)\n{\n  x = x + 1;\n}\nelse\n{\n  x = x - 1;\n}\n\nif (x > 0)\n{\n  x = x + 1;\n}\nelse\n{\n  x = x - 1;\n}\n\nif (x > 0)\n{\n  x = x + 1;\n}\nelse\n{\n  x = x - 1;\n}\n\nif (x > 0)\n{\n  x = x + 1;\n}\nelse\n{\n  x = x - 1;\n}\n\nif (x > 0)\n{\n  x = x + 1;\n}\nelse\n{\n  x = x - 1;\n}\n\nwhile ((y < 100) && (z < 100))\n{\n  y = y + x;\n  z = z - x;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Toulouse-MultiBranchesToLoop-2.c",
+  "expected_unreach": null,
+  "source": "int f(int y, int z){\nint x;\nif (__VERIFIER_nondet_int() != 0)\n{\n  x = 1;\n}\nelse\n{\n  x = -1;\n}\n\nif (x > 0)\n{\n  x = x + 1;\n}\nelse\n{\n  x = x - 1;\n}\n\nif (x > 0)\n{\n  x = x + 1;\n}\nelse\n{\n  x = x - 1;\n}\n\nif (x > 0)\n{\n  x = x + 1;\n}\nelse\n{\n  x = x - 1;\n}\n\nif (x > 0)\n{\n  x = x + 1;\n}\nelse\n{\n  x = x - 1;\n}\n\nif (x > 0)\n{\n  x = x + 1;\n}\nelse\n{\n  x = x - 1;\n}\n\nif (x > 0)\n{\n  x = x + 1;\n}\nelse\n{\n  x = x - 1;\n}\n\nif (x > 0)\n{\n  x = x + 1;\n}\nelse\n{\n  x = x - 1;\n}\n\nif (x > 0)\n{\n  x = x + 1;\n}\nelse\n{\n  x = x - 1;\n}\n\nwhile ((y < 100) && (z < 100))\n{\n  y = y + x;\n  z = z - x;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "y": [
+    -268435455,
+    2147483647
+   ],
+   "z": [
+    -268435455,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "Waldkirch.c",
+  "expected_unreach": "true",
+  "source": "int f(int x){\nwhile (x >= 0)\n{\n  x = x - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "WhileFalse.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nwhile (false)\n{\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Unknown lifted integer variable"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "WhileTrue.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nwhile (true)\n{\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Unknown lifted integer variable"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "aaron2-1.c",
+  "expected_unreach": null,
+  "source": "int f(int tx, int x, int y){\nwhile ((x >= y) && (tx >= 0))\n{\n  if (__VERIFIER_nondet_int() != 0)\n  {\n    x = (x - 1) - tx;\n  }\n  else\n  {\n    y = (y + 1) + tx;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "tx": [
+    -2147483648,
+    1073741823
+   ],
+   "x": [
+    -2147483648,
+    1073741823
+   ],
+   "y": [
+    -1073741823,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "aaron2-2.c",
+  "expected_unreach": "false",
+  "source": "int f(int tx, int x, int y){\nwhile ((x >= y) && (tx >= 0))\n{\n  if (__VERIFIER_nondet_int() != 0)\n  {\n    x = (x - 1) - tx;\n  }\n  else\n  {\n    y = (y + 1) + tx;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "tx": [
+    -2147483648,
+    2147483647
+   ],
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "aaron3-1.c",
+  "expected_unreach": null,
+  "stage": "reject:early return in body"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "aaron3-2.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y, int z, int tx){\nwhile ((x >= y) && (x <= (tx + z)))\n{\n  if (__VERIFIER_nondet_int() != 0)\n  {\n    z = z - 1;\n    tx = x;\n    x = __VERIFIER_nondet_int();\n  }\n  else\n  {\n    y = y + 1;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ],
+   "tx": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "easy1.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nint x = 0;\nint y = 100;\nint z = 0;\nz = __VERIFIER_nondet_int();\nwhile (x < 40)\n{\n  if (z == 0)\n  {\n    x = x + 1;\n  }\n  else\n  {\n    x = x + 2;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "easy2-1.c",
+  "expected_unreach": "false",
+  "source": "int f(int __z){\nint x = 12;\nint y = 0;\nint z = 0;\nz = __VERIFIER_nondet_int();\nwhile (z > 0)\n{\n  x = x + 1;\n  y = y - 1;\n  z = z - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted",
+  "file": "easy2-2.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nint x = 0;\nint y = 0;\nint z = 0;\nz = __VERIFIER_nondet_int();\nwhile (z > 0)\n{\n  x = x + 1;\n  y = y - 1;\n  z = z - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-Fig1.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nint x = 0;\nint y = 0;\nint m = 0;\nm = __VERIFIER_nondet_int();\nx = m;\nwhile ((x >= 0) && (y >= 0))\n{\n  if (__VERIFIER_nondet_int() != 0)\n  {\n    while ((y <= m) && (__VERIFIER_nondet_int() != 0))\n    {\n      y = y + 1;\n    }\n\n    x = x - 1;\n  }\n  y = y - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_loops_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-Fig2a.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nwhile (x >= 2)\n{\n  x = x - 1;\n  y = y + x;\n  while ((y >= x) && (__VERIFIER_nondet_int() != 0))\n  {\n    y = y - 1;\n  }\n\n  x = x - 1;\n  y = y - x;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_loops_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-Fig2b.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nwhile (x >= 2)\n{\n  x = x - 1;\n  y = y + x;\n  while ((y >= (x + 1)) && (__VERIFIER_nondet_int() != 0))\n  {\n    y = y - 1;\n    while ((y >= (x + 3)) && (__VERIFIER_nondet_int() != 0))\n    {\n      x = x + 1;\n      y = y - 2;\n    }\n\n    y = y - 1;\n  }\n\n  x = x - 1;\n  y = y - x;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_loops_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-aaron2.c",
+  "expected_unreach": "false",
+  "source": "int f(int tx, int x, int y){\nwhile ((x >= y) && (tx >= 0))\n{\n  if (__VERIFIER_nondet_int())\n  {\n    x = (x - 1) - tx;\n  }\n  else\n  {\n    y = (y + 1) + tx;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "tx": [
+    -2147483648,
+    2147483647
+   ],
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-aaron3.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y, int z, int tx){\nwhile ((x >= y) && (x <= (tx + z)))\n{\n  if (__VERIFIER_nondet_int())\n  {\n    z = z - 1;\n    tx = x;\n    x = __VERIFIER_nondet_int();\n  }\n  else\n  {\n    y = y + 1;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ],
+   "tx": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-complex.c",
+  "expected_unreach": "false",
+  "source": "int f(int a, int b){\nwhile (a < 30)\n{\n  while (b < a)\n  {\n    if (b > 5)\n    {\n      b = b + 7;\n    }\n    else\n    {\n      b = b + 2;\n    }\n    if ((b >= 10) && (b <= 12))\n    {\n      a = a + 10;\n    }\n    else\n    {\n      a = a + 1;\n    }\n  }\n\n  a = a + 2;\n  b = b - 10;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "a": [
+    -2147483648,
+    2147483647
+   ],
+   "b": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_loops_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-counterex1a.c",
+  "expected_unreach": "false",
+  "source": "int f(int n, int b, int x, int y){\nwhile (((x >= 0) && (0 <= y)) && (y <= n))\n{\n  if (b == 0)\n  {\n    y = y + 1;\n    if (__VERIFIER_nondet_int() != 0)\n    {\n      b = 1;\n    }\n  }\n  else\n  {\n    y = y - 1;\n    if (__VERIFIER_nondet_int() != 0)\n    {\n      x = x - 1;\n      b = 0;\n    }\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "n": [
+    -2147483648,
+    2147483647
+   ],
+   "b": [
+    -2147483648,
+    2147483647
+   ],
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-counterex1b.c",
+  "expected_unreach": "false",
+  "source": "int f(int n, int x, int y){\nwhile (x >= 0)\n{\n  while ((y >= 0) && (__VERIFIER_nondet_int() != 0))\n  {\n    y = y - 1;\n  }\n\n  x = x - 1;\n  while ((y <= n) && (__VERIFIER_nondet_int() != 0))\n  {\n    y = y + 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "n": [
+    -2147483648,
+    2147483647
+   ],
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_loops_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-cousot9.c",
+  "expected_unreach": "true",
+  "source": "int f(int j, int N){\nint i = 0;\ni = N;\nwhile (i > 0)\n{\n  if (j > 0)\n  {\n    j = j - 1;\n  }\n  else\n  {\n    j = N;\n    i = i - 1;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "j": [
+    -2147483648,
+    2147483647
+   ],
+   "N": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-easy1.c",
+  "expected_unreach": "true",
+  "source": "int f(int z){\nint x = 0;\nint y = 100;\nwhile (x < 40)\n{\n  if (z == 0)\n  {\n    x = x + 1;\n  }\n  else\n  {\n    x = x + 2;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "z": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-easy2-1.c",
+  "expected_unreach": "false",
+  "source": "int f(int z){\nint x = 12;\nint y = 0;\nwhile (z > 0)\n{\n  x = x + 1;\n  y = y - 1;\n  z = z - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "z": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-easy2-2.c",
+  "expected_unreach": "true",
+  "source": "int f(int z){\nint x = 0;\nint y = 0;\nwhile (z > 0)\n{\n  x = x + 1;\n  y = y - 1;\n  z = z - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "z": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-exmini.c",
+  "expected_unreach": "false",
+  "source": "int f(int i, int j, int k, int tmp){\nwhile ((i <= 100) && (j <= k))\n{\n  tmp = i;\n  i = j;\n  j = tmp + 1;\n  k = k - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "i": [
+    -2147483648,
+    2147483647
+   ],
+   "j": [
+    -2147483648,
+    2147483647
+   ],
+   "k": [
+    -2147483648,
+    2147483647
+   ],
+   "tmp": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-loops.c",
+  "expected_unreach": "true",
+  "source": "int f(int n, int y){\nint x = 0;\nx = n;\nif ((x >= 0) && (x <= 1073741823))\n{\n  while (x >= 0)\n  {\n    y = 1;\n    if (y < x)\n    {\n      while (y < x)\n      {\n        y = 2 * y;\n      }\n\n    }\n    x = x - 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "n": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_loops_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-ndecr.c",
+  "expected_unreach": "false",
+  "source": "int f(int n){\nint i = 0;\ni = n - 1;\nwhile (i > 1)\n{\n  i = i - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "n": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-nestedLoop-1.c",
+  "expected_unreach": "true",
+  "source": "int f(int i, int j, int k, int n, int m, int N){\nif (((0 <= n) && (0 <= m)) && (0 <= N))\n{\n  i = 0;\n  while (i < n)\n  {\n    j = 0;\n    while (j < m)\n    {\n      j = j + 1;\n      k = i;\n      while (k < (N - 1))\n      {\n        k = k + 1;\n      }\n\n      i = k;\n    }\n\n    i = i + 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "i": [
+    -2147483648,
+    2147483647
+   ],
+   "j": [
+    -2147483648,
+    2147483647
+   ],
+   "k": [
+    -2147483648,
+    2147483647
+   ],
+   "n": [
+    -2147483648,
+    2147483647
+   ],
+   "m": [
+    -2147483648,
+    2147483647
+   ],
+   "N": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_loops_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-nestedLoop-2.c",
+  "expected_unreach": "false",
+  "source": "int f(int i, int j, int k, int n, int m, int N){\nif (((0 <= n) && (0 <= m)) && (0 <= N))\n{\n  i = 0;\n  while (i < n)\n  {\n    j = 0;\n    while (j < m)\n    {\n      j = j + 1;\n      k = i;\n      while (k < N)\n      {\n        k = k + 1;\n      }\n\n      i = k;\n    }\n\n    i = i + 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "i": [
+    -2147483648,
+    2147483647
+   ],
+   "j": [
+    -2147483648,
+    2147483647
+   ],
+   "k": [
+    -2147483648,
+    2147483647
+   ],
+   "n": [
+    -2147483648,
+    2147483647
+   ],
+   "m": [
+    -2147483648,
+    2147483647
+   ],
+   "N": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_loops_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-random1d-1.c",
+  "expected_unreach": "false",
+  "source": "int f(int max){\nint a;\nint x;\nif (max > 0)\n{\n  a = 0;\n  x = 1;\n  while (x <= max)\n  {\n    if (__VERIFIER_nondet_int() != 0)\n    {\n      a = a + 1;\n    }\n    else\n    {\n      a = a - 1;\n    }\n    x = x + 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "max": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:Initialized named scalar locals required | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-random1d-2.c",
+  "expected_unreach": "true",
+  "source": "int f(int max){\nint a;\nint x;\nif (max > 0)\n{\n  a = 0;\n  x = 1;\n  while (x < max)\n  {\n    if (__VERIFIER_nondet_int() != 0)\n    {\n      a = a + 1;\n    }\n    else\n    {\n      a = a - 1;\n    }\n    x = x + 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "max": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:Initialized named scalar locals required | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-random2d.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nint N = 10;\nint x = 0;\nint y = 0;\nint i = 0;\nint r;\nwhile (i < N)\n{\n  i = i + 1;\n  r = __VERIFIER_nondet_int();\n  if ((r >= 0) && (r <= 3))\n  {\n    if (r == 0)\n    {\n      x = x + 1;\n    }\n    else\n    {\n      if (r == 1)\n      {\n        x = x - 1;\n      }\n      else\n      {\n        if (r == 2)\n        {\n          y = y + 1;\n        }\n        else\n        {\n          if (r == 3)\n          {\n            y = y - 1;\n          }\n        }\n      }\n    }\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "structural:tree:Initialized named scalar locals required | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-rsd.c",
+  "expected_unreach": "false",
+  "source": "int f(int r){\nint da;\nint db;\nint temp;\nif (r >= 0)\n{\n  da = 2 * r;\n  db = 2 * r;\n  while (da >= r)\n  {\n    if (__VERIFIER_nondet_int() != 0)\n    {\n      da = da - 1;\n    }\n    else\n    {\n      temp = da;\n      da = db - 1;\n      db = da;\n    }\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "r": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-speedFails4.c",
+  "expected_unreach": "false",
+  "source": "int f(int i, int x, int n, int b){\nint t;\nif (b >= 1)\n{\n  t = 1;\n}\nelse\n{\n  t = -1;\n}\n\nwhile (x <= n)\n{\n  if (b >= 1)\n  {\n    x = x + t;\n  }\n  else\n  {\n    x = x - t;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "i": [
+    -2147483648,
+    2147483647
+   ],
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "n": [
+    -2147483648,
+    2147483647
+   ],
+   "b": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-speedpldi2.c",
+  "expected_unreach": "true",
+  "source": "int f(int n, int m){\nint v1;\nint v2;\nif ((n >= 0) && (m > 0))\n{\n  v1 = n;\n  v2 = 0;\n  while (v1 > 0)\n  {\n    if (v2 < m)\n    {\n      v2 = v2 + 1;\n      v1 = v1 - 1;\n    }\n    else\n    {\n      v2 = 0;\n    }\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "n": [
+    -2147483648,
+    2147483647
+   ],
+   "m": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-speedpldi3.c",
+  "expected_unreach": "true",
+  "source": "int f(int n, int m){\nint i;\nint j;\nif ((m > 0) && (n > m))\n{\n  i = 0;\n  j = 0;\n  while (i < n)\n  {\n    if (j < m)\n    {\n      j = j + 1;\n    }\n    else\n    {\n      j = 0;\n      i = i + 1;\n    }\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "n": [
+    -2147483648,
+    2147483647
+   ],
+   "m": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-speedpldi4.c",
+  "expected_unreach": "true",
+  "source": "int f(int n, int m){\nint i;\nif ((m > 0) && (n > m))\n{\n  i = n;\n  while (i > 0)\n  {\n    if (i < m)\n    {\n      i = i - 1;\n    }\n    else\n    {\n      i = i - m;\n    }\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "n": [
+    -2147483648,
+    2147483647
+   ],
+   "m": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-terminate.c",
+  "expected_unreach": "false",
+  "source": "int f(int i, int j, int k){\nint ell;\nwhile ((i <= 100) && (j <= k))\n{\n  ell = i;\n  i = j;\n  j = ell + 1;\n  k = k - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "i": [
+    -2147483648,
+    2147483647
+   ],
+   "j": [
+    -2147483648,
+    2147483647
+   ],
+   "k": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-wcet2.c",
+  "expected_unreach": "true",
+  "source": "int f(int i, int j){\nwhile (i < 5)\n{\n  j = 0;\n  while ((i > 2) && (j <= 9))\n  {\n    j = j + 1;\n  }\n\n  i = i + 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "i": [
+    -2147483648,
+    2147483647
+   ],
+   "j": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_loops_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-while2.c",
+  "expected_unreach": "true",
+  "source": "int f(int N){\nint i = 0;\nint j;\ni = N;\nwhile (i > 0)\n{\n  j = N;\n  while (j > 0)\n  {\n    j = j - 1;\n  }\n\n  i = i - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "N": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "AliasDarteFeautrierGonnord-SAS2010-wise.c",
+  "expected_unreach": "true",
+  "source": "int f(int x, int y){\nif ((x >= 0) && (y >= 0))\n{\n  while (((x - y) > 2) || ((y - x) > 2))\n  {\n    if (x < y)\n    {\n      x = x + 1;\n    }\n    else\n    {\n      y = y + 1;\n    }\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "Avery-FLOPS2006-Table1.c",
+  "expected_unreach": "true",
+  "source": "int f(int x, int y){\nint z = 0;\nint i = 0;\ni = x;\nif ((y > 0) && (x > 0))\n{\n  while (i > 0)\n  {\n    i = i - 1;\n    z = z + 1;\n  }\n\n  while (i < y)\n  {\n    i = i + 1;\n    z = z - 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_loops_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "Ben-Amram-LMCS2010-Ex2.3.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y, int z){\nwhile (((x > 0) && (y > 0)) && (z > 0))\n{\n  if (y > x)\n  {\n    y = z;\n    x = __VERIFIER_nondet_int();\n    z = x - 1;\n  }\n  else\n  {\n    z = z - 1;\n    x = __VERIFIER_nondet_int();\n    y = x - 1;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "BradleyMannaSipma-CAV2005-Fig1-modified.c",
+  "expected_unreach": "true",
+  "source": "int f(int y1, int y2){\nif ((y1 >= 0) && (y2 >= 0))\n{\n  while (y1 != y2)\n  {\n    if (y1 > y2)\n    {\n      y1 = y1 - y2;\n    }\n    else\n    {\n      y2 = y2 - y1;\n    }\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "y1": [
+    -2147483648,
+    2147483647
+   ],
+   "y2": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "BradleyMannaSipma-CAV2005-Fig1.c",
+  "expected_unreach": "true",
+  "source": "int f(int y1, int y2){\nif ((y1 > 0) && (y2 > 0))\n{\n  while (y1 != y2)\n  {\n    if (y1 > y2)\n    {\n      y1 = y1 - y2;\n    }\n    else\n    {\n      y2 = y2 - y1;\n    }\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "y1": [
+    -2147483648,
+    2147483647
+   ],
+   "y2": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "BradleyMannaSipma-ICALP2005-Fig1.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y, int N){\nif ((((N < 536870912) && (x < 536870912)) && (y < 536870912)) && (x >= (-1073741824)))\n{\n  if ((x + y) >= 0)\n  {\n    while (x <= N)\n    {\n      if (__VERIFIER_nondet_int() != 0)\n      {\n        x = (2 * x) + y;\n        y = y + 1;\n      }\n      else\n      {\n        x = x + 1;\n      }\n    }\n\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "N": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "BrockschmidtCookFuhs-CAV2013-Fig1.c",
+  "expected_unreach": "true",
+  "source": "int f(int i, int j, int n){\nwhile (i < n)\n{\n  j = 0;\n  while (j <= i)\n  {\n    j = j + 1;\n  }\n\n  i = i + 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "i": [
+    -2147483648,
+    2147483647
+   ],
+   "j": [
+    -2147483648,
+    2147483647
+   ],
+   "n": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_loops_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "BrockschmidtCookFuhs-CAV2013-Fig9a.c",
+  "expected_unreach": "true",
+  "source": "int f(int k, int i, int j, int n){\nif (k >= 1)\n{\n  i = 0;\n  while (i < n)\n  {\n    j = 0;\n    while (j <= i)\n    {\n      j = j + k;\n    }\n\n    i = i + 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "k": [
+    -2147483648,
+    2147483647
+   ],
+   "i": [
+    -2147483648,
+    2147483647
+   ],
+   "j": [
+    -2147483648,
+    2147483647
+   ],
+   "n": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_loops_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "BrockschmidtCookFuhs-CAV2013-Introduction.c",
+  "expected_unreach": "true",
+  "source": "int f(int x){\nint y = 1;\nwhile (x > 0)\n{\n  x = x - y;\n  y = y + 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChawdharyCookGulwaniSagivYang-ESOP2008-aaron1.c",
+  "expected_unreach": "false",
+  "source": "int f(int i, int j, int an, int bn){\nwhile ((((an >= i) && (bn >= j)) || ((an >= i) && (bn <= j))) || ((an <= i) && (bn >= j)))\n{\n  if ((an >= i) && (bn >= j))\n  {\n    if (__VERIFIER_nondet_int() != 0)\n    {\n      j = j + 1;\n    }\n    else\n    {\n      i = i + 1;\n    }\n  }\n  else\n  {\n    if ((an >= i) && (bn <= j))\n    {\n      i = i + 1;\n    }\n    else\n    {\n      if ((an <= i) && (bn >= j))\n      {\n        j = j + 1;\n      }\n    }\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "i": [
+    -2147483648,
+    2147483647
+   ],
+   "j": [
+    -2147483648,
+    2147483647
+   ],
+   "an": [
+    -2147483648,
+    2147483647
+   ],
+   "bn": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChawdharyCookGulwaniSagivYang-ESOP2008-aaron12.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y, int z){\nwhile (x >= y)\n{\n  if (__VERIFIER_nondet_int() != 0)\n  {\n    x = x + 1;\n    y = y + x;\n  }\n  else\n  {\n    x = x - z;\n    y = y + (z * z);\n    z = z - 1;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChawdharyCookGulwaniSagivYang-ESOP2008-aaron2.c",
+  "expected_unreach": "false",
+  "source": "int f(int tx, int x, int y){\nwhile ((x >= y) && (tx >= 0))\n{\n  if (__VERIFIER_nondet_int())\n  {\n    x = (x - 1) - tx;\n  }\n  else\n  {\n    y = (y + 1) + tx;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "tx": [
+    -2147483648,
+    2147483647
+   ],
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChawdharyCookGulwaniSagivYang-ESOP2008-aaron3.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y, int z, int tx){\nwhile ((x >= y) && (x <= (tx + z)))\n{\n  if (__VERIFIER_nondet_int())\n  {\n    z = z - 1;\n    tx = x;\n    x = __VERIFIER_nondet_int();\n  }\n  else\n  {\n    y = y + 1;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ],
+   "tx": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChawdharyCookGulwaniSagivYang-ESOP2008-aaron4.c",
+  "expected_unreach": "false",
+  "source": "int f(int i, int j, int k, int an, int bn, int tk){\nwhile (((((an >= i) && (bn >= j)) || ((an >= i) && (bn <= j))) || ((an <= i) && (bn >= j))) && (k >= (tk + 1)))\n{\n  if ((an >= i) && (bn >= j))\n  {\n    if (__VERIFIER_nondet_int() != 0)\n    {\n      j = j + k;\n      tk = k;\n      k = __VERIFIER_nondet_int();\n    }\n    else\n    {\n      i = i + 1;\n    }\n  }\n  else\n  {\n    if ((an >= i) && (bn <= j))\n    {\n      i = i + 1;\n    }\n    else\n    {\n      if ((an <= i) && (bn >= j))\n      {\n        j = j + k;\n        tk = k;\n        k = __VERIFIER_nondet_int();\n      }\n    }\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "i": [
+    -2147483648,
+    2147483647
+   ],
+   "j": [
+    -2147483648,
+    2147483647
+   ],
+   "k": [
+    -2147483648,
+    2147483647
+   ],
+   "an": [
+    -2147483648,
+    2147483647
+   ],
+   "bn": [
+    -2147483648,
+    2147483647
+   ],
+   "tk": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChawdharyCookGulwaniSagivYang-ESOP2008-aaron6.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int tx, int y, int ty, int n){\nif ((x + y) >= 0)\n{\n  while ((((x <= n) && (x >= ((2 * tx) + y))) && (y >= (ty + 1))) && (x >= (tx + 1)))\n  {\n    if (__VERIFIER_nondet_int() != 0)\n    {\n      tx = x;\n      ty = y;\n      x = __VERIFIER_nondet_int();\n      y = __VERIFIER_nondet_int();\n    }\n    else\n    {\n      tx = x;\n      x = __VERIFIER_nondet_int();\n    }\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "tx": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "ty": [
+    -2147483648,
+    2147483647
+   ],
+   "n": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChawdharyCookGulwaniSagivYang-ESOP2008-easy1.c",
+  "expected_unreach": "true",
+  "source": "int f(int z){\nint x = 0;\nint y = 100;\nwhile (x < 40)\n{\n  if (z == 0)\n  {\n    x = x + 1;\n  }\n  else\n  {\n    x = x + 2;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "z": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChawdharyCookGulwaniSagivYang-ESOP2008-easy2.c",
+  "expected_unreach": "true",
+  "source": "int f(int z){\nint x = 12;\nint y = 0;\nwhile (z > 0)\n{\n  x = x + 1;\n  y = y - 1;\n  z = z - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "z": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChawdharyCookGulwaniSagivYang-ESOP2008-random1d.c",
+  "expected_unreach": "true",
+  "source": "int f(int a, int x, int max){\nif (max > 0)\n{\n  a = 0;\n  x = 1;\n  while (x <= max)\n  {\n    if (__VERIFIER_nondet_int() != 0)\n    {\n      a = a + 1;\n    }\n    else\n    {\n      a = a - 1;\n    }\n    x = x + 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "a": [
+    -2147483648,
+    2147483647
+   ],
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "max": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:Fresh declared loop index required | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChawdharyCookGulwaniSagivYang-ESOP2008-random2d.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nint x = 0;\nint y = 0;\nint i = 0;\nint r;\nint N = 10;\nwhile (i < N)\n{\n  i = i + 1;\n  r = __VERIFIER_nondet_int();\n  if ((r >= 0) && (r <= 3))\n  {\n    if (r == 0)\n    {\n      x = x + 1;\n    }\n    else\n    {\n      if (r == 1)\n      {\n        x = x - 1;\n      }\n      else\n      {\n        if (r == 2)\n        {\n          y = y + 1;\n        }\n        else\n        {\n          if (r == 3)\n          {\n            y = y - 1;\n          }\n        }\n      }\n    }\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "structural:tree:Initialized named scalar locals required | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenCookFuhsNimkarOHearn-TACAS2014-Introduction.c",
+  "expected_unreach": "true",
+  "source": "int f(int k, int i){\nif (k >= 0)\n{\n}\nelse\n{\n  i = -1;\n}\n\nwhile (i >= 0)\n{\n  i = __VERIFIER_nondet_int();\n}\n\ni = 2;\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "k": [
+    -2147483648,
+    2147483647
+   ],
+   "i": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex1.01.c",
+  "expected_unreach": "false",
+  "source": "int f(int x){\nwhile (x > 0)\n{\n  x = ((-2) * x) + 10;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex1.02.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int oldx){\nwhile (((x > 0) && (x < 100)) && (x >= ((2 * oldx) + 10)))\n{\n  oldx = x;\n  x = __VERIFIER_nondet_int();\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "oldx": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex1.03.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int oldx){\nwhile ((x > 1) && (((-2) * x) == oldx))\n{\n  oldx = x;\n  x = __VERIFIER_nondet_int();\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "oldx": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex1.04.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int oldx){\nwhile ((x > 1) && ((2 * x) <= oldx))\n{\n  oldx = x;\n  x = __VERIFIER_nondet_int();\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "oldx": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex1.05.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int oldx){\nwhile ((x > 0) && ((2 * x) <= oldx))\n{\n  oldx = x;\n  x = __VERIFIER_nondet_int();\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "oldx": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex2.01.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nwhile (x > 0)\n{\n  x = x + y;\n  y = y - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex2.02.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nwhile (x < 0)\n{\n  x = x + y;\n  y = y - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex2.03.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nwhile (x > 0)\n{\n  x = x + y;\n  y = (-2) * y;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex2.04.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nwhile (x < y)\n{\n  x = x + y;\n  y = (-2) * y;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex2.05.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nwhile (x < y)\n{\n  x = x + y;\n  y = y / 2;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex2.06.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nint oldx;\nwhile (((4 * x) + y) > 0)\n{\n  oldx = x;\n  x = ((-2) * oldx) + (4 * y);\n  y = 4 * oldx;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex2.07.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nwhile ((x > 0) && (x < y))\n{\n  x = 2 * x;\n  y = y + 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex2.08.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nwhile (x > 0)\n{\n  x = x - (2 * y);\n  y = y + 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex2.09.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y, int n){\nwhile ((x > 0) && (x < n))\n{\n  x = ((-x) + y) - 5;\n  y = 2 * y;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "n": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex2.10.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nwhile ((x > 0) && (y < 0))\n{\n  x = x + y;\n  y = y - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex2.11.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nint oldx;\nwhile (((4 * x) - (5 * y)) > 0)\n{\n  oldx = x;\n  x = (2 * oldx) + (4 * y);\n  y = 4 * oldx;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex2.12.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nint oldx;\nwhile (x < 5)\n{\n  oldx = x;\n  x = oldx - y;\n  y = oldx + y;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex2.13.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nwhile ((x - y) > 0)\n{\n  x = y - x;\n  y = y + 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex2.14.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nwhile ((x > 0) && (y > 0))\n{\n  x = (10 * y) - (2 * x);\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex2.15.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nwhile (x > 0)\n{\n  x = x + y;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex2.16.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nwhile (x > 0)\n{\n  x = y;\n  y = y - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex2.17.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nwhile (x < 10)\n{\n  x = -y;\n  y = y + 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex2.18.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nwhile (x > 0)\n{\n  x = (x + y) - 5;\n  y = (-2) * y;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex2.19.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nwhile ((x + y) > 0)\n{\n  x = x - 1;\n  y = (-2) * y;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex2.20.c",
+  "expected_unreach": "true",
+  "source": "int f(int x, int y){\nwhile (((x > y) && (y >= 1)) && (y <= 2))\n{\n  x = x - y;\n  y = __VERIFIER_nondet_int();\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex2.21.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nwhile (x > 0)\n{\n  x = x + y;\n  y = (-y) - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex2.22.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y, int oldy){\nwhile ((x > 0) && (y <= (-oldy)))\n{\n  x = y;\n  oldy = y;\n  y = __VERIFIER_nondet_int();\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "oldy": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex3.01.c",
+  "expected_unreach": "true",
+  "source": "int f(int x, int y, int z){\nwhile (x < y)\n{\n  x = x + 1;\n  y = z;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex3.02.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y, int z){\nwhile (x > 0)\n{\n  x = x + y;\n  y = y + z;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex3.03.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y, int z){\nwhile (x > 0)\n{\n  x = x + y;\n  y = y + z;\n  z = z - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex3.04.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y, int z){\nwhile (((x + y) >= 0) && (x <= z))\n{\n  x = (2 * x) + y;\n  y = y + 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex3.05.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y, int z){\nwhile ((x >= 0) && (x <= z))\n{\n  x = (2 * x) + y;\n  y = y + 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex3.06.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y, int z){\nwhile (x < 0)\n{\n  x = x + z;\n  z = (-2) * y;\n  y = y + 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex3.07.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y, int z){\nwhile (x >= 0)\n{\n  x = x + y;\n  y = z;\n  z = (-z) - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex3.08.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y, int z){\nwhile ((x - y) > 0)\n{\n  x = (-x) + y;\n  y = z;\n  z = z;\n  z = z + 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex3.09.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y, int z, int oldx){\nwhile (((x > 0) && (x < y)) && (x > (2 * oldx)))\n{\n  oldx = x;\n  x = __VERIFIER_nondet_int();\n  y = z;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ],
+   "oldx": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex3.10.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y, int z){\nwhile ((x >= 0) && ((x + y) >= 0))\n{\n  x = (x + y) + z;\n  y = (-z) - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Ex4.01.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y, int z, int n){\nwhile (((x + y) >= 0) && (x <= n))\n{\n  x = (2 * x) + y;\n  y = z;\n  z = z;\n  z = z + 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ],
+   "n": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ChenFlurMukhopadhyay-SAS2012-Fig1.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y, int z){\nwhile (x > 0)\n{\n  x = x + y;\n  y = z;\n  z = (-z) - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "ColonSipma-TACAS2001-Fig1.c",
+  "expected_unreach": "false",
+  "source": "int f(int k, int i, int j){\nint tmp;\nwhile ((i <= 100) && (j <= k))\n{\n  tmp = i;\n  i = j;\n  j = tmp + 1;\n  k = k - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "k": [
+    -2147483648,
+    2147483647
+   ],
+   "i": [
+    -2147483648,
+    2147483647
+   ],
+   "j": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "CookSeeZuleger-TACAS2013-Fig1.c",
+  "expected_unreach": "true",
+  "source": "int f(int x, int y){\nwhile ((x > 0) && (y > 0))\n{\n  if (__VERIFIER_nondet_int() != 0)\n  {\n    x = x - 1;\n  }\n  else\n  {\n    x = __VERIFIER_nondet_int();\n    y = y - 1;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "CookSeeZuleger-TACAS2013-Fig7a.c",
+  "expected_unreach": "true",
+  "source": "int f(int x, int y, int d){\nwhile (((x > 0) && (y > 0)) && (d > 0))\n{\n  if (__VERIFIER_nondet_int() != 0)\n  {\n    x = x - 1;\n    d = __VERIFIER_nondet_int();\n  }\n  else\n  {\n    x = __VERIFIER_nondet_int();\n    y = y - 1;\n    d = d - 1;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "d": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "CookSeeZuleger-TACAS2013-Fig7b.c",
+  "expected_unreach": "true",
+  "source": "int f(int x, int y, int z){\nwhile (((x > 0) && (y > 0)) && (z > 0))\n{\n  if (__VERIFIER_nondet_int() != 0)\n  {\n    x = x - 1;\n  }\n  else\n  {\n    if (__VERIFIER_nondet_int() != 0)\n    {\n      y = y - 1;\n      z = __VERIFIER_nondet_int();\n    }\n    else\n    {\n      z = z - 1;\n      x = __VERIFIER_nondet_int();\n    }\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "CookSeeZuleger-TACAS2013-Fig8a-modified.c",
+  "expected_unreach": "true",
+  "source": "int f(int K, int x){\nwhile (x != K)\n{\n  if (x > K)\n  {\n    x = x - 1;\n  }\n  else\n  {\n    x = x + 1;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "K": [
+    -2147483648,
+    2147483647
+   ],
+   "x": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "CookSeeZuleger-TACAS2013-Fig8a.c",
+  "expected_unreach": "true",
+  "source": "int f(int x){\nwhile (x != 0)\n{\n  if (x > 0)\n  {\n    x = x - 1;\n  }\n  else\n  {\n    x = x + 1;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "CookSeeZuleger-TACAS2013-Fig8b.c",
+  "expected_unreach": "true",
+  "source": "int f(int x, int M){\nif (M > 0)\n{\n  while (x != M)\n  {\n    if (x > M)\n    {\n      x = 0;\n    }\n    else\n    {\n      x = x + 1;\n    }\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "M": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "GopanReps-CAV2006-Fig1a.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nint x = 0;\nint y = 0;\nwhile (y >= 0)\n{\n  if (x <= 50)\n  {\n    y = y + 1;\n  }\n  else\n  {\n    y = y - 1;\n  }\n  x = x + 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "GulavaniGulwani-CAV2008-Fig1a.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y, int z, int i){\nwhile (x < y)\n{\n  i = i + 1;\n  if (z > x)\n  {\n    x = x + 1;\n  }\n  else\n  {\n    z = z + 1;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ],
+   "i": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "GulavaniGulwani-CAV2008-Fig1b.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int i, int n, int m){\nwhile (x < n)\n{\n  i = i + 1;\n  x = x + 1;\n}\n\nwhile (x < m)\n{\n  i = i + 1;\n  x = x + 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "i": [
+    -2147483648,
+    2147483647
+   ],
+   "n": [
+    -2147483648,
+    2147483647
+   ],
+   "m": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_loops_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "GulavaniGulwani-CAV2008-Fig1c.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int i, int n){\nwhile (x < n)\n{\n  i = i + 1;\n  x = x + 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "i": [
+    -2147483648,
+    2147483647
+   ],
+   "n": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "GulwaniJainKoskinen-PLDI2009-Fig1.c",
+  "expected_unreach": "false",
+  "source": "int f(int id, int maxId){\nint tmp;\nif ((0 <= id) && (id < maxId))\n{\n  tmp = id + 1;\n  while ((tmp != id) && (__VERIFIER_nondet_int() != 0))\n  {\n    if (tmp <= maxId)\n    {\n      tmp = tmp + 1;\n    }\n    else\n    {\n      tmp = 0;\n    }\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "id": [
+    -2147483648,
+    2147483647
+   ],
+   "maxId": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "HarrisLalNoriRajamani-SAS2010-Fig1.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: f"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "HarrisLalNoriRajamani-SAS2010-Fig2.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: foo"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "HarrisLalNoriRajamani-SAS2010-Fig3.c",
+  "expected_unreach": "true",
+  "stage": "reject:unsupported nondet assignment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "HeizmannHoenickeLeikePodelski-ATVA2013-Fig1.c",
+  "expected_unreach": "true",
+  "source": "int f(int x){\nint y = 23;\nwhile (x >= 0)\n{\n  x = x - y;\n  y = y + 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "HeizmannHoenickeLeikePodelski-ATVA2013-Fig2.c",
+  "expected_unreach": "false",
+  "source": "int f(int y){\nint x = y + 42;\nwhile (x >= 0)\n{\n  y = (2 * y) - x;\n  x = (y + x) / 2;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "HeizmannHoenickeLeikePodelski-ATVA2013-Fig4.c",
+  "expected_unreach": "true",
+  "source": "int f(int x){\nint y = 23;\nwhile (x >= y)\n{\n  x = x - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "HeizmannHoenickeLeikePodelski-ATVA2013-Fig5.c",
+  "expected_unreach": "true",
+  "source": "int f(int x){\nint y = 2;\nwhile (x >= 0)\n{\n  x = x - y;\n  y = (y + 1) / 2;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "HeizmannHoenickeLeikePodelski-ATVA2013-Fig6.c",
+  "expected_unreach": "true",
+  "source": "int f(int x, int y){\nwhile ((x >= 0) && (y >= 1))\n{\n  x = x - y;\n  y = __VERIFIER_nondet_int();\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "HeizmannHoenickeLeikePodelski-ATVA2013-Fig7.c",
+  "expected_unreach": "false",
+  "stage": "reject:early return in body"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "HeizmannHoenickeLeikePodelski-ATVA2013-Fig8.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nif ((2 * y) >= 1)\n{\n  while (x >= 0)\n  {\n    x = (x - (2 * y)) + 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "HeizmannHoenickeLeikePodelski-ATVA2013-Fig9.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y, int z){\nif ((2 * y) >= z)\n{\n  while ((x >= 0) && (z == 1))\n  {\n    x = (x - (2 * y)) + 1;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Exactly one top-level loop (and no other loops) is required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "HenzingerJhalaMajumdarSutre-POPL2002-LockingExample.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: lock"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "KroeningSharyginaTsitovichWintersteiger-CAV2010-Ex.c",
+  "expected_unreach": "true",
+  "source": "int f(int i){\nwhile (i < 255)\n{\n  if (__VERIFIER_nondet_int() != 0)\n  {\n    i = i + 1;\n  }\n  else\n  {\n    i = i + 2;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "i": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "KroeningSharyginaTsitovichWintersteiger-CAV2010-Fig1.c",
+  "expected_unreach": "true",
+  "source": "int f(int x){\nint debug = 0;\nwhile (x < 255)\n{\n  if ((x % 2) != 0)\n  {\n    x--;\n  }\n  else\n  {\n    x += 2;\n  }\n  if (debug != 0)\n  {\n    x = 0;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "LarrazOliverasRodriguez-CarbonellRubio-FMCAD2013-Fig1.c",
+  "expected_unreach": "true",
+  "source": "int f(int x, int y, int z){\nif ((((x <= 10000) && (x >= (-10000))) && (y <= 10000)) && (z <= 10000))\n{\n  while (y >= 1)\n  {\n    x = x - 1;\n    while (y < z)\n    {\n      x = x + 1;\n      z = z - 1;\n    }\n\n    y = x + y;\n  }\n\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_loops_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "LeeJonesBen-Amram-POPL2001-Ex1.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: rev"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "LeeJonesBen-Amram-POPL2001-Ex2.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: f"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "LeeJonesBen-Amram-POPL2001-Ex3.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: a"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "LeeJonesBen-Amram-POPL2001-Ex4.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: p"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "LeeJonesBen-Amram-POPL2001-Ex5.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: f"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "LeeJonesBen-Amram-POPL2001-Ex6.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: f"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "LeikeHeizmann-TACAS2014-Ex1.c",
+  "expected_unreach": "true",
+  "source": "int f(int q, int y){\nwhile (q > 0)\n{\n  if (y > 0)\n  {\n    q = (q - y) - 1;\n  }\n  else\n  {\n    q = (q + y) - 1;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "q": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "LeikeHeizmann-TACAS2014-Ex7.c",
+  "expected_unreach": "false",
+  "source": "int f(int q, int z){\nwhile (q > 0)\n{\n  q = (q + z) - 1;\n  z = -z;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "q": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "LeikeHeizmann-TACAS2014-Ex8.c",
+  "expected_unreach": "false",
+  "source": "int f(int q, int y){\nwhile (q > 0)\n{\n  if (y > 0)\n  {\n    y = 0;\n    q = __VERIFIER_nondet_int();\n  }\n  else\n  {\n    y = y - 1;\n    q = q - 1;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "q": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "LeikeHeizmann-TACAS2014-Ex9.c",
+  "expected_unreach": "true",
+  "source": "int f(int q, int p){\nwhile (((q > 0) && (p > 0)) && (p != q))\n{\n  if (q < p)\n  {\n    q = q - 1;\n  }\n  else\n  {\n    if (p < q)\n    {\n      p = p - 1;\n    }\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "q": [
+    -2147483648,
+    2147483647
+   ],
+   "p": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "LeikeHeizmann-TACAS2014-Fig1.c",
+  "expected_unreach": "false",
+  "source": "int f(int q, int y){\nwhile (q > 0)\n{\n  q = q - y;\n  y = y + 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "q": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "LeikeHeizmann-WST2014-Ex5.c",
+  "expected_unreach": "false",
+  "source": "int f(int a, int b){\nint olda;\nwhile (a >= 7)\n{\n  olda = a;\n  a = b;\n  b = olda + 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "a": [
+    -2147483648,
+    2147483647
+   ],
+   "b": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "LeikeHeizmann-WST2014-Ex6.c",
+  "expected_unreach": "false",
+  "source": "int f(int a, int b){\nwhile ((a >= 1) && (b >= 1))\n{\n  a = 2 * a;\n  b = 3 * b;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "a": [
+    -2147483648,
+    2147483647
+   ],
+   "b": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "LeikeHeizmann-WST2014-Ex9.c",
+  "expected_unreach": "true",
+  "source": "int f(int x){\nwhile (x > 0)\n{\n  x = x / 2;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "Masse-VMCAI2014-Ex6.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nwhile (x >= 0)\n{\n  x = x + y;\n  if (y >= 0)\n  {\n    y = y - 1;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "Masse-VMCAI2014-Fig1a.c",
+  "expected_unreach": "false",
+  "source": "int f(int a, int b){\nwhile (a >= 0)\n{\n  a = a + b;\n  if (b >= 0)\n  {\n    b = (-b) - 1;\n  }\n  else\n  {\n    b = -b;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "a": [
+    -2147483648,
+    2147483647
+   ],
+   "b": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "Masse-VMCAI2014-Fig1b.c",
+  "expected_unreach": "false",
+  "source": "int f(int x){\nwhile (x <= 100)\n{\n  if (__VERIFIER_nondet_int() != 0)\n  {\n    x = ((-2) * x) + 2;\n  }\n  else\n  {\n    x = ((-3) * x) - 2;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "NoriSharma-FSE2013-Fig7.c",
+  "expected_unreach": "false",
+  "source": "int f(int i, int j, int M, int N){\nint a = 0;\nint b = 0;\nint c = 0;\na = i;\nb = j;\nc = 0;\nwhile ((i < M) || (j < N))\n{\n  i = i + 1;\n  j = j + 1;\n  c = c + 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "i": [
+    -2147483648,
+    2147483647
+   ],
+   "j": [
+    -2147483648,
+    2147483647
+   ],
+   "M": [
+    -2147483648,
+    2147483647
+   ],
+   "N": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "NoriSharma-FSE2013-Fig8.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y, int z){\nint c = 0;\nint u = 0;\nint v = 0;\nint w = 0;\nu = x;\nv = y;\nw = z;\nc = 0;\nwhile (x >= y)\n{\n  c = c + 1;\n  if (z > 1)\n  {\n    z = z - 1;\n    x = x + z;\n  }\n  else\n  {\n    y = y + 1;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ],
+   "z": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "PodelskiRybalchenko-LICS2004-Fig1.c",
+  "expected_unreach": "true",
+  "source": "int f(int x, int y){\nwhile ((x >= 0) && (x <= 1073741823))\n{\n  y = 1;\n  while (y < x)\n  {\n    y = 2 * y;\n  }\n\n  x = x - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_loops_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "PodelskiRybalchenko-LICS2004-Fig2-TACAS2011-Fig3.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nint oldx;\nint oldy;\nwhile ((x > 0) && (y > 0))\n{\n  oldx = x;\n  oldy = y;\n  if (__VERIFIER_nondet_int() != 0)\n  {\n    x = oldx - 1;\n    y = oldx;\n  }\n  else\n  {\n    x = oldy - 2;\n    y = oldx + 1;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "PodelskiRybalchenko-LICS2004-Fig2.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nwhile ((x > 0) && (y > 0))\n{\n  int old_x = x;\n  int old_y = y;\n  if (__VERIFIER_nondet_int())\n  {\n    x = old_x - 1;\n    y = old_x;\n  }\n  else\n  {\n    x = old_y - 2;\n    y = old_x + 1;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Loop body must be loop-free straight-line/if code without br"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "PodelskiRybalchenko-TACAS2011-Fig1.c",
+  "expected_unreach": "true",
+  "source": "int f(int y){\nwhile (y >= 0)\n{\n  y = y - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "PodelskiRybalchenko-TACAS2011-Fig2.c",
+  "expected_unreach": "true",
+  "source": "int f(int x, int y){\nwhile (x >= 0)\n{\n  y = 1;\n  while (y < x)\n  {\n    y = y + 1;\n  }\n\n  x = x - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_loops_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "PodelskiRybalchenko-TACAS2011-Fig3.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nwhile ((x > 0) && (y > 0))\n{\n  int old_x = x;\n  int old_y = y;\n  if (__VERIFIER_nondet_int())\n  {\n    x = old_x - 1;\n    y = old_x;\n  }\n  else\n  {\n    x = old_y - 2;\n    y = old_x + 1;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Loop body must be loop-free straight-line/if code without br"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "PodelskiRybalchenko-TACAS2011-Fig4.c",
+  "expected_unreach": "true",
+  "source": "int f(int x, int y){\nwhile ((x > 0) && (y > 0))\n{\n  if (__VERIFIER_nondet_int() != 0)\n  {\n    x = x - 1;\n    y = __VERIFIER_nondet_int();\n  }\n  else\n  {\n    y = y - 1;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "PodelskiRybalchenko-VMCAI2004-Ex1.c",
+  "expected_unreach": "false",
+  "source": "int f(int i, int j){\nint nondetNat;\nint nondetPos;\nwhile ((i - j) >= 1)\n{\n  nondetNat = __VERIFIER_nondet_int();\n  if (nondetNat < 0)\n  {\n    nondetNat = -nondetNat;\n  }\n  i = i - nondetNat;\n  nondetPos = __VERIFIER_nondet_int();\n  if (nondetPos < 0)\n  {\n    nondetPos = -nondetPos;\n  }\n  nondetPos = nondetPos + 1;\n  j = j + nondetPos;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "i": [
+    -2147483648,
+    2147483647
+   ],
+   "j": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "PodelskiRybalchenko-VMCAI2004-Ex2.c",
+  "expected_unreach": "false",
+  "source": "int f(int x){\nwhile (x >= 0)\n{\n  x = ((-2) * x) + 10;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "Urban-WST2013-Fig1.c",
+  "expected_unreach": "true",
+  "source": "int f(int x){\nwhile (x <= 10)\n{\n  if (x > 6)\n  {\n    x = x + 2;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "Urban-WST2013-Fig2-modified1000.c",
+  "expected_unreach": "true",
+  "source": "int f(int x1, int x2){\nwhile (x1 <= 10)\n{\n  x2 = 1000;\n  while (x2 > 1)\n  {\n    x2 = x2 - 1;\n  }\n\n  x1 = x1 + 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x1": [
+    -2147483648,
+    2147483647
+   ],
+   "x2": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_loops_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "Urban-WST2013-Fig2.c",
+  "expected_unreach": "true",
+  "source": "int f(int x1, int x2){\nwhile (x1 <= 10)\n{\n  x2 = 10;\n  while (x2 > 1)\n  {\n    x2 = x2 - 1;\n  }\n\n  x1 = x1 + 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x1": [
+    -2147483648,
+    2147483647
+   ],
+   "x2": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_loops_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "UrbanMine-ESOP2014-Fig3.c",
+  "expected_unreach": "true",
+  "source": "int f(int x, int y){\nwhile ((x != 0) && (y > 0))\n{\n  if (x > 0)\n  {\n    if (__VERIFIER_nondet_int() != 0)\n    {\n      x = x - 1;\n      y = __VERIFIER_nondet_int();\n    }\n    else\n    {\n      y = y - 1;\n    }\n  }\n  else\n  {\n    if (__VERIFIER_nondet_int() != 0)\n    {\n      x = x + 1;\n    }\n    else\n    {\n      y = y - 1;\n      x = __VERIFIER_nondet_int();\n    }\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "Velroyen.c",
+  "expected_unreach": "true",
+  "source": "int f(int x){\nwhile (x != 0)\n{\n  if (((-5) <= x) && (x <= 35))\n  {\n    if (x < 0)\n    {\n      x = -5;\n    }\n    else\n    {\n      if (x > 30)\n      {\n        x = 35;\n      }\n      else\n      {\n        x = x - 1;\n      }\n    }\n  }\n  else\n  {\n    x = 0;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "aviad.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: f"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "cstrcmp.c",
+  "expected_unreach": "true",
+  "stage": "reject:no loops"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "cstrcspn.c",
+  "expected_unreach": "true",
+  "stage": "reject:no loops"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "cstrlen.c",
+  "expected_unreach": "true",
+  "stage": "reject:no loops"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "cstrncmp.c",
+  "expected_unreach": "false",
+  "stage": "reject:no loops"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "cstrpbrk.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: cstrpbrk"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "cstrspn.c",
+  "expected_unreach": "true",
+  "stage": "reject:no loops"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "gcd1.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nint r;\nif (x < 0)\n{\n  x = -x;\n}\n\nif (y < 0)\n{\n  y = -y;\n}\n\nwhile (y > 0)\n{\n  r = x;\n  while (r >= y)\n  {\n    r = r - y;\n  }\n\n  x = y;\n  y = r;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:Initialized named scalar locals required | while:Initialized named scalar locals required | loops:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "genady.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nint i = 10000;\nint j = 1;\nwhile ((i - j) >= 1)\n{\n  j = j + 1;\n  i = i - 1;\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "joey.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: rec"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "min_rf.c",
+  "expected_unreach": "false",
+  "source": "int f(int x, int y){\nint z;\nwhile ((y > 0) && (x > 0))\n{\n  if (x > y)\n  {\n    z = y;\n  }\n  else\n  {\n    z = x;\n  }\n  if (__VERIFIER_nondet_int() != 0)\n  {\n    y = y + x;\n    x = z - 1;\n    z = y + z;\n  }\n  else\n  {\n    x = y + x;\n    y = z - 1;\n    z = x + z;\n  }\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "x": [
+    -2147483648,
+    2147483647
+   ],
+   "y": [
+    -2147483648,
+    2147483647
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required"
+ },
+ {
+  "dir": "termination-crafted-lit",
+  "file": "strchr-2.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: cstrchr"
+ },
+ {
+  "dir": "termination-numeric",
+  "file": "Ackermann01-1.c",
+  "expected_unreach": "true",
+  "stage": "reject:early return in body"
+ },
+ {
+  "dir": "termination-numeric",
+  "file": "Addition01-1.c",
+  "expected_unreach": "false",
+  "stage": "reject:early return in body"
+ },
+ {
+  "dir": "termination-numeric",
+  "file": "Avg_true.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: average"
+ },
+ {
+  "dir": "termination-numeric",
+  "file": "Binomial.c",
+  "expected_unreach": "false",
+  "stage": "reject:early return in body"
+ },
+ {
+  "dir": "termination-numeric",
+  "file": "Et1_true.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: loop"
+ },
+ {
+  "dir": "termination-numeric",
+  "file": "Et2_true.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: loop"
+ },
+ {
+  "dir": "termination-numeric",
+  "file": "Et3_true.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: loop"
+ },
+ {
+  "dir": "termination-numeric",
+  "file": "Et4_true.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: loop"
+ },
+ {
+  "dir": "termination-numeric",
+  "file": "EvenOdd01-2.c",
+  "expected_unreach": "true",
+  "stage": "reject:early return in body"
+ },
+ {
+  "dir": "termination-numeric",
+  "file": "Fibonacci01-2.c",
+  "expected_unreach": "true",
+  "stage": "reject:early return in body"
+ },
+ {
+  "dir": "termination-numeric",
+  "file": "LeUserDefRec.c",
+  "expected_unreach": "true",
+  "stage": "reject:early return in body"
+ },
+ {
+  "dir": "termination-numeric",
+  "file": "LogRecursive.c",
+  "expected_unreach": "true",
+  "stage": "reject:early return in body"
+ },
+ {
+  "dir": "termination-numeric",
+  "file": "MultCommutative-1.c",
+  "expected_unreach": "false",
+  "stage": "reject:early return in body"
+ },
+ {
+  "dir": "termination-numeric",
+  "file": "Parts.c",
+  "expected_unreach": "true",
+  "stage": "reject:early return in body"
+ },
+ {
+  "dir": "termination-numeric",
+  "file": "TerminatorRec02.c",
+  "expected_unreach": "false",
+  "stage": "reject:early return in body"
+ },
+ {
+  "dir": "termination-numeric",
+  "file": "TwoWay.c",
+  "expected_unreach": "true",
+  "stage": "reject:early return in body"
+ },
+ {
+  "dir": "termination-numeric",
+  "file": "gcd01-2.c",
+  "expected_unreach": "true",
+  "stage": "reject:early return in body"
+ },
+ {
+  "dir": "termination-numeric",
+  "file": "java_LogBuiltIn.c",
+  "expected_unreach": "true",
+  "stage": "reject:no loops"
+ },
+ {
+  "dir": "termination-numeric",
+  "file": "recHanoi02-1.c",
+  "expected_unreach": "true",
+  "stage": "reject:early return in body"
+ },
+ {
+  "dir": "termination-numeric",
+  "file": "rec_counter1.c",
+  "expected_unreach": "true",
+  "stage": "reject:early return in body"
+ },
+ {
+  "dir": "termination-numeric",
+  "file": "rec_counter3.c",
+  "expected_unreach": "true",
+  "stage": "reject:early return in body"
+ },
+ {
+  "dir": "termination-numeric",
+  "file": "twisted.c",
+  "expected_unreach": "true",
+  "stage": "reject:no loops"
+ },
+ {
+  "dir": "bitvector",
+  "file": "byte_add-1.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: mp_add"
+ },
+ {
+  "dir": "bitvector",
+  "file": "byte_add-2.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: mp_add"
+ },
+ {
+  "dir": "bitvector",
+  "file": "byte_add_1-1.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: mp_add"
+ },
+ {
+  "dir": "bitvector",
+  "file": "byte_add_1-2.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: mp_add"
+ },
+ {
+  "dir": "bitvector",
+  "file": "byte_add_2-1.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: mp_add"
+ },
+ {
+  "dir": "bitvector",
+  "file": "byte_add_2-2.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: mp_add"
+ },
+ {
+  "dir": "bitvector",
+  "file": "gcd_1.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: gcd_test"
+ },
+ {
+  "dir": "bitvector",
+  "file": "gcd_2.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: gcd_test"
+ },
+ {
+  "dir": "bitvector",
+  "file": "gcd_3.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: gcd_test"
+ },
+ {
+  "dir": "bitvector",
+  "file": "gcd_4.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: gcd_test"
+ },
+ {
+  "dir": "bitvector",
+  "file": "interleave_bits.c",
+  "expected_unreach": "true",
+  "source": "int f(unsigned short x, unsigned short y){\nunsigned int xx = 0;\nunsigned int yy = 0;\nunsigned int zz = 0;\nunsigned int z = 0;\nunsigned int i = 0;\nwhile (i < ((sizeof(x)) * 8))\n{\n  z |= ((x & (1U << i)) << i) | ((y & (1U << i)) << (i + 1));\n  i += 1U;\n}\n\nxx = x;\nyy = y;\nxx = (xx | (xx << 8u)) & 16711935U;\nxx = (xx | (xx << 4u)) & 252645135U;\nxx = (xx | (xx << 2u)) & 858993459U;\nxx = (xx | (xx << 1u)) & 1431655765U;\nyy = (yy | (yy << 8u)) & 16711935U;\nyy = (yy | (yy << 4u)) & 252645135U;\nyy = (yy | (yy << 2u)) & 858993459U;\nyy = (yy | (yy << 1u)) & 1431655765U;\nzz = xx | (yy << 1U);\nreturn 1/((z == zz));\n}\n",
+  "parameter_bounds": {
+   "x": [
+    0,
+    65535
+   ],
+   "y": [
+    0,
+    65535
+   ]
+  },
+  "stage": "structural:tree:Loop update must be i++/i+=c (ascending) or i--/i- | while:sizeof currently requires an integer type name"
+ },
+ {
+  "dir": "bitvector",
+  "file": "jain_1-1.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nunsigned int y = 0;\nint __a = 0;\ny = 1U;\nwhile (1)\n{\n  y = y + (2U * __VERIFIER_nondet_uint());\n  __a = 1 / (y != 0U);\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "bitvector",
+  "file": "jain_1-2.c",
+  "expected_unreach": "false",
+  "source": "int f(int __z){\nint y = 1;\nint __a = 0;\nwhile (1)\n{\n  y = y + (2 * __VERIFIER_nondet_int());\n  __a = 1 / (y != 0);\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "bitvector",
+  "file": "jain_2-1.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nunsigned int x = 0;\nunsigned int y = 0;\nint __a = 0;\nx = 1U;\ny = 1U;\nwhile (1)\n{\n  x = x + (2U * __VERIFIER_nondet_uint());\n  y = y + (2U * __VERIFIER_nondet_uint());\n  __a = 1 / ((x + y) != 1U);\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "bitvector",
+  "file": "jain_2-2.c",
+  "expected_unreach": "false",
+  "source": "int f(int __z){\nint x = 1;\nint y = 1;\nint __a = 0;\nwhile (1)\n{\n  x = x + (2 * __VERIFIER_nondet_int());\n  y = y + (2 * __VERIFIER_nondet_int());\n  __a = 1 / ((x + y) != 1);\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "bitvector",
+  "file": "jain_4-1.c",
+  "expected_unreach": "false",
+  "source": "int f(int __z){\nint x = 0;\nint y = 0;\nint z = 0;\nint __a = 0;\nwhile (1)\n{\n  x = x + (4 * __VERIFIER_nondet_int());\n  y = y + (4 * __VERIFIER_nondet_int());\n  z = z + (8 * __VERIFIER_nondet_int());\n  __a = 1 / (((x + y) + z) != 1);\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "bitvector",
+  "file": "jain_4-2.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nunsigned int x = 0;\nunsigned int y = 0;\nunsigned int z = 0;\nint __a = 0;\nx = 0U;\ny = 0U;\nz = 0U;\nwhile (1)\n{\n  x = x + (4U * __VERIFIER_nondet_uint());\n  y = y + (4U * __VERIFIER_nondet_uint());\n  z = z + (8U * __VERIFIER_nondet_uint());\n  __a = 1 / (((x + y) + z) != 1U);\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "bitvector",
+  "file": "jain_5-1.c",
+  "expected_unreach": "false",
+  "source": "int f(int __z){\nint x = 0;\nint y = 4;\nint __a = 0;\nwhile (1)\n{\n  x = x + y;\n  y = y + 4;\n  __a = 1 / (x != 30);\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "bitvector",
+  "file": "jain_5-2.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nunsigned int x = 0;\nunsigned int y = 0;\nint __a = 0;\nx = 0U;\ny = 4U;\nwhile (1)\n{\n  x = x + y;\n  y = y + 4U;\n  __a = 1 / (x != 30U);\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "bitvector",
+  "file": "jain_6-1.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nunsigned int x = 0;\nunsigned int y = 0;\nunsigned int z = 0;\nint __a = 0;\nx = 0U;\ny = 0U;\nz = 0U;\nwhile (1)\n{\n  x = x + (2U * __VERIFIER_nondet_uint());\n  y = y + (4U * __VERIFIER_nondet_uint());\n  z = z + (8U * __VERIFIER_nondet_uint());\n  __a = 1 / ((((4U * x) + (2U * y)) + z) != 4U);\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "bitvector",
+  "file": "jain_6-2.c",
+  "expected_unreach": "false",
+  "source": "int f(int __z){\nint x = 0;\nint y = 0;\nint z = 0;\nint __a = 0;\nwhile (1)\n{\n  x = x + (2 * __VERIFIER_nondet_int());\n  y = y + (4 * __VERIFIER_nondet_int());\n  z = z + (8 * __VERIFIER_nondet_int());\n  __a = 1 / ((((4 * x) + (2 * y)) + z) != 4);\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "bitvector",
+  "file": "jain_7-1.c",
+  "expected_unreach": "false",
+  "source": "int f(int __z){\nint x = 0;\nint y = 0;\nint z = 0;\nint __a = 0;\nwhile (1)\n{\n  x = x + (1048576 * __VERIFIER_nondet_int());\n  y = y + (2097152 * __VERIFIER_nondet_int());\n  z = z + (4194304 * __VERIFIER_nondet_int());\n  __a = 1 / ((((4 * x) - (2 * y)) + z) != 1048576);\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "bitvector",
+  "file": "jain_7-2.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nunsigned int x = 0;\nunsigned int y = 0;\nunsigned int z = 0;\nint __a = 0;\nx = 0U;\ny = 0U;\nz = 0U;\nwhile (1)\n{\n  x = x + (1048576U * __VERIFIER_nondet_uint());\n  y = y + (2097152U * __VERIFIER_nondet_uint());\n  z = z + (4194304U * __VERIFIER_nondet_uint());\n  __a = 1 / ((((4U * x) - (2U * y)) + z) != 1048576U);\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "bitvector",
+  "file": "modulus-1.c",
+  "expected_unreach": "false",
+  "source": "int f(unsigned int n, unsigned int s){\nunsigned int d = 0;\nunsigned int m;\nint __a = 0;\nd = (1 << s) - 1;\nif (d > 0)\n{\n  m = n;\n  while (n > d)\n  {\n    m = 0;\n    while (n > 0)\n    {\n      m += n & d;\n      n = n >> s;\n    }\n\n    n = m;\n  }\n\n  if (m == d)\n  {\n    m = 0;\n  }\n  __a = 1 / (m == (n % d));\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "n": [
+    0,
+    4294967295
+   ],
+   "s": [
+    0,
+    31
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required | loops:Initialized named scalar locals required"
+ },
+ {
+  "dir": "bitvector",
+  "file": "modulus-2.c",
+  "expected_unreach": "true",
+  "source": "int f(unsigned int n, unsigned int s){\nunsigned int d = 0;\nunsigned int m;\nint __a = 0;\nd = (1 << s) - 1;\nif (d > 0)\n{\n  m = n;\n  while (n > d)\n  {\n    m = 0;\n    while (n > 0)\n    {\n      m += n & d;\n      n = n >> s;\n    }\n\n    n = m;\n  }\n\n  if (m == d)\n  {\n    m = 0;\n  }\n  __a = 1 / (m == (n % d));\n}\n\nreturn 0;\n}\n",
+  "parameter_bounds": {
+   "n": [
+    0,
+    4294967295
+   ],
+   "s": [
+    0,
+    30
+   ]
+  },
+  "stage": "structural:tree:StopIteration: | while:Initialized named scalar locals required | loops:Initialized named scalar locals required"
+ },
+ {
+  "dir": "bitvector",
+  "file": "num_conversion_1.c",
+  "expected_unreach": "true",
+  "source": "int f(int __z){\nunsigned char x = 37;\nunsigned char y = 0;\nunsigned char c = 0;\nwhile (c < ((unsigned char) 8))\n{\n  unsigned char i = ((unsigned char) 1) << c;\n  unsigned char bit = x & i;\n  if (bit != ((unsigned char) 0))\n  {\n    y = y + i;\n  }\n  c = c + ((unsigned char) 1);\n}\n\nreturn 1/((x == y));\n}\n",
+  "parameter_bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "stage": "structural:tree:Loop update must be i++/i+=c (ascending) or i--/i- | while:Loop body must be loop-free straight-line/if code without br"
+ },
+ {
+  "dir": "bitvector",
+  "file": "num_conversion_2.c",
+  "expected_unreach": "true",
+  "source": "int f(unsigned char x){\nunsigned char y = 0;\nunsigned char c = 0;\nwhile (c < ((unsigned char) 8))\n{\n  unsigned char i = ((unsigned char) 1) << c;\n  unsigned char bit = x & i;\n  if (bit != ((unsigned char) 0))\n  {\n    y = y + i;\n  }\n  c = c + ((unsigned char) 1);\n}\n\nreturn 1/((x == y));\n}\n",
+  "parameter_bounds": {
+   "x": [
+    0,
+    255
+   ]
+  },
+  "stage": "structural:tree:Loop update must be i++/i+=c (ascending) or i--/i- | while:Loop body must be loop-free straight-line/if code without br"
+ },
+ {
+  "dir": "bitvector",
+  "file": "parity.c",
+  "expected_unreach": "true",
+  "source": "int f(unsigned int v){\nunsigned int v1 = 0;\nunsigned int v2 = 0;\nchar parity1 = 0;\nchar parity2 = 0;\nv1 = v;\nparity1 = (char) 0;\nwhile (v1 != 0)\n{\n  if (parity1 == ((char) 0))\n  {\n    parity1 = (char) 1;\n  }\n  else\n  {\n    parity1 = (char) 0;\n  }\n  v1 = v1 & (v1 - 1U);\n}\n\nv2 = v;\nparity2 = (char) 0;\nv2 = v2 ^ (v2 >> 1u);\nv2 = v2 ^ (v2 >> 2u);\nv2 = (v2 & 286331153U) * 286331153U;\nif (((v2 >> 28u) & 1u) == 0)\n{\n  parity2 = (char) 0;\n}\nelse\n{\n  parity2 = (char) 1;\n}\n\nreturn 1/((parity1 == parity2));\n}\n",
+  "parameter_bounds": {
+   "v": [
+    0,
+    4294967295
+   ]
+  },
+  "stage": "in_while_fragment"
+ },
+ {
+  "dir": "bitvector",
+  "file": "s3_clnt_1.BV.c.cil-1.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: ssl3_connect"
+ },
+ {
+  "dir": "bitvector",
+  "file": "s3_clnt_1.BV.c.cil-1a.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: ssl3_connect"
+ },
+ {
+  "dir": "bitvector",
+  "file": "s3_clnt_1.BV.c.cil-2.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: ssl3_connect"
+ },
+ {
+  "dir": "bitvector",
+  "file": "s3_clnt_1.BV.c.cil-2a.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: ssl3_connect"
+ },
+ {
+  "dir": "bitvector",
+  "file": "s3_clnt_2.BV.c.cil-1.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: ssl3_connect"
+ },
+ {
+  "dir": "bitvector",
+  "file": "s3_clnt_2.BV.c.cil-1a.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: ssl3_connect"
+ },
+ {
+  "dir": "bitvector",
+  "file": "s3_clnt_2.BV.c.cil-2.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: ssl3_connect"
+ },
+ {
+  "dir": "bitvector",
+  "file": "s3_clnt_2.BV.c.cil-2a.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: ssl3_connect"
+ },
+ {
+  "dir": "bitvector",
+  "file": "s3_clnt_3.BV.c.cil-1.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: ssl3_connect"
+ },
+ {
+  "dir": "bitvector",
+  "file": "s3_clnt_3.BV.c.cil-1a.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: ssl3_connect"
+ },
+ {
+  "dir": "bitvector",
+  "file": "s3_clnt_3.BV.c.cil-2.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: ssl3_connect"
+ },
+ {
+  "dir": "bitvector",
+  "file": "s3_clnt_3.BV.c.cil-2a.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: ssl3_connect"
+ },
+ {
+  "dir": "bitvector",
+  "file": "s3_srvr_1.BV.c.cil.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: ssl3_accept"
+ },
+ {
+  "dir": "bitvector",
+  "file": "s3_srvr_1_alt.BV.c.cil.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: ssl3_accept"
+ },
+ {
+  "dir": "bitvector",
+  "file": "s3_srvr_1a.BV.c.cil.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: ssl3_accept"
+ },
+ {
+  "dir": "bitvector",
+  "file": "s3_srvr_1a_alt.BV.c.cil.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: ssl3_accept"
+ },
+ {
+  "dir": "bitvector",
+  "file": "s3_srvr_2.BV.c.cil.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: ssl3_accept"
+ },
+ {
+  "dir": "bitvector",
+  "file": "s3_srvr_2_alt.BV.c.cil.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: ssl3_accept"
+ },
+ {
+  "dir": "bitvector",
+  "file": "s3_srvr_2a.BV.c.cil.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: ssl3_accept"
+ },
+ {
+  "dir": "bitvector",
+  "file": "s3_srvr_2a_alt.BV.c.cil.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: ssl3_accept"
+ },
+ {
+  "dir": "bitvector",
+  "file": "s3_srvr_3.BV.c.cil.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: ssl3_accept"
+ },
+ {
+  "dir": "bitvector",
+  "file": "s3_srvr_3_alt.BV.c.cil.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: ssl3_accept"
+ },
+ {
+  "dir": "bitvector",
+  "file": "s3_srvr_3a.BV.c.cil.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: ssl3_accept"
+ },
+ {
+  "dir": "bitvector",
+  "file": "s3_srvr_3a_alt.BV.c.cil.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: ssl3_accept"
+ },
+ {
+  "dir": "bitvector",
+  "file": "soft_float_1-1.c.cil.c",
+  "expected_unreach": null,
+  "stage": "reject:call inside program body: base2flt"
+ },
+ {
+  "dir": "bitvector",
+  "file": "soft_float_1-2.c.cil.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: base2flt"
+ },
+ {
+  "dir": "bitvector",
+  "file": "soft_float_1-2a.c.cil.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: base2flt"
+ },
+ {
+  "dir": "bitvector",
+  "file": "soft_float_1-3.c.cil.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: base2flt"
+ },
+ {
+  "dir": "bitvector",
+  "file": "soft_float_1-3a.c.cil.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: base2flt"
+ },
+ {
+  "dir": "bitvector",
+  "file": "soft_float_2.c.cil.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: base2flt"
+ },
+ {
+  "dir": "bitvector",
+  "file": "soft_float_2a.c.cil.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: base2flt"
+ },
+ {
+  "dir": "bitvector",
+  "file": "soft_float_3.c.cil.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: base2flt"
+ },
+ {
+  "dir": "bitvector",
+  "file": "soft_float_3a.c.cil.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: base2flt"
+ },
+ {
+  "dir": "bitvector",
+  "file": "soft_float_4-1.c.cil.c",
+  "expected_unreach": null,
+  "stage": "reject:call inside program body: base2flt"
+ },
+ {
+  "dir": "bitvector",
+  "file": "soft_float_4-2.c.cil.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: base2flt"
+ },
+ {
+  "dir": "bitvector",
+  "file": "soft_float_4-2a.c.cil.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: base2flt"
+ },
+ {
+  "dir": "bitvector",
+  "file": "soft_float_4-3.c.cil.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: base2flt"
+ },
+ {
+  "dir": "bitvector",
+  "file": "soft_float_4-3a.c.cil.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: base2flt"
+ },
+ {
+  "dir": "bitvector",
+  "file": "soft_float_5.c.cil.c",
+  "expected_unreach": "false",
+  "stage": "reject:call inside program body: base2flt"
+ },
+ {
+  "dir": "bitvector",
+  "file": "soft_float_5a.c.cil.c",
+  "expected_unreach": "true",
+  "stage": "reject:call inside program body: base2flt"
+ },
+ {
+  "dir": "bitvector",
+  "file": "sum02-1.c",
+  "expected_unreach": "true",
+  "source": "int f(unsigned int n){\nunsigned int i;\nunsigned int sn = 0;\nfor (i = 0; i <= n; i++)\n{\n  sn = sn + i;\n}\n\nreturn 1/(((sn == ((n * (n + 1)) / 2)) || (sn == 0)));\n}\n",
+  "parameter_bounds": {
+   "n": [
+    0,
+    4294967295
+   ]
+  },
+  "stage": "in_fragment"
+ },
+ {
+  "dir": "bitvector",
+  "file": "sum02-2.c",
+  "expected_unreach": "true",
+  "stage": "reject:assumption is not a conjunction of var-vs-constant comparisons"
+ },
+ {
+  "dir": "psyco",
+  "file": "psyco_abp_1-1.c",
+  "expected_unreach": "true",
+  "stage": "reject:goto"
+ },
+ {
+  "dir": "psyco",
+  "file": "psyco_abp_1-2.c",
+  "expected_unreach": "false",
+  "stage": "reject:goto"
+ },
+ {
+  "dir": "psyco",
+  "file": "psyco_abp_1-3.c",
+  "expected_unreach": "true",
+  "stage": "reject:goto"
+ },
+ {
+  "dir": "psyco",
+  "file": "psyco_accelerometer_1.c",
+  "expected_unreach": null,
+  "stage": "reject:goto"
+ },
+ {
+  "dir": "psyco",
+  "file": "psyco_cev_1.c",
+  "expected_unreach": null,
+  "stage": "reject:goto"
+ },
+ {
+  "dir": "psyco",
+  "file": "psyco_cev_2.c",
+  "expected_unreach": null,
+  "stage": "reject:goto"
+ },
+ {
+  "dir": "psyco",
+  "file": "psyco_cev_3.c",
+  "expected_unreach": null,
+  "stage": "reject:goto"
+ },
+ {
+  "dir": "psyco",
+  "file": "psyco_io_1.c",
+  "expected_unreach": null,
+  "stage": "reject:goto"
+ },
+ {
+  "dir": "psyco",
+  "file": "psyco_math_1.c",
+  "expected_unreach": null,
+  "stage": "reject:goto"
+ },
+ {
+  "dir": "psyco",
+  "file": "psyco_net_1.c",
+  "expected_unreach": null,
+  "stage": "reject:goto"
+ },
+ {
+  "dir": "psyco",
+  "file": "psyco_security.c",
+  "expected_unreach": null,
+  "stage": "reject:goto"
+ }
+]

@@ -1,0 +1,6 @@
+int f(int p0) {
+  int i = 0;
+  int s = 1;
+  while (i < 10) { i = i + 2; s = s + 3; }
+  return s;
+}

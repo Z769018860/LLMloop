@@ -1,0 +1,292 @@
+name: v1.04 witness batch, all 165
+
+# E1, the real run: export every invariant the verifier proved as an SV-COMP YAML correctness
+# witness and have two unrelated verifiers re-verify each program from the witness alone.
+#
+# The format question was closed in probe run 45009866409. Two things had to be right and only one of
+# them was about the format:
+#   * the witness had to be `invariant_set` at format_version 2.0 -- CPAchecker 4.2.2 has an
+#     AutomatonWitnessV2d0Parser and nothing else, so 0.1 is "not supported" and 2.2 throws
+#     NoSuchElementException;
+#   * the harness had to stop assuming bounds over names that do not exist in `main`
+#     ("Undefined identifier n found", run 45009560330) -- for six probes in a row the validator was
+#     refusing the *program*, and every message it gave was about the witness.
+# With both fixed, the non-vacuity control passes: a true invariant at the loop head is confirmed and
+# a false one is rejected, by CPAchecker at either column base and by Ultimate at column base 1. That
+# is the property a pass rate needs in order to mean anything, so the same control gates this run.
+#
+# What each shard produces, per case: `cases/NNNN/program.c` (the frozen translation plus a `main`
+# that supplies the same parameter bounds the verifier assumed), `cases/NNNN/witness.yml` (one
+# invariant per loop head, in C), `logs/NNNN.out.txt` (the validator's full output and exit code) and
+# `validation-cpachecker.json` / `validation-ultimate.json`. The `cpa/` working directories are
+# deleted before upload; the log is the evidence.
+on:
+  # Deliberately not on push. This file describes one measurement, and a batch of ten 90-minute jobs
+  # is not something an edit should launch without being asked: pushing a fix to the workflow used to
+  # start a fresh 165-case run, which then collided with the run being fixed.
+  workflow_dispatch:
+    inputs:
+      cases:
+        description: 'comma-separated case names; empty = all 165'
+        required: false
+        default: ''
+      shards:
+        description: 'comma-separated shard numbers (0-19); empty = all twenty'
+        required: false
+        default: ''
+      workers:
+        description: 'concurrent validations per shard (default 2)'
+        required: false
+        default: '2'
+      timeout:
+        description: 'wall-clock seconds per validation (default 150); CPAchecker gets 30 less'
+        required: false
+        default: '150'
+      validator:
+        description: "both (default) | cpachecker | ultimate: which phases to run"
+        required: false
+        default: 'both'
+permissions:
+  contents: write
+# No concurrency group. It was there to stop two batches colliding on the git push, which the retry
+# loop in `collect` already handles, and it had a worse failure mode: run 45014235382 left three jobs
+# wedged behind a JVM that outlived its wrapper, could not be cancelled, and held the group so the
+# replacement run sat pending instead of running.
+jobs:
+  control:
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '21'}
+      - name: Install package
+        run: python -m pip install -q -e '.[test,smt,exp]'
+      - name: Fetch CPAchecker and Ultimate
+        run: |
+          EXT="${{ runner.temp }}/ext"
+          mkdir -p "$EXT"
+          # sosy-lab answered 403 to one runner (run 45013718717) and curl does not retry a 403 by
+          # default, so the job died before it started. --retry-all-errors also retries that.
+          for i in 1 2 3 4 5; do
+            curl -fsSL --retry 3 --retry-delay 5 --retry-all-errors --max-time 600 \
+              -o "$EXT/cpa.zip" https://cpachecker.sosy-lab.org/CPAchecker-4.2.2-unix.zip && break
+            echo "attempt $i failed, waiting" >&2; sleep 15
+          done
+          echo "183adce15ced2641784dd16dd1dda3c4d88bb463674d8adb688fb28c3656525f  $EXT/cpa.zip" | sha256sum -c -
+          unzip -q -o "$EXT/cpa.zip" -d "$EXT"
+          chmod +x scripts/ci_setup_v103.sh
+          scripts/ci_setup_v103.sh "$EXT" tools
+      # The control is allowed to fail the run: if the validator cannot tell a true invariant from a
+      # false one here, no number the batch produces is evidence, so the batch must not run at all.
+      - name: Non-vacuity control, both validators
+        run: |
+          EXT="${{ runner.temp }}/ext"
+          for v in cpachecker ultimate; do
+            echo "===== $v"
+            python -u scripts/witness_v104.py selftest --external "$EXT" \
+              --output "experiments/v104/witness/control/$v" --validator $v --column-base 1 \
+              | tee "control-$v.txt"
+            # `grep -q X && { ...; exit 1; }` would end the step with grep's status when grep finds
+            # nothing, which is 1 -- the control passed and the job failed anyway. Use if/then.
+            if grep -q MISMATCH "control-$v.txt"; then
+              echo "$v cannot separate a true invariant from a false one" >&2
+              exit 1
+            fi
+          done
+          echo "both validators confirmed the true invariant and rejected the false one"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: witness-control
+          path: experiments/v104/witness/control
+          if-no-files-found: warn
+          retention-days: 30
+
+  export:
+    needs: control
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        # Twenty slices, four validations at a time. Longer jobs are what this environment kills --
+        # run 45016384532 lost shards 8 and 9 early and then shards 3 and 6 at the same instant around
+        # 48 minutes, all of them inside the CPAchecker step, and a killed job never reaches its
+        # artifact upload. A 10-15 minute job shrinks the window; nothing else does.
+        #
+        # The matrix comes from the `shards` input rather than from a range, because a job-level `if`
+        # cannot see `matrix` (the parser rejects it: "Unrecognized named-value: 'matrix'"), so the
+        # subset has to be expressed by not creating the job at all.
+        shard: ${{ fromJSON(format('[{0}]', inputs.shards || '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19')) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '21'}
+      - name: Install package
+        run: python -m pip install -q -e '.[test,smt,exp]'
+      - name: Fetch corpora, CPAchecker and Ultimate
+        run: |
+          EXT="${{ runner.temp }}/ext"
+          mkdir -p "$EXT"
+          # sosy-lab answered 403 to one runner (run 45013718717) and curl does not retry a 403 by
+          # default, so the job died before it started. --retry-all-errors also retries that.
+          for i in 1 2 3 4 5; do
+            curl -fsSL --retry 3 --retry-delay 5 --retry-all-errors --max-time 600 \
+              -o "$EXT/cpa.zip" https://cpachecker.sosy-lab.org/CPAchecker-4.2.2-unix.zip && break
+            echo "attempt $i failed, waiting" >&2; sleep 15
+          done
+          echo "183adce15ced2641784dd16dd1dda3c4d88bb463674d8adb688fb28c3656525f  $EXT/cpa.zip" | sha256sum -c -
+          unzip -q -o "$EXT/cpa.zip" -d "$EXT"
+          chmod +x scripts/ci_setup_v103.sh
+          scripts/ci_setup_v103.sh "$EXT" svbench
+          scripts/ci_setup_v103.sh "$EXT" tools
+      - name: Export shard ${{ matrix.shard }}
+        timeout-minutes: 140
+        env:
+          CASES: ${{ inputs.cases }}
+        run: |
+          # With --cases, most shards come out empty on purpose: the point of that mode is to ask a
+          # specific question about a named witness, not to measure a rate.
+          python -u scripts/witness_v104.py make --external "${{ runner.temp }}/ext" \
+            --output "experiments/v104/witness/full165/shard${{ matrix.shard }}" \
+            --shard ${{ matrix.shard }}/20 --column-base 1 --dialect set-20 \
+            --cases "$CASES"
+      # Uploaded after every phase, because a job the host kills skips every later step including the
+      # artifact upload: shards 3, 6, 8 and 9 of run 45016384532 all died inside a validation step and
+      # uploaded nothing, so work that had been paid for was invisible. The `cpa/` working tree is
+      # deleted before each upload -- it is megabytes of machine output per case, and the log is the
+      # evidence.
+      - name: Keep the export
+        if: always()
+        run: |
+          D="experiments/v104/witness/full165/shard${{ matrix.shard }}"
+          rm -rf "$D"/cpa
+          find "$D" -name 'Ultimate*.log' -delete 2>/dev/null || true
+          find "$D" -name '*.dot' -delete 2>/dev/null || true
+          du -sh "$D" || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: witness-shard-${{ matrix.shard }}
+          path: experiments/v104/witness/full165
+          overwrite: true
+          if-no-files-found: error
+          retention-days: 30
+      - name: Validate with CPAchecker
+        # Skippable by input because this is the phase that takes the host down. Three cases
+        # (`NO_24.c`, `Nested-2.c`, `Swingers.c`) kill the runner inside it, reproducibly and in a
+        # dedicated job, so their Ultimate verdict can never be reached while CPAchecker runs first:
+        # a validator that never got its turn must not look like one that failed. `validator=ultimate`
+        # asks the question the other way round.
+        if: inputs.validator != 'ultimate'
+        timeout-minutes: 60
+        continue-on-error: true
+        run: |
+          python -u scripts/witness_v104.py validate --external "${{ runner.temp }}/ext" \
+            --output "experiments/v104/witness/full165/shard${{ matrix.shard }}" \
+            --validator cpachecker --timeout ${{ inputs.timeout }} --workers ${{ inputs.workers }}
+      - name: Keep the CPAchecker verdicts
+        if: always()
+        run: |
+          D="experiments/v104/witness/full165/shard${{ matrix.shard }}"
+          rm -rf "$D"/cpa
+          find "$D" -name 'Ultimate*.log' -delete 2>/dev/null || true
+          find "$D" -name '*.dot' -delete 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: witness-shard-${{ matrix.shard }}
+          path: experiments/v104/witness/full165
+          overwrite: true
+          if-no-files-found: error
+          retention-days: 30
+      - name: Validate with Ultimate
+        if: inputs.validator != 'cpachecker'
+        timeout-minutes: 60
+        continue-on-error: true
+        run: |
+          python -u scripts/witness_v104.py validate --external "${{ runner.temp }}/ext" \
+            --output "experiments/v104/witness/full165/shard${{ matrix.shard }}" \
+            --validator ultimate --timeout ${{ inputs.timeout }} --workers ${{ inputs.workers }}
+      - name: Trim the tools' working directories
+        if: always()
+        run: |
+          D="experiments/v104/witness/full165/shard${{ matrix.shard }}"
+          rm -rf "$D"/cpa
+          find "$D" -name 'Ultimate*.log' -delete 2>/dev/null || true
+          find "$D" -name '*.dot' -delete 2>/dev/null || true
+          du -sh "$D" || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: witness-shard-${{ matrix.shard }}
+          path: experiments/v104/witness/full165
+          # overwrite because the same name is uploaded three times in one job, once per phase; the
+          # later upload replaces the earlier one instead of failing on the duplicate name.
+          overwrite: true
+          if-no-files-found: error
+          retention-days: 30
+
+  collect:
+    needs: export
+    if: always()
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install package
+        run: python -m pip install -q -e '.[test,smt,exp]'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: witness-shard-*
+          merge-multiple: true
+          path: experiments/v104/witness/full165
+      - name: Fold the shards in
+        env:
+          WANT: ${{ inputs.shards }}
+        run: |
+          D=experiments/v104/witness/full165
+          ls "$D"
+          n=$(ls -d "$D"/shard* 2>/dev/null | wc -l)
+          if [ -n "$WANT" ]; then
+            want=$(printf '%s' "$WANT" | tr ',' '\n' | grep -c .)
+          else
+            want=20
+          fi
+          echo "$n shard directory/directories, $want requested"
+          # Only the shards that were asked for are required. On a full run that is every shard of
+          # the split, and a missing one is still an error; on a dispatched subset it is the subset.
+          if [ "$n" -ne "$want" ]; then echo "expected $want shards, got $n" >&2; exit 1; fi
+          python -u scripts/witness_v104.py merge --output "$D" \
+            --inputs "$(ls -d "$D"/shard* | paste -sd, -)"
+          cat "$D"/summary.md
+      - name: Record evidence and push
+        # A dispatched subset folds only its own shards, so its summary covers a fragment of the
+        # protocol and must not be committed over the full one. Subset runs are evidence producers;
+        # the summary is written once, from the union, when every shard exists.
+        if: inputs.shards == ''
+        run: |
+          D=experiments/v104/witness/full165
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A "$D"
+          if git diff --cached --quiet; then echo 'no change'; exit 0; fi
+          git commit -q -m "v1.04: third-party validation of the exported invariants, all 165 cases [skip ci]"
+          for i in 1 2 3; do
+            git pull --rebase --quiet --autostash origin research/v103-exec \
+              && git push -q origin HEAD:refs/heads/research/v103-exec && break
+            sleep 5
+          done

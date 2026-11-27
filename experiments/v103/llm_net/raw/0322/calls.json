@@ -1,0 +1,221 @@
+[
+  {
+    "model_requested": "claude-sonnet-4-5-20250929",
+    "request": {
+      "model": "claude-sonnet-4-5-20250929",
+      "temperature": 0.7,
+      "max_tokens": 6000,
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a loop-summary hypothesis generator. You only PROPOSE candidates; a separate verifier checks them against the real C semantics and rejects wrong ones. Reply with one JSON object and nothing else."
+        },
+        {
+          "role": "user",
+          "content": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int x__in){\nint x = x__in;\nint c = 0;\nwhile ((x > 1) && (x < 100))\n{\n  x = x * x;\n  c = c + 1;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"x__in\": [-2147483648, 2147483647]}"
+        }
+      ]
+    },
+    "started_utc": "2026-11-22T00:34:06Z",
+    "endpoint": "https://api.square16.org/v1",
+    "attempts": [
+      {
+        "attempt": 0,
+        "ok": true,
+        "http_status": 200,
+        "seconds": 6.647
+      }
+    ],
+    "seconds": 6.647,
+    "response_text": "{\"id\":\"msg_011Cgxaz4eyrR8qwx6t6S0ff\",\"model\":\"claude-sonnet-4-5-20250929\",\"object\":\"chat.completion\",\"created\":1795307652,\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"```json\\n{\\\"atoms\\\": [\\\"x \\u003e 1\\\", \\\"x \\u003c 100\\\", \\\"x \\u003e= -2147483648\\\", \\\"x \\u003c= 2147483647\\\", \\\"c \\u003e= 0\\\", \\\"c \\u003c= 30\\\", \\\"c \\u003c= 63\\\", \\\"x__in \\u003c= 1 or x__in \\u003e= 100 or c \\u003e= 1\\\", \\\"x \\u003e 1 and x \\u003c 100 or c == 0 or not (x \\u003e 1 and x \\u003c 100)\\\", \\\"x \\u003e= 2 or x \\u003c= 1\\\", \\\"x \\u003c 100 or x \\u003e= 100\\\", \\\"c \\u003e= 0 and c \\u003c= 100\\\", \\\"x__in == x or c \\u003e= 1\\\", \\\"x \\u003e 0 or not (x \\u003e 1 and x \\u003c 100)\\\", \\\"x \\u003c= 9801\\\", \\\"x \\u003e= 2 and x \\u003c 100 or not (x \\u003e 1 and x \\u003c 100)\\\", \\\"c \\u003c= x__in\\\", \\\"x__in \\u003c 2 or x__in \\u003e= 100 or x \\u003e= x__in\\\", \\\"x__in \\u003c 2 or x__in \\u003e= 100 or x \\u003e= x__in * x__in\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x * x \\u003e= 0\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x * x \\u003c= 9801\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x * x \\u003e= 4\\\", \\\"x \\u003c= 99 or not (x \\u003e 1 and x \\u003c 100)\\\", \\\"x \\u003e= 2 or not (x \\u003e 1 and x \\u003c 100)\\\", \\\"c == 0 or x \\u003e= x__in\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x \\u003e= 2\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x \\u003c= 99\\\"]}\\n```\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":643,\"completion_tokens\":560,\"total_tokens\":1203,\"usage_semantic\":\"openai\",\"usage_source\":\"anthropic\",\"billing_usage\":{\"source\":\"claude_messages\",\"semantic\":\"anthropic\",\"claude_usage\":{\"input_tokens\":643,\"cache_creation_input_tokens\":0,\"cache_read_input_tokens\":0,\"output_tokens\":560,\"cache_creation\":{},\"claude_cache_creation_5_m_tokens\":0,\"claude_cache_creation_1_h_tokens\":0}},\"prompt_tokens_details\":{\"cached_tokens\":0,\"text_tokens\":0,\"audio_tokens\":0,\"image_tokens\":0},\"completion_tokens_details\":{\"text_tokens\":0,\"audio_tokens\":0,\"image_tokens\":0,\"reasoning_tokens\":0},\"input_tokens\":643,\"output_tokens\":0,\"input_tokens_details\":null,\"claude_cache_creation_5_m_tokens\":0,\"claude_cache_creation_1_h_tokens\":0}}",
+    "served_model": "claude-sonnet-4-5-20250929",
+    "usage": {
+      "prompt_tokens": 643,
+      "completion_tokens": 560,
+      "total_tokens": 1203,
+      "usage_semantic": "openai",
+      "usage_source": "anthropic",
+      "billing_usage": {
+        "source": "claude_messages",
+        "semantic": "anthropic",
+        "claude_usage": {
+          "input_tokens": 643,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 0,
+          "output_tokens": 560,
+          "cache_creation": {},
+          "claude_cache_creation_5_m_tokens": 0,
+          "claude_cache_creation_1_h_tokens": 0
+        }
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "text_tokens": 0,
+        "audio_tokens": 0,
+        "image_tokens": 0
+      },
+      "completion_tokens_details": {
+        "text_tokens": 0,
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0
+      },
+      "input_tokens": 643,
+      "output_tokens": 0,
+      "input_tokens_details": null,
+      "claude_cache_creation_5_m_tokens": 0,
+      "claude_cache_creation_1_h_tokens": 0
+    },
+    "content": "```json\n{\"atoms\": [\"x > 1\", \"x < 100\", \"x >= -2147483648\", \"x <= 2147483647\", \"c >= 0\", \"c <= 30\", \"c <= 63\", \"x__in <= 1 or x__in >= 100 or c >= 1\", \"x > 1 and x < 100 or c == 0 or not (x > 1 and x < 100)\", \"x >= 2 or x <= 1\", \"x < 100 or x >= 100\", \"c >= 0 and c <= 100\", \"x__in == x or c >= 1\", \"x > 0 or not (x > 1 and x < 100)\", \"x <= 9801\", \"x >= 2 and x < 100 or not (x > 1 and x < 100)\", \"c <= x__in\", \"x__in < 2 or x__in >= 100 or x >= x__in\", \"x__in < 2 or x__in >= 100 or x >= x__in * x__in\", \"not (x > 1 and x < 100) or x * x >= 0\", \"not (x > 1 and x < 100) or x * x <= 9801\", \"not (x > 1 and x < 100) or x * x >= 4\", \"x <= 99 or not (x > 1 and x < 100)\", \"x >= 2 or not (x > 1 and x < 100)\", \"c == 0 or x >= x__in\", \"not (x > 1 and x < 100) or x >= 2\", \"not (x > 1 and x < 100) or x <= 99\"]}\n```",
+    "finish_reason": "stop",
+    "round": 0,
+    "prompt_sha256": "98607110aa9943492f77d4fedb30cc5f74a681dcda40c98b0402c517132ba612",
+    "prompt_text": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int x__in){\nint x = x__in;\nint c = 0;\nwhile ((x > 1) && (x < 100))\n{\n  x = x * x;\n  c = c + 1;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"x__in\": [-2147483648, 2147483647]}"
+  },
+  {
+    "model_requested": "claude-sonnet-4-5-20250929",
+    "request": {
+      "model": "claude-sonnet-4-5-20250929",
+      "temperature": 0.7,
+      "max_tokens": 6000,
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a loop-summary hypothesis generator. You only PROPOSE candidates; a separate verifier checks them against the real C semantics and rejects wrong ones. Reply with one JSON object and nothing else."
+        },
+        {
+          "role": "user",
+          "content": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int x__in){\nint x = x__in;\nint c = 0;\nwhile ((x > 1) && (x < 100))\n{\n  x = x * x;\n  c = c + 1;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"x__in\": [-2147483648, 2147483647]}\n\nA previous attempt with your atoms failed: the verifier got stuck at the obligation `STUCK:top/loop0/body operations defined`. Atoms that currently survive: [\"x > 1\", \"x < 100\", \"x >= -2147483648\", \"x <= 2147483647\", \"c >= 0\", \"c <= 30\", \"c <= 63\", \"x__in <= 1 or x__in >= 100 or c >= 1\", \"x > 1 and x < 100 or c == 0 or not (x > 1 and x < 100)\", \"x >= 2 or x <= 1\", \"x < 100 or x >= 100\", \"c >= 0 and c <= 100\", \"x__in == x or c >= 1\", \"x > 0 or not (x > 1 and x < 100)\", \"x <= 9801\", \"x >= 2 and x < 100 or not (x > 1 and x < 100)\", \"c <= x__in\", \"x__in < 2 or x__in >= 100 or x >= x__in\", \"x__in < 2 or x__in >= 100 or x >= x__in * x__in\", \"not (x > 1 and x < 100) or x * x >= 0\", \"not (x > 1 and x < 100) or x * x <= 9801\", \"not (x > 1 and x < 100) or x * x >= 4\", \"x <= 99 or not (x > 1 and x < 100)\", \"x >= 2 or not (x > 1 and x < 100)\", \"c == 0 or x >= x__in\", \"not (x > 1 and x < 100) or x >= 2\", \"not (x > 1 and x < 100) or x <= 99\"]\nPropose NEW atoms (different shapes: relations with entry values, polynomial relations, bounds on products) that would make this obligation provable. Output the same JSON schema."
+        }
+      ]
+    },
+    "started_utc": "2026-11-22T00:34:15Z",
+    "endpoint": "https://api.square16.org/v1",
+    "attempts": [
+      {
+        "attempt": 0,
+        "ok": true,
+        "http_status": 200,
+        "seconds": 11.707
+      }
+    ],
+    "seconds": 11.707,
+    "response_text": "{\"id\":\"msg_011Cgxb0zX1EmzwEEc56lFIv\",\"model\":\"claude-sonnet-4-5-20250929\",\"object\":\"chat.completion\",\"created\":1795307667,\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"```json\\n{\\\"atoms\\\": [\\\"not (x \\u003e 1 and x \\u003c 100) or x * x \\u003c= 2147483647\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x * x \\u003c 2147483647\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x \\u003c= 46340\\\", \\\"x \\u003c= 46340 or not (x \\u003e 1 and x \\u003c 100)\\\", \\\"x * x \\u003c= 9801 or not (x \\u003e 1 and x \\u003c 100)\\\", \\\"x \\u003e 1 and x \\u003c 100 or not (x \\u003e 1 and x \\u003c 100)\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or (x \\u003e= 2 and x \\u003c= 99)\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x * x \\u003c= 9801\\\", \\\"x \\u003e= 2 and x \\u003c= 99 or not (x \\u003e 1 and x \\u003c 100)\\\", \\\"x * x \\u003e= 4 or not (x \\u003e 1 and x \\u003c 100)\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or (x * x \\u003e= 4 and x * x \\u003c= 9801)\\\", \\\"x \\u003c= 99 and x \\u003e= 2 or not (x \\u003e 1 and x \\u003c 100)\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x \\u003c 46341\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x * x \\u003c 9802\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x * x \\u003c= 2147483646\\\", \\\"x \\u003e= -2147483648 and x \\u003c= 46340 or not (x \\u003e 1 and x \\u003c 100)\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or (x \\u003e= 2 and x \\u003c= 46340)\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x * x \\u003e= 0\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x * x \\u003c= 10000\\\", \\\"x \\u003c 100 and x \\u003e 1 and x * x \\u003c= 9801 or not (x \\u003e 1 and x \\u003c 100)\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or (x \\u003e= 2 and x * x \\u003c= 9801)\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x \\u003c= 99 and x * x \\u003c 2147483647\\\", \\\"x \\u003e 1 and x \\u003c= 99 or not (x \\u003e 1 and x \\u003c 100)\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or (x \\u003e 0 and x \\u003c 100 and x * x \\u003c 2147483647)\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x * x != 2147483647\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x * x + 1 \\u003c= 9802\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x * x - 1 \\u003c= 9800\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x * x \\u003c= 9801 and x * x \\u003e= 4\\\", \\\"x \\u003e 1 and x \\u003c 100 and x * x \\u003c= 9801 or not (x \\u003e 1 and x \\u003c 100)\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x * x // 1 \\u003c= 9801\\\"]}\\n```\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":1127,\"completion_tokens\":1113,\"total_tokens\":2240,\"usage_semantic\":\"openai\",\"usage_source\":\"anthropic\",\"billing_usage\":{\"source\":\"claude_messages\",\"semantic\":\"anthropic\",\"claude_usage\":{\"input_tokens\":1127,\"cache_creation_input_tokens\":0,\"cache_read_input_tokens\":0,\"output_tokens\":1113,\"cache_creation\":{},\"claude_cache_creation_5_m_tokens\":0,\"claude_cache_creation_1_h_tokens\":0}},\"prompt_tokens_details\":{\"cached_tokens\":0,\"text_tokens\":0,\"audio_tokens\":0,\"image_tokens\":0},\"completion_tokens_details\":{\"text_tokens\":0,\"audio_tokens\":0,\"image_tokens\":0,\"reasoning_tokens\":0},\"input_tokens\":1127,\"output_tokens\":0,\"input_tokens_details\":null,\"claude_cache_creation_5_m_tokens\":0,\"claude_cache_creation_1_h_tokens\":0}}",
+    "served_model": "claude-sonnet-4-5-20250929",
+    "usage": {
+      "prompt_tokens": 1127,
+      "completion_tokens": 1113,
+      "total_tokens": 2240,
+      "usage_semantic": "openai",
+      "usage_source": "anthropic",
+      "billing_usage": {
+        "source": "claude_messages",
+        "semantic": "anthropic",
+        "claude_usage": {
+          "input_tokens": 1127,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 0,
+          "output_tokens": 1113,
+          "cache_creation": {},
+          "claude_cache_creation_5_m_tokens": 0,
+          "claude_cache_creation_1_h_tokens": 0
+        }
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "text_tokens": 0,
+        "audio_tokens": 0,
+        "image_tokens": 0
+      },
+      "completion_tokens_details": {
+        "text_tokens": 0,
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0
+      },
+      "input_tokens": 1127,
+      "output_tokens": 0,
+      "input_tokens_details": null,
+      "claude_cache_creation_5_m_tokens": 0,
+      "claude_cache_creation_1_h_tokens": 0
+    },
+    "content": "```json\n{\"atoms\": [\"not (x > 1 and x < 100) or x * x <= 2147483647\", \"not (x > 1 and x < 100) or x * x < 2147483647\", \"not (x > 1 and x < 100) or x <= 46340\", \"x <= 46340 or not (x > 1 and x < 100)\", \"x * x <= 9801 or not (x > 1 and x < 100)\", \"x > 1 and x < 100 or not (x > 1 and x < 100)\", \"not (x > 1 and x < 100) or (x >= 2 and x <= 99)\", \"not (x > 1 and x < 100) or x * x <= 9801\", \"x >= 2 and x <= 99 or not (x > 1 and x < 100)\", \"x * x >= 4 or not (x > 1 and x < 100)\", \"not (x > 1 and x < 100) or (x * x >= 4 and x * x <= 9801)\", \"x <= 99 and x >= 2 or not (x > 1 and x < 100)\", \"not (x > 1 and x < 100) or x < 46341\", \"not (x > 1 and x < 100) or x * x < 9802\", \"not (x > 1 and x < 100) or x * x <= 2147483646\", \"x >= -2147483648 and x <= 46340 or not (x > 1 and x < 100)\", \"not (x > 1 and x < 100) or (x >= 2 and x <= 46340)\", \"not (x > 1 and x < 100) or x * x >= 0\", \"not (x > 1 and x < 100) or x * x <= 10000\", \"x < 100 and x > 1 and x * x <= 9801 or not (x > 1 and x < 100)\", \"not (x > 1 and x < 100) or (x >= 2 and x * x <= 9801)\", \"not (x > 1 and x < 100) or x <= 99 and x * x < 2147483647\", \"x > 1 and x <= 99 or not (x > 1 and x < 100)\", \"not (x > 1 and x < 100) or (x > 0 and x < 100 and x * x < 2147483647)\", \"not (x > 1 and x < 100) or x * x != 2147483647\", \"not (x > 1 and x < 100) or x * x + 1 <= 9802\", \"not (x > 1 and x < 100) or x * x - 1 <= 9800\", \"not (x > 1 and x < 100) or x * x <= 9801 and x * x >= 4\", \"x > 1 and x < 100 and x * x <= 9801 or not (x > 1 and x < 100)\", \"not (x > 1 and x < 100) or x * x // 1 <= 9801\"]}\n```",
+    "finish_reason": "stop",
+    "round": 1,
+    "prompt_sha256": "9d6af1e4bc5fc13b19df65551d0a32dbc55c31743e24575aa5e79dcdb392ef02",
+    "prompt_text": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int x__in){\nint x = x__in;\nint c = 0;\nwhile ((x > 1) && (x < 100))\n{\n  x = x * x;\n  c = c + 1;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"x__in\": [-2147483648, 2147483647]}\n\nA previous attempt with your atoms failed: the verifier got stuck at the obligation `STUCK:top/loop0/body operations defined`. Atoms that currently survive: [\"x > 1\", \"x < 100\", \"x >= -2147483648\", \"x <= 2147483647\", \"c >= 0\", \"c <= 30\", \"c <= 63\", \"x__in <= 1 or x__in >= 100 or c >= 1\", \"x > 1 and x < 100 or c == 0 or not (x > 1 and x < 100)\", \"x >= 2 or x <= 1\", \"x < 100 or x >= 100\", \"c >= 0 and c <= 100\", \"x__in == x or c >= 1\", \"x > 0 or not (x > 1 and x < 100)\", \"x <= 9801\", \"x >= 2 and x < 100 or not (x > 1 and x < 100)\", \"c <= x__in\", \"x__in < 2 or x__in >= 100 or x >= x__in\", \"x__in < 2 or x__in >= 100 or x >= x__in * x__in\", \"not (x > 1 and x < 100) or x * x >= 0\", \"not (x > 1 and x < 100) or x * x <= 9801\", \"not (x > 1 and x < 100) or x * x >= 4\", \"x <= 99 or not (x > 1 and x < 100)\", \"x >= 2 or not (x > 1 and x < 100)\", \"c == 0 or x >= x__in\", \"not (x > 1 and x < 100) or x >= 2\", \"not (x > 1 and x < 100) or x <= 99\"]\nPropose NEW atoms (different shapes: relations with entry values, polynomial relations, bounds on products) that would make this obligation provable. Output the same JSON schema."
+  },
+  {
+    "model_requested": "claude-sonnet-4-5-20250929",
+    "request": {
+      "model": "claude-sonnet-4-5-20250929",
+      "temperature": 0.7,
+      "max_tokens": 6000,
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a loop-summary hypothesis generator. You only PROPOSE candidates; a separate verifier checks them against the real C semantics and rejects wrong ones. Reply with one JSON object and nothing else."
+        },
+        {
+          "role": "user",
+          "content": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int x__in){\nint x = x__in;\nint c = 0;\nwhile ((x > 1) && (x < 100))\n{\n  x = x * x;\n  c = c + 1;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"x__in\": [-2147483648, 2147483647]}\n\nA previous attempt with your atoms failed: the verifier got stuck at the obligation `STUCK:top/loop0/body operations defined`. Atoms that currently survive: [\"x > 1\", \"x < 100\", \"x >= -2147483648\", \"x <= 2147483647\", \"c >= 0\", \"c <= 30\", \"c <= 63\", \"x__in <= 1 or x__in >= 100 or c >= 1\", \"x > 1 and x < 100 or c == 0 or not (x > 1 and x < 100)\", \"x >= 2 or x <= 1\", \"x < 100 or x >= 100\", \"c >= 0 and c <= 100\", \"x__in == x or c >= 1\", \"x > 0 or not (x > 1 and x < 100)\", \"x <= 9801\", \"x >= 2 and x < 100 or not (x > 1 and x < 100)\", \"c <= x__in\", \"x__in < 2 or x__in >= 100 or x >= x__in\", \"x__in < 2 or x__in >= 100 or x >= x__in * x__in\", \"not (x > 1 and x < 100) or x * x >= 0\", \"not (x > 1 and x < 100) or x * x <= 9801\", \"not (x > 1 and x < 100) or x * x >= 4\", \"x <= 99 or not (x > 1 and x < 100)\", \"x >= 2 or not (x > 1 and x < 100)\", \"c == 0 or x >= x__in\", \"not (x > 1 and x < 100) or x >= 2\", \"not (x > 1 and x < 100) or x <= 99\", \"not (x > 1 and x < 100) or x * x <= 2147483647\", \"not (x > 1 and x < 100) or x * x < 2147483647\", \"not (x > 1 and x < 100) or x <= 46340\", \"x <= 46340 or not (x > 1 and x < 100)\", \"x * x <= 9801 or not (x > 1 and x < 100)\", \"x > 1 and x < 100 or not (x > 1 and x < 100)\", \"not (x > 1 and x < 100) or (x >= 2 and x <= 99)\", \"x >= 2 and x <= 99 or not (x > 1 and x < 100)\", \"x * x >= 4 or not (x > 1 and x < 100)\", \"not (x > 1 and x < 100) or (x * x >= 4 and x * x <= 9801)\", \"x <= 99 and x >= 2 or not (x > 1 and x < 100)\", \"not (x > 1 and x < 100) or x < 46341\", \"not (x > 1 and x < 100) or x * x < 9802\"]\nPropose NEW atoms (different shapes: relations with entry values, polynomial relations, bounds on products) that would make this obligation provable. Output the same JSON schema."
+        }
+      ]
+    },
+    "started_utc": "2026-11-22T00:34:31Z",
+    "endpoint": "https://api.square16.org/v1",
+    "attempts": [
+      {
+        "attempt": 0,
+        "ok": true,
+        "http_status": 200,
+        "seconds": 160.828
+      }
+    ],
+    "seconds": 160.828,
+    "response_text": "{\"id\":\"msg_011CgxbDycsQx9H5syRs6YFL\",\"model\":\"claude-sonnet-4-5-20250929\",\"object\":\"chat.completion\",\"created\":1795307831,\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"atoms\\\": [\\\"not (x \\u003e 1 and x \\u003c 100) or x \\u003e= 0\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x \\u003e= 2\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x \\u003c= 99\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x * x \\u003e= 0\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x * x \\u003e= 4\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x * x \\u003e= x\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x * x \\u003c= 99 * x\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x * x \\u003c= 100 * x\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or 99 * x \\u003c= 9801\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or 100 * x \\u003c= 9900\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x * x \\u003c= 99 * 99\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x * x \\u003c= 9900\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x * x \\u003c= 9801\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x * x \\u003c= 2147483647\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x * (x - 99) \\u003c= 0\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x * x - 99 * x \\u003c= 0\\\", \\\"x % 2 == x__in % 2\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x % 2 == x__in % 2\\\", \\\"c == 0 or x \\u003e x__in\\\", \\\"c == 0 or x \\u003e= x__in * x__in\\\", \\\"x__in \\u003c 2 or x__in \\u003e= 100 or x * x \\u003c= 9801\\\", \\\"x__in \\u003c 2 or x__in \\u003e= 100 or x * x \\u003c= 2147483647\\\", \\\"x__in \\u003c 2 or x__in \\u003e= 100 or x \\u003c= 99\\\", \\\"x__in \\u003c 2 or x__in \\u003e= 100 or x \\u003e= 2\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or c + 1 \\u003c= 2147483647\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or c \\u003c= 30\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x \\u003c= 46340\\\", \\\"not (x \\u003e 1 and x \\u003c 100) or x \\u003c 46341\\\"]}\"},\"finish_reason\":\"length\"}],\"usage\":{\"prompt_tokens\":1422,\"completion_tokens\":6000,\"total_tokens\":7422,\"usage_semantic\":\"openai\",\"usage_source\":\"anthropic\",\"billing_usage\":{\"source\":\"claude_messages\",\"semantic\":\"anthropic\",\"claude_usage\":{\"input_tokens\":1422,\"cache_creation_input_tokens\":0,\"cache_read_input_tokens\":0,\"output_tokens\":6000,\"cache_creation\":{},\"claude_cache_creation_5_m_tokens\":0,\"claude_cache_creation_1_h_tokens\":0}},\"prompt_tokens_details\":{\"cached_tokens\":0,\"text_tokens\":0,\"audio_tokens\":0,\"image_tokens\":0},\"completion_tokens_details\":{\"text_tokens\":0,\"audio_tokens\":0,\"image_tokens\":0,\"reasoning_tokens\":0},\"input_tokens\":1422,\"output_tokens\":0,\"input_tokens_details\":null,\"claude_cache_creation_5_m_tokens\":0,\"claude_cache_creation_1_h_tokens\":0}}",
+    "served_model": "claude-sonnet-4-5-20250929",
+    "usage": {
+      "prompt_tokens": 1422,
+      "completion_tokens": 6000,
+      "total_tokens": 7422,
+      "usage_semantic": "openai",
+      "usage_source": "anthropic",
+      "billing_usage": {
+        "source": "claude_messages",
+        "semantic": "anthropic",
+        "claude_usage": {
+          "input_tokens": 1422,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 0,
+          "output_tokens": 6000,
+          "cache_creation": {},
+          "claude_cache_creation_5_m_tokens": 0,
+          "claude_cache_creation_1_h_tokens": 0
+        }
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "text_tokens": 0,
+        "audio_tokens": 0,
+        "image_tokens": 0
+      },
+      "completion_tokens_details": {
+        "text_tokens": 0,
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0
+      },
+      "input_tokens": 1422,
+      "output_tokens": 0,
+      "input_tokens_details": null,
+      "claude_cache_creation_5_m_tokens": 0,
+      "claude_cache_creation_1_h_tokens": 0
+    },
+    "content": "{\"atoms\": [\"not (x > 1 and x < 100) or x >= 0\", \"not (x > 1 and x < 100) or x >= 2\", \"not (x > 1 and x < 100) or x <= 99\", \"not (x > 1 and x < 100) or x * x >= 0\", \"not (x > 1 and x < 100) or x * x >= 4\", \"not (x > 1 and x < 100) or x * x >= x\", \"not (x > 1 and x < 100) or x * x <= 99 * x\", \"not (x > 1 and x < 100) or x * x <= 100 * x\", \"not (x > 1 and x < 100) or 99 * x <= 9801\", \"not (x > 1 and x < 100) or 100 * x <= 9900\", \"not (x > 1 and x < 100) or x * x <= 99 * 99\", \"not (x > 1 and x < 100) or x * x <= 9900\", \"not (x > 1 and x < 100) or x * x <= 9801\", \"not (x > 1 and x < 100) or x * x <= 2147483647\", \"not (x > 1 and x < 100) or x * (x - 99) <= 0\", \"not (x > 1 and x < 100) or x * x - 99 * x <= 0\", \"x % 2 == x__in % 2\", \"not (x > 1 and x < 100) or x % 2 == x__in % 2\", \"c == 0 or x > x__in\", \"c == 0 or x >= x__in * x__in\", \"x__in < 2 or x__in >= 100 or x * x <= 9801\", \"x__in < 2 or x__in >= 100 or x * x <= 2147483647\", \"x__in < 2 or x__in >= 100 or x <= 99\", \"x__in < 2 or x__in >= 100 or x >= 2\", \"not (x > 1 and x < 100) or c + 1 <= 2147483647\", \"not (x > 1 and x < 100) or c <= 30\", \"not (x > 1 and x < 100) or x <= 46340\", \"not (x > 1 and x < 100) or x < 46341\"]}",
+    "finish_reason": "length",
+    "round": 2,
+    "prompt_sha256": "6fcc35fcff6171561f5646f224addc65158effa611fcbf6856a67e5452def76f",
+    "prompt_text": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int x__in){\nint x = x__in;\nint c = 0;\nwhile ((x > 1) && (x < 100))\n{\n  x = x * x;\n  c = c + 1;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"x__in\": [-2147483648, 2147483647]}\n\nA previous attempt with your atoms failed: the verifier got stuck at the obligation `STUCK:top/loop0/body operations defined`. Atoms that currently survive: [\"x > 1\", \"x < 100\", \"x >= -2147483648\", \"x <= 2147483647\", \"c >= 0\", \"c <= 30\", \"c <= 63\", \"x__in <= 1 or x__in >= 100 or c >= 1\", \"x > 1 and x < 100 or c == 0 or not (x > 1 and x < 100)\", \"x >= 2 or x <= 1\", \"x < 100 or x >= 100\", \"c >= 0 and c <= 100\", \"x__in == x or c >= 1\", \"x > 0 or not (x > 1 and x < 100)\", \"x <= 9801\", \"x >= 2 and x < 100 or not (x > 1 and x < 100)\", \"c <= x__in\", \"x__in < 2 or x__in >= 100 or x >= x__in\", \"x__in < 2 or x__in >= 100 or x >= x__in * x__in\", \"not (x > 1 and x < 100) or x * x >= 0\", \"not (x > 1 and x < 100) or x * x <= 9801\", \"not (x > 1 and x < 100) or x * x >= 4\", \"x <= 99 or not (x > 1 and x < 100)\", \"x >= 2 or not (x > 1 and x < 100)\", \"c == 0 or x >= x__in\", \"not (x > 1 and x < 100) or x >= 2\", \"not (x > 1 and x < 100) or x <= 99\", \"not (x > 1 and x < 100) or x * x <= 2147483647\", \"not (x > 1 and x < 100) or x * x < 2147483647\", \"not (x > 1 and x < 100) or x <= 46340\", \"x <= 46340 or not (x > 1 and x < 100)\", \"x * x <= 9801 or not (x > 1 and x < 100)\", \"x > 1 and x < 100 or not (x > 1 and x < 100)\", \"not (x > 1 and x < 100) or (x >= 2 and x <= 99)\", \"x >= 2 and x <= 99 or not (x > 1 and x < 100)\", \"x * x >= 4 or not (x > 1 and x < 100)\", \"not (x > 1 and x < 100) or (x * x >= 4 and x * x <= 9801)\", \"x <= 99 and x >= 2 or not (x > 1 and x < 100)\", \"not (x > 1 and x < 100) or x < 46341\", \"not (x > 1 and x < 100) or x * x < 9802\"]\nPropose NEW atoms (different shapes: relations with entry values, polynomial relations, bounds on products) that would make this obligation provable. Output the same JSON schema."
+  }
+]

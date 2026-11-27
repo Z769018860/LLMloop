@@ -1,0 +1,28 @@
+- entry_type: invariant_set
+  metadata:
+    format_version: '2.0'
+    uuid: e3d7b2d5-16a3-54bd-9180-6a7583089ca7
+    creation_time: '2026-11-22T00:00:00+00:00'
+    producer:
+      name: llmloop
+      version: 1.04
+      configuration: llmloop v1.04 deterministic pipeline, invariants exported as loop heads
+    task:
+      input_files:
+      - program.c
+      input_file_hashes:
+        program.c: 98308b945f7e2164282d73b667b808b726ac2c95f2f6a434ee63a708be8a1588
+      specification: |
+        CHECK( init(main()), LTL(G ! overflow) )
+      data_model: LP64
+      language: C
+  content:
+  - invariant:
+      type: loop_invariant
+      location:
+        file_name: program.c
+        line: 4
+        column: 1
+        function: f
+      value: '(a >= 1) && (a <= 2) && ((a == 1 || a == 2)) && (b >= 1) && (b <= 2) && ((b == 1 || b == 2)) && (((long long)__z - (long long)a) >= -2) && (((long long)__z - (long long)a) <= -1) && (((long long)__z + (long long)a) >= 1) && (((long long)__z + (long long)a) <= 2) && (__z <= a) && (((long long)__z - (long long)b) >= -2) && (((long long)__z - (long long)b) <= -1) && (((long long)__z + (long long)b) >= 1) && (((long long)__z + (long long)b) <= 2) && (__z <= b) && (((long long)a - (long long)b) >= -1) && (((long long)a - (long long)b) <= 1) && ((((a - b) % 2) + 2) % 2 == 1) && (a + b == 3) && (1*__z == 0) && (-1*a + -1*b + 3 == 0) && (a >= -1) && (a >= 0) && (a <= 3) && (a <= 4) && (a <= 5) && (a <= 6) && (b >= -1) && (b >= 0) && (b <= 3) && (b <= 4) && (b <= 5) && (b <= 6) && ((a != 1 || b >= 2)) && ((a == 1 || b <= 1)) && ((a != 2 || b <= 1)) && ((a == 2 || b >= 2)) && ((b != 1 || a >= 2)) && ((b == 1 || a <= 1)) && ((b != 2 || a <= 1)) && ((b == 2 || a >= 2))'
+      format: c_expression

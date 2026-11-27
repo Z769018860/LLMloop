@@ -1,0 +1,113 @@
+name: v1.04 scale-up, 400 cases
+
+# Frozen protocol: experiments/v104/scale400/protocol.json
+# 400 cases x 3 tools at 600 s / 2 GiB = 1200 units. The 165 of v1.03 are included by identity;
+# the additions are termination-crafted and a hash-ordered prefix of termination-crafted-lit, so the
+# set is the same population with more samples -- a precision increase, not a change of task.
+#
+# Three failed attempts, all before the first case:
+#   * 45005886487 -- the protocol was frozen on Windows, so its source-hash keys were
+#     `scripts\scale_v104.py`, and `Path / 'scripts\x.py'` is one odd file name on Linux rather than
+#     a directory traversal. Keys are now POSIX; the check folds both spellings either way.
+#   * 45006470248 -- `ci_setup_v103.sh svbench` only fetches termination-15 and
+#     termination-restricted-15, so the first termination-crafted case was missing. The study now
+#     has its own checkout (`scale`) rather than widening the one the v1.03 protocols were frozen
+#     against.
+#   * 45006927799 -- the frozen source hashes were taken over CRLF bytes (a Windows checkout) while
+#     the runner materialises the same revision with LF. Benchmark inputs are now hashed with CRLF
+#     folded to LF, in the freeze and in the run.
+#
+# Run 45007189312 completed, and two of its three columns were artefacts rather than results:
+#   * every Ultimate cell died in 0.12 s with KeyError: 'V103_ULTIMATE' -- the adapter reads that
+#     name, the driver set V104_ULTIMATE. All 400 were recorded as MALFORMED_OUTPUT.
+#   * CBMC was counted as refuting 154 cases that carry an upstream `true` label, because a failing
+#     unwinding assertion (`main.unwind.0`) was read as a property violation. The protocol says
+#     incomplete unrolling is UNKNOWN; 204 of its 309 refutations were only that.
+# Both are fixed, the raw cells of that run are removed, and this run regenerates them.
+on:
+  push:
+    branches: [research/v103-exec]
+    paths: ['.github/workflows/v104-scale.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: v104-scale
+  cancel-in-progress: false
+jobs:
+  scale:
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '21'}
+      - name: Install package
+        run: python -m pip install -q -e '.[test,smt,exp]'
+      - name: Prepare pinned inputs
+        run: |
+          chmod +x scripts/ci_setup_v103.sh
+          EXT="${{ runner.temp }}/ext"
+          scripts/ci_setup_v103.sh "$EXT" scale
+          scripts/ci_setup_v103.sh "$EXT" tools
+      - name: Run shard ${{ matrix.shard }}
+        run: |
+          EXT="${{ runner.temp }}/ext"
+          python -u scripts/heldout_v104.py run --external "$EXT" \
+            --output experiments/v104/scale400 --shard ${{ matrix.shard }} --shards 8
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: scale400-shard-${{ matrix.shard }}
+          path: experiments/v104/scale400
+          if-no-files-found: error
+          retention-days: 30
+
+  merge:
+    needs: scale
+    if: always()
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install package
+        run: python -m pip install -q -e '.[test,smt,exp]'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: scale400-shard-*
+          merge-multiple: true
+          path: incoming
+      - name: Fold the shards in
+        run: |
+          ls incoming
+          n=$(ls -1 incoming/shards/shard_*.json 2>/dev/null | wc -l)
+          echo "$n shard result(s)"
+          if [ "$n" -ne 8 ]; then echo "expected 8 shards, got $n" >&2; exit 1; fi
+          mkdir -p experiments/v104/scale400
+          cp -a incoming/. experiments/v104/scale400/
+          python -u scripts/heldout_v104.py merge --output experiments/v104/scale400
+          cat experiments/v104/scale400/summary.md
+      - name: Record evidence and push
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A experiments/v104/scale400
+          if git diff --cached --quiet; then echo 'no change'; exit 0; fi
+          git commit -q -m "v1.04: 400-case scale-up of the deterministic comparison [skip ci]"
+          for i in 1 2 3; do
+            git pull --rebase --quiet --autostash origin research/v103-exec \
+              && git push -q origin HEAD:refs/heads/research/v103-exec && break
+            sleep 5
+          done

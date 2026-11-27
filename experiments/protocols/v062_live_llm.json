@@ -1,0 +1,368 @@
+{
+  "schema_version": 1,
+  "study": "v062_live_llm_proposals",
+  "seed": 20261107,
+  "provider_endpoint_host": "api.square16.org",
+  "api": "openai-compatible chat/completions",
+  "models": [
+    "deepseek-v4.1-flash-ark",
+    "glm-5.3-ark",
+    "deepseek-v4.1-flash-itkk"
+  ],
+  "repetitions": 3,
+  "temperature": 0.7,
+  "max_tokens": 8000,
+  "max_candidates_per_response": 3,
+  "fallback_max_steps": 128,
+  "call_timeout_seconds": 240,
+  "verify_timeout_seconds": 120,
+  "verification_backend": "llmloop.api.analyze_request frontend=typed_summary_portfolio (unmodified)",
+  "split": "held_out_by_source",
+  "held_out_programs": 17,
+  "split_caveat": "Programs are source-disjoint from v0.59/v0.60 development fixtures and were frozen before any model output; they are NOT family-disjoint (counter/wrap/nested-product styles overlap with the two worked prompt examples) and training-data contamination of the models cannot be excluded. One corpus revision; the single pre-run correction (h_toggle domain bound; h_mod3_ramp reclassified) is disclosed in the report.",
+  "system_prompt": "You are a loop-summary hypothesis generator. You only PROPOSE candidates; a separate verifier checks them against the real C semantics and rejects wrong ones. Reply with one JSON object and nothing else.",
+  "prompt_sha256": {
+    "h_countdown": "4390c442f53fe3740c1c4c6cea473ee209da450c7d7160d8a8d68bd90274b8e9",
+    "h_sum_index": "46b206184def22cc75f9a2330f66070eee01606be036e73a615616281a789457",
+    "h_u8_step3": "30fa27f7d753f2744db6199a95e175c554ac29c38f4645c4baba870834105289",
+    "h_two_counters": "8ef5b1427ddc8b46a50118a4601bca0be4273417cf4f3546a08f889d8ffe149a",
+    "h_alternating": "62f9f22bcc7806bab90dc81c05597680f83d36a297120f5b82b36e056e6e06da",
+    "h_floor_zero": "10ac727edc414efdb91e7c7c9d59274992637ca4d53f9e56fd3ac5426a4b0168",
+    "h_toggle": "25fdf3e8c36a5b46838d33490fc9c09dca2d220756707f118a49bc1de90aac53",
+    "h_threshold_step": "41d91280b3b685d1d7371f876c171eb2d54e0c91c34c06bcc25f32e151245b89",
+    "h_u16_triangular": "5b9bff0ffb5d1cd8f6acfd488f9cdf832ea3e6db75fe6fa719c03c0287a32516",
+    "h_mod3_ramp": "39c5a6124acbd9ab6020faf29256efa075c164715f278b81f6dea58467cf7fd3",
+    "h_nest_const": "b5fbebcbfa6a38146c55643f61631dfeb7215de3f59d9e492c38cdfee48d8c09",
+    "h_nest_triangle": "411f3b27ff370a761a875be9fcb1d8a690a97b497e161864f0ed4e51f8884ae8",
+    "h_nest_u8wrap": "4d2b59b1f3633e3ebfc6cad79dad24e114a43ebb96c2689156aa6ace121edfd4",
+    "h_fib_mod": "797e76f3541910247c496fa09470a142024117a893308feffe4b4c6a43ac2bd3",
+    "h_exp_mod": "1b57028da552c4e280aa67a9821ef62b4dc76ead99195226ecf894947b176147",
+    "h_overflow_accum": "086e85ce9bc6b195f00031190335afb5ee0271f8287b2d3aa9bb20f5a79e2508",
+    "h_div_zero": "360fbf8b7b4ba5eb3d1c126d345a834ecce410e2a55fad26971a2ebd86de75cc"
+  },
+  "corpus": [
+    {
+      "name": "h_countdown",
+      "source": "long f(int n){long x=n;for(int i=0;i<n;i++){x--;}return x;}",
+      "backend": "typed_recurrence",
+      "parameter_bounds": {
+        "n": [
+          0,
+          20000000
+        ]
+      },
+      "inputs": {
+        "n": 20000000
+      },
+      "role": "provable",
+      "note": "",
+      "source_sha256": "56d6ce7ceca3a81d140ca2dad2aecfa3720c83acd8c2066946d7d4c86bfde291",
+      "reference_sha256": "162239cea76d0c2c4759d559d72502053f87f0d59e3b36042073406458774bb9"
+    },
+    {
+      "name": "h_sum_index",
+      "source": "long f(int n){long s=0;for(int i=0;i<n;i++){s+=i;}return s;}",
+      "backend": "typed_recurrence",
+      "parameter_bounds": {
+        "n": [
+          0,
+          100000
+        ]
+      },
+      "inputs": {
+        "n": 100000
+      },
+      "role": "provable",
+      "note": "",
+      "source_sha256": "e03f17593b173ef9b9ebca2c52eaac6bb2ed6a7afd4ce08645178f2063744787",
+      "reference_sha256": "760e1f50d33d459de670c729524149af45fb8745bc98762f0191a9caa021c972"
+    },
+    {
+      "name": "h_u8_step3",
+      "source": "int f(int n){unsigned char a=0;for(int i=0;i<n;i++){a+=3;}return a;}",
+      "backend": "typed_recurrence",
+      "parameter_bounds": {
+        "n": [
+          0,
+          20000000
+        ]
+      },
+      "inputs": {
+        "n": 20000000
+      },
+      "role": "provable",
+      "note": "",
+      "source_sha256": "f5dcdc587e3faa3d9f7f4a2d9b8d845dd1af80082f032b042738578af6b233b3",
+      "reference_sha256": "8c0b7b97fb0fda7b87cc8e585da71eb70f683e82d5c9ef9226bb5cb0cb8d572f"
+    },
+    {
+      "name": "h_two_counters",
+      "source": "long f(int n){int a=0;long b=0;for(int i=0;i<n;i++){a+=2;b+=a;}return b+a;}",
+      "backend": "typed_recurrence",
+      "parameter_bounds": {
+        "n": [
+          0,
+          30000
+        ]
+      },
+      "inputs": {
+        "n": 30000
+      },
+      "role": "provable",
+      "note": "",
+      "source_sha256": "bbf3bec68654c66f61c919f8a57f68475ab49bfe6cdbd2b05808d8dfe32e9641",
+      "reference_sha256": "13f5bcd0a79c3d2ba622941161ea31aa6536db4fefa34bb83b97634932ea53d9"
+    },
+    {
+      "name": "h_alternating",
+      "source": "long f(int n){long x=0;for(int i=0;i<n;i++){if(i%2==0){x+=1;}else{x+=3;}}return x;}",
+      "backend": "typed_recurrence",
+      "parameter_bounds": {
+        "n": [
+          0,
+          20000000
+        ]
+      },
+      "inputs": {
+        "n": 20000000
+      },
+      "role": "provable",
+      "note": "",
+      "source_sha256": "974b69c4f47daa39c0efaf84c5abfb268834bf5b894b6657809b5dc73c7f8843",
+      "reference_sha256": "25ead9fe3021d62a6b81008409a387278d80ccdae48503612d53395c42c24bcb"
+    },
+    {
+      "name": "h_floor_zero",
+      "source": "int f(int n){int x=1000000;for(int i=0;i<n;i++){if(x>0){x--;}}return x;}",
+      "backend": "typed_recurrence",
+      "parameter_bounds": {
+        "n": [
+          0,
+          2000000
+        ]
+      },
+      "inputs": {
+        "n": 1500000
+      },
+      "role": "provable",
+      "note": "",
+      "source_sha256": "747a5b7ea72fc98628a5c8d703c4c93b83cd12f5ee6a7a83f44c79095f57fe74",
+      "reference_sha256": "7037dec5b4a9f3695d262c34987cfd2ddade3d754aec85d27accc2bb8108b118"
+    },
+    {
+      "name": "h_toggle",
+      "source": "int f(int n){unsigned char b=0;for(int i=0;i<n;i++){b^=1;}return b;}",
+      "backend": "typed_recurrence",
+      "parameter_bounds": {
+        "n": [
+          0,
+          20000001
+        ]
+      },
+      "inputs": {
+        "n": 20000001
+      },
+      "role": "provable",
+      "note": "bitwise xor body; DSL has no xor",
+      "source_sha256": "584e1fea4fc182f64cbb5e9486ca7df75e86eacfeebe3c605a84e7bea04b8904",
+      "reference_sha256": "05c3ef694d4b698d82943dcdbcd19fa7d6b6cb5d89be1e82eafef7b0d44cb72b"
+    },
+    {
+      "name": "h_threshold_step",
+      "source": "long f(int n){long x=0;for(int i=0;i<n;i++){if(i<100){x+=2;}else{x+=1;}}return x;}",
+      "backend": "typed_recurrence",
+      "parameter_bounds": {
+        "n": [
+          0,
+          20000000
+        ]
+      },
+      "inputs": {
+        "n": 20000000
+      },
+      "role": "provable",
+      "note": "",
+      "source_sha256": "ac4af49297318055b9bf5c8682a8e7fbef7c981521b14f1635eca8d1f50c7e0d",
+      "reference_sha256": "0d3c8ba8fe73f2d50127679d2a9f0d5367249758933c2fddb7e058aab8e14357"
+    },
+    {
+      "name": "h_u16_triangular",
+      "source": "int f(int n){unsigned short s=0;for(int i=0;i<n;i++){s+=i;}return s;}",
+      "backend": "typed_recurrence",
+      "parameter_bounds": {
+        "n": [
+          0,
+          60000
+        ]
+      },
+      "inputs": {
+        "n": 60000
+      },
+      "role": "provable",
+      "note": "",
+      "source_sha256": "c8afa2b61ecfe760a5e0644b753a340e2960d088f2be1f1ba037b83b82f4e16f",
+      "reference_sha256": "180ce145e0c28a247fbff380d17dfab2d5593253ab2edafa76c65cc5372119e3"
+    },
+    {
+      "name": "h_mod3_ramp",
+      "source": "long f(int n){long x=0;for(int i=0;i<n;i++){x+=i%3;}return x;}",
+      "backend": "typed_recurrence",
+      "parameter_bounds": {
+        "n": [
+          0,
+          20000000
+        ]
+      },
+      "inputs": {
+        "n": 20000000
+      },
+      "role": "hard_unconfirmed",
+      "note": "two maintainer formulas (3*(i//3)+(i%3)*((i%3)-1)//2 and 3*(i//3)+(i%3)//2) both hit the 5 s solver timeout during corpus validation; a correct closed form exists but certification is unconfirmed",
+      "source_sha256": "94de34403a9e3fed80b9193336ef3e3ee0c01111f8e2b345a106a2dfe733a729",
+      "reference_sha256": null
+    },
+    {
+      "name": "h_nest_const",
+      "source": "long f(int n,int m){long x=0;for(int i=0;i<n;i++){for(int j=0;j<m;j++){x+=2;}}return x;}",
+      "backend": "typed_nested",
+      "parameter_bounds": {
+        "n": [
+          0,
+          4000
+        ],
+        "m": [
+          0,
+          4000
+        ]
+      },
+      "inputs": {
+        "n": 4000,
+        "m": 4000
+      },
+      "role": "provable",
+      "note": "",
+      "source_sha256": "aeaaafddec8ab276db577473a50d27615ff08bb231705c22a878ad09876f41c3",
+      "reference_sha256": "e438633a72496d1eb1fd100a25e90c7abace6d9dc474094255d54d1bc4968851"
+    },
+    {
+      "name": "h_nest_triangle",
+      "source": "long f(int n){long x=0;for(int i=0;i<n;i++){for(int j=0;j<i;j++){x++;}}return x;}",
+      "backend": "typed_nested",
+      "parameter_bounds": {
+        "n": [
+          0,
+          5000
+        ]
+      },
+      "inputs": {
+        "n": 5000
+      },
+      "role": "provable",
+      "note": "",
+      "source_sha256": "bf4fc213272bd7aec1a94f0472acf005d09cd33e8820422c768e0150ef9f3423",
+      "reference_sha256": "c1d3046502ada98a8978dd70c7590713e1e2a5c4d806cd8df67d78dcf8560be7"
+    },
+    {
+      "name": "h_nest_u8wrap",
+      "source": "int f(int n){unsigned char c=0;for(int i=0;i<n;i++){for(int j=0;j<4;j++){c+=1;}}return c;}",
+      "backend": "typed_nested",
+      "parameter_bounds": {
+        "n": [
+          0,
+          5000000
+        ]
+      },
+      "inputs": {
+        "n": 5000000
+      },
+      "role": "provable",
+      "note": "",
+      "source_sha256": "8122c93962326dcf9b9877386625e7b22c24886d451207bc74bfe65417f7b778",
+      "reference_sha256": "1bce7b4b3b6a17d9b908ba591a9b04a72b20f8f092444a19adb07c5abc21cd4d"
+    },
+    {
+      "name": "h_fib_mod",
+      "source": "int f(int n){unsigned char a=0,b=1;for(int i=0;i<n;i++){unsigned char t=a+b;a=b;b=t;}return a;}",
+      "backend": "typed_recurrence",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000
+        ]
+      },
+      "inputs": {
+        "n": 1000000
+      },
+      "role": "frontier_no_known_closed_form",
+      "note": "Fibonacci mod 256: period 384, no polynomial/DSL closed form known to maintainers",
+      "source_sha256": "a8cff5181b3f0f11d358ac83561ef3bec07b6d2cb2107d263fead76d24eccc45",
+      "reference_sha256": null
+    },
+    {
+      "name": "h_exp_mod",
+      "source": "unsigned f(int n){unsigned x=1;for(int i=0;i<n;i++){x*=3;}return x%1000;}",
+      "backend": "typed_recurrence",
+      "parameter_bounds": {
+        "n": [
+          0,
+          1000000
+        ]
+      },
+      "inputs": {
+        "n": 1000000
+      },
+      "role": "frontier_no_known_closed_form",
+      "note": "needs variable exponent; unsupported by DSL",
+      "source_sha256": "2a6dbf1c327eb88fe0e6bb240147649adfd9a6c67696cb25a50196ac2a7fcdd8",
+      "reference_sha256": null
+    },
+    {
+      "name": "h_overflow_accum",
+      "source": "int f(int n){int x=0;for(int i=0;i<n;i++){x+=1000000000;}return x;}",
+      "backend": "typed_recurrence",
+      "parameter_bounds": {
+        "n": [
+          0,
+          5
+        ]
+      },
+      "inputs": {
+        "n": 2
+      },
+      "role": "unsafe_source_control",
+      "note": "signed overflow reachable at n>=3; no candidate may be certified",
+      "source_sha256": "039dcf7ffff40513c69e74a72e09dc52cb23f37827a02cce994f8126d6aa8674",
+      "reference_sha256": null
+    },
+    {
+      "name": "h_div_zero",
+      "source": "int f(int n){int x=0;for(int i=0;i<n;i++){x+=10/i;}return x;}",
+      "backend": "typed_recurrence",
+      "parameter_bounds": {
+        "n": [
+          1,
+          10
+        ]
+      },
+      "inputs": {
+        "n": 5
+      },
+      "role": "unsafe_source_control",
+      "note": "division by zero at i=0; no candidate may be certified",
+      "source_sha256": "ca90fc542533b3b6854c55419e3df16c8c258e10919eb89cbc34f9cdb8a01314",
+      "reference_sha256": null
+    }
+  ],
+  "metrics": [
+    "pass@1 (first candidate certified)",
+    "pass@k (any candidate certified)",
+    "final status incl. bounded fallback",
+    "soundness: unsafe controls never certified, certified values equal native oracle",
+    "tokens, generation latency, verification time"
+  ],
+  "comparators": [
+    "bounded 128-step typed CFG",
+    "deterministic auto generator (loop_summaries=auto)"
+  ],
+  "no_unavailable_claims": "Fallback proofs are bounded proofs, not certified accelerations."
+}

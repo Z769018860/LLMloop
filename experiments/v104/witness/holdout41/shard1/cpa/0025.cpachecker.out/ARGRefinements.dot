@@ -1,0 +1,53 @@
+digraph ARG {
+node [style="filled" shape="box" color="white"]
+subgraph cluster_0 {
+label="Refinement 0"
+9 [fillcolor="red" label="9 @ N15\nmain\nAbstractionState: ABS1: true\n OverflowState: Assumptions:\\n\n AutomatonState: Overflows: _predefinedState_ERROR\n AutomatonState: WitnessBasedISA: singleState\n" id="9"]
+}
+0 -> 9
+subgraph cluster_1 {
+label="Refinement 1"
+16 [fillcolor="red" label="16 @ N17\nmain\nAbstractionState: ABS4: true\n OverflowState: Assumptions:\\n\n AutomatonState: Overflows: _predefinedState_ERROR\n AutomatonState: WitnessBasedISA: singleState\n" id="16"]
+}
+0 -> 16
+subgraph cluster_2 {
+label="Refinement 2"
+1 [label="1 @ N23\nmain\nAutomatonState: WitnessBasedISA: singleState\n" id="1"]
+31 [label="31 @ N1\nf entry\nAutomatonState: WitnessBasedISA: singleState\n" id="31"]
+35 [fillcolor="cornflowerblue" label="35 @ N4\nf\nAbstractionState: ABS8: true\n AutomatonState: WitnessBasedISA: singleState\n" id="35"]
+43 [fillcolor="red" label="43 @ N7\nf\nAbstractionState: ABS10: true\n OverflowState: Assumptions:\\n\n AutomatonState: Overflows: _predefinedState_ERROR\n AutomatonState: WitnessBasedISA: singleState\n" id="43"]
+40 [label="40 @ N0\nf exit\nAutomatonState: WitnessBasedISA: singleState\n" id="40"]
+41 [fillcolor="orange" label="41 @ N21\nmain\nAutomatonState: WitnessBasedISA: singleState\n" id="41"]
+38 [fillcolor="orange" label="38 @ N5\nf\nAutomatonState: WitnessBasedISA: singleState\n" id="38"]
+1 -> 31 []
+31 -> 35 []
+35 -> 38 [label="Line 3: \l[x > 0]\l" id="35 -> 38"]
+35 -> 40 []
+35 -> 43 []
+40 -> 41 [label="Line 15: \lReturn edge from f to main: __CPAchecker_TMP_1 = f(a0);\l" id="40 -> 41"]
+}
+0 -> 1
+subgraph cluster_3 {
+label="Refinement 3"
+52 [fillcolor="red" label="52 @ N15\nmain\nAbstractionState: ABS11: true\n OverflowState: Assumptions:\\n\n AutomatonState: Overflows: _predefinedState_ERROR\n AutomatonState: WitnessBasedISA: singleState\n" id="52"]
+}
+0 -> 52
+subgraph cluster_4 {
+label="Refinement 4"
+59 [fillcolor="red" label="59 @ N17\nmain\nAbstractionState: ABS14: true\n OverflowState: Assumptions:\\n\n AutomatonState: Overflows: _predefinedState_ERROR\n AutomatonState: WitnessBasedISA: singleState\n" id="59"]
+}
+0 -> 59
+0 [fillcolor="cornflowerblue" label="0 @ N10\nmain entry\nAbstractionState: ABS0: true\n AutomatonState: WitnessBasedISA: singleState\n" id="0"]
+74 [label="74 @ N1\nf entry\nAutomatonState: WitnessBasedISA: singleState\n" id="74"]
+78 [fillcolor="cornflowerblue" label="78 @ N4\nf\nAbstractionState: ABS18: true\n AutomatonState: WitnessBasedISA: singleState\n" id="78"]
+90 [fillcolor="green" label="90 @ N4\nf\nAbstractionState: ABS22: true\n AutomatonState: WitnessBasedISA: singleState\n" id="90"]
+89 [fillcolor="green" label="89 @ N4\nf\nAbstractionState: ABS21: true\n AutomatonState: WitnessBasedISA: singleState\n" id="89"]
+83 [label="83 @ N0\nf exit\nAutomatonState: WitnessBasedISA: singleState\n" id="83"]
+0 -> 74 []
+74 -> 78 []
+89 -> 78 [style="dashed" weight="0" label="covered by"]
+90 -> 78 [style="dashed" weight="0" label="covered by"]
+78 -> 83 []
+78 -> 89 []
+78 -> 90 []
+}

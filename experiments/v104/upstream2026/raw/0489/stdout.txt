@@ -1,0 +1,953 @@
+Checking for overflows
+Using default analysis
+Version c425bfe6
+Calling Ultimate with: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.13-9/x64/bin/java -XX:ActiveProcessorCount=1 -Dosgi.configuration.area=/home/runner/work/_temp/ext/ultimate-v0.3.2/UAutomizer-linux/data/config -Xms2M -Xmx1G -Xss1M -jar /home/runner/work/_temp/ext/ultimate-v0.3.2/UAutomizer-linux/plugins/org.eclipse.equinox.launcher_1.8.0.v20260804-1928.jar -data @noDefault -ultimatedata /home/runner/work/_temp/ext/ultimate-v0.3.2/UAutomizer-linux/data -tc /home/runner/work/_temp/ext/ultimate-v0.3.2/UAutomizer-linux/config/AutomizerReach.xml -i /home/runner/work/_temp/ext/svbench-2026/c/goblint-coreutils/instrumented_ptx_comb.i -s /home/runner/work/_temp/ext/ultimate-v0.3.2/UAutomizer-linux/config/svcomp-Overflow-64bit-Automizer_Default.epf --cacsl2boogietranslator.entry.function main --witnessprinter.witness.directory /home/runner/work/LLMloop/LLMloop/experiments/v104/upstream2026/raw/0489/work --witnessprinter.witness.filename witness --witnessprinter.write.witness.besides.input.file false --witnessprinter.graph.data.specification CHECK( init(main()), LTL(G ! overflow) )
+ --witnessprinter.graph.data.producer Automizer --witnessprinter.graph.data.architecture 64bit --witnessprinter.graph.data.programhash 37cffa36d12f99fa5b0b0171dcb8704e4f919336fbfc801054ad86fe38d73e34 --core.toolchain.timeout.in.seconds 600
+--- Real Ultimate output ---
+This is Ultimate 0.3.2-dev-c425bfe605
+[2026-11-23 00:18:20,391 INFO  L188        SettingsManager]: Resetting all preferences to default values...
+[2026-11-23 00:18:20,502 INFO  L114        SettingsManager]: Loading settings from /home/runner/work/_temp/ext/ultimate-v0.3.2/UAutomizer-linux/config/svcomp-Overflow-64bit-Automizer_Default.epf
+[2026-11-23 00:18:20,513 WARN  L101        SettingsManager]: Preference file contains the following unknown settings:
+[2026-11-23 00:18:20,517 WARN  L103        SettingsManager]:   * de.uni_freiburg.informatik.ultimate.core.Log level for class
+[2026-11-23 00:18:20,587 INFO  L130        SettingsManager]: Preferences different from defaults after loading the file:
+[2026-11-23 00:18:20,588 INFO  L151        SettingsManager]: Preferences of UltimateCore differ from their defaults:
+[2026-11-23 00:18:20,589 INFO  L153        SettingsManager]:  * Log level for class=de.uni_freiburg.informatik.ultimate.lib.smtlibutils.quantifier.QuantifierPusher=ERROR;
+[2026-11-23 00:18:20,590 INFO  L151        SettingsManager]: Preferences of Boogie Procedure Inliner differ from their defaults:
+[2026-11-23 00:18:20,592 INFO  L153        SettingsManager]:  * Ignore calls to procedures called more than once=ONLY_FOR_SEQUENTIAL_PROGRAMS
+[2026-11-23 00:18:20,593 INFO  L151        SettingsManager]: Preferences of BlockEncodingV2 differ from their defaults:
+[2026-11-23 00:18:20,593 INFO  L153        SettingsManager]:  * Create parallel compositions if possible=false
+[2026-11-23 00:18:20,593 INFO  L153        SettingsManager]:  * Use SBE=true
+[2026-11-23 00:18:20,593 INFO  L151        SettingsManager]: Preferences of CACSL2BoogieTranslator differ from their defaults:
+[2026-11-23 00:18:20,593 INFO  L153        SettingsManager]:  * Overapproximate operations on floating types=true
+[2026-11-23 00:18:20,593 INFO  L153        SettingsManager]:  * Check division by zero=IGNORE
+[2026-11-23 00:18:20,593 INFO  L153        SettingsManager]:  * If two pointers are subtracted or compared they have the same base address=IGNORE
+[2026-11-23 00:18:20,593 INFO  L153        SettingsManager]:  * Pointer dereference validity=IGNORE
+[2026-11-23 00:18:20,594 INFO  L153        SettingsManager]:  * Memory addressing=One_Dimensional
+[2026-11-23 00:18:20,594 INFO  L153        SettingsManager]:  * Check absence of signed integer overflows=CHECK
+[2026-11-23 00:18:20,594 INFO  L153        SettingsManager]:  * Check unreachability of reach_error function=false
+[2026-11-23 00:18:20,594 INFO  L153        SettingsManager]:  * Check if freed pointer was valid=false
+[2026-11-23 00:18:20,594 INFO  L153        SettingsManager]:  * Behaviour of calls to undefined functions=OVERAPPROXIMATE_BEHAVIOUR
+[2026-11-23 00:18:20,594 INFO  L151        SettingsManager]: Preferences of IcfgBuilder differ from their defaults:
+[2026-11-23 00:18:20,594 INFO  L153        SettingsManager]:  * Size of a code block=SequenceOfStatements
+[2026-11-23 00:18:20,594 INFO  L153        SettingsManager]:  * Only consider context switches at boundaries of atomic blocks=true
+[2026-11-23 00:18:20,594 INFO  L153        SettingsManager]:  * SMT solver=External_DefaultMode
+[2026-11-23 00:18:20,594 INFO  L153        SettingsManager]:  * Command for external solver=z3 SMTLIB2_COMPLIANT=true -memory:5120 -smt2 -in -t:4000
+[2026-11-23 00:18:20,594 INFO  L151        SettingsManager]: Preferences of RCFGBuilder differ from their defaults:
+[2026-11-23 00:18:20,595 INFO  L153        SettingsManager]:  * Size of a code block=SequenceOfStatements
+[2026-11-23 00:18:20,597 INFO  L153        SettingsManager]:  * Only consider context switches at boundaries of atomic blocks=true
+[2026-11-23 00:18:20,597 INFO  L153        SettingsManager]:  * SMT solver=External_DefaultMode
+[2026-11-23 00:18:20,597 INFO  L153        SettingsManager]:  * Command for external solver=z3 SMTLIB2_COMPLIANT=true -memory:5120 -smt2 -in -t:4000
+[2026-11-23 00:18:20,598 INFO  L151        SettingsManager]: Preferences of TraceAbstraction differ from their defaults:
+[2026-11-23 00:18:20,598 INFO  L153        SettingsManager]:  * Compute Interpolants along a Counterexample=FPandBP
+[2026-11-23 00:18:20,598 INFO  L153        SettingsManager]:  * Command for external solver=z3 SMTLIB2_COMPLIANT=true -memory:5120 -smt2 -in
+[2026-11-23 00:18:20,598 INFO  L153        SettingsManager]:  * Order on configurations for Petri net unfoldings=DBO
+[2026-11-23 00:18:20,598 INFO  L153        SettingsManager]:  * Looper check in Petri net analysis=SEMANTIC
+[2026-11-23 00:18:20,598 INFO  L153        SettingsManager]:  * Compute procedure contracts=false
+[2026-11-23 00:18:20,598 INFO  L153        SettingsManager]:  * Positions where we compute the Hoare Annotation=LoopHeads
+[2026-11-23 00:18:20,598 INFO  L153        SettingsManager]:  * Trace refinement strategy=CAMEL
+[2026-11-23 00:18:20,598 INFO  L153        SettingsManager]:  * Automaton type used in concurrency analysis=PETRI_NET
+[2026-11-23 00:18:20,598 INFO  L153        SettingsManager]:  * Use sequential CEGAR loop with k-induction=true
+[2026-11-23 00:18:20,598 INFO  L153        SettingsManager]:  * SMT solver=External_ModelsAndUnsatCoreMode
+Applying setting for plugin de.uni_freiburg.informatik.ultimate.plugins.generator.cacsl2boogietranslator: Entry function -> main
+Applying setting for plugin de.uni_freiburg.informatik.ultimate.witnessprinter: Witness directory -> /home/runner/work/LLMloop/LLMloop/experiments/v104/upstream2026/raw/0489/work
+Applying setting for plugin de.uni_freiburg.informatik.ultimate.witnessprinter: Witness filename -> witness
+Applying setting for plugin de.uni_freiburg.informatik.ultimate.witnessprinter: Write witness besides input file -> false
+Applying setting for plugin de.uni_freiburg.informatik.ultimate.witnessprinter: Graph data specification -> CHECK( init(main()), LTL(G ! overflow) )
+
+Applying setting for plugin de.uni_freiburg.informatik.ultimate.witnessprinter: Graph data producer -> Automizer
+Applying setting for plugin de.uni_freiburg.informatik.ultimate.witnessprinter: Graph data architecture -> 64bit
+Applying setting for plugin de.uni_freiburg.informatik.ultimate.witnessprinter: Graph data programhash -> 37cffa36d12f99fa5b0b0171dcb8704e4f919336fbfc801054ad86fe38d73e34
+Applying setting for plugin de.uni_freiburg.informatik.ultimate.core: Toolchain timeout in seconds -> 600
+[2026-11-23 00:18:21,180 INFO  L75    nceAwareModelManager]: Repository-Root is: /tmp
+[2026-11-23 00:18:21,201 INFO  L261   ainManager$Toolchain]: [Toolchain 1]: Applicable parser(s) successfully (re)initialized
+[2026-11-23 00:18:21,204 INFO  L217   ainManager$Toolchain]: [Toolchain 1]: Toolchain selected.
+[2026-11-23 00:18:21,206 INFO  L270        PluginConnector]: Initializing CDTParser...
+[2026-11-23 00:18:21,207 INFO  L274        PluginConnector]: CDTParser initialized
+[2026-11-23 00:18:21,208 INFO  L431   ainManager$Toolchain]: [Toolchain 1]: Parsing single file: /home/runner/work/_temp/ext/svbench-2026/c/goblint-coreutils/instrumented_ptx_comb.i
+[2026-11-23 00:18:22,760 INFO  L538              CDTParser]: Created temporary CDT project at /home/runner/work/_temp/ext/ultimate-v0.3.2/UAutomizer-linux/data/7f8d52db5/03c84bff74084b04b1668d3293aa44cb/FLAG1a35b7fbf
+[2026-11-23 00:18:24,895 INFO  L389              CDTParser]: Found 1 translation units.
+[2026-11-23 00:18:24,896 INFO  L178              CDTParser]: Scanning /home/runner/work/_temp/ext/svbench-2026/c/goblint-coreutils/instrumented_ptx_comb.i
+[2026-11-23 00:18:25,074 INFO  L432              CDTParser]: About to delete temporary CDT project at /home/runner/work/_temp/ext/ultimate-v0.3.2/UAutomizer-linux/data/7f8d52db5/03c84bff74084b04b1668d3293aa44cb/FLAG1a35b7fbf
+[2026-11-23 00:18:25,253 INFO  L440              CDTParser]: Successfully deleted /home/runner/work/_temp/ext/ultimate-v0.3.2/UAutomizer-linux/data/7f8d52db5/03c84bff74084b04b1668d3293aa44cb
+[2026-11-23 00:18:25,259 INFO  L299   ainManager$Toolchain]: ####################### [Toolchain 1] #######################
+[2026-11-23 00:18:25,264 INFO  L133        ToolchainWalker]: Walking toolchain with 6 elements.
+[2026-11-23 00:18:25,265 INFO  L112        PluginConnector]: ------------------------CACSL2BoogieTranslator----------------------------
+[2026-11-23 00:18:25,265 INFO  L270        PluginConnector]: Initializing CACSL2BoogieTranslator...
+[2026-11-23 00:18:25,273 INFO  L274        PluginConnector]: CACSL2BoogieTranslator initialized
+[2026-11-23 00:18:25,276 INFO  L184        PluginConnector]: Executing the observer ACSLObjectContainerObserver from plugin CACSL2BoogieTranslator for "CDTParser AST 23.11 12:18:25" (1/1) ...
+[2026-11-23 00:18:25,277 INFO  L204        PluginConnector]: Invalid model from CACSL2BoogieTranslator for observer de.uni_freiburg.informatik.ultimate.plugins.generator.cacsl2boogietranslator.ACSLObjectContainerObserver@3b507101 and model type de.uni_freiburg.informatik.ultimate.plugins.generator.cacsl2boogietranslator AST 23.11 12:18:25, skipping insertion in model container
+[2026-11-23 00:18:25,277 INFO  L184        PluginConnector]: Executing the observer CACSL2BoogieTranslatorObserver from plugin CACSL2BoogieTranslator for "CDTParser AST 23.11 12:18:25" (1/1) ...
+[2026-11-23 00:18:25,959 INFO  L177         MainTranslator]: Built tables and reachable declarations
+[2026-11-23 00:18:44,772 WARN  L650        FunctionHandler]: implicit declaration of function __builtin___memcpy_chk
+[2026-11-23 00:18:44,777 WARN  L650        FunctionHandler]: implicit declaration of function __builtin___memmove_chk
+[2026-11-23 00:18:44,778 WARN  L650        FunctionHandler]: implicit declaration of function __builtin___mempcpy_chk
+[2026-11-23 00:18:44,782 WARN  L650        FunctionHandler]: implicit declaration of function __builtin___memset_chk
+[2026-11-23 00:18:44,788 WARN  L650        FunctionHandler]: implicit declaration of function __builtin___strcpy_chk
+[2026-11-23 00:18:44,789 WARN  L650        FunctionHandler]: implicit declaration of function __builtin___stpcpy_chk
+[2026-11-23 00:18:44,790 WARN  L650        FunctionHandler]: implicit declaration of function __builtin___strncpy_chk
+[2026-11-23 00:18:44,794 WARN  L650        FunctionHandler]: implicit declaration of function __builtin___strcat_chk
+[2026-11-23 00:18:44,798 WARN  L650        FunctionHandler]: implicit declaration of function __builtin___strncat_chk
+[2026-11-23 00:18:44,909 WARN  L650        FunctionHandler]: implicit declaration of function __builtin___vsnprintf_chk
+[2026-11-23 00:18:45,359 WARN  L650        FunctionHandler]: implicit declaration of function __builtin_strspn
+[2026-11-23 00:18:46,331 WARN  L650        FunctionHandler]: implicit declaration of function __builtin_strcspn
+[2026-11-23 00:18:46,711 ERROR L332         MainTranslator]: Unsupported Syntax: The second argument of the pthread_mutex_init is not a null pointer. This means that non-default attributes are used. We support only the default attributes.
+[2026-11-23 00:18:46,712 INFO  L204        PluginConnector]: Invalid model from CACSL2BoogieTranslator for observer de.uni_freiburg.informatik.ultimate.plugins.generator.cacsl2boogietranslator.CACSL2BoogieTranslatorObserver@66e28106 and model type de.uni_freiburg.informatik.ultimate.plugins.generator.cacsl2boogietranslator AST 23.11 12:18:46, skipping insertion in model container
+[2026-11-23 00:18:46,712 INFO  L131        PluginConnector]: ------------------------ END CACSL2BoogieTranslator----------------------------
+[2026-11-23 00:18:46,713 INFO  L186        ToolchainWalker]: Toolchain execution was canceled (user or tool) before executing de.uni_freiburg.informatik.ultimate.boogie.procedureinliner
+[2026-11-23 00:18:46,717 INFO  L158              Benchmark]: Toolchain (without parser) took 21453.25ms. Allocated memory was 120.0MB in the beginning and 194.0MB in the end (delta: 74.1MB). Free memory was 46.5MB in the beginning and 13.0MB in the end (delta: 33.6MB). Peak memory consumption was 107.7MB. Max. memory is 1.0GB.
+[2026-11-23 00:18:46,717 INFO  L158              Benchmark]: CDTParser took 0.25ms. Allocated memory is still 45.6MB. Free memory was 22.4MB in the beginning and 22.3MB in the end (delta: 31.7kB). Peak memory consumption was 31.7kB. Max. memory is 1.0GB.
+[2026-11-23 00:18:46,718 INFO  L158              Benchmark]: CACSL2BoogieTranslator took 21447.89ms. Allocated memory was 120.0MB in the beginning and 194.0MB in the end (delta: 74.1MB). Free memory was 46.5MB in the beginning and 13.0MB in the end (delta: 33.6MB). Peak memory consumption was 107.7MB. Max. memory is 1.0GB.
+[2026-11-23 00:18:46,719 INFO  L338   ainManager$Toolchain]: #######################  End [Toolchain 1] #######################
+ --- Results ---
+ * Results from de.uni_freiburg.informatik.ultimate.core:
+  - StatisticsResult: Toolchain Benchmarks
+    Benchmark results are:
+ * CDTParser took 0.25ms. Allocated memory is still 45.6MB. Free memory was 22.4MB in the beginning and 22.3MB in the end (delta: 31.7kB). Peak memory consumption was 31.7kB. Max. memory is 1.0GB.
+ * CACSL2BoogieTranslator took 21447.89ms. Allocated memory was 120.0MB in the beginning and 194.0MB in the end (delta: 74.1MB). Free memory was 46.5MB in the beginning and 13.0MB in the end (delta: 33.6MB). Peak memory consumption was 107.7MB. Max. memory is 1.0GB.
+ * Results from de.uni_freiburg.informatik.ultimate.plugins.generator.cacsl2boogietranslator:
+  - UnsupportedSyntaxResult [Line: 36147]: Unsupported Syntax
+    The second argument of the pthread_mutex_init is not a null pointer. This means that non-default attributes are used. We support only the default attributes.
+RESULT: Ultimate could not prove your program: Toolchain returned no result.
+Received shutdown request...
+--- End real Ultimate output ---
+
+Execution finished normally
+Using bit-precise analysis
+Retrying with bit-precise analysis
+
+### Bit-precise run ###
+Calling Ultimate with: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.13-9/x64/bin/java -XX:ActiveProcessorCount=1 -Dosgi.configuration.area=/home/runner/work/_temp/ext/ultimate-v0.3.2/UAutomizer-linux/data/config -Xms2M -Xmx1G -Xss1M -jar /home/runner/work/_temp/ext/ultimate-v0.3.2/UAutomizer-linux/plugins/org.eclipse.equinox.launcher_1.8.0.v20260804-1928.jar -data @noDefault -ultimatedata /home/runner/work/_temp/ext/ultimate-v0.3.2/UAutomizer-linux/data -tc /home/runner/work/_temp/ext/ultimate-v0.3.2/UAutomizer-linux/config/AutomizerReach.xml -i /home/runner/work/_temp/ext/svbench-2026/c/goblint-coreutils/instrumented_ptx_comb.i -s /home/runner/work/_temp/ext/ultimate-v0.3.2/UAutomizer-linux/config/svcomp-Overflow-64bit-Automizer_Bitvector.epf --cacsl2boogietranslator.entry.function main --witnessprinter.witness.directory /home/runner/work/LLMloop/LLMloop/experiments/v104/upstream2026/raw/0489/work --witnessprinter.witness.filename witness --witnessprinter.write.witness.besides.input.file false --witnessprinter.graph.data.specification CHECK( init(main()), LTL(G ! overflow) )
+ --witnessprinter.graph.data.producer Automizer --witnessprinter.graph.data.architecture 64bit --witnessprinter.graph.data.programhash 37cffa36d12f99fa5b0b0171dcb8704e4f919336fbfc801054ad86fe38d73e34 --core.toolchain.timeout.in.seconds 600
+--- Real Ultimate output ---
+This is Ultimate 0.3.2-dev-c425bfe605
+[2026-11-23 00:18:50,269 INFO  L188        SettingsManager]: Resetting all preferences to default values...
+[2026-11-23 00:18:50,359 INFO  L114        SettingsManager]: Loading settings from /home/runner/work/_temp/ext/ultimate-v0.3.2/UAutomizer-linux/config/svcomp-Overflow-64bit-Automizer_Bitvector.epf
+[2026-11-23 00:18:50,366 WARN  L101        SettingsManager]: Preference file contains the following unknown settings:
+[2026-11-23 00:18:50,367 WARN  L103        SettingsManager]:   * de.uni_freiburg.informatik.ultimate.core.Log level for class
+[2026-11-23 00:18:50,367 WARN  L103        SettingsManager]:   * de.uni_freiburg.informatik.ultimate.plugins.generator.cacsl2boogietranslator.Checked method. Library mode if empty.
+[2026-11-23 00:18:50,416 INFO  L130        SettingsManager]: Preferences different from defaults after loading the file:
+[2026-11-23 00:18:50,416 INFO  L151        SettingsManager]: Preferences of UltimateCore differ from their defaults:
+[2026-11-23 00:18:50,416 INFO  L153        SettingsManager]:  * Log level for class=de.uni_freiburg.informatik.ultimate.lib.smtlibutils.quantifier.QuantifierPusher=ERROR;
+[2026-11-23 00:18:50,417 INFO  L151        SettingsManager]: Preferences of Boogie Procedure Inliner differ from their defaults:
+[2026-11-23 00:18:50,417 INFO  L153        SettingsManager]:  * Ignore calls to procedures called more than once=ONLY_FOR_SEQUENTIAL_PROGRAMS
+[2026-11-23 00:18:50,417 INFO  L151        SettingsManager]: Preferences of BlockEncodingV2 differ from their defaults:
+[2026-11-23 00:18:50,417 INFO  L153        SettingsManager]:  * Create parallel compositions if possible=false
+[2026-11-23 00:18:50,417 INFO  L153        SettingsManager]:  * Use SBE=true
+[2026-11-23 00:18:50,418 INFO  L151        SettingsManager]: Preferences of CACSL2BoogieTranslator differ from their defaults:
+[2026-11-23 00:18:50,418 INFO  L153        SettingsManager]:  * Check division by zero=IGNORE
+[2026-11-23 00:18:50,418 INFO  L153        SettingsManager]:  * Memory structure=HoenickeLindenmann_4ByteResolution
+[2026-11-23 00:18:50,418 INFO  L153        SettingsManager]:  * If two pointers are subtracted or compared they have the same base address=IGNORE
+[2026-11-23 00:18:50,419 INFO  L153        SettingsManager]:  * Adapt memory model on pointer casts if necessary=true
+[2026-11-23 00:18:50,419 INFO  L153        SettingsManager]:  * Pointer dereference validity=IGNORE
+[2026-11-23 00:18:50,419 INFO  L153        SettingsManager]:  * Use bitvectors instead of ints=true
+[2026-11-23 00:18:50,419 INFO  L153        SettingsManager]:  * Memory addressing=One_Dimensional
+[2026-11-23 00:18:50,420 INFO  L153        SettingsManager]:  * Check absence of signed integer overflows=CHECK
+[2026-11-23 00:18:50,420 INFO  L153        SettingsManager]:  * Check unreachability of reach_error function=false
+[2026-11-23 00:18:50,420 INFO  L153        SettingsManager]:  * Check if freed pointer was valid=false
+[2026-11-23 00:18:50,420 INFO  L153        SettingsManager]:  * Behaviour of calls to undefined functions=OVERAPPROXIMATE_BEHAVIOUR
+[2026-11-23 00:18:50,420 INFO  L151        SettingsManager]: Preferences of IcfgBuilder differ from their defaults:
+[2026-11-23 00:18:50,420 INFO  L153        SettingsManager]:  * Size of a code block=SequenceOfStatements
+[2026-11-23 00:18:50,420 INFO  L153        SettingsManager]:  * Only consider context switches at boundaries of atomic blocks=true
+[2026-11-23 00:18:50,420 INFO  L153        SettingsManager]:  * SMT solver=External_DefaultMode
+[2026-11-23 00:18:50,420 INFO  L153        SettingsManager]:  * Command for external solver=z3 SMTLIB2_COMPLIANT=true -memory:5120 -smt2 -in -t:4000
+[2026-11-23 00:18:50,421 INFO  L151        SettingsManager]: Preferences of RCFGBuilder differ from their defaults:
+[2026-11-23 00:18:50,421 INFO  L153        SettingsManager]:  * Size of a code block=SequenceOfStatements
+[2026-11-23 00:18:50,421 INFO  L153        SettingsManager]:  * Only consider context switches at boundaries of atomic blocks=true
+[2026-11-23 00:18:50,421 INFO  L153        SettingsManager]:  * SMT solver=External_DefaultMode
+[2026-11-23 00:18:50,421 INFO  L153        SettingsManager]:  * Command for external solver=z3 SMTLIB2_COMPLIANT=true -memory:5120 -smt2 -in -t:4000
+[2026-11-23 00:18:50,421 INFO  L151        SettingsManager]: Preferences of TraceAbstraction differ from their defaults:
+[2026-11-23 00:18:50,421 INFO  L153        SettingsManager]:  * Compute Interpolants along a Counterexample=FPandBP
+[2026-11-23 00:18:50,421 INFO  L153        SettingsManager]:  * Command for external solver=bitwuzla
+[2026-11-23 00:18:50,422 INFO  L153        SettingsManager]:  * Order on configurations for Petri net unfoldings=DBO
+[2026-11-23 00:18:50,422 INFO  L153        SettingsManager]:  * Looper check in Petri net analysis=SEMANTIC
+[2026-11-23 00:18:50,422 INFO  L153        SettingsManager]:  * Compute procedure contracts=false
+[2026-11-23 00:18:50,422 INFO  L153        SettingsManager]:  * Positions where we compute the Hoare Annotation=LoopHeads
+[2026-11-23 00:18:50,422 INFO  L153        SettingsManager]:  * Trace refinement strategy=FOX
+[2026-11-23 00:18:50,422 INFO  L153        SettingsManager]:  * Automaton type used in concurrency analysis=PETRI_NET
+[2026-11-23 00:18:50,422 INFO  L153        SettingsManager]:  * Use sequential CEGAR loop with k-induction=true
+[2026-11-23 00:18:50,422 INFO  L153        SettingsManager]:  * SMT solver=External_ModelsAndUnsatCoreMode
+Applying setting for plugin de.uni_freiburg.informatik.ultimate.plugins.generator.cacsl2boogietranslator: Entry function -> main
+Applying setting for plugin de.uni_freiburg.informatik.ultimate.witnessprinter: Witness directory -> /home/runner/work/LLMloop/LLMloop/experiments/v104/upstream2026/raw/0489/work
+Applying setting for plugin de.uni_freiburg.informatik.ultimate.witnessprinter: Witness filename -> witness
+Applying setting for plugin de.uni_freiburg.informatik.ultimate.witnessprinter: Write witness besides input file -> false
+Applying setting for plugin de.uni_freiburg.informatik.ultimate.witnessprinter: Graph data specification -> CHECK( init(main()), LTL(G ! overflow) )
+
+Applying setting for plugin de.uni_freiburg.informatik.ultimate.witnessprinter: Graph data producer -> Automizer
+Applying setting for plugin de.uni_freiburg.informatik.ultimate.witnessprinter: Graph data architecture -> 64bit
+Applying setting for plugin de.uni_freiburg.informatik.ultimate.witnessprinter: Graph data programhash -> 37cffa36d12f99fa5b0b0171dcb8704e4f919336fbfc801054ad86fe38d73e34
+Applying setting for plugin de.uni_freiburg.informatik.ultimate.core: Toolchain timeout in seconds -> 600
+[2026-11-23 00:18:50,860 INFO  L75    nceAwareModelManager]: Repository-Root is: /tmp
+[2026-11-23 00:18:50,876 INFO  L261   ainManager$Toolchain]: [Toolchain 1]: Applicable parser(s) successfully (re)initialized
+[2026-11-23 00:18:50,886 INFO  L217   ainManager$Toolchain]: [Toolchain 1]: Toolchain selected.
+[2026-11-23 00:18:50,887 INFO  L270        PluginConnector]: Initializing CDTParser...
+[2026-11-23 00:18:50,888 INFO  L274        PluginConnector]: CDTParser initialized
+[2026-11-23 00:18:50,892 INFO  L431   ainManager$Toolchain]: [Toolchain 1]: Parsing single file: /home/runner/work/_temp/ext/svbench-2026/c/goblint-coreutils/instrumented_ptx_comb.i
+[2026-11-23 00:18:52,397 INFO  L538              CDTParser]: Created temporary CDT project at /home/runner/work/_temp/ext/ultimate-v0.3.2/UAutomizer-linux/data/cc1777e10/ec10c4b204cf4be08cda3e7ad22a47c2/FLAG52553519c
+[2026-11-23 00:18:54,479 INFO  L389              CDTParser]: Found 1 translation units.
+[2026-11-23 00:18:54,482 INFO  L178              CDTParser]: Scanning /home/runner/work/_temp/ext/svbench-2026/c/goblint-coreutils/instrumented_ptx_comb.i
+[2026-11-23 00:18:54,654 INFO  L432              CDTParser]: About to delete temporary CDT project at /home/runner/work/_temp/ext/ultimate-v0.3.2/UAutomizer-linux/data/cc1777e10/ec10c4b204cf4be08cda3e7ad22a47c2/FLAG52553519c
+[2026-11-23 00:18:54,848 INFO  L440              CDTParser]: Successfully deleted /home/runner/work/_temp/ext/ultimate-v0.3.2/UAutomizer-linux/data/cc1777e10/ec10c4b204cf4be08cda3e7ad22a47c2
+[2026-11-23 00:18:54,852 INFO  L299   ainManager$Toolchain]: ####################### [Toolchain 1] #######################
+[2026-11-23 00:18:54,854 INFO  L133        ToolchainWalker]: Walking toolchain with 6 elements.
+[2026-11-23 00:18:54,861 INFO  L112        PluginConnector]: ------------------------CACSL2BoogieTranslator----------------------------
+[2026-11-23 00:18:54,862 INFO  L270        PluginConnector]: Initializing CACSL2BoogieTranslator...
+[2026-11-23 00:18:54,871 INFO  L274        PluginConnector]: CACSL2BoogieTranslator initialized
+[2026-11-23 00:18:54,876 INFO  L184        PluginConnector]: Executing the observer ACSLObjectContainerObserver from plugin CACSL2BoogieTranslator for "CDTParser AST 23.11 12:18:54" (1/1) ...
+[2026-11-23 00:18:54,879 INFO  L204        PluginConnector]: Invalid model from CACSL2BoogieTranslator for observer de.uni_freiburg.informatik.ultimate.plugins.generator.cacsl2boogietranslator.ACSLObjectContainerObserver@5dc4f502 and model type de.uni_freiburg.informatik.ultimate.plugins.generator.cacsl2boogietranslator AST 23.11 12:18:54, skipping insertion in model container
+[2026-11-23 00:18:54,879 INFO  L184        PluginConnector]: Executing the observer CACSL2BoogieTranslatorObserver from plugin CACSL2BoogieTranslator for "CDTParser AST 23.11 12:18:54" (1/1) ...
+[2026-11-23 00:18:55,432 INFO  L177         MainTranslator]: Built tables and reachable declarations
+[2026-11-23 00:19:17,287 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:19,048 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:21,954 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:21,955 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:21,955 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:21,955 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:22,233 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:22,256 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:22,270 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:22,283 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:22,284 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:22,311 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:22,340 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:22,515 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:22,759 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,739 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,740 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,745 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,746 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,747 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,748 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,749 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,750 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,752 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,753 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,753 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,753 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,754 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,754 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,755 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,757 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,758 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,758 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,761 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,762 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,763 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,763 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,763 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,764 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,780 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,816 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,824 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,825 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,828 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,878 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,880 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,882 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,890 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,897 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,902 WARN  L650        FunctionHandler]: implicit declaration of function __builtin___memcpy_chk
+[2026-11-23 00:19:24,904 WARN  L650        FunctionHandler]: implicit declaration of function __builtin___memmove_chk
+[2026-11-23 00:19:24,907 WARN  L650        FunctionHandler]: implicit declaration of function __builtin___mempcpy_chk
+[2026-11-23 00:19:24,909 WARN  L650        FunctionHandler]: implicit declaration of function __builtin___memset_chk
+[2026-11-23 00:19:24,914 WARN  L650        FunctionHandler]: implicit declaration of function __builtin___strcpy_chk
+[2026-11-23 00:19:24,915 WARN  L650        FunctionHandler]: implicit declaration of function __builtin___stpcpy_chk
+[2026-11-23 00:19:24,919 WARN  L650        FunctionHandler]: implicit declaration of function __builtin___strncpy_chk
+[2026-11-23 00:19:24,924 WARN  L650        FunctionHandler]: implicit declaration of function __builtin___strcat_chk
+[2026-11-23 00:19:24,925 WARN  L650        FunctionHandler]: implicit declaration of function __builtin___strncat_chk
+[2026-11-23 00:19:24,930 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,936 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,971 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,972 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,975 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,976 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,977 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,979 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,979 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,981 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,982 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:24,983 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,004 WARN  L650        FunctionHandler]: implicit declaration of function __builtin___vsnprintf_chk
+[2026-11-23 00:19:25,020 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,026 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,027 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,040 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,043 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,046 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,059 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,060 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,060 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,061 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,068 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,068 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,071 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,072 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,073 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,073 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,078 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,079 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,082 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,083 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,085 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,086 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,089 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,090 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,090 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,091 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,092 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,095 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,097 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,098 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,103 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,103 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,105 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,108 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,109 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,109 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,110 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,110 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,118 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,119 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,119 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,120 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,124 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,124 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,125 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,125 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,126 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,129 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,132 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,135 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,140 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,140 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,147 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,147 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,147 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,148 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,152 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,152 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,153 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,153 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,158 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,158 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,158 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,158 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,161 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,161 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,161 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,161 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,166 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,167 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,169 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,169 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,171 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,171 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,172 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,172 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,175 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,175 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,186 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,186 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,186 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,186 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,186 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,188 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,188 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,188 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,189 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,217 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,218 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,230 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,271 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,272 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,272 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,325 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,326 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,329 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,330 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,330 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,332 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,332 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,332 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,334 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,383 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,384 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,384 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,385 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,385 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,385 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,389 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,390 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,390 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,390 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,399 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,399 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,399 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,399 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,399 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,399 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,400 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,402 WARN  L650        FunctionHandler]: implicit declaration of function __builtin_strspn
+[2026-11-23 00:19:25,404 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,404 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,404 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,411 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,412 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,412 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,412 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,412 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,412 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,412 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,413 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,414 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,418 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,419 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,419 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,419 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,419 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,426 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,429 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,430 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,431 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,431 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,431 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,431 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,431 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,431 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,442 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,443 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,443 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,444 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,459 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,464 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,469 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,469 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,469 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,469 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,470 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,474 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,475 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,475 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,475 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,475 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,479 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,479 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,480 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,481 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,484 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,485 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,485 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,485 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,489 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,489 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,489 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,489 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,489 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,491 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,491 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,492 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,492 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,492 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,492 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,492 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,492 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,493 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,493 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,493 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,493 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,493 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,493 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,493 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,494 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,494 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,498 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,565 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,576 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,576 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,577 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,577 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,577 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,578 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,583 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,583 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,584 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,584 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,585 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,585 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,588 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,589 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,589 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,589 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,589 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,590 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,590 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,590 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,590 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,593 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,594 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,594 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,594 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,594 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,594 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,594 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,594 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,595 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,595 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,595 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,595 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,595 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,595 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,599 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,702 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,707 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,714 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,714 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,714 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,714 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,714 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,719 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,719 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,720 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,722 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,723 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,723 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,723 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,727 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,727 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,728 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,729 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,732 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,733 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,733 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,734 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,734 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,738 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,739 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,739 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,739 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,739 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,739 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,740 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,740 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,740 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,740 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,740 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,740 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,740 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,741 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,741 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,741 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,741 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,741 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,748 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,748 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,748 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,748 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,750 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,899 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,899 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,899 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,899 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,899 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,901 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,905 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,905 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,905 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,905 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,905 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,907 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,907 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,907 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,908 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,909 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,909 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,909 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,910 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,910 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,911 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,912 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,912 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,912 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,912 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,913 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,913 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,914 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,914 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,914 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,914 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,914 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,915 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,915 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,915 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,915 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,915 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,915 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,915 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,915 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,916 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,916 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,916 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,916 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,916 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,916 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,916 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,916 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,916 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:25,919 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,040 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,042 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,042 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,042 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,043 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,043 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,043 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,044 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,044 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,044 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,044 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,045 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,045 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,045 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,046 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,046 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,046 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,046 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,046 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,046 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,046 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,047 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,047 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,049 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,050 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,058 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,058 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,058 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,058 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,058 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,058 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,064 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,072 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,073 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,095 WARN  L650        FunctionHandler]: implicit declaration of function __builtin_strcspn
+[2026-11-23 00:19:26,096 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,097 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,097 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,097 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,099 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,099 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,099 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,100 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,100 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,100 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,102 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,102 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,103 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,104 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,109 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,109 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,110 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,111 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,111 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,111 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,111 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,115 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,115 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,115 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,115 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,116 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,126 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,128 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,128 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,129 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,133 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,133 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,135 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,135 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,135 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,138 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,143 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,144 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,144 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,144 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,158 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,167 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,168 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,168 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,169 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,170 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,174 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,174 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,174 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,175 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,175 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,175 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,175 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,176 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,176 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,180 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,180 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,193 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,193 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,193 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,193 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,193 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,193 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,193 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,193 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,193 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,193 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,193 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,194 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,194 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,198 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,199 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,210 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,210 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,210 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,210 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,211 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,211 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,211 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,212 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,216 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,216 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,216 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,216 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,217 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,218 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,218 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,218 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,222 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,222 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,223 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,223 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,224 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,227 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,228 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,228 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,234 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,234 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,247 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,265 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,268 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,278 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,288 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,340 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,356 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,356 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,365 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,365 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,375 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,376 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,376 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,396 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,397 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,397 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,398 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,398 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,404 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,405 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,405 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,416 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,416 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,416 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,416 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,417 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,417 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,422 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,423 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,423 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,423 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,428 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,428 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,428 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,428 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,428 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,429 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,429 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,429 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,430 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,433 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,433 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,433 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,433 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,434 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,435 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,435 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,436 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,436 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,452 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,453 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,453 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,457 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,458 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,459 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,462 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,474 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,474 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,476 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,476 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,479 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,480 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,481 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,485 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,486 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,486 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,486 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,487 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,494 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,495 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,500 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,500 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,501 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,505 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,509 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,509 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,510 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,515 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,516 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,516 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,521 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,522 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,522 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,523 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,523 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,527 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,527 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,527 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,528 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,528 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,528 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,529 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,529 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,529 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,530 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,530 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,530 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,533 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,534 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,534 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,534 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,535 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,535 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,540 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,540 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,540 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,543 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,544 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,545 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,550 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,550 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,550 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,550 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,551 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,551 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,551 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,551 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,551 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,551 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,551 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,551 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,563 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,563 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,567 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,567 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,567 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,567 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,568 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,568 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,568 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,568 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,584 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,585 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,586 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,590 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,590 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,590 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,590 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,591 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,591 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,591 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,591 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,592 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,592 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,596 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,596 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,597 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,597 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,598 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,598 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,603 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,604 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,605 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,605 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,605 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,605 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,605 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,606 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,606 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,610 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,610 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,611 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,611 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,611 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,611 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,612 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,612 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,612 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,612 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,616 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,616 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,616 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,616 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,628 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,629 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,630 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,634 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,634 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,634 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,635 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,635 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,640 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,640 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,641 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,641 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,641 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,641 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,641 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,641 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,641 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,645 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,647 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,648 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,648 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,651 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,652 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,657 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,657 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,657 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,657 WARN  L1210              CHandler]: saw a pointer cast to a type that we could not get a type size for, not adapting memory model
+[2026-11-23 00:19:26,664 ERROR L332         MainTranslator]: Unsupported Syntax: The second argument of the pthread_mutex_init is not a null pointer. This means that non-default attributes are used. We support only the default attributes.
+[2026-11-23 00:19:26,665 INFO  L204        PluginConnector]: Invalid model from CACSL2BoogieTranslator for observer de.uni_freiburg.informatik.ultimate.plugins.generator.cacsl2boogietranslator.CACSL2BoogieTranslatorObserver@465f7b50 and model type de.uni_freiburg.informatik.ultimate.plugins.generator.cacsl2boogietranslator AST 23.11 12:19:26, skipping insertion in model container
+[2026-11-23 00:19:26,665 INFO  L131        PluginConnector]: ------------------------ END CACSL2BoogieTranslator----------------------------
+[2026-11-23 00:19:26,665 INFO  L186        ToolchainWalker]: Toolchain execution was canceled (user or tool) before executing de.uni_freiburg.informatik.ultimate.boogie.procedureinliner
+[2026-11-23 00:19:26,670 INFO  L158              Benchmark]: Toolchain (without parser) took 31812.67ms. Allocated memory was 119.5MB in the beginning and 179.9MB in the end (delta: 60.4MB). Free memory was 45.6MB in the beginning and 40.6MB in the end (delta: 5.0MB). Peak memory consumption was 76.4MB. Max. memory is 1.0GB.
+[2026-11-23 00:19:26,671 INFO  L158              Benchmark]: CDTParser took 0.28ms. Allocated memory is still 45.5MB. Free memory was 22.9MB in the beginning and 22.9MB in the end (delta: 31.5kB). Peak memory consumption was 31.5kB. Max. memory is 1.0GB.
+[2026-11-23 00:19:26,671 INFO  L158              Benchmark]: CACSL2BoogieTranslator took 31803.72ms. Allocated memory was 119.5MB in the beginning and 179.9MB in the end (delta: 60.4MB). Free memory was 45.6MB in the beginning and 40.6MB in the end (delta: 5.0MB). Peak memory consumption was 76.4MB. Max. memory is 1.0GB.
+[2026-11-23 00:19:26,675 INFO  L338   ainManager$Toolchain]: #######################  End [Toolchain 1] #######################
+ --- Results ---
+ * Results from de.uni_freiburg.informatik.ultimate.core:
+  - StatisticsResult: Toolchain Benchmarks
+    Benchmark results are:
+ * CDTParser took 0.28ms. Allocated memory is still 45.5MB. Free memory was 22.9MB in the beginning and 22.9MB in the end (delta: 31.5kB). Peak memory consumption was 31.5kB. Max. memory is 1.0GB.
+ * CACSL2BoogieTranslator took 31803.72ms. Allocated memory was 119.5MB in the beginning and 179.9MB in the end (delta: 60.4MB). Free memory was 45.6MB in the beginning and 40.6MB in the end (delta: 5.0MB). Peak memory consumption was 76.4MB. Max. memory is 1.0GB.
+ * Results from de.uni_freiburg.informatik.ultimate.plugins.generator.cacsl2boogietranslator:
+  - UnsupportedSyntaxResult [Line: 36147]: Unsupported Syntax
+    The second argument of the pthread_mutex_init is not a null pointer. This means that non-default attributes are used. We support only the default attributes.
+RESULT: Ultimate could not prove your program: Toolchain returned no result.
+Received shutdown request...
+--- End real Ultimate output ---
+
+Execution finished normally
+Writing output log to file Ultimate.log
+Result:
+UNKNOWN

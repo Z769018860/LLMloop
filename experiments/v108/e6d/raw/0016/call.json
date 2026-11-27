@@ -1,0 +1,66 @@
+{
+  "model_requested": "claude-sonnet-4-5-20250929",
+  "cache_key": "5bbac996af11d0336dd8d280da5f0c001a0ada7b46470a339a212ec15e021ef7",
+  "endpoint": "https://api.square16.org/v1",
+  "started_utc": "2026-11-27T00:59:05Z",
+  "stream": true,
+  "chunks": 66,
+  "ttft": 2.793,
+  "seconds": 4.572,
+  "aborted": null,
+  "messages_sha256": "1d4ff7fcc891929635570c75c6fb9901827675ac6ec1e903ee25a324db86ce58",
+  "request": {
+    "model": "claude-sonnet-4-5-20250929",
+    "temperature": 0.7,
+    "max_tokens": 2048,
+    "stream": true,
+    "stream_options": {
+      "include_usage": true
+    }
+  },
+  "cached": false,
+  "served_model": "claude-sonnet-4-5-20250929",
+  "finish_reason": "stop",
+  "usage": {
+    "prompt_tokens": 415,
+    "completion_tokens": 423,
+    "total_tokens": 838,
+    "usage_semantic": "openai",
+    "usage_source": "anthropic",
+    "billing_usage": {
+      "source": "claude_messages",
+      "semantic": "anthropic",
+      "claude_usage": {
+        "input_tokens": 415,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 423,
+        "claude_cache_creation_5_m_tokens": 0,
+        "claude_cache_creation_1_h_tokens": 0
+      }
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "text_tokens": 0,
+      "audio_tokens": 0,
+      "image_tokens": 0
+    },
+    "completion_tokens_details": {
+      "text_tokens": 0,
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "reasoning_tokens": 0
+    },
+    "input_tokens": 415,
+    "output_tokens": 0,
+    "input_tokens_details": null,
+    "claude_cache_creation_5_m_tokens": 0,
+    "claude_cache_creation_1_h_tokens": 0
+  },
+  "done": true,
+  "http_status": 200,
+  "content": "```json\n{\"pre\": {}}\n```\n\nWait \u2014 I need to reason about the two UB sources before answitting.\n\n**Division by zero:** `1/((k >= 100))` is zero only when `k < 100`. With `n \u2265 10` and `m \u2265 10`, the minimum value of `k` after the loops is `10 \u00d7 10 = 100`, so `(k >= 100)` is always 1 (never 0) inside the declared box. No division-by-zero risk.\n\n**Signed integer overflow on `k++`:** `k` accumulates `n \u00d7 m` increments. The maximum is `10000 \u00d7 10000 = 100,000,000`, which is well within `INT_MAX` (2,147,483,647) on ILP32. No overflow.\n\nThe declared bounds are already safe.\n\n```json\n{\"pre\": {}}\n```",
+  "reasoning_content": "",
+  "prompt_sha256": "de481cbe3f5f9d145c767e9ed103224038d822330499f10684106b483b29769f",
+  "prompt_text": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int n, int m){\nint k = 0;\nint i = 0;\nint j = 0;\nfor (i = 0; i < n; i++)\n{\n  for (j = 0; j < m; j++)\n  {\n    k++;\n  }\n\n}\n\nreturn 1/((k >= 100));\n}\n\n\nABI: ILP32\nDeclared bounds: {\"m\": [10, 10000], \"n\": [10, 10000]}"
+}

@@ -1,0 +1,46 @@
+{
+  "model_requested": "deepseek-v4.1-flash-ark",
+  "request": {
+    "model": "deepseek-v4.1-flash-ark",
+    "temperature": 0.7,
+    "max_tokens": 1500,
+    "messages": [
+      {
+        "role": "system",
+        "content": "You state preconditions. You never prove anything: a separate verifier checks every value in the box you give, and it rejects the program if any of them overflows. Reply with one JSON object and nothing else."
+      },
+      {
+        "role": "user",
+        "content": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int i__in, int j__in, int k){\nint j = j__in;\nint i = i__in;\nwhile (i <= k)\n{\n  i++;\n  j = j + 1;\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"i__in\": [0, 0], \"j__in\": [0, 0], \"k\": [-2147483648, 2147483647]}"
+      }
+    ]
+  },
+  "started_utc": "2026-11-23T04:35:13Z",
+  "endpoint": "https://api.square16.org/v1",
+  "attempts": [
+    {
+      "attempt": 0,
+      "ok": true,
+      "http_status": 200,
+      "seconds": 7.465
+    }
+  ],
+  "response_text": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"logprobs\":null,\"message\":{\"content\":\"{\\\"pre\\\": {\\\"k\\\": [-2147483648, 2147483646]}}\",\"reasoning_content\":\"We need answer JSON only. Need determine precondition largest box on parameters within declared bounds avoiding signed overflow. Function:\\n\\nint f(int i__in, int j__in, int k){\\n int j = j__in;\\n int i = i__in;\\n while (i \\u003c= k)\\n {\\n   i++;\\n   j = j + 1;\\n }\\n return 0;\\n}\\n\\nDeclared bounds: i__in [0,0], j__in [0,0], k [-2147483648, 2147483647]. Only parameters named may appear: i__in, j__in, k. Need restrict to avoid signed overflow. Since i starts 0, j starts 0. Loop condition i \\u003c= k. k can be large. Loop increments i each iteration. i eventually overflows if loop executes past INT_MAX? But condition i\\u003c=k. k max INT_MAX. Starting i=0. For k=INT_MAX, iterations: when i=INT_MAX-1, condition true, i++ -\\u003e INT_MAX (ok). Next condition i=INT_MAX \\u003c= k=INT_MAX true, body i++ -\\u003e overflow (INT_MAX+1) undefined. Wait check: i starts 0, after n iterations i=n. For k=INT_MAX, loop executes while i \\u003c= k. At i=INT_MAX, condition true, then i++ overflow. So even k=INT_MAX causes overflow. To avoid, need loop not execute when i=INT_MAX? Since i can never exceed k without increment to k+1 at least. The loop terminates when i \\u003e k. Starting 0, if k\\u003e=0, it will increment i until i=k+1. The increment that sets i=k+1 must be representable. If k = INT_MAX, k+1 overflow. So need k \\u003c= INT_MAX-1? But also j increments each iteration. j starts 0, increments same number as i. Number of iterations = max(0, k - i__in +1) if i__in \\u003c= k. For i__in=0, iterations = k+1 if k\\u003e=0. j increments k+1 times. j starts 0, after k+1 increments, j = k+1. Need no overflow in j. Since k max INT_MAX-1, k+1 = INT_MAX, j reaches INT_MAX at last iteration? Let's trace k=INT_MAX-1: iterations for i=0..k inclusive: count k+1 = INT_MAX. At each, j increments from 0 to INT_MAX. On final iteration i from INT_MAX-1 to INT_MAX, j from INT_MAX-1 to INT_MAX. No overflow. After final, condition i=INT_MAX \\u003c= k=INT_MAX-1 false. Safe. So k \\u003c= INT_MAX-1 avoids both i++ and j++ overflow? Check i final increment from k to k+1 = INT_MAX, safe. j final increment to k+1 = INT_MAX, safe. Since k = INT_MAX-1. If k negative, loop may not execute because i=0 \\u003c= k false for k\\u003c0. Then no increments, safe. So k range can be [-2147483648, 2147483646]. But also if k is negative, condition i\\u003c=k: 0 \\u003c= negative false. no body. safe. So max k = 2147483646. What about lower bound? k min INT_MIN safe. i__in and j__in declared [0,0] so fixed 0. Could we expand i__in? Declared bounds says i__in [0,0], j__in [0,0]. We may only restrict, not expand beyond declared. Leave i__in and j__in omitted or include [0,0] unchanged. Need keep largest box within declared. So pre: {\\\"k\\\": [-2147483648, 2147483646]}. Maybe omit i__in/j__in. But schema includes parameters named. If leave out keep declared bounds. So answer only k.\\n\\nNeed ensure no other undefined like division by zero bad shifts none. Signed overflow only i++ and j++. We considered. For k=2147483646, iterations = 2147483647? Wait calculate: starting i=0. Condition i\\u003c=k. For k=2147483646. Number iterations: values i before body: 0,1,...,2147483646. That's 2147483647 iterations. Last body: i before = 2147483646, i++ -\\u003e 2147483647 = INT_MAX safe. j before last = 2147483646? Let's see j starts 0. After m iterations j=m. For m=2147483647, j=2147483647 INT_MAX. Last increment from 2147483646 to 2147483647 safe. So safe. Next condition i=2147483647 \\u003c= k=2147483646 false. safe.\\n\\nFor k=2147483647: iterations values i before body 0..2147483647 inclusive = 2147483648 iterations. At last body i before = INT_MAX, i++ overflow. Also j increment from INT_MAX to overflow. So unsafe. Thus upper bound k=INT_MAX-1.\\n\\nWhat about i__in nonzero? fixed 0. If declared i__in [0,0], cannot expand. Could we include i__in as [0,0]? yes. j__in [0,0]. Need largest box: keep unchanged for fixed. Pre can just specify k. That's largest within declared. Could include i__in [0,0] and j__in [0,0] explicitly. Both valid. They said leave out parameter to keep declared bounds. So omit them. Final JSON: {\\\"pre\\\":{\\\"k\\\":[-2147483648,2147483646]}}.\\n\\nNeed only JSON.\",\"role\":\"assistant\"}}],\"created\":1795408520,\"id\":\"0217954085137903694b53d1b7644bc84f9058822e8eff29b7a4c\",\"model\":\"deepseek-v4-1-flash-261017\",\"service_tier\":\"default\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":1245,\"prompt_tokens\":399,\"total_tokens\":1644,\"prompt_tokens_details\":{\"cached_tokens\":384},\"completion_tokens_details\":{\"reasoning_tokens\":1225}}}",
+  "served_model": "deepseek-v4-1-flash-261017",
+  "usage": {
+    "completion_tokens": 1245,
+    "prompt_tokens": 399,
+    "total_tokens": 1644,
+    "prompt_tokens_details": {
+      "cached_tokens": 384
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 1225
+    }
+  },
+  "content": "{\"pre\": {\"k\": [-2147483648, 2147483646]}}",
+  "finish_reason": "stop",
+  "seconds": 7.465,
+  "prompt_sha256": "6af7b4fa1054d89fae626371d5bfbdb734c4a2f3deb6db080f8e1ea8575134ac",
+  "prompt_text": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int i__in, int j__in, int k){\nint j = j__in;\nint i = i__in;\nwhile (i <= k)\n{\n  i++;\n  j = j + 1;\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"i__in\": [0, 0], \"j__in\": [0, 0], \"k\": [-2147483648, 2147483647]}"
+}

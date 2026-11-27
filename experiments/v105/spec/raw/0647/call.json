@@ -1,0 +1,46 @@
+{
+  "model_requested": "deepseek-v4.1-flash-ark",
+  "request": {
+    "model": "deepseek-v4.1-flash-ark",
+    "temperature": 0.7,
+    "max_tokens": 1500,
+    "messages": [
+      {
+        "role": "system",
+        "content": "You state preconditions. You never prove anything: a separate verifier checks every value in the box you give, and it rejects the program if any of them overflows. Reply with one JSON object and nothing else."
+      },
+      {
+        "role": "user",
+        "content": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(unsigned int y){\nunsigned int x = 0;\nwhile (x < 99)\n{\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x++;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x -= 2;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x += 2;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x -= 2;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x += 2;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x -= 4;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x += 4;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x += 2;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x -= 4;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x -= 4;\n}\n\nreturn 1/(((x % 2) == (y % 2)));\n}\n\n\nABI: ILP32\nDeclared bounds: {\"y\": [0, 4294967295]}"
+      }
+    ]
+  },
+  "started_utc": "2026-11-23T04:34:34Z",
+  "endpoint": "https://api.square16.org/v1",
+  "attempts": [
+    {
+      "attempt": 0,
+      "ok": true,
+      "http_status": 200,
+      "seconds": 7.168
+    }
+  ],
+  "response_text": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"logprobs\":null,\"message\":{\"content\":\"{\\\"pre\\\": {}}\",\"reasoning_content\":\"We need answer JSON only. Need analyze C code. Need precondition for y unsigned int. Declared y 0..4294967295. Need largest box no undefined behavior: signed integer overflow? But x and y unsigned. y unsigned, x unsigned. Operations x += etc unsigned wrap defined. y%2 unsigned. Division denominator: (((x % 2) == (y % 2))) is 0 or 1. 1/denominator division by zero if equality false. Need ensure equality true at return. Need determine for which y does loop terminate and final x parity equals y parity. Need avoid infinite loop? Contract about UB signed overflow/div zero/bad shifts. Infinite loop not UB but verifier? It checks no UB within box; division occurs after loop. Need ensure at exit denominator nonzero. If loop infinite no division but verifier may consider? Usually precondition must guarantee no div zero at return, and termination maybe required for safety? Need find y values where equality true. y parity determines updates. Since y unsigned, all values. Need analyze loop dynamics for y even vs y odd.\\n\\nLet p = y mod 2. x starts 0. Loop while x \\u003c 99. Each iteration performs series updates depending on p. Compute net delta for even p (p=0): each if true:\\n1 +2\\n2 +2\\n3 +2\\n4 +2\\n5 +2\\n6 +2\\n7 +2\\n8 +2\\n9 +2? Let's count code lines: \\nwhile:\\nif ((y % 2) == 0) x += 2; else x++;\\nif even x +=2 else x-=2;\\nif even x +=2 else x+=2;\\nif even x +=2 else x-=2;\\nif even x +=2 else x+=2;\\nif even x +=2 else x-=4;\\nif even x +=2 else x+=4;\\nif even x +=2 else x+=2;\\nif even x +=2 else x-=4;\\nif even x +=2 else x-=4;\\n\\nThere are 10 if statements? Let's enumerate carefully source:\\n1 if ((y % 2) == 0)\\n    x += 2;\\n  else\\n    x++;\\n2 if ((y % 2) == 0)\\n    x += 2;\\n  else\\n    x -= 2;\\n3 if ((y % 2) == 0)\\n    x += 2;\\n  else\\n    x += 2;\\n4 if ((y % 2) == 0)\\n    x += 2;\\n  else\\n    x -= 2;\\n5 if ((y % 2) == 0)\\n    x += 2;\\n  else\\n    x += 2;\\n6 if ((y % 2) == 0)\\n    x += 2;\\n  else\\n    x -= 4;\\n7 if ((y % 2) == 0)\\n    x += 2;\\n  else\\n    x += 4;\\n8 if ((y % 2) == 0)\\n    x += 2;\\n  else\\n    x += 2;\\n9 if ((y % 2) == 0)\\n    x += 2;\\n  else\\n    x -= 4;\\n10 if ((y % 2) == 0)\\n    x += 2;\\n  else\\n    x -= 4;\\n\\nYes 10.\\n\\nEven p=0: all 10 true, x +=20 each iteration. Start 0. While x\\u003c99. Sequence x:0,20,40,60,80,100 exit. Final x=100. y even has y%2=0. x%2 =0. equality true. Return 1/1 ok.\\n\\nOdd p=1: all false. Updates per iteration:\\n1 x++ (+1)\\n2 x -=2 (-2)\\n3 x +=2 (+2)\\n4 x -=2 (-2)\\n5 x +=2 (+2)\\n6 x -=4 (-4)\\n7 x +=4 (+4)\\n8 x +=2 (+2)\\n9 x -=4 (-4)\\n10 x -=4 (-4)\\nSum: +1 -2 +2 -2 +2 -4 +4 +2 -4 -4.\\nCompute: 1-2=-1; +2=1; -2=-1; +2=1; -4=-3; +4=1; +2=3; -4=-1; -4=-5. Net -5 per iteration.\\n\\nx starts 0. Each iteration x += -5 modulo 2^32 (unsigned). x is unsigned int. x \\u003c 99 condition. For odd y, x decreases by 5 modulo 2^32. It will wrap around eventually. Need analyze final exit x\\u003c99? Starting 0, after first iteration x = 2^32 -5 = 4294967291, which is not \\u003c99? Wait while condition checked before first: 0\\u003c99 true. After first x=-5 mod = 4294967291. Next condition x\\u003c99 false (since huge). Loop exits. Final x = 4294967291. Parity? 4294967291 mod2 = 1. y odd mod2=1. Equality true. So for odd y, loop executes one iteration and exits, final x odd. equality true. Thus for all y, equality true? For even final x=100 even; y even; true. Odd final x odd; true. So no division by zero. Also unsigned arithmetic no signed overflow. So declared bounds safe. But wait C: x is unsigned int, y unsigned. All additions unsigned wrap. No UB. Division denominator 1. So empty precondition.\\n\\nBut check subtle: ((x % 2) == (y % 2)) yields int 0/1. 1/1 okay. For odd y, x becomes UINT_MAX-4? Let's recalc odd net maybe -5, start 0 -\\u003e x = 4294967291. Since x\\u003c99 false. final parity: 4294967291 %2 =1. y%2=1. equal. yes.\\n\\nNeed output {\\\"pre\\\": {}} empty. Ensure JSON only.\",\"role\":\"assistant\"}}],\"created\":1795408481,\"id\":\"0217954084751253694b53d1b7644bc84f9058822e8eff251832f\",\"model\":\"deepseek-v4-1-flash-261017\",\"service_tier\":\"default\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":1303,\"prompt_tokens\":628,\"total_tokens\":1931,\"prompt_tokens_details\":{\"cached_tokens\":512},\"completion_tokens_details\":{\"reasoning_tokens\":1297}}}",
+  "served_model": "deepseek-v4-1-flash-261017",
+  "usage": {
+    "completion_tokens": 1303,
+    "prompt_tokens": 628,
+    "total_tokens": 1931,
+    "prompt_tokens_details": {
+      "cached_tokens": 512
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 1297
+    }
+  },
+  "content": "{\"pre\": {}}",
+  "finish_reason": "stop",
+  "seconds": 7.168,
+  "prompt_sha256": "3419763ebd1d5d4d5c065e5f0449debaa188c23b73fc682f3f47f9c08f534597",
+  "prompt_text": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(unsigned int y){\nunsigned int x = 0;\nwhile (x < 99)\n{\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x++;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x -= 2;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x += 2;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x -= 2;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x += 2;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x -= 4;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x += 4;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x += 2;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x -= 4;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x -= 4;\n}\n\nreturn 1/(((x % 2) == (y % 2)));\n}\n\n\nABI: ILP32\nDeclared bounds: {\"y\": [0, 4294967295]}"
+}

@@ -1,0 +1,1167 @@
+[
+  {
+    "name": "loopbench/loop-acceleration/diamond_1-1",
+    "source": "int f(unsigned int y){\nunsigned int x = 0;\nwhile (x < 99)\n{\n  if ((y % 2) == 0)\n  {\n    x += 2;\n  }\n  else\n  {\n    x++;\n  }\n}\n\nreturn 1/(((x % 2) == (y % 2)));\n}\n",
+    "bounds": {
+      "y": [
+        0,
+        4294967295
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "loopbench/loop-acceleration/diamond_1-2",
+    "source": "int f(unsigned int y){\nunsigned int x = 0;\nwhile (x < 99)\n{\n  if ((y % 2) == 0)\n  {\n    x++;\n  }\n  else\n  {\n    x += 2;\n  }\n}\n\nreturn 1/(((x % 2) == (y % 2)));\n}\n",
+    "bounds": {
+      "y": [
+        0,
+        4294967295
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "loopbench/loop-acceleration/diamond_2-2",
+    "source": "int f(unsigned int y){\nunsigned int x = 0;\nwhile (x < 99)\n{\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x++;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x -= 2;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x += 2;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x -= 2;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x += 2;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x -= 4;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x += 4;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x += 2;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x -= 4;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x -= 4;\n}\n\nreturn 1/(((x % 2) == (y % 2)));\n}\n",
+    "bounds": {
+      "y": [
+        0,
+        4294967295
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "loopbench/loop-acceleration/multivar_1-2",
+    "source": "int f(unsigned int x__in){\nunsigned int x = x__in;\nunsigned int y = x + 1;\nwhile (x < 1024)\n{\n  x++;\n  y++;\n}\n\nreturn 1/((x == y));\n}\n",
+    "bounds": {
+      "x__in": [
+        0,
+        4294967295
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "loopbench/loop-acceleration/phases_2-1",
+    "source": "int f(unsigned int y){\nunsigned int x = 1;\nwhile (x < y)\n{\n  if (x < (y / x))\n  {\n    x *= x;\n  }\n  else\n  {\n    x++;\n  }\n}\n\nreturn 1/((x != y));\n}\n",
+    "bounds": {
+      "y": [
+        1,
+        4294967295
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "loopbench/loop-acceleration/simple_2-2",
+    "source": "int f(unsigned int x__in){\nunsigned int x = x__in;\nwhile (x < 0x0fffffff)\n{\n  x++;\n}\n\nreturn 1/((x > 0x0fffffff));\n}\n",
+    "bounds": {
+      "x__in": [
+        0,
+        4294967295
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "loopbench/loop-acceleration/simple_3-1",
+    "source": "int f(unsigned short N){\nunsigned int x = 0;\nwhile (x < N)\n{\n  x += 2;\n}\n\nreturn 1/((x % 2));\n}\n",
+    "bounds": {
+      "N": [
+        0,
+        65535
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "loopbench/loop-invgen/down",
+    "source": "int f(int n){\nint k = 0;\nint i = 0;\nint __a = 0;\nwhile (i < n)\n{\n  i++;\n  k++;\n}\n\nint j = n;\nwhile (j > 0)\n{\n  __a = 1 / (k > 0);\n  j--;\n  k--;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "n": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "loopbench/loop-invgen/half_2",
+    "source": "int f(int n){\nint i = 0;\nint k = 0;\nint __a = 0;\nk = n;\ni = 0;\nwhile (i < n)\n{\n  k--;\n  i = i + 2;\n}\n\nint j = 0;\nwhile (j < (n / 2))\n{\n  __a = 1 / (k > 0);\n  k--;\n  j++;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "n": [
+        -2147483648,
+        1000000
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "loopbench/loop-invgen/id_build",
+    "source": "int f(int nlen){\nint offset;\nint length;\nint i = 0;\nint j = 0;\nint __a = 0;\nfor (i = 0; i < nlen; i++)\n{\n  for (j = 0; j < 8; j++)\n  {\n    __a = 1 / (0 <= ((nlen - 1) - i));\n    __a = 1 / (((nlen - 1) - i) < nlen);\n  }\n\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "nlen": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "loopbench/loop-invgen/seq-3",
+    "source": "int f(int n0, int n1){\nint i0 = 0;\nint k = 0;\nint __a = 0;\nwhile (i0 < n0)\n{\n  i0++;\n  k++;\n}\n\nint i1 = 0;\nwhile (i1 < n1)\n{\n  i1++;\n  k++;\n}\n\nint j1 = 0;\nwhile (j1 < (n0 + n1))\n{\n  __a = 1 / (k > 0);\n  j1++;\n  k--;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "n0": [
+        -1000000,
+        999999
+      ],
+      "n1": [
+        -1000000,
+        999999
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "loopbench/loop-invgen/up",
+    "source": "int f(int n){\nint i = 0;\nint k = 0;\nint __a = 0;\nwhile (i < n)\n{\n  i++;\n  k++;\n}\n\nint j = 0;\nwhile (j < n)\n{\n  __a = 1 / (k > 0);\n  j++;\n  k--;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "n": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "loopbench/loop-lit/ddlm2013",
+    "source": "int f(int flag){\nunsigned int i;\nunsigned int j = 1;\nunsigned int a = 0;\nunsigned int b = 0;\nint __a = 0;\nif (flag)\n{\n  i = 0;\n}\nelse\n{\n  i = 1;\n}\n\nwhile (__VERIFIER_nondet_int())\n{\n  a++;\n  b += j - i;\n  i += 2;\n  if ((i % 2) == 0)\n  {\n    j += 2;\n  }\n  else\n  {\n    j++;\n  }\n}\n\nif (flag)\n{\n  __a = 1 / (a == b);\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "flag": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "loopbench/loop-lit/gj2007b",
+    "source": "int f(int n){\nint x = 0;\nint m = 0;\nwhile (x < n)\n{\n  if (__VERIFIER_nondet_int())\n  {\n    m = x;\n  }\n  x = x + 1;\n}\n\nreturn 1/(((m >= 0) || (n <= 0)) && ((m < n) || (n <= 0)));\n}\n",
+    "bounds": {
+      "n": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "loopbench/loop-new/count_by_k",
+    "source": "int f(int k){\nint i = 0;\nfor (i = 0; i < (1000000 * k); i += k)\n  ;\n\nreturn 1/((i == (1000000 * k)));\n}\n",
+    "bounds": {
+      "k": [
+        0,
+        10
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "loopbench/loop-new/half",
+    "source": "int f(int k){\nint i = 0;\nint n = 0;\nfor (i = 0; i < (2 * k); i++)\n{\n  if ((i % 2) == 0)\n  {\n    n++;\n  }\n}\n\nreturn 1/(((k < 0) || (n == k)));\n}\n",
+    "bounds": {
+      "k": [
+        -1000000,
+        1000000
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "loopbench/loop-new/nested-1",
+    "source": "int f(int n, int m){\nint k = 0;\nint i = 0;\nint j = 0;\nfor (i = 0; i < n; i++)\n{\n  for (j = 0; j < m; j++)\n  {\n    k++;\n  }\n\n}\n\nreturn 1/((k >= 100));\n}\n",
+    "bounds": {
+      "n": [
+        10,
+        10000
+      ],
+      "m": [
+        10,
+        10000
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "loopbench/loop-zilu/benchmark08_conjunctive",
+    "source": "int f(int n, int sum__in, int i__in){\nint i = i__in;\nint sum = sum__in;\nwhile (i < n)\n{\n  sum = sum + i;\n  i++;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "n": [
+        0,
+        2147483647
+      ],
+      "sum__in": [
+        0,
+        0
+      ],
+      "i__in": [
+        0,
+        0
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "loopbench/loop-zilu/benchmark13_conjunctive",
+    "source": "int f(int i__in, int j__in, int k){\nint j = j__in;\nint i = i__in;\nwhile (i <= k)\n{\n  i++;\n  j = j + 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "i__in": [
+        0,
+        0
+      ],
+      "j__in": [
+        0,
+        0
+      ],
+      "k": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "loopbench/loop-zilu/benchmark16_conjunctive",
+    "source": "int f(int i__in, int k__in){\nint k = k__in;\nint i = i__in;\nwhile (__VERIFIER_nondet_bool())\n{\n  i = i + 1;\n  k = k - 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "i__in": [
+        1,
+        1
+      ],
+      "k__in": [
+        0,
+        1
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "loopbench/loop-zilu/benchmark31_disjunctive",
+    "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nwhile (1)\n{\n  if (x >= 0)\n  {\n    break;\n  }\n  else\n  {\n    x = x + y;\n    y++;\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x__in": [
+        -2147483648,
+        -1
+      ],
+      "y__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench-scaling/geo1-ll2_unwindbound1",
+    "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile ((counter++) < 1)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        1,
+        2147483647
+      ],
+      "k": [
+        1,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench-scaling/geo1-ll2_unwindbound10",
+    "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile ((counter++) < 10)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        1,
+        2147483647
+      ],
+      "k": [
+        1,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench-scaling/geo1-ll2_unwindbound100",
+    "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile ((counter++) < 100)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        1,
+        2147483647
+      ],
+      "k": [
+        1,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench-scaling/geo1-ll2_unwindbound2",
+    "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile ((counter++) < 2)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        1,
+        2147483647
+      ],
+      "k": [
+        1,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench-scaling/geo1-ll2_unwindbound20",
+    "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile ((counter++) < 20)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        1,
+        2147483647
+      ],
+      "k": [
+        1,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench-scaling/geo1-ll2_unwindbound5",
+    "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile ((counter++) < 5)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        1,
+        2147483647
+      ],
+      "k": [
+        1,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench-scaling/geo1-ll2_unwindbound50",
+    "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile ((counter++) < 50)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        1,
+        2147483647
+      ],
+      "k": [
+        1,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench-scaling/geo1-u2_unwindbound1",
+    "source": "int f(unsigned int z, unsigned int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile ((counter++) < 1)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        0,
+        4294967295
+      ],
+      "k": [
+        0,
+        4294967295
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench-scaling/geo1-u2_unwindbound10",
+    "source": "int f(unsigned int z, unsigned int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile ((counter++) < 10)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        0,
+        4294967295
+      ],
+      "k": [
+        0,
+        4294967295
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench-scaling/geo1-u2_unwindbound100",
+    "source": "int f(unsigned int z, unsigned int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile ((counter++) < 100)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        0,
+        4294967295
+      ],
+      "k": [
+        0,
+        4294967295
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench-scaling/geo1-u2_unwindbound2",
+    "source": "int f(unsigned int z, unsigned int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile ((counter++) < 2)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        0,
+        4294967295
+      ],
+      "k": [
+        0,
+        4294967295
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench-scaling/geo1-u2_unwindbound20",
+    "source": "int f(unsigned int z, unsigned int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile ((counter++) < 20)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        0,
+        4294967295
+      ],
+      "k": [
+        0,
+        4294967295
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench-scaling/geo1-u2_unwindbound5",
+    "source": "int f(unsigned int z, unsigned int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile ((counter++) < 5)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        0,
+        4294967295
+      ],
+      "k": [
+        0,
+        4294967295
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench-scaling/geo1-u2_unwindbound50",
+    "source": "int f(unsigned int z, unsigned int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile ((counter++) < 50)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        0,
+        4294967295
+      ],
+      "k": [
+        0,
+        4294967295
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench-scaling/geo2-ll2_unwindbound1",
+    "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 1;\nlong long c = 1;\nwhile ((counter++) < 1)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        -2147483648,
+        2147483647
+      ],
+      "k": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench-scaling/geo2-ll2_unwindbound10",
+    "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 1;\nlong long c = 1;\nwhile ((counter++) < 10)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        -2147483648,
+        2147483647
+      ],
+      "k": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench-scaling/geo2-ll2_unwindbound100",
+    "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 1;\nlong long c = 1;\nwhile ((counter++) < 100)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        -2147483648,
+        2147483647
+      ],
+      "k": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench-scaling/geo2-ll2_unwindbound2",
+    "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 1;\nlong long c = 1;\nwhile ((counter++) < 2)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        -2147483648,
+        2147483647
+      ],
+      "k": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench-scaling/geo2-ll2_unwindbound20",
+    "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 1;\nlong long c = 1;\nwhile ((counter++) < 20)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        -2147483648,
+        2147483647
+      ],
+      "k": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench-scaling/geo2-ll2_unwindbound5",
+    "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 1;\nlong long c = 1;\nwhile ((counter++) < 5)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        -2147483648,
+        2147483647
+      ],
+      "k": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench-scaling/geo2-ll2_unwindbound50",
+    "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 1;\nlong long c = 1;\nwhile ((counter++) < 50)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        -2147483648,
+        2147483647
+      ],
+      "k": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench-scaling/geo3-ll2_unwindbound1",
+    "source": "int f(int z, int a, int k){\nlong long x = 0;\nlong long y = 0;\nlong long c = 0;\nlong long az = 0;\nx = a;\ny = 1;\nc = 1;\naz = ((long long) a) * z;\nwhile ((counter++) < 1)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + a;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        -2147483648,
+        2147483647
+      ],
+      "a": [
+        -2147483648,
+        2147483647
+      ],
+      "k": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench-scaling/geo3-ll2_unwindbound10",
+    "source": "int f(int z, int a, int k){\nlong long x = 0;\nlong long y = 0;\nlong long c = 0;\nlong long az = 0;\nx = a;\ny = 1;\nc = 1;\naz = ((long long) a) * z;\nwhile ((counter++) < 10)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + a;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        -2147483648,
+        2147483647
+      ],
+      "a": [
+        -2147483648,
+        2147483647
+      ],
+      "k": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench-scaling/geo3-ll2_unwindbound100",
+    "source": "int f(int z, int a, int k){\nlong long x = 0;\nlong long y = 0;\nlong long c = 0;\nlong long az = 0;\nx = a;\ny = 1;\nc = 1;\naz = ((long long) a) * z;\nwhile ((counter++) < 100)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + a;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        -2147483648,
+        2147483647
+      ],
+      "a": [
+        -2147483648,
+        2147483647
+      ],
+      "k": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench-scaling/geo3-ll2_unwindbound2",
+    "source": "int f(int z, int a, int k){\nlong long x = 0;\nlong long y = 0;\nlong long c = 0;\nlong long az = 0;\nx = a;\ny = 1;\nc = 1;\naz = ((long long) a) * z;\nwhile ((counter++) < 2)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + a;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        -2147483648,
+        2147483647
+      ],
+      "a": [
+        -2147483648,
+        2147483647
+      ],
+      "k": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench-scaling/geo3-ll2_unwindbound20",
+    "source": "int f(int z, int a, int k){\nlong long x = 0;\nlong long y = 0;\nlong long c = 0;\nlong long az = 0;\nx = a;\ny = 1;\nc = 1;\naz = ((long long) a) * z;\nwhile ((counter++) < 20)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + a;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        -2147483648,
+        2147483647
+      ],
+      "a": [
+        -2147483648,
+        2147483647
+      ],
+      "k": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench-scaling/geo3-ll2_unwindbound5",
+    "source": "int f(int z, int a, int k){\nlong long x = 0;\nlong long y = 0;\nlong long c = 0;\nlong long az = 0;\nx = a;\ny = 1;\nc = 1;\naz = ((long long) a) * z;\nwhile ((counter++) < 5)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + a;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        -2147483648,
+        2147483647
+      ],
+      "a": [
+        -2147483648,
+        2147483647
+      ],
+      "k": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench-scaling/geo3-ll2_unwindbound50",
+    "source": "int f(int z, int a, int k){\nlong long x = 0;\nlong long y = 0;\nlong long c = 0;\nlong long az = 0;\nx = a;\ny = 1;\nc = 1;\naz = ((long long) a) * z;\nwhile ((counter++) < 50)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + a;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        -2147483648,
+        2147483647
+      ],
+      "a": [
+        -2147483648,
+        2147483647
+      ],
+      "k": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench/geo1-ll2",
+    "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile (1)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        1,
+        2147483647
+      ],
+      "k": [
+        1,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench/geo1-u2",
+    "source": "int f(unsigned int z, unsigned int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile (1)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        0,
+        4294967295
+      ],
+      "k": [
+        0,
+        4294967295
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench/geo2-ll2",
+    "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 1;\nlong long c = 1;\nwhile (1)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        -2147483648,
+        2147483647
+      ],
+      "k": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/nla-digbench/geo3-ll2",
+    "source": "int f(int z, int a, int k){\nlong long x = 0;\nlong long y = 0;\nlong long c = 0;\nlong long az = 0;\nx = a;\ny = 1;\nc = 1;\naz = ((long long) a) * z;\nwhile (1)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + a;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        -2147483648,
+        2147483647
+      ],
+      "a": [
+        -2147483648,
+        2147483647
+      ],
+      "k": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/bresenham1-both-nt",
+    "source": "int f(int X, int Y){\nint v = 0;\nint x = 0;\nint y = 0;\nv = (2 * Y) - X;\ny = 0;\nx = 0;\nint c;\nint k;\nc = 0;\nwhile (((((((2 * Y) * x) - ((2 * X) * y)) - X) + (2 * Y)) - v) == 0)\n{\n  if (v < 0)\n  {\n    v = v + (2 * Y);\n  }\n  else\n  {\n    v = v + (2 * (Y - X));\n    y++;\n  }\n  x++;\n  c++;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "X": [
+        -2147483648,
+        2147483647
+      ],
+      "Y": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/bresenham1-both-t",
+    "source": "int f(int X, int Y){\nint v = 0;\nint x = 0;\nint y = 0;\nv = (2 * Y) - X;\ny = 0;\nx = 0;\nint c;\nint k;\nc = 0;\nk = __VERIFIER_nondet_int();\nwhile ((((((((2 * Y) * x) - ((2 * X) * y)) - X) + (2 * Y)) - v) + c) <= k)\n{\n  if (v < 0)\n  {\n    v = v + (2 * Y);\n  }\n  else\n  {\n    v = v + (2 * (Y - X));\n    y++;\n  }\n  x++;\n  c++;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "X": [
+        -2147483648,
+        2147483647
+      ],
+      "Y": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/cohencu1-both-nt",
+    "source": "int f(int a){\nint n = 0;\nint x = 0;\nint y = 1;\nint z = 6;\nwhile (z <= ((6 * n) + 6))\n{\n  n = n + 1;\n  x = x + y;\n  y = y + z;\n  z = z + 6;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "a": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/cohencu2-both-nt",
+    "source": "int f(int a){\nint n = 0;\nint x = 0;\nint y = 1;\nint z = 6;\nwhile (y == ((((3 * n) * n) + (3 * n)) + 1))\n{\n  n = n + 1;\n  x = x + y;\n  y = y + z;\n  z = z + 6;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "a": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/cohencu3-both-nt",
+    "source": "int f(int a){\nint n = 0;\nint x = 0;\nint y = 1;\nint z = 6;\nwhile (x == ((n * n) * n))\n{\n  n = n + 1;\n  x = x + y;\n  y = y + z;\n  z = z + 6;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "a": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/cohencu4-both-nt",
+    "source": "int f(int a){\nint n = 0;\nint x = 0;\nint y = 1;\nint z = 6;\nwhile ((((((y * z) - (18 * x)) - (12 * y)) + (2 * z)) - 6) == 0)\n{\n  n = n + 1;\n  x = x + y;\n  y = y + z;\n  z = z + 6;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "a": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/cohencu5-both-nt",
+    "source": "int f(int a){\nint n = 0;\nint x = 0;\nint y = 1;\nint z = 6;\nwhile (((((z * z) - (12 * y)) - (6 * z)) + 12) == 0)\n{\n  n = n + 1;\n  x = x + y;\n  y = y + z;\n  z = z + 6;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "a": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/dijkstra3-both-nt",
+    "source": "int f(int n){\nint p = 0;\nint q = 1;\nint r = 0;\nint h = 0;\nr = n;\nh = 0;\nif (q > n)\n{\n  while (((((((((h * h) * h) - (((12 * h) * n) * q)) + (((16 * n) * p) * q)) - ((h * q) * q)) - (((4 * p) * q) * q)) + (((12 * h) * q) * r)) - (((16 * p) * q) * r)) == 0)\n  {\n    if (((4 * (q / 4)) == q) && ((2 * (p / 2)) == p))\n    {\n      q = q / 4;\n      h = p + q;\n      p = p / 2;\n      if (r >= h)\n      {\n        p = p + q;\n        r = r - h;\n      }\n    }\n  }\n\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "n": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/dijkstra4-both-nt",
+    "source": "int f(int n){\nint p = 0;\nint q = 1;\nint r = 0;\nint h = 0;\nr = n;\nh = 0;\nif (q > n)\n{\n  while (((((((((((h * h) * n) - (((4 * h) * n) * p)) + ((4 * (n * n)) * q)) - ((n * q) * q)) - ((h * h) * r)) + (((4 * h) * p) * r)) - (((8 * n) * q) * r)) + ((q * q) * r)) + (((4 * q) * r) * r)) == 0)\n  {\n    if (((4 * (q / 4)) == q) && ((2 * (p / 2)) == p))\n    {\n      q = q / 4;\n      h = p + q;\n      p = p / 2;\n      if (r >= h)\n      {\n        p = p + q;\n        r = r - h;\n      }\n    }\n  }\n\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "n": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/dijkstra5-both-nt",
+    "source": "int f(int n){\nint p = 0;\nint q = 1;\nint r = 0;\nint h = 0;\nr = n;\nh = 0;\nif (q > n)\n{\n  while ((((((((h * h) * p) - (((4 * h) * n) * q)) + (((4 * n) * p) * q)) - ((p * q) * q)) + (((4 * h) * q) * r)) - (((4 * p) * q) * r)) == 0)\n  {\n    if (((4 * (q / 4)) == q) && ((2 * (p / 2)) == p))\n    {\n      q = q / 4;\n      h = p + q;\n      p = p / 2;\n      if (r >= h)\n      {\n        p = p + q;\n        r = r - h;\n      }\n    }\n  }\n\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "n": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/dijkstra6-both-nt",
+    "source": "int f(int n){\nint p = 0;\nint q = 1;\nint r = 0;\nint h = 0;\nr = n;\nh = 0;\nif (q > n)\n{\n  while ((((p * p) - (n * q)) + (q * r)) == 0)\n  {\n    if (((4 * (q / 4)) == q) && ((2 * (p / 2)) == p))\n    {\n      q = q / 4;\n      h = p + q;\n      p = p / 2;\n      if (r >= h)\n      {\n        p = p + q;\n        r = r - h;\n      }\n    }\n  }\n\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "n": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/egcd-both-nt",
+    "source": "int f(int x, int y){\nint a = 0;\nint b = 0;\nint p = 0;\nint q = 0;\nint r = 0;\nint s = 0;\nif ((x >= 1) && (y >= 1))\n{\n  a = x;\n  b = y;\n  p = 1;\n  q = 0;\n  r = 0;\n  s = 1;\n  while (b == ((x * q) + (y * s)))\n  {\n    if (a > b)\n    {\n      a = a - b;\n      p = p - q;\n      r = r - s;\n    }\n    else\n    {\n      b = b - a;\n      q = q - p;\n      s = s - r;\n    }\n  }\n\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x": [
+        -2147483648,
+        2147483647
+      ],
+      "y": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/egcd-both-t",
+    "source": "int f(int x, int y){\nint a = 0;\nint b = 0;\nint p = 0;\nint q = 0;\nint r = 0;\nint s = 0;\nif ((x >= 1) && (y >= 1))\n{\n  a = x;\n  b = y;\n  p = 1;\n  q = 0;\n  r = 0;\n  s = 1;\n  while (((y * r) + (x * p)) != ((x * q) + (y * s)))\n  {\n    if (a > b)\n    {\n      a = a - b;\n      p = p - q;\n      r = r - s;\n    }\n    else\n    {\n      b = b - a;\n      q = q - p;\n      s = s - r;\n    }\n  }\n\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x": [
+        -2147483648,
+        2147483647
+      ],
+      "y": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/egcd3-both-nt",
+    "source": "int f(int x, int y){\nint a = 0;\nint b = 0;\nint p = 0;\nint q = 0;\nint r = 0;\nint s = 0;\na = x;\nb = y;\np = 1;\nq = 0;\nr = 0;\ns = 1;\nwhile (1)\n{\n  if (!(b != 0))\n    break;\n  int c;\n  int k;\n  c = a;\n  k = 0;\n  while (1)\n  {\n    if (!(c >= b))\n      break;\n    int d;\n    int v;\n    d = 1;\n    v = b;\n    while (1)\n    {\n      if (!(b == ((x * q) + (y * s))))\n        break;\n      d = 2 * d;\n      v = 2 * v;\n    }\n\n    c = c - v;\n    k = k + d;\n  }\n\n  a = b;\n  b = c;\n  int temp;\n  temp = p;\n  p = q;\n  q = temp - (q * k);\n  temp = r;\n  r = s;\n  s = temp - (s * k);\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x": [
+        -2147483648,
+        2147483647
+      ],
+      "y": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/egcd3-both-t",
+    "source": "int f(int x, int y){\nint a = 0;\nint b = 0;\nint p = 0;\nint q = 0;\nint r = 0;\nint s = 0;\na = x;\nb = y;\np = 1;\nq = 0;\nr = 0;\ns = 1;\nwhile (1)\n{\n  if (!(b != 0))\n    break;\n  int c;\n  int k;\n  c = a;\n  k = 0;\n  while (1)\n  {\n    if (!(c >= b))\n      break;\n    int d;\n    int v;\n    d = 1;\n    v = b;\n    while (1)\n    {\n      if (!(c >= ((2 * b) * d)))\n        break;\n      d = 2 * d;\n      v = 2 * v;\n    }\n\n    c = c - v;\n    k = k + d;\n  }\n\n  a = b;\n  b = c;\n  int temp;\n  temp = p;\n  p = q;\n  q = temp - (q * k);\n  temp = r;\n  r = s;\n  s = temp - (s * k);\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "x": [
+        -2147483648,
+        2147483647
+      ],
+      "y": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/freire1-both-t",
+    "source": "int f(int a){\nint r = 0;\nint x = 0;\nx = a / 2;\nr = 0;\nint c = 0;\nint k = __VERIFIER_nondet_int();\nwhile ((((((r * r) - a) - r) + (2 * x)) + c) <= k)\n{\n  x = x - r;\n  r = r + 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "a": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/geo1-both-nt",
+    "source": "int f(int z, int k){\nint x = 1;\nint y = 0;\nint c = 0;\ny = z;\nc = 1;\nwhile (1)\n{\n  if (!(((((x * z) - x) - y) + 1) == 0))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        -2147483648,
+        2147483647
+      ],
+      "k": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/geo1-both-t",
+    "source": "int f(int z, int k){\nint x = 1;\nint y = 0;\nint c = 0;\ny = z;\nc = 1;\nwhile (1)\n{\n  if (!((((((x * z) - x) - y) + 1) + c) < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        -2147483648,
+        2147483647
+      ],
+      "k": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/geo2-both-nt",
+    "source": "int f(int z, int k){\nint x = 1;\nint y = 1;\nint c = 1;\nwhile (1)\n{\n  if (!((((1 + (x * z)) - x) - (z * y)) == 0))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        -2147483648,
+        2147483647
+      ],
+      "k": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/geo2-both-t",
+    "source": "int f(int z, int k){\nint x = 1;\nint y = 1;\nint c = 1;\nwhile (1)\n{\n  if (!(((((1 + (x * z)) - x) - (z * y)) + c) < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        -2147483648,
+        2147483647
+      ],
+      "k": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/geo3-both-nt",
+    "source": "int f(int z, int a, int k){\nint x = 0;\nint y = 0;\nint c = 0;\nx = a;\ny = 1;\nc = 1;\nwhile (1)\n{\n  if (!(((((z * x) - x) + a) - ((a * z) * y)) == 0))\n    break;\n  c = c + 1;\n  x = (x * z) + a;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        -2147483648,
+        2147483647
+      ],
+      "a": [
+        -2147483648,
+        2147483647
+      ],
+      "k": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/geo3-both-t",
+    "source": "int f(int z, int a, int k){\nint x = 0;\nint y = 0;\nint c = 0;\nx = a;\ny = 1;\nc = 1;\nwhile (1)\n{\n  if (!((((((z * x) - x) + a) - ((a * z) * y)) + c) < k))\n    break;\n  c = c + 1;\n  x = (x * z) + a;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "z": [
+        -2147483648,
+        2147483647
+      ],
+      "a": [
+        -2147483648,
+        2147483647
+      ],
+      "k": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/hard2-both-nt",
+    "source": "int f(int A){\nint B = 1;\nint r = 0;\nint d = 0;\nint p = 0;\nint q = 0;\nr = A;\nd = B;\np = 1;\nq = 0;\nwhile (1)\n{\n  if (!(d == (B * p)))\n    break;\n  d = 2 * d;\n  p = 2 * p;\n}\n\nwhile (1)\n{\n  if (!(A == ((q * B) + r)))\n    break;\n  d = d / 2;\n  p = p / 2;\n  if (r >= d)\n  {\n    r = r - d;\n    q = q + p;\n  }\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "A": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/ps2-both-nt",
+    "source": "int f(int k){\nint y = 0;\nint x = 0;\nint c = 0;\nwhile (1)\n{\n  if (!((((y * y) - (2 * x)) + y) == 0))\n    break;\n  c = c + 1;\n  y = y + 1;\n  x = y + x;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "k": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/ps3-both-nt",
+    "source": "int f(int k){\nint y = 0;\nint x = 0;\nint c = 0;\nwhile (1)\n{\n  if (!(((((6 * x) - (((2 * y) * y) * y)) - ((3 * y) * y)) - y) == 0))\n    break;\n  c = c + 1;\n  y = y + 1;\n  x = (y * y) + x;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "k": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/ps4-both-nt",
+    "source": "int f(int k){\nint y = 0;\nint x = 0;\nint c = 0;\nwhile (1)\n{\n  if (!(((((4 * x) - (((y * y) * y) * y)) - (((2 * y) * y) * y)) - (y * y)) == 0))\n    break;\n  c = c + 1;\n  y = y + 1;\n  x = ((y * y) * y) + x;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "k": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/ps5-both-nt",
+    "source": "int f(int k){\nint y = 0;\nint x = 0;\nint c = 0;\nwhile (1)\n{\n  if (!((((((((((6 * y) * y) * y) * y) * y) + ((((15 * y) * y) * y) * y)) + (((10 * y) * y) * y)) - (30 * x)) - y) == 0))\n    break;\n  c = c + 1;\n  y = y + 1;\n  x = (((y * y) * y) * y) + x;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "k": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/ps6-both-nt",
+    "source": "int f(int k){\nint y = 0;\nint x = 0;\nint c = 0;\nwhile (1)\n{\n  if (!((((((((((((-2) * y) * y) * y) * y) * y) * y) - (((((6 * y) * y) * y) * y) * y)) - ((((5 * y) * y) * y) * y)) + (y * y)) + (12 * x)) == 0))\n    break;\n  c = c + 1;\n  y = y + 1;\n  x = ((((y * y) * y) * y) * y) + x;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "k": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/sqrt1-both-nt",
+    "source": "int f(int n){\nint a = 0;\nint s = 1;\nint t = 1;\nwhile (((((t * t) - (4 * s)) + (2 * t)) + 1) == 0)\n{\n  a = a + 1;\n  t = t + 2;\n  s = s + t;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "n": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  },
+  {
+    "name": "upstream2026/termination-nla/sqrt2-both-nt",
+    "source": "int f(int i__in, int j__in){\nint j = j__in;\nint i = i__in;\nint s = 1;\nint t = 1;\nwhile ((((((t * t) - (4 * s)) + (2 * t)) + 1) + i) >= 0)\n{\n  t = t + 2;\n  s = s + t;\n  i = i + j;\n  j = j + 1;\n}\n\nreturn 0;\n}\n",
+    "bounds": {
+      "i__in": [
+        -2147483648,
+        2147483647
+      ],
+      "j__in": [
+        -2147483648,
+        2147483647
+      ]
+    },
+    "abi": "ILP32"
+  }
+]

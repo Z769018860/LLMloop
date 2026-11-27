@@ -1,0 +1,21 @@
+{
+  "original_function": "void CWE190_Integer_Overflow__int64_t_max_multiply_11_bad() {\n    long data;\n    data = 0LL;\n    if (globalReturnsTrue()) {\n        data = 9223372036854775807LL;\n    }\n    if (globalReturnsTrue()) {\n        if (data > 0) {\n            long result = data * 2;\n            printLongLongLine(result);\n        }\n    }\n}",
+  "source": "int f(int __z)\n{\n  long result = 0;\n  long data = 0;\n  data = 0LL;\n  if (unknown())\n  {\n    data = 9223372036854775807LL;\n  }\n  if (unknown())\n  {\n    if (data > 0)\n    {\n      result = data * 2;\n    }\n  }\n  return 0;\n}\n\n",
+  "bounds": {
+    "__z": [
+      0,
+      0
+    ]
+  },
+  "notes": [
+    "dead trailing return",
+    "hoisted loop-body declaration",
+    "memory abstraction (memory safety assumed)",
+    "nondeterministic result for globalReturnsTrue",
+    "opaque void call dropped: printLongLongLine",
+    "void -> int",
+    "zero-initialized locals"
+  ],
+  "extra": "[]",
+  "nondet": "True"
+}

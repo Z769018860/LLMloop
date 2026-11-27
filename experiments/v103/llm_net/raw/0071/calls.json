@@ -1,0 +1,185 @@
+[
+  {
+    "model_requested": "gpt-4.1-mini",
+    "request": {
+      "model": "gpt-4.1-mini",
+      "temperature": 0.7,
+      "max_tokens": 6000,
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a loop-summary hypothesis generator. You only PROPOSE candidates; a separate verifier checks them against the real C semantics and rejects wrong ones. Reply with one JSON object and nothing else."
+        },
+        {
+          "role": "user",
+          "content": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int x__in, int y__in, int z){\nint y = y__in;\nint x = x__in;\nint c = 0;\nwhile (x > z)\n{\n  while (y > z)\n  {\n    y = y - 1;\n  }\n\n  x = x - 1;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"x__in\": [-2147483648, 2147483647], \"y__in\": [-2147483648, 2147483647], \"z\": [-2147483648, 2147483647]}"
+        }
+      ]
+    },
+    "started_utc": "2026-11-22T00:29:50Z",
+    "endpoint": "https://api.square16.org/v1",
+    "attempts": [
+      {
+        "attempt": 0,
+        "ok": true,
+        "http_status": 200,
+        "seconds": 3.91
+      }
+    ],
+    "seconds": 3.91,
+    "response_text": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"logprobs\":null,\"message\":{\"annotations\":[],\"content\":\"{\\\"atoms\\\": [\\\"x \\u003e= z + 1\\\", \\\"y \\u003e= z + 1\\\", \\\"x \\u003c= x__in\\\", \\\"y \\u003c= y__in\\\", \\\"c \\u003e= 0\\\", \\\"c \\u003c= x__in - z if x__in \\u003e z else 0\\\", \\\"x - z \\u003c= x__in - z\\\", \\\"y - z \\u003c= y__in - z\\\", \\\"x \\u003e= z + 1 or x \\u003c= z\\\", \\\"y \\u003e= z + 1 or y \\u003c= z\\\", \\\"x == x__in - (c if x__in \\u003e z else 0)\\\", \\\"y \\u003e= z or y \\u003c= y__in\\\", \\\"x \\u003e= -2147483648 and x \\u003c= 2147483647\\\", \\\"y \\u003e= -2147483648 and y \\u003c= 2147483647\\\", \\\"c == (x__in - x) if x__in \\u003e z else 0\\\", \\\"y == y__in - (y__in - z) if y__in \\u003e z else y__in\\\", \\\"not (x - 1 \\u003c -2147483648)\\\", \\\"not (y - 1 \\u003c -2147483648)\\\", \\\"x \\u003e z implies x - 1 \\u003e= z\\\", \\\"y \\u003e z implies y - 1 \\u003e= z\\\", \\\"c \\u003e= 0 and c \\u003c= 2147483647\\\", \\\"x \\u003e= z + 1 implies x - 1 \\u003e= z\\\", \\\"y \\u003e= z + 1 implies y - 1 \\u003e= z\\\", \\\"c \\u003c= x__in - z + 1\\\", \\\"x == max(z + 1, x__in - c)\\\", \\\"y == max(z + 1, y__in - (y__in - z) if y__in \\u003e z else y__in)\\\", \\\"x \\u003e= z and y \\u003e= z\\\"]}\",\"refusal\":null,\"role\":\"assistant\"}}],\"created\":1795307391,\"id\":\"chatcmpl-EmpkldgYLkCNaoszlkJqbSqIlozJh\",\"model\":\"gpt-4.1-mini-2025-04-14\",\"object\":\"chat.completion\",\"routing\":{\"serving_pipereplica\":\"d20261105064405-382bdcf2-default-r2-dp0-default\"},\"service_tier\":\"default\",\"system_fingerprint\":\"fp_8ebcb6c932\",\"usage\":{\"completion_tokens\":376,\"completion_tokens_details\":{\"accepted_prediction_tokens\":0,\"audio_tokens\":0,\"reasoning_tokens\":0,\"rejected_prediction_tokens\":0},\"latency_checkpoint\":{\"engine_tbt_ms\":7,\"engine_ttft_ms\":28,\"engine_ttlt_ms\":2583,\"pre_inference_ms\":76,\"service_tbt_ms\":7,\"service_ttft_ms\":146,\"service_ttlt_ms\":2705,\"user_visible_ttft_ms\":69},\"prompt_tokens\":592,\"prompt_tokens_details\":{\"audio_tokens\":0,\"cached_tokens\":0},\"total_tokens\":968}}\n",
+    "served_model": "gpt-4.1-mini-2025-04-14",
+    "usage": {
+      "completion_tokens": 376,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "latency_checkpoint": {
+        "engine_tbt_ms": 7,
+        "engine_ttft_ms": 28,
+        "engine_ttlt_ms": 2583,
+        "pre_inference_ms": 76,
+        "service_tbt_ms": 7,
+        "service_ttft_ms": 146,
+        "service_ttlt_ms": 2705,
+        "user_visible_ttft_ms": 69
+      },
+      "prompt_tokens": 592,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0
+      },
+      "total_tokens": 968
+    },
+    "content": "{\"atoms\": [\"x >= z + 1\", \"y >= z + 1\", \"x <= x__in\", \"y <= y__in\", \"c >= 0\", \"c <= x__in - z if x__in > z else 0\", \"x - z <= x__in - z\", \"y - z <= y__in - z\", \"x >= z + 1 or x <= z\", \"y >= z + 1 or y <= z\", \"x == x__in - (c if x__in > z else 0)\", \"y >= z or y <= y__in\", \"x >= -2147483648 and x <= 2147483647\", \"y >= -2147483648 and y <= 2147483647\", \"c == (x__in - x) if x__in > z else 0\", \"y == y__in - (y__in - z) if y__in > z else y__in\", \"not (x - 1 < -2147483648)\", \"not (y - 1 < -2147483648)\", \"x > z implies x - 1 >= z\", \"y > z implies y - 1 >= z\", \"c >= 0 and c <= 2147483647\", \"x >= z + 1 implies x - 1 >= z\", \"y >= z + 1 implies y - 1 >= z\", \"c <= x__in - z + 1\", \"x == max(z + 1, x__in - c)\", \"y == max(z + 1, y__in - (y__in - z) if y__in > z else y__in)\", \"x >= z and y >= z\"]}",
+    "finish_reason": "stop",
+    "round": 0,
+    "prompt_sha256": "33a6983bb1e5e7fbbd8eb144e8b53589c0b93da23e75abf16d76e4485c673281",
+    "prompt_text": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int x__in, int y__in, int z){\nint y = y__in;\nint x = x__in;\nint c = 0;\nwhile (x > z)\n{\n  while (y > z)\n  {\n    y = y - 1;\n  }\n\n  x = x - 1;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"x__in\": [-2147483648, 2147483647], \"y__in\": [-2147483648, 2147483647], \"z\": [-2147483648, 2147483647]}"
+  },
+  {
+    "model_requested": "gpt-4.1-mini",
+    "request": {
+      "model": "gpt-4.1-mini",
+      "temperature": 0.7,
+      "max_tokens": 6000,
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a loop-summary hypothesis generator. You only PROPOSE candidates; a separate verifier checks them against the real C semantics and rejects wrong ones. Reply with one JSON object and nothing else."
+        },
+        {
+          "role": "user",
+          "content": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int x__in, int y__in, int z){\nint y = y__in;\nint x = x__in;\nint c = 0;\nwhile (x > z)\n{\n  while (y > z)\n  {\n    y = y - 1;\n  }\n\n  x = x - 1;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"x__in\": [-2147483648, 2147483647], \"y__in\": [-2147483648, 2147483647], \"z\": [-2147483648, 2147483647]}\n\nA previous attempt with your atoms failed: the verifier got stuck at the obligation `STUCK:Invariant formulas must be boolean (use a comparison)`. Atoms that currently survive: [\"x >= z + 1\", \"y >= z + 1\", \"x <= x__in\", \"y <= y__in\", \"c >= 0\", \"c <= x__in - z if x__in > z else 0\", \"x - z <= x__in - z\", \"y - z <= y__in - z\", \"x >= z + 1 or x <= z\", \"y >= z + 1 or y <= z\", \"x == x__in - (c if x__in > z else 0)\", \"y >= z or y <= y__in\", \"x >= -2147483648 and x <= 2147483647\", \"y >= -2147483648 and y <= 2147483647\", \"c == (x__in - x) if x__in > z else 0\", \"y == y__in - (y__in - z) if y__in > z else y__in\", \"not (x - 1 < -2147483648)\", \"not (y - 1 < -2147483648)\", \"x > z implies x - 1 >= z\", \"y > z implies y - 1 >= z\", \"c >= 0 and c <= 2147483647\", \"x >= z + 1 implies x - 1 >= z\", \"y >= z + 1 implies y - 1 >= z\", \"c <= x__in - z + 1\", \"x == max(z + 1, x__in - c)\", \"y == max(z + 1, y__in - (y__in - z) if y__in > z else y__in)\", \"x >= z and y >= z\"]\nPropose NEW atoms (different shapes: relations with entry values, polynomial relations, bounds on products) that would make this obligation provable. Output the same JSON schema."
+        }
+      ]
+    },
+    "started_utc": "2026-11-22T00:31:22Z",
+    "endpoint": "https://api.square16.org/v1",
+    "attempts": [
+      {
+        "attempt": 0,
+        "ok": true,
+        "http_status": 200,
+        "seconds": 4.614
+      }
+    ],
+    "seconds": 4.614,
+    "response_text": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"logprobs\":null,\"message\":{\"annotations\":[],\"content\":\"{\\\"atoms\\\": [\\\"x \\u003e= z + 1\\\", \\\"y \\u003e= z + 1\\\", \\\"x \\u003c= x__in\\\", \\\"y \\u003c= y__in\\\", \\\"c \\u003e= 0\\\", \\\"c \\u003c= x__in - z if x__in \\u003e z else 0\\\", \\\"x - z \\u003c= x__in - z\\\", \\\"y - z \\u003c= y__in - z\\\", \\\"x \\u003e= z + 1 or x \\u003c= z\\\", \\\"y \\u003e= z + 1 or y \\u003c= z\\\", \\\"x == x__in - c if x__in \\u003e z else x__in\\\", \\\"y \\u003e= z or y \\u003c= y__in\\\", \\\"x \\u003e= -2147483648 and x \\u003c= 2147483647\\\", \\\"y \\u003e= -2147483648 and y \\u003c= 2147483647\\\", \\\"c == (x__in - x) if x__in \\u003e z else 0\\\", \\\"y == max(z + 1, y__in - (y__in - z) if y__in \\u003e z else y__in)\\\", \\\"not (x - 1 \\u003c -2147483648)\\\", \\\"not (y - 1 \\u003c -2147483648)\\\", \\\"x \\u003e z implies x - 1 \\u003e= z\\\", \\\"y \\u003e z implies y - 1 \\u003e= z\\\", \\\"c \\u003e= 0 and c \\u003c= 2147483647\\\", \\\"x \\u003e= z + 1 implies x - 1 \\u003e= z\\\", \\\"y \\u003e= z + 1 implies y - 1 \\u003e= z\\\", \\\"c \\u003c= x__in - z + 1\\\", \\\"x == max(z + 1, x__in - c)\\\", \\\"y == max(z + 1, y__in - (y__in - z) if y__in \\u003e z else y__in)\\\", \\\"x \\u003e= z and y \\u003e= z\\\", \\\"c == x__in - x\\\", \\\"x \\u003e= z + 1 and y \\u003e= z + 1 implies x - 1 \\u003e= z and y - 1 \\u003e= z\\\", \\\"c \\u003c= max(0, x__in - z)\\\", \\\"y \\u003e= z + 1 implies y - 1 \\u003e= z\\\", \\\"x \\u003e= z + 1 implies x - 1 \\u003e= z\\\", \\\"x \\u003e= z + 1 and y == z + 1 implies y stays at z + 1 during inner loop\\\"]}\",\"refusal\":null,\"role\":\"assistant\"}}],\"created\":1795307483,\"id\":\"chatcmpl-EmpmFMGKok7816iZCpAYiSktQI7pv\",\"model\":\"gpt-4.1-mini-2025-04-14\",\"object\":\"chat.completion\",\"routing\":{\"serving_pipereplica\":\"d20261107065220-116812aa-default-r0-dp0-default\"},\"service_tier\":\"default\",\"system_fingerprint\":\"fp_8ebcb6c932\",\"usage\":{\"completion_tokens\":489,\"completion_tokens_details\":{\"accepted_prediction_tokens\":0,\"audio_tokens\":0,\"reasoning_tokens\":0,\"rejected_prediction_tokens\":0},\"latency_checkpoint\":{\"engine_tbt_ms\":6,\"engine_ttft_ms\":80,\"engine_ttlt_ms\":3221,\"pre_inference_ms\":78,\"service_tbt_ms\":6,\"service_ttft_ms\":186,\"service_ttlt_ms\":3323,\"user_visible_ttft_ms\":108},\"prompt_tokens\":1035,\"prompt_tokens_details\":{\"audio_tokens\":0,\"cached_tokens\":0},\"total_tokens\":1524}}\n",
+    "served_model": "gpt-4.1-mini-2025-04-14",
+    "usage": {
+      "completion_tokens": 489,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "latency_checkpoint": {
+        "engine_tbt_ms": 6,
+        "engine_ttft_ms": 80,
+        "engine_ttlt_ms": 3221,
+        "pre_inference_ms": 78,
+        "service_tbt_ms": 6,
+        "service_ttft_ms": 186,
+        "service_ttlt_ms": 3323,
+        "user_visible_ttft_ms": 108
+      },
+      "prompt_tokens": 1035,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0
+      },
+      "total_tokens": 1524
+    },
+    "content": "{\"atoms\": [\"x >= z + 1\", \"y >= z + 1\", \"x <= x__in\", \"y <= y__in\", \"c >= 0\", \"c <= x__in - z if x__in > z else 0\", \"x - z <= x__in - z\", \"y - z <= y__in - z\", \"x >= z + 1 or x <= z\", \"y >= z + 1 or y <= z\", \"x == x__in - c if x__in > z else x__in\", \"y >= z or y <= y__in\", \"x >= -2147483648 and x <= 2147483647\", \"y >= -2147483648 and y <= 2147483647\", \"c == (x__in - x) if x__in > z else 0\", \"y == max(z + 1, y__in - (y__in - z) if y__in > z else y__in)\", \"not (x - 1 < -2147483648)\", \"not (y - 1 < -2147483648)\", \"x > z implies x - 1 >= z\", \"y > z implies y - 1 >= z\", \"c >= 0 and c <= 2147483647\", \"x >= z + 1 implies x - 1 >= z\", \"y >= z + 1 implies y - 1 >= z\", \"c <= x__in - z + 1\", \"x == max(z + 1, x__in - c)\", \"y == max(z + 1, y__in - (y__in - z) if y__in > z else y__in)\", \"x >= z and y >= z\", \"c == x__in - x\", \"x >= z + 1 and y >= z + 1 implies x - 1 >= z and y - 1 >= z\", \"c <= max(0, x__in - z)\", \"y >= z + 1 implies y - 1 >= z\", \"x >= z + 1 implies x - 1 >= z\", \"x >= z + 1 and y == z + 1 implies y stays at z + 1 during inner loop\"]}",
+    "finish_reason": "stop",
+    "round": 1,
+    "prompt_sha256": "ebbc2771bd91b3c998fd02e3155a582fd3d8989060d829e323cbdcd6bac04194",
+    "prompt_text": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int x__in, int y__in, int z){\nint y = y__in;\nint x = x__in;\nint c = 0;\nwhile (x > z)\n{\n  while (y > z)\n  {\n    y = y - 1;\n  }\n\n  x = x - 1;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"x__in\": [-2147483648, 2147483647], \"y__in\": [-2147483648, 2147483647], \"z\": [-2147483648, 2147483647]}\n\nA previous attempt with your atoms failed: the verifier got stuck at the obligation `STUCK:Invariant formulas must be boolean (use a comparison)`. Atoms that currently survive: [\"x >= z + 1\", \"y >= z + 1\", \"x <= x__in\", \"y <= y__in\", \"c >= 0\", \"c <= x__in - z if x__in > z else 0\", \"x - z <= x__in - z\", \"y - z <= y__in - z\", \"x >= z + 1 or x <= z\", \"y >= z + 1 or y <= z\", \"x == x__in - (c if x__in > z else 0)\", \"y >= z or y <= y__in\", \"x >= -2147483648 and x <= 2147483647\", \"y >= -2147483648 and y <= 2147483647\", \"c == (x__in - x) if x__in > z else 0\", \"y == y__in - (y__in - z) if y__in > z else y__in\", \"not (x - 1 < -2147483648)\", \"not (y - 1 < -2147483648)\", \"x > z implies x - 1 >= z\", \"y > z implies y - 1 >= z\", \"c >= 0 and c <= 2147483647\", \"x >= z + 1 implies x - 1 >= z\", \"y >= z + 1 implies y - 1 >= z\", \"c <= x__in - z + 1\", \"x == max(z + 1, x__in - c)\", \"y == max(z + 1, y__in - (y__in - z) if y__in > z else y__in)\", \"x >= z and y >= z\"]\nPropose NEW atoms (different shapes: relations with entry values, polynomial relations, bounds on products) that would make this obligation provable. Output the same JSON schema."
+  },
+  {
+    "model_requested": "gpt-4.1-mini",
+    "request": {
+      "model": "gpt-4.1-mini",
+      "temperature": 0.7,
+      "max_tokens": 6000,
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a loop-summary hypothesis generator. You only PROPOSE candidates; a separate verifier checks them against the real C semantics and rejects wrong ones. Reply with one JSON object and nothing else."
+        },
+        {
+          "role": "user",
+          "content": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int x__in, int y__in, int z){\nint y = y__in;\nint x = x__in;\nint c = 0;\nwhile (x > z)\n{\n  while (y > z)\n  {\n    y = y - 1;\n  }\n\n  x = x - 1;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"x__in\": [-2147483648, 2147483647], \"y__in\": [-2147483648, 2147483647], \"z\": [-2147483648, 2147483647]}\n\nA previous attempt with your atoms failed: the verifier got stuck at the obligation `STUCK:Invariant formulas must be boolean (use a comparison)`. Atoms that currently survive: [\"x >= z + 1\", \"y >= z + 1\", \"x <= x__in\", \"y <= y__in\", \"c >= 0\", \"c <= x__in - z if x__in > z else 0\", \"x - z <= x__in - z\", \"y - z <= y__in - z\", \"x >= z + 1 or x <= z\", \"y >= z + 1 or y <= z\", \"x == x__in - (c if x__in > z else 0)\", \"y >= z or y <= y__in\", \"x >= -2147483648 and x <= 2147483647\", \"y >= -2147483648 and y <= 2147483647\", \"c == (x__in - x) if x__in > z else 0\", \"y == y__in - (y__in - z) if y__in > z else y__in\", \"not (x - 1 < -2147483648)\", \"not (y - 1 < -2147483648)\", \"x > z implies x - 1 >= z\", \"y > z implies y - 1 >= z\", \"c >= 0 and c <= 2147483647\", \"x >= z + 1 implies x - 1 >= z\", \"y >= z + 1 implies y - 1 >= z\", \"c <= x__in - z + 1\", \"x == max(z + 1, x__in - c)\", \"y == max(z + 1, y__in - (y__in - z) if y__in > z else y__in)\", \"x >= z and y >= z\", \"x == x__in - c if x__in > z else x__in\", \"c == x__in - x\", \"x >= z + 1 and y >= z + 1 implies x - 1 >= z and y - 1 >= z\", \"c <= max(0, x__in - z)\", \"x >= z + 1 and y == z + 1 implies y stays at z + 1 during inner loop\"]\nPropose NEW atoms (different shapes: relations with entry values, polynomial relations, bounds on products) that would make this obligation provable. Output the same JSON schema."
+        }
+      ]
+    },
+    "started_utc": "2026-11-22T00:32:54Z",
+    "endpoint": "https://api.square16.org/v1",
+    "attempts": [
+      {
+        "attempt": 0,
+        "ok": true,
+        "http_status": 200,
+        "seconds": 5.382
+      }
+    ],
+    "seconds": 5.382,
+    "response_text": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"logprobs\":null,\"message\":{\"annotations\":[],\"content\":\"{\\\"atoms\\\": [\\\"x \\u003e= z + 1\\\", \\\"y \\u003e= z + 1\\\", \\\"x \\u003c= x__in\\\", \\\"y \\u003c= y__in\\\", \\\"c \\u003e= 0\\\", \\\"c \\u003c= max(0, x__in - z)\\\", \\\"x == x__in - c if x__in \\u003e z else x__in\\\", \\\"y == max(z + 1, y__in - (y__in - z) if y__in \\u003e z else y__in)\\\", \\\"x \\u003e= -2147483648 and x \\u003c= 2147483647\\\", \\\"y \\u003e= -2147483648 and y \\u003c= 2147483647\\\", \\\"not (x - 1 \\u003c -2147483648)\\\", \\\"not (y - 1 \\u003c -2147483648)\\\", \\\"x \\u003e z implies x - 1 \\u003e= z\\\", \\\"y \\u003e z implies y - 1 \\u003e= z\\\", \\\"c == x__in - x\\\", \\\"y \\u003e= z and y \\u003c= y__in\\\", \\\"x \\u003e= z and x \\u003c= x__in\\\", \\\"c \\u003c= x__in - z + 1\\\", \\\"x \\u003e= z + 1 implies x - 1 \\u003e= z\\\", \\\"y \\u003e= z + 1 implies y - 1 \\u003e= z\\\", \\\"x == max(z + 1, x__in - c)\\\", \\\"y == max(z + 1, y__in - (y__in - z) if y__in \\u003e z else y__in)\\\", \\\"x \\u003e= z and y \\u003e= z\\\", \\\"x \\u003e= z + 1 and y \\u003e= z + 1 implies x - 1 \\u003e= z and y - 1 \\u003e= z\\\", \\\"c \\u003e= 0 and c \\u003c= 2147483647\\\", \\\"c \\u003c= max(0, x__in - z)\\\", \\\"x == x__in - c if x__in \\u003e z else x__in\\\", \\\"c == x__in - x\\\", \\\"x \\u003e= z + 1 and y == z + 1 implies y stays at z + 1 during inner loop\\\", \\\"x - z \\u003c= x__in - z\\\", \\\"y - z \\u003c= y__in - z\\\", \\\"y \\u003e= z + 1 or y \\u003c= z\\\", \\\"x \\u003e= z + 1 or x \\u003c= z\\\", \\\"c == 0 or c == x__in - x\\\"]}\",\"refusal\":null,\"role\":\"assistant\"}}],\"created\":1795307575,\"id\":\"chatcmpl-EmpnjZHKtsE5VyJskl7fRbBoAHDoN\",\"model\":\"gpt-4.1-mini-2025-04-14\",\"object\":\"chat.completion\",\"routing\":{\"serving_pipereplica\":\"d20261105070911-72966ec3-default-r0-dp0-default\"},\"service_tier\":\"default\",\"system_fingerprint\":\"fp_36de3d5958\",\"usage\":{\"completion_tokens\":487,\"completion_tokens_details\":{\"accepted_prediction_tokens\":0,\"audio_tokens\":0,\"reasoning_tokens\":0,\"rejected_prediction_tokens\":0},\"latency_checkpoint\":{\"engine_tbt_ms\":8,\"engine_ttft_ms\":40,\"engine_ttlt_ms\":3930,\"pre_inference_ms\":74,\"service_tbt_ms\":8,\"service_ttft_ms\":144,\"service_ttlt_ms\":4029,\"user_visible_ttft_ms\":70},\"prompt_tokens\":1131,\"prompt_tokens_details\":{\"audio_tokens\":0,\"cached_tokens\":0},\"total_tokens\":1618}}\n",
+    "served_model": "gpt-4.1-mini-2025-04-14",
+    "usage": {
+      "completion_tokens": 487,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "latency_checkpoint": {
+        "engine_tbt_ms": 8,
+        "engine_ttft_ms": 40,
+        "engine_ttlt_ms": 3930,
+        "pre_inference_ms": 74,
+        "service_tbt_ms": 8,
+        "service_ttft_ms": 144,
+        "service_ttlt_ms": 4029,
+        "user_visible_ttft_ms": 70
+      },
+      "prompt_tokens": 1131,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0
+      },
+      "total_tokens": 1618
+    },
+    "content": "{\"atoms\": [\"x >= z + 1\", \"y >= z + 1\", \"x <= x__in\", \"y <= y__in\", \"c >= 0\", \"c <= max(0, x__in - z)\", \"x == x__in - c if x__in > z else x__in\", \"y == max(z + 1, y__in - (y__in - z) if y__in > z else y__in)\", \"x >= -2147483648 and x <= 2147483647\", \"y >= -2147483648 and y <= 2147483647\", \"not (x - 1 < -2147483648)\", \"not (y - 1 < -2147483648)\", \"x > z implies x - 1 >= z\", \"y > z implies y - 1 >= z\", \"c == x__in - x\", \"y >= z and y <= y__in\", \"x >= z and x <= x__in\", \"c <= x__in - z + 1\", \"x >= z + 1 implies x - 1 >= z\", \"y >= z + 1 implies y - 1 >= z\", \"x == max(z + 1, x__in - c)\", \"y == max(z + 1, y__in - (y__in - z) if y__in > z else y__in)\", \"x >= z and y >= z\", \"x >= z + 1 and y >= z + 1 implies x - 1 >= z and y - 1 >= z\", \"c >= 0 and c <= 2147483647\", \"c <= max(0, x__in - z)\", \"x == x__in - c if x__in > z else x__in\", \"c == x__in - x\", \"x >= z + 1 and y == z + 1 implies y stays at z + 1 during inner loop\", \"x - z <= x__in - z\", \"y - z <= y__in - z\", \"y >= z + 1 or y <= z\", \"x >= z + 1 or x <= z\", \"c == 0 or c == x__in - x\"]}",
+    "finish_reason": "stop",
+    "round": 2,
+    "prompt_sha256": "2039810c2782ebbbab3a77d371e06c85eed9294e5c43bd0db4b939594db73361",
+    "prompt_text": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int x__in, int y__in, int z){\nint y = y__in;\nint x = x__in;\nint c = 0;\nwhile (x > z)\n{\n  while (y > z)\n  {\n    y = y - 1;\n  }\n\n  x = x - 1;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"x__in\": [-2147483648, 2147483647], \"y__in\": [-2147483648, 2147483647], \"z\": [-2147483648, 2147483647]}\n\nA previous attempt with your atoms failed: the verifier got stuck at the obligation `STUCK:Invariant formulas must be boolean (use a comparison)`. Atoms that currently survive: [\"x >= z + 1\", \"y >= z + 1\", \"x <= x__in\", \"y <= y__in\", \"c >= 0\", \"c <= x__in - z if x__in > z else 0\", \"x - z <= x__in - z\", \"y - z <= y__in - z\", \"x >= z + 1 or x <= z\", \"y >= z + 1 or y <= z\", \"x == x__in - (c if x__in > z else 0)\", \"y >= z or y <= y__in\", \"x >= -2147483648 and x <= 2147483647\", \"y >= -2147483648 and y <= 2147483647\", \"c == (x__in - x) if x__in > z else 0\", \"y == y__in - (y__in - z) if y__in > z else y__in\", \"not (x - 1 < -2147483648)\", \"not (y - 1 < -2147483648)\", \"x > z implies x - 1 >= z\", \"y > z implies y - 1 >= z\", \"c >= 0 and c <= 2147483647\", \"x >= z + 1 implies x - 1 >= z\", \"y >= z + 1 implies y - 1 >= z\", \"c <= x__in - z + 1\", \"x == max(z + 1, x__in - c)\", \"y == max(z + 1, y__in - (y__in - z) if y__in > z else y__in)\", \"x >= z and y >= z\", \"x == x__in - c if x__in > z else x__in\", \"c == x__in - x\", \"x >= z + 1 and y >= z + 1 implies x - 1 >= z and y - 1 >= z\", \"c <= max(0, x__in - z)\", \"x >= z + 1 and y == z + 1 implies y stays at z + 1 during inner loop\"]\nPropose NEW atoms (different shapes: relations with entry values, polynomial relations, bounds on products) that would make this obligation provable. Output the same JSON schema."
+  }
+]

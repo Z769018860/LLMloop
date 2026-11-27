@@ -1,0 +1,28 @@
+- entry_type: invariant_set
+  metadata:
+    format_version: '2.0'
+    uuid: ea2afd7a-c93d-53bd-aab1-7526c5a3a8a1
+    creation_time: '2026-11-22T00:00:00+00:00'
+    producer:
+      name: llmloop
+      version: 1.04
+      configuration: llmloop v1.04 deterministic pipeline, invariants exported as loop heads
+    task:
+      input_files:
+      - program.c
+      input_file_hashes:
+        program.c: 57da275e0539587dd0cd5b04f8b1574f4bb138313442e0cb6669156b7bfb7dba
+      specification: |
+        CHECK( init(main()), LTL(G ! overflow) )
+      data_model: LP64
+      language: C
+  content:
+  - invariant:
+      type: loop_invariant
+      location:
+        file_name: program.c
+        line: 3
+        column: 1
+        function: f
+      value: '1'
+      format: c_expression

@@ -1,0 +1,46 @@
+{
+  "model_requested": "deepseek-v4.1-flash-ark",
+  "request": {
+    "model": "deepseek-v4.1-flash-ark",
+    "temperature": 0.7,
+    "max_tokens": 1500,
+    "messages": [
+      {
+        "role": "system",
+        "content": "You state preconditions. You never prove anything: a separate verifier checks every value in the box you give, and it rejects the program if any of them overflows. Reply with one JSON object and nothing else."
+      },
+      {
+        "role": "user",
+        "content": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(unsigned int x__in){\nunsigned int x = x__in;\nwhile (x < 0x0fffffff)\n{\n  x++;\n}\n\nreturn 1/((x > 0x0fffffff));\n}\n\n\nABI: ILP32\nDeclared bounds: {\"x__in\": [0, 4294967295]}"
+      }
+    ]
+  },
+  "started_utc": "2026-11-23T04:32:36Z",
+  "endpoint": "https://api.square16.org/v1",
+  "attempts": [
+    {
+      "attempt": 0,
+      "ok": true,
+      "http_status": 200,
+      "seconds": 4.108
+    }
+  ],
+  "response_text": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"logprobs\":null,\"message\":{\"content\":\"{\\\"pre\\\":{\\\"x__in\\\":[268435456,4294967295]}}\",\"reasoning_content\":\"We need answer JSON only. Need analyze function. Need largest box on x__in avoiding undefined behavior signed integer overflow/div zero/bad shifts. Function:\\n\\nint f(unsigned int x__in){\\nunsigned int x = x__in;\\nwhile (x \\u003c 0x0fffffff)\\n{\\n  x++;\\n}\\nreturn 1/((x \\u003e 0x0fffffff));\\n}\\n\\nx unsigned int. No signed arithmetic? x++ unsigned wraps defined. Condition x \\u003c 0x0fffffff. Loop increments until x \\u003e= 0x0fffffff. If x__in \\u003c 0x0fffffff, it increments to exactly 0x0fffffff (since start \\u003c= threshold-1, eventually reaches threshold). While stops at x == 0x0fffffff. Then expression (x \\u003e 0x0fffffff) is false = 0. Return 1/0 -\\u003e division by zero undefined behavior. If x__in \\u003e= 0x0fffffff, loop not entered. x = x__in. Then (x \\u003e 0x0fffffff) is true if x__in \\u003e 0x0fffffff, denominator 1, return 1. If x__in == 0x0fffffff, condition false? x \\u003e threshold is false (equal), denominator 0 -\\u003e division by zero. So UB for x__in \\u003c= 0x0fffffff? Let's see if x__in \\u003c threshold: loop sets x=threshold, denominator false 0. Yes. x__in == threshold: loop skipped, x=threshold, denominator 0. Thus division by zero for all x__in \\u003c= 0x0fffffff. Safe only x__in \\u003e 0x0fffffff (strict). Declared bounds [0, 4294967295]. 0x0fffffff = 268435455. Safe x__in in [268435456, 4294967295]. Need return pre maybe x__in [268435456,4294967295]. Check any unsigned overflow? x++ only in loop for x \\u003c 268435455. It will terminate at 268435455, no overflow beyond. Actually if x starts 0, increments 268M times fine. x++ at x=268435454 -\\u003e 268435455, loop condition false. No overflow. x unsigned. Return 1/(x \\u003e threshold) int division. Denominator 1 safe. Return 1. So safe.\\n\\nNeed output JSON. Ensure number decimal. {\\\"pre\\\":{\\\"x__in\\\":[268435456,4294967295]}}. Could use hex? JSON numbers decimal only. final nothing else.\",\"role\":\"assistant\"}}],\"created\":1795408360,\"id\":\"0217954083574143694b53d1b7644bc84f9058822e8eff2e3e479\",\"model\":\"deepseek-v4-1-flash-261017\",\"service_tier\":\"default\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":568,\"prompt_tokens\":370,\"total_tokens\":938,\"prompt_tokens_details\":{\"cached_tokens\":256},\"completion_tokens_details\":{\"reasoning_tokens\":550}}}",
+  "served_model": "deepseek-v4-1-flash-261017",
+  "usage": {
+    "completion_tokens": 568,
+    "prompt_tokens": 370,
+    "total_tokens": 938,
+    "prompt_tokens_details": {
+      "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 550
+    }
+  },
+  "content": "{\"pre\":{\"x__in\":[268435456,4294967295]}}",
+  "finish_reason": "stop",
+  "seconds": 4.108,
+  "prompt_sha256": "043a0a1ef37cb116ec1493e70f52a43ecdd7aa795656a8605d9ba881417d9eda",
+  "prompt_text": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(unsigned int x__in){\nunsigned int x = x__in;\nwhile (x < 0x0fffffff)\n{\n  x++;\n}\n\nreturn 1/((x > 0x0fffffff));\n}\n\n\nABI: ILP32\nDeclared bounds: {\"x__in\": [0, 4294967295]}"
+}

@@ -1,0 +1,185 @@
+[
+  {
+    "model_requested": "gpt-4.1-mini",
+    "request": {
+      "model": "gpt-4.1-mini",
+      "temperature": 0.7,
+      "max_tokens": 6000,
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a loop-summary hypothesis generator. You only PROPOSE candidates; a separate verifier checks them against the real C semantics and rejects wrong ones. Reply with one JSON object and nothing else."
+        },
+        {
+          "role": "user",
+          "content": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int __z){\nint i = 0;\nint j = 0;\nint c = 0;\nwhile (i < 100)\n{\n  c = c + 1;\n  i = i + 1;\n}\n\nj = 5;\nwhile (j < 21)\n{\n  c = c + 1;\n  j = j + 3;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"__z\": [0, 0]}"
+        }
+      ]
+    },
+    "started_utc": "2026-11-22T00:34:25Z",
+    "endpoint": "https://api.square16.org/v1",
+    "attempts": [
+      {
+        "attempt": 0,
+        "ok": true,
+        "http_status": 200,
+        "seconds": 2.902
+      }
+    ],
+    "seconds": 2.902,
+    "response_text": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"logprobs\":null,\"message\":{\"annotations\":[],\"content\":\"{\\\"atoms\\\": [\\\"0 \\u003c= i \\u003c= 100\\\", \\\"0 \\u003c= c \\u003c= 100\\\", \\\"j % 3 == 2\\\", \\\"5 \\u003c= j \\u003c= 20\\\", \\\"c == i + 4\\\", \\\"i \\u003e= 0\\\", \\\"j \\u003e= 0\\\", \\\"c \\u003e= 0\\\", \\\"i == 0 or i \\u003e 0\\\", \\\"j == 5 or (j - 5) % 3 == 0\\\", \\\"i \\u003c= 100\\\", \\\"j \\u003c 21\\\", \\\"c \\u003c= 104\\\", \\\"i + j \\u003e= 5\\\", \\\"c == i + ((20 - 5) // 3 + 1)\\\", \\\"i - c \\u003c= 0\\\", \\\"j \\u003e= 5\\\", \\\"c \\u003e= i\\\", \\\"c \\u003e= j - 5\\\", \\\"i == 0 or c \\u003e 0\\\", \\\"j \\u003c= 20\\\"]}\",\"refusal\":null,\"role\":\"assistant\"}}],\"created\":1795307666,\"id\":\"chatcmpl-EmppCWAbOLmwDC40TcTEOZq88mSqc\",\"model\":\"gpt-4.1-mini-2025-04-14\",\"object\":\"chat.completion\",\"routing\":{\"serving_pipereplica\":\"d20261105070911-72966ec3-default-r0-dp0-default\"},\"service_tier\":\"default\",\"system_fingerprint\":\"fp_36de3d5958\",\"usage\":{\"completion_tokens\":181,\"completion_tokens_details\":{\"accepted_prediction_tokens\":0,\"audio_tokens\":0,\"reasoning_tokens\":0,\"rejected_prediction_tokens\":0},\"latency_checkpoint\":{\"engine_tbt_ms\":9,\"engine_ttft_ms\":26,\"engine_ttlt_ms\":1657,\"pre_inference_ms\":83,\"service_tbt_ms\":9,\"service_ttft_ms\":155,\"service_ttlt_ms\":1772,\"user_visible_ttft_ms\":72},\"prompt_tokens\":562,\"prompt_tokens_details\":{\"audio_tokens\":0,\"cached_tokens\":0},\"total_tokens\":743}}\n",
+    "served_model": "gpt-4.1-mini-2025-04-14",
+    "usage": {
+      "completion_tokens": 181,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "latency_checkpoint": {
+        "engine_tbt_ms": 9,
+        "engine_ttft_ms": 26,
+        "engine_ttlt_ms": 1657,
+        "pre_inference_ms": 83,
+        "service_tbt_ms": 9,
+        "service_ttft_ms": 155,
+        "service_ttlt_ms": 1772,
+        "user_visible_ttft_ms": 72
+      },
+      "prompt_tokens": 562,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0
+      },
+      "total_tokens": 743
+    },
+    "content": "{\"atoms\": [\"0 <= i <= 100\", \"0 <= c <= 100\", \"j % 3 == 2\", \"5 <= j <= 20\", \"c == i + 4\", \"i >= 0\", \"j >= 0\", \"c >= 0\", \"i == 0 or i > 0\", \"j == 5 or (j - 5) % 3 == 0\", \"i <= 100\", \"j < 21\", \"c <= 104\", \"i + j >= 5\", \"c == i + ((20 - 5) // 3 + 1)\", \"i - c <= 0\", \"j >= 5\", \"c >= i\", \"c >= j - 5\", \"i == 0 or c > 0\", \"j <= 20\"]}",
+    "finish_reason": "stop",
+    "round": 0,
+    "prompt_sha256": "b66aa723acb9af951c580948c8be080919b46d861b9a75376f311a7e0f20f01e",
+    "prompt_text": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int __z){\nint i = 0;\nint j = 0;\nint c = 0;\nwhile (i < 100)\n{\n  c = c + 1;\n  i = i + 1;\n}\n\nj = 5;\nwhile (j < 21)\n{\n  c = c + 1;\n  j = j + 3;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"__z\": [0, 0]}"
+  },
+  {
+    "model_requested": "gpt-4.1-mini",
+    "request": {
+      "model": "gpt-4.1-mini",
+      "temperature": 0.7,
+      "max_tokens": 6000,
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a loop-summary hypothesis generator. You only PROPOSE candidates; a separate verifier checks them against the real C semantics and rejects wrong ones. Reply with one JSON object and nothing else."
+        },
+        {
+          "role": "user",
+          "content": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int __z){\nint i = 0;\nint j = 0;\nint c = 0;\nwhile (i < 100)\n{\n  c = c + 1;\n  i = i + 1;\n}\n\nj = 5;\nwhile (j < 21)\n{\n  c = c + 1;\n  j = j + 3;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"__z\": [0, 0]}\n\nA previous attempt with your atoms failed: the verifier got stuck at the obligation `STUCK:top/loop1/body operations defined`. Atoms that currently survive: [\"0 <= i <= 100\", \"0 <= c <= 100\", \"j % 3 == 2\", \"5 <= j <= 20\", \"c == i + 4\", \"i >= 0\", \"j >= 0\", \"c >= 0\", \"i == 0 or i > 0\", \"j == 5 or (j - 5) % 3 == 0\", \"i <= 100\", \"j < 21\", \"c <= 104\", \"i + j >= 5\", \"c == i + ((20 - 5) // 3 + 1)\", \"i - c <= 0\", \"j >= 5\", \"c >= i\", \"c >= j - 5\", \"i == 0 or c > 0\", \"j <= 20\"]\nPropose NEW atoms (different shapes: relations with entry values, polynomial relations, bounds on products) that would make this obligation provable. Output the same JSON schema."
+        }
+      ]
+    },
+    "started_utc": "2026-11-22T00:34:34Z",
+    "endpoint": "https://api.square16.org/v1",
+    "attempts": [
+      {
+        "attempt": 0,
+        "ok": true,
+        "http_status": 200,
+        "seconds": 4.149
+      }
+    ],
+    "seconds": 4.149,
+    "response_text": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"logprobs\":null,\"message\":{\"annotations\":[],\"content\":\"{\\\"atoms\\\": [\\\"c == i + ((20 - 5) // 3 + 1)\\\", \\\"c == i + ((j - 5) // 3)\\\", \\\"i \\u003e= 0\\\", \\\"i \\u003c= 100\\\", \\\"j \\u003e= 5\\\", \\\"j \\u003c= 20\\\", \\\"j == 5 or (j - 5) % 3 == 0\\\", \\\"c \\u003e= i\\\", \\\"c \\u003e= (j - 5) // 3 + i\\\", \\\"c \\u003c= i + ((20 - 5) // 3 + 1)\\\", \\\"i + j \\u003c= 120\\\", \\\"c \\u003e= 0\\\", \\\"c \\u003c= 104\\\", \\\"i % 1 == 0\\\", \\\"j % 3 == 2 or j == 5\\\", \\\"c - i == (j - 5) // 3\\\", \\\"c - i \\u003e= 0\\\", \\\"j - 5 \\u003e= 0\\\", \\\"i + c \\u003e= 0\\\", \\\"c - i \\u003c= 20\\\", \\\"i == 0 or i \\u003e 0\\\", \\\"100 - i \\u003e= 0\\\", \\\"20 - j \\u003e= 0\\\", \\\"c == i + ((j - 5) // 3) if j \\u003e= 5 else i\\\", \\\"c \\u003e= i + (j - 5) // 3 if j \\u003e= 5 else i\\\", \\\"c == i + ((20 - 5) // 3 + 1)\\\", \\\"c - i == ((j - 5) // 3) if j \\u003e= 5 else 0\\\"]}\",\"refusal\":null,\"role\":\"assistant\"}}],\"created\":1795307676,\"id\":\"chatcmpl-EmppMi11o89vK66pCZUyZnpXgvUkg\",\"model\":\"gpt-4.1-mini-2025-04-14\",\"object\":\"chat.completion\",\"routing\":{\"serving_pipereplica\":\"d20261105070911-72966ec3-default-r0-dp0-default\"},\"service_tier\":\"default\",\"system_fingerprint\":\"fp_36de3d5958\",\"usage\":{\"completion_tokens\":323,\"completion_tokens_details\":{\"accepted_prediction_tokens\":0,\"audio_tokens\":0,\"reasoning_tokens\":0,\"rejected_prediction_tokens\":0},\"latency_checkpoint\":{\"engine_tbt_ms\":7,\"engine_ttft_ms\":30,\"engine_ttlt_ms\":2432,\"pre_inference_ms\":86,\"service_tbt_ms\":7,\"service_ttft_ms\":152,\"service_ttlt_ms\":2550,\"user_visible_ttft_ms\":66},\"prompt_tokens\":807,\"prompt_tokens_details\":{\"audio_tokens\":0,\"cached_tokens\":0},\"total_tokens\":1130}}\n",
+    "served_model": "gpt-4.1-mini-2025-04-14",
+    "usage": {
+      "completion_tokens": 323,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "latency_checkpoint": {
+        "engine_tbt_ms": 7,
+        "engine_ttft_ms": 30,
+        "engine_ttlt_ms": 2432,
+        "pre_inference_ms": 86,
+        "service_tbt_ms": 7,
+        "service_ttft_ms": 152,
+        "service_ttlt_ms": 2550,
+        "user_visible_ttft_ms": 66
+      },
+      "prompt_tokens": 807,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0
+      },
+      "total_tokens": 1130
+    },
+    "content": "{\"atoms\": [\"c == i + ((20 - 5) // 3 + 1)\", \"c == i + ((j - 5) // 3)\", \"i >= 0\", \"i <= 100\", \"j >= 5\", \"j <= 20\", \"j == 5 or (j - 5) % 3 == 0\", \"c >= i\", \"c >= (j - 5) // 3 + i\", \"c <= i + ((20 - 5) // 3 + 1)\", \"i + j <= 120\", \"c >= 0\", \"c <= 104\", \"i % 1 == 0\", \"j % 3 == 2 or j == 5\", \"c - i == (j - 5) // 3\", \"c - i >= 0\", \"j - 5 >= 0\", \"i + c >= 0\", \"c - i <= 20\", \"i == 0 or i > 0\", \"100 - i >= 0\", \"20 - j >= 0\", \"c == i + ((j - 5) // 3) if j >= 5 else i\", \"c >= i + (j - 5) // 3 if j >= 5 else i\", \"c == i + ((20 - 5) // 3 + 1)\", \"c - i == ((j - 5) // 3) if j >= 5 else 0\"]}",
+    "finish_reason": "stop",
+    "round": 1,
+    "prompt_sha256": "0d5bf491b89b7318bd9ad324763f3d0a309038479eb81b297dc2240d4a5778f0",
+    "prompt_text": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int __z){\nint i = 0;\nint j = 0;\nint c = 0;\nwhile (i < 100)\n{\n  c = c + 1;\n  i = i + 1;\n}\n\nj = 5;\nwhile (j < 21)\n{\n  c = c + 1;\n  j = j + 3;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"__z\": [0, 0]}\n\nA previous attempt with your atoms failed: the verifier got stuck at the obligation `STUCK:top/loop1/body operations defined`. Atoms that currently survive: [\"0 <= i <= 100\", \"0 <= c <= 100\", \"j % 3 == 2\", \"5 <= j <= 20\", \"c == i + 4\", \"i >= 0\", \"j >= 0\", \"c >= 0\", \"i == 0 or i > 0\", \"j == 5 or (j - 5) % 3 == 0\", \"i <= 100\", \"j < 21\", \"c <= 104\", \"i + j >= 5\", \"c == i + ((20 - 5) // 3 + 1)\", \"i - c <= 0\", \"j >= 5\", \"c >= i\", \"c >= j - 5\", \"i == 0 or c > 0\", \"j <= 20\"]\nPropose NEW atoms (different shapes: relations with entry values, polynomial relations, bounds on products) that would make this obligation provable. Output the same JSON schema."
+  },
+  {
+    "model_requested": "gpt-4.1-mini",
+    "request": {
+      "model": "gpt-4.1-mini",
+      "temperature": 0.7,
+      "max_tokens": 6000,
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a loop-summary hypothesis generator. You only PROPOSE candidates; a separate verifier checks them against the real C semantics and rejects wrong ones. Reply with one JSON object and nothing else."
+        },
+        {
+          "role": "user",
+          "content": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int __z){\nint i = 0;\nint j = 0;\nint c = 0;\nwhile (i < 100)\n{\n  c = c + 1;\n  i = i + 1;\n}\n\nj = 5;\nwhile (j < 21)\n{\n  c = c + 1;\n  j = j + 3;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"__z\": [0, 0]}\n\nA previous attempt with your atoms failed: the verifier got stuck at the obligation `STUCK:Invariant formulas must be boolean (use a comparison)`. Atoms that currently survive: [\"0 <= i <= 100\", \"0 <= c <= 100\", \"j % 3 == 2\", \"5 <= j <= 20\", \"c == i + 4\", \"i >= 0\", \"j >= 0\", \"c >= 0\", \"i == 0 or i > 0\", \"j == 5 or (j - 5) % 3 == 0\", \"i <= 100\", \"j < 21\", \"c <= 104\", \"i + j >= 5\", \"c == i + ((20 - 5) // 3 + 1)\", \"i - c <= 0\", \"j >= 5\", \"c >= i\", \"c >= j - 5\", \"i == 0 or c > 0\", \"j <= 20\", \"c == i + ((j - 5) // 3)\", \"c >= (j - 5) // 3 + i\", \"c <= i + ((20 - 5) // 3 + 1)\", \"i + j <= 120\", \"i % 1 == 0\", \"j % 3 == 2 or j == 5\", \"c - i == (j - 5) // 3\", \"c - i >= 0\", \"j - 5 >= 0\", \"i + c >= 0\", \"c - i <= 20\", \"100 - i >= 0\", \"20 - j >= 0\", \"c == i + ((j - 5) // 3) if j >= 5 else i\", \"c >= i + (j - 5) // 3 if j >= 5 else i\", \"c - i == ((j - 5) // 3) if j >= 5 else 0\"]\nPropose NEW atoms (different shapes: relations with entry values, polynomial relations, bounds on products) that would make this obligation provable. Output the same JSON schema."
+        }
+      ]
+    },
+    "started_utc": "2026-11-22T00:34:44Z",
+    "endpoint": "https://api.square16.org/v1",
+    "attempts": [
+      {
+        "attempt": 0,
+        "ok": true,
+        "http_status": 200,
+        "seconds": 3.309
+      }
+    ],
+    "seconds": 3.309,
+    "response_text": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"logprobs\":null,\"message\":{\"annotations\":[],\"content\":\"{\\\"atoms\\\": [\\\"0 \\u003c= i \\u003c= 100\\\", \\\"0 \\u003c= c \\u003c= 104\\\", \\\"i == 0 or (1 \\u003c= i \\u003c= 100)\\\", \\\"j == 5 or (5 \\u003c j \\u003c 21 and (j - 5) % 3 == 0)\\\", \\\"5 \\u003c= j \\u003c= 20\\\", \\\"c == i + ((j - 5) // 3) if j \\u003e= 5 else i\\\", \\\"c \\u003e= i + ((j - 5) // 3) if j \\u003e= 5 else i\\\", \\\"c \\u003c= i + ((20 - 5) // 3 + 1)\\\", \\\"i + j \\u003c= 120\\\", \\\"c \\u003e= i\\\", \\\"i \\u003e= 0\\\", \\\"j \\u003e= 5\\\", \\\"j \\u003c 21\\\", \\\"c - i == ((j - 5) // 3) if j \\u003e= 5 else 0\\\", \\\"c \\u003e= 0\\\", \\\"i % 1 == 0\\\", \\\"j % 3 == 2 or j == 5\\\", \\\"c - i \\u003e= 0\\\", \\\"100 - i \\u003e= 0\\\", \\\"20 - j \\u003e= 0\\\", \\\"c \\u003e= (j - 5) // 3 + i\\\", \\\"c \\u003c= i + ((20 - 5) // 3 + 1)\\\", \\\"c == i + 4\\\", \\\"j == 5 or (j - 5) % 3 == 0\\\", \\\"abs(i - 50) \\u003c= 50\\\", \\\"c - i \\u003c= 20\\\", \\\"i - c \\u003c= 0\\\", \\\"c \\u003e= i + (j - 5) // 3\\\", \\\"j \\u003e= 5 and (j - 5) % 3 == 0\\\", \\\"c \\u003e= i and c \\u003c= 104\\\"]}\",\"refusal\":null,\"role\":\"assistant\"}}],\"created\":1795307685,\"id\":\"chatcmpl-EmppVDMFKS4eOiMuKGwVVicYwhQFw\",\"model\":\"gpt-4.1-mini-2025-04-14\",\"object\":\"chat.completion\",\"routing\":{\"serving_pipereplica\":\"d20261105052007-a1fdc8f6-default-r0-dp0-default\"},\"service_tier\":\"default\",\"system_fingerprint\":\"fp_8ebcb6c932\",\"usage\":{\"completion_tokens\":372,\"completion_tokens_details\":{\"accepted_prediction_tokens\":0,\"audio_tokens\":0,\"reasoning_tokens\":0,\"rejected_prediction_tokens\":0},\"latency_checkpoint\":{\"engine_tbt_ms\":5,\"engine_ttft_ms\":31,\"engine_ttlt_ms\":1878,\"pre_inference_ms\":97,\"service_tbt_ms\":5,\"service_ttft_ms\":191,\"service_ttlt_ms\":2051,\"user_visible_ttft_ms\":94},\"prompt_tokens\":1022,\"prompt_tokens_details\":{\"audio_tokens\":0,\"cached_tokens\":0},\"total_tokens\":1394}}\n",
+    "served_model": "gpt-4.1-mini-2025-04-14",
+    "usage": {
+      "completion_tokens": 372,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "latency_checkpoint": {
+        "engine_tbt_ms": 5,
+        "engine_ttft_ms": 31,
+        "engine_ttlt_ms": 1878,
+        "pre_inference_ms": 97,
+        "service_tbt_ms": 5,
+        "service_ttft_ms": 191,
+        "service_ttlt_ms": 2051,
+        "user_visible_ttft_ms": 94
+      },
+      "prompt_tokens": 1022,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0
+      },
+      "total_tokens": 1394
+    },
+    "content": "{\"atoms\": [\"0 <= i <= 100\", \"0 <= c <= 104\", \"i == 0 or (1 <= i <= 100)\", \"j == 5 or (5 < j < 21 and (j - 5) % 3 == 0)\", \"5 <= j <= 20\", \"c == i + ((j - 5) // 3) if j >= 5 else i\", \"c >= i + ((j - 5) // 3) if j >= 5 else i\", \"c <= i + ((20 - 5) // 3 + 1)\", \"i + j <= 120\", \"c >= i\", \"i >= 0\", \"j >= 5\", \"j < 21\", \"c - i == ((j - 5) // 3) if j >= 5 else 0\", \"c >= 0\", \"i % 1 == 0\", \"j % 3 == 2 or j == 5\", \"c - i >= 0\", \"100 - i >= 0\", \"20 - j >= 0\", \"c >= (j - 5) // 3 + i\", \"c <= i + ((20 - 5) // 3 + 1)\", \"c == i + 4\", \"j == 5 or (j - 5) % 3 == 0\", \"abs(i - 50) <= 50\", \"c - i <= 20\", \"i - c <= 0\", \"c >= i + (j - 5) // 3\", \"j >= 5 and (j - 5) % 3 == 0\", \"c >= i and c <= 104\"]}",
+    "finish_reason": "stop",
+    "round": 2,
+    "prompt_sha256": "0383a83b01be241c624ccc02f28e982d2e90ef67de36ac5f772409ac32a004f8",
+    "prompt_text": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int __z){\nint i = 0;\nint j = 0;\nint c = 0;\nwhile (i < 100)\n{\n  c = c + 1;\n  i = i + 1;\n}\n\nj = 5;\nwhile (j < 21)\n{\n  c = c + 1;\n  j = j + 3;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"__z\": [0, 0]}\n\nA previous attempt with your atoms failed: the verifier got stuck at the obligation `STUCK:Invariant formulas must be boolean (use a comparison)`. Atoms that currently survive: [\"0 <= i <= 100\", \"0 <= c <= 100\", \"j % 3 == 2\", \"5 <= j <= 20\", \"c == i + 4\", \"i >= 0\", \"j >= 0\", \"c >= 0\", \"i == 0 or i > 0\", \"j == 5 or (j - 5) % 3 == 0\", \"i <= 100\", \"j < 21\", \"c <= 104\", \"i + j >= 5\", \"c == i + ((20 - 5) // 3 + 1)\", \"i - c <= 0\", \"j >= 5\", \"c >= i\", \"c >= j - 5\", \"i == 0 or c > 0\", \"j <= 20\", \"c == i + ((j - 5) // 3)\", \"c >= (j - 5) // 3 + i\", \"c <= i + ((20 - 5) // 3 + 1)\", \"i + j <= 120\", \"i % 1 == 0\", \"j % 3 == 2 or j == 5\", \"c - i == (j - 5) // 3\", \"c - i >= 0\", \"j - 5 >= 0\", \"i + c >= 0\", \"c - i <= 20\", \"100 - i >= 0\", \"20 - j >= 0\", \"c == i + ((j - 5) // 3) if j >= 5 else i\", \"c >= i + (j - 5) // 3 if j >= 5 else i\", \"c - i == ((j - 5) // 3) if j >= 5 else 0\"]\nPropose NEW atoms (different shapes: relations with entry values, polynomial relations, bounds on products) that would make this obligation provable. Output the same JSON schema."
+  }
+]

@@ -1,0 +1,526 @@
+{
+  "schema_version": 1,
+  "study": "v074_study_w",
+  "seed": 20270120,
+  "models": [
+    "deepseek-v4.1-flash-ark",
+    "glm-5.3-ark",
+    "deepseek-v4.1-flash-itkk",
+    "gpt-4.1-mini",
+    "claude-dsflash-itkk"
+  ],
+  "arms": [
+    "if"
+  ],
+  "reps": 1,
+  "temperature": 0.7,
+  "max_tokens": 12000,
+  "corpus_seed": 20261201,
+  "roles": {
+    "heldout:nla-digbench-scaling_cohencu-ll_valuebound1.c": "provable_safe",
+    "heldout:nla-digbench-scaling_cohencu-ll_valuebound10.c": "provable_safe",
+    "heldout:nla-digbench-scaling_cohencu-ll_valuebound100.c": "provable_safe",
+    "heldout:nla-digbench-scaling_cohencu-ll_valuebound2.c": "provable_safe",
+    "heldout:nla-digbench-scaling_cohencu-ll_valuebound20.c": "provable_safe",
+    "heldout:nla-digbench-scaling_cohencu-ll_valuebound5.c": "provable_safe",
+    "heldout:nla-digbench-scaling_cohencu-ll_valuebound50.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps2-ll_valuebound1.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps2-ll_valuebound10.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps2-ll_valuebound100.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps2-ll_valuebound2.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps2-ll_valuebound20.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps2-ll_valuebound5.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps2-ll_valuebound50.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps3-ll_valuebound1.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps3-ll_valuebound10.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps3-ll_valuebound100.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps3-ll_valuebound2.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps3-ll_valuebound20.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps3-ll_valuebound5.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps3-ll_valuebound50.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps4-ll_valuebound1.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps4-ll_valuebound10.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps4-ll_valuebound100.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps4-ll_valuebound2.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps4-ll_valuebound20.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps4-ll_valuebound5.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps4-ll_valuebound50.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps5-ll_valuebound1.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps5-ll_valuebound10.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps5-ll_valuebound100.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps5-ll_valuebound2.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps5-ll_valuebound20.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps5-ll_valuebound5.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps5-ll_valuebound50.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps6-ll_valuebound1.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps6-ll_valuebound10.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps6-ll_valuebound100.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps6-ll_valuebound2.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps6-ll_valuebound20.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps6-ll_valuebound5.c": "provable_safe",
+    "heldout:nla-digbench-scaling_ps6-ll_valuebound50.c": "provable_safe",
+    "heldout:nla-digbench-scaling_sqrt1-ll_valuebound1.c": "provable_safe",
+    "heldout:nla-digbench-scaling_sqrt1-ll_valuebound10.c": "provable_safe",
+    "heldout:nla-digbench-scaling_sqrt1-ll_valuebound100.c": "provable_safe",
+    "heldout:nla-digbench-scaling_sqrt1-ll_valuebound2.c": "provable_safe",
+    "heldout:nla-digbench-scaling_sqrt1-ll_valuebound20.c": "provable_safe",
+    "heldout:nla-digbench-scaling_sqrt1-ll_valuebound5.c": "provable_safe",
+    "heldout:nla-digbench-scaling_sqrt1-ll_valuebound50.c": "provable_safe",
+    "heldout:bitvector-loops_overflow_1-2.c": "unsafe_source_control"
+  },
+  "hypothesis": "H1: models certify a substantial share of safe if-loop programs (descriptive). H2: 0 unsafe controls certified. Exploratory: per-family/model.",
+  "note": "The worked example (branch-selected loops, constant increments) resembles the I_branch family; claude-dsflash-itkk is a DeepSeek V4.1 Flash alias. Unsafe controls confirmed natively (UBSan). Exact references certified for all safe programs.",
+  "verifier": "typed_summary_portfolio backend typed_invariant_tree, solver_profile auto, no fallback",
+  "programs": [
+    {
+      "name": "heldout:nla-digbench-scaling_cohencu-ll_valuebound1.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "b871e2a46324da29b2ed79ebe011dcf7ea7b6180a5e368cc3f5d9411769d54e0",
+      "prompt_sha256": {
+        "if": "b4aefc84d879b2ca481303b71eac4c58535d476cad182166863cd8d5855924e4"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_cohencu-ll_valuebound10.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "b871e2a46324da29b2ed79ebe011dcf7ea7b6180a5e368cc3f5d9411769d54e0",
+      "prompt_sha256": {
+        "if": "8a978a0af20e29612cc58f17c23cb7c9763073cda7dfe6b5d6f7c46c4ed789ec"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_cohencu-ll_valuebound100.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "b871e2a46324da29b2ed79ebe011dcf7ea7b6180a5e368cc3f5d9411769d54e0",
+      "prompt_sha256": {
+        "if": "fdb063f05c8af4c4afec019c49b0f79233e31022de04b9818eef8a609bd61f22"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_cohencu-ll_valuebound2.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "b871e2a46324da29b2ed79ebe011dcf7ea7b6180a5e368cc3f5d9411769d54e0",
+      "prompt_sha256": {
+        "if": "431ff07679465c9048be4d6b8fa86abbb586d352e70f7db7986c78e2ffc83f31"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_cohencu-ll_valuebound20.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "b871e2a46324da29b2ed79ebe011dcf7ea7b6180a5e368cc3f5d9411769d54e0",
+      "prompt_sha256": {
+        "if": "9446ca35c65e4eb805478acdd1fe351acdb88ebac7d7032378c61a207d599214"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_cohencu-ll_valuebound5.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "b871e2a46324da29b2ed79ebe011dcf7ea7b6180a5e368cc3f5d9411769d54e0",
+      "prompt_sha256": {
+        "if": "0cd6c652fcc3850a0445e52fea8bf144f2b5d628043acd77cddee3f5a225ea8d"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_cohencu-ll_valuebound50.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "b871e2a46324da29b2ed79ebe011dcf7ea7b6180a5e368cc3f5d9411769d54e0",
+      "prompt_sha256": {
+        "if": "43fb101bc791689984c06e37cd73b06c044bc9713fe75c30c5313aa94e4710dc"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps2-ll_valuebound1.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "98d6a63a27184962bf3c9889781add2d803c1d8f82d964145a787ed4b612c93b",
+      "prompt_sha256": {
+        "if": "bf01c1a6c1c80a93d8d92c42c52c76f00a14f60039d0ac93d6b6d2914eee369e"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps2-ll_valuebound10.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "98d6a63a27184962bf3c9889781add2d803c1d8f82d964145a787ed4b612c93b",
+      "prompt_sha256": {
+        "if": "daf13fdf24394fa62d753df4e0a9e45d8ae1a95a113eba87c2c8b558369ef937"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps2-ll_valuebound100.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "98d6a63a27184962bf3c9889781add2d803c1d8f82d964145a787ed4b612c93b",
+      "prompt_sha256": {
+        "if": "d327074a6ec13dd14812e262b6618f6d69c901442ddd52e6f7047c52f6b6d21e"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps2-ll_valuebound2.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "98d6a63a27184962bf3c9889781add2d803c1d8f82d964145a787ed4b612c93b",
+      "prompt_sha256": {
+        "if": "ad99494fed1b6f208352962112e4e40bc5b623eeda87d7c181a37711cbf28098"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps2-ll_valuebound20.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "98d6a63a27184962bf3c9889781add2d803c1d8f82d964145a787ed4b612c93b",
+      "prompt_sha256": {
+        "if": "39626660cc7a50beb785679502a63a4cefe3820624670a5df37d818d596e27ac"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps2-ll_valuebound5.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "98d6a63a27184962bf3c9889781add2d803c1d8f82d964145a787ed4b612c93b",
+      "prompt_sha256": {
+        "if": "561df7e771ad6fffbbd515690183267bcca8480460952414deb4f225773977e0"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps2-ll_valuebound50.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "98d6a63a27184962bf3c9889781add2d803c1d8f82d964145a787ed4b612c93b",
+      "prompt_sha256": {
+        "if": "559ac5515ae8afed42119b8aefdf381ddbe3f1f8833d824fe9e9dc2e444a6d2f"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps3-ll_valuebound1.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "b519a441239ff74b72870295b90981d003e1f924f0fa075cbda456bb7936f625",
+      "prompt_sha256": {
+        "if": "d677bb57f87ba1c990ac80a349cd19222a4fa63f487fcda17c53edf692b623ef"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps3-ll_valuebound10.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "b519a441239ff74b72870295b90981d003e1f924f0fa075cbda456bb7936f625",
+      "prompt_sha256": {
+        "if": "2426fce58b233921d4a8f1ac14c86b8c97fc4604c1b586d0042d9151a57dd993"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps3-ll_valuebound100.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "b519a441239ff74b72870295b90981d003e1f924f0fa075cbda456bb7936f625",
+      "prompt_sha256": {
+        "if": "46a237c1852dae377174f7c569ff1b3467fff088748510fe3ba31b14ca27a91f"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps3-ll_valuebound2.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "b519a441239ff74b72870295b90981d003e1f924f0fa075cbda456bb7936f625",
+      "prompt_sha256": {
+        "if": "2dbca97e3d0258515c5b58fe7d0a52ec6b83473d539feef515b1af2066c88be9"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps3-ll_valuebound20.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "b519a441239ff74b72870295b90981d003e1f924f0fa075cbda456bb7936f625",
+      "prompt_sha256": {
+        "if": "2a38b72299d855bbce3590dae77e4fa029aebe228e1104315d80817a9f214b34"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps3-ll_valuebound5.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "b519a441239ff74b72870295b90981d003e1f924f0fa075cbda456bb7936f625",
+      "prompt_sha256": {
+        "if": "7f36bfc55e0d053cc1b540381305240a5493d698d710cacc479d23aeafc10a82"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps3-ll_valuebound50.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "b519a441239ff74b72870295b90981d003e1f924f0fa075cbda456bb7936f625",
+      "prompt_sha256": {
+        "if": "f160cb6f43db35d8244e7909c5d0a7547dedf413152e39eb5ebbc3d1507613bf"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps4-ll_valuebound1.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "2199d561da65ec797ce75cdb4cdeed21abdbceecc5c092d534409174ea65aebc",
+      "prompt_sha256": {
+        "if": "64375f61f6a861707218bf0bc46baa7443c434d43dea7e204b9729a522da404f"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps4-ll_valuebound10.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "2199d561da65ec797ce75cdb4cdeed21abdbceecc5c092d534409174ea65aebc",
+      "prompt_sha256": {
+        "if": "4288a9511b541f31adf0084e33e1e4412c689fe12831f9252e3d3218a8167c7c"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps4-ll_valuebound100.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "2199d561da65ec797ce75cdb4cdeed21abdbceecc5c092d534409174ea65aebc",
+      "prompt_sha256": {
+        "if": "9991a828a86e3887d33059091ce59dea55951775a032cfd10350698125f7fa05"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps4-ll_valuebound2.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "2199d561da65ec797ce75cdb4cdeed21abdbceecc5c092d534409174ea65aebc",
+      "prompt_sha256": {
+        "if": "ae497627f922e88cdfbc8896529ec9264ec19e349a1f7419fd12f5872649e6d1"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps4-ll_valuebound20.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "2199d561da65ec797ce75cdb4cdeed21abdbceecc5c092d534409174ea65aebc",
+      "prompt_sha256": {
+        "if": "0b8d76f113060e833b1c4ab89bc3fbcd5a73a44821d875fee07cdfb8fc2777f2"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps4-ll_valuebound5.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "2199d561da65ec797ce75cdb4cdeed21abdbceecc5c092d534409174ea65aebc",
+      "prompt_sha256": {
+        "if": "8ab475e1f66f8718fe7eb2794f3034eb077d6bf6609e91332ac5ea968bdea278"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps4-ll_valuebound50.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "2199d561da65ec797ce75cdb4cdeed21abdbceecc5c092d534409174ea65aebc",
+      "prompt_sha256": {
+        "if": "288976d898525bff385dab1334e706b4100259eb52b2e2838d7a149d86fbd6d6"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps5-ll_valuebound1.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "94eba4606b92e4c7419d7e773acdc96cbaee4ab64e9a78115040f52a89712ffb",
+      "prompt_sha256": {
+        "if": "24e4ce2c501ceef2ab799247ddffc8c33e37dc8484b4ed9eca962041ae067ab2"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps5-ll_valuebound10.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "94eba4606b92e4c7419d7e773acdc96cbaee4ab64e9a78115040f52a89712ffb",
+      "prompt_sha256": {
+        "if": "2450ccd356274a08944dcd353404e794cade3e46dd82eb6247e8cf5ef84fc21a"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps5-ll_valuebound100.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "94eba4606b92e4c7419d7e773acdc96cbaee4ab64e9a78115040f52a89712ffb",
+      "prompt_sha256": {
+        "if": "ebf72627fc3d7155e06620dedf9e74c6206992937367d6e7d6e483685e417204"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps5-ll_valuebound2.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "94eba4606b92e4c7419d7e773acdc96cbaee4ab64e9a78115040f52a89712ffb",
+      "prompt_sha256": {
+        "if": "9f23febe24c7a517678ad09d23c581090c564ad248252ea090009aec4fb55bae"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps5-ll_valuebound20.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "94eba4606b92e4c7419d7e773acdc96cbaee4ab64e9a78115040f52a89712ffb",
+      "prompt_sha256": {
+        "if": "f498fece6f473b4f1c7090a81d634508c3a9c25123c9705f3d1f3e5a39a57793"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps5-ll_valuebound5.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "94eba4606b92e4c7419d7e773acdc96cbaee4ab64e9a78115040f52a89712ffb",
+      "prompt_sha256": {
+        "if": "84341aee07b4c58e6afe64822b813bbf971fc58743e0716f7414336b073f4d3d"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps5-ll_valuebound50.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "94eba4606b92e4c7419d7e773acdc96cbaee4ab64e9a78115040f52a89712ffb",
+      "prompt_sha256": {
+        "if": "af45e58b8e1c196c7aa7487f5e8c43a92a137c901e058e4891f7d7a7018ca667"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps6-ll_valuebound1.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "bb40a01b7aded4a906fa62ad416a09562e49c4b343b74d34620aa5d85fad2c4d",
+      "prompt_sha256": {
+        "if": "0312f8105419fdc126559efc3eb46294b08dff817b986c7b59d953df444029b6"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps6-ll_valuebound10.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "bb40a01b7aded4a906fa62ad416a09562e49c4b343b74d34620aa5d85fad2c4d",
+      "prompt_sha256": {
+        "if": "9fa26dd8f7e15eb68f83b48e742a5d9c50f6e6fbc90f2bf32260a959cff22f5d"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps6-ll_valuebound100.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "bb40a01b7aded4a906fa62ad416a09562e49c4b343b74d34620aa5d85fad2c4d",
+      "prompt_sha256": {
+        "if": "58e9a237e7ad88af00407ffa579bdf15ece18fdc1c28d59ccea3a252c74aaa4f"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps6-ll_valuebound2.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "bb40a01b7aded4a906fa62ad416a09562e49c4b343b74d34620aa5d85fad2c4d",
+      "prompt_sha256": {
+        "if": "ff1625f25b59473aff3bf2a702d1fb66bf8d26eafc9028a5661d04dd4cb2c028"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps6-ll_valuebound20.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "bb40a01b7aded4a906fa62ad416a09562e49c4b343b74d34620aa5d85fad2c4d",
+      "prompt_sha256": {
+        "if": "705a8ca606e2a383613cc097d17669f1c7d437f3afe47a377e5aaeaedadeebfe"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps6-ll_valuebound5.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "bb40a01b7aded4a906fa62ad416a09562e49c4b343b74d34620aa5d85fad2c4d",
+      "prompt_sha256": {
+        "if": "d60e321dfe010f53ffa7c0068a3bd964d38b0087cec650ac0283d366084b9dba"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_ps6-ll_valuebound50.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "bb40a01b7aded4a906fa62ad416a09562e49c4b343b74d34620aa5d85fad2c4d",
+      "prompt_sha256": {
+        "if": "23a70d888305c7d9513c381515dc03ea57885c91dcd988cebac181d6f2574059"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_sqrt1-ll_valuebound1.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "3d600c49cf3afcb2df30f5da4723bd8287055fd938dee50f7d4347bea8a0a13c",
+      "prompt_sha256": {
+        "if": "409f4fc29dfd3385f2b81042bc662c1d3a5343efd7eb050159419eb02f3a38b6"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_sqrt1-ll_valuebound10.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "3d600c49cf3afcb2df30f5da4723bd8287055fd938dee50f7d4347bea8a0a13c",
+      "prompt_sha256": {
+        "if": "676a0185c800eb47c5ca91983c44442812be5d6da20c2243cdae712c453178c8"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_sqrt1-ll_valuebound100.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "3d600c49cf3afcb2df30f5da4723bd8287055fd938dee50f7d4347bea8a0a13c",
+      "prompt_sha256": {
+        "if": "54bdb2bc1de5d5d1d62144d10e90f4853526012699f2066394e8ae1a81973a9d"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_sqrt1-ll_valuebound2.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "3d600c49cf3afcb2df30f5da4723bd8287055fd938dee50f7d4347bea8a0a13c",
+      "prompt_sha256": {
+        "if": "b80964a3f77e56d0e2171c4773a75dfc591bfbae6e8ea1107a5aa21557d3e736"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_sqrt1-ll_valuebound20.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "3d600c49cf3afcb2df30f5da4723bd8287055fd938dee50f7d4347bea8a0a13c",
+      "prompt_sha256": {
+        "if": "02f9de561be482926730fa3a653f1e8ea3605d410b3a0445a39cd0653844ebff"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_sqrt1-ll_valuebound5.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "3d600c49cf3afcb2df30f5da4723bd8287055fd938dee50f7d4347bea8a0a13c",
+      "prompt_sha256": {
+        "if": "44b51715d1095fd2d156c103adf50fae8c4722aad240360341f28651c56cac7a"
+      }
+    },
+    {
+      "name": "heldout:nla-digbench-scaling_sqrt1-ll_valuebound50.c",
+      "family": "heldout_nla-digbench-scaling",
+      "role": "provable_safe",
+      "source_sha256": "3d600c49cf3afcb2df30f5da4723bd8287055fd938dee50f7d4347bea8a0a13c",
+      "prompt_sha256": {
+        "if": "10658cd253c303b10079c2aaba2c014fe7635fb2617d33d325101ab1c6850b85"
+      }
+    },
+    {
+      "name": "heldout:bitvector-loops_overflow_1-2.c",
+      "family": "heldout_bitvector-loops",
+      "role": "unsafe_source_control",
+      "source_sha256": "cf0585985742b6088614b1f4c22d13e2745f911a4be5a7d65e0a1405c9f3d543",
+      "prompt_sha256": {
+        "if": "b0cc97fa5c7bb28b6cb0f9a3afb226265a83403643ec620a189660ad5f446e4d"
+      }
+    }
+  ]
+}

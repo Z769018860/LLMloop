@@ -1,0 +1,615 @@
+[
+ {
+  "suite": "gnulib:lib",
+  "file": "clean-temp.c",
+  "function": "create_temp_dir",
+  "class": "loop",
+  "src_sha1": "e15f3bac55fc",
+  "stage": "rejected",
+  "reason": "call without a scalar result used as a value"
+ },
+ {
+  "suite": "gnulib:lib",
+  "file": "dfa.c",
+  "function": "dfamust",
+  "class": "unparsed",
+  "src_sha1": "90d5dbab28de",
+  "stage": "rejected",
+  "reason": "parse failure"
+ },
+ {
+  "suite": "gnulib:lib",
+  "file": "fts.c",
+  "function": "fts_close",
+  "class": "loop",
+  "src_sha1": "deb632b4f1c0",
+  "stage": "rejected",
+  "reason": "untyped memory access: p->fts_level"
+ },
+ {
+  "suite": "gnulib:lib",
+  "file": "fts.c",
+  "function": "fts_padjust",
+  "class": "loop",
+  "src_sha1": "5fef6afa08de",
+  "stage": "rejected",
+  "reason": "untyped memory access: p->fts_accpath"
+ },
+ {
+  "suite": "gnulib:lib",
+  "file": "modechange.c",
+  "function": "mode_compile",
+  "class": "loop",
+  "src_sha1": "ae1faf28d287",
+  "stage": "rejected",
+  "reason": "untyped memory access"
+ },
+ {
+  "suite": "gnulib:lib",
+  "file": "mountlist.c",
+  "function": "read_file_system_list",
+  "class": "loop",
+  "src_sha1": "5df8ca24d140",
+  "stage": "rejected",
+  "reason": "cast to a non-scalar type in scalar context"
+ },
+ {
+  "suite": "gnulib:lib",
+  "file": "linebuffer.c",
+  "function": "readlinebuffer_delim",
+  "class": "loop",
+  "src_sha1": "45285d08f0a4",
+  "stage": "certified",
+  "notes": [
+   "do-while with jumps -> while(1)",
+   "hoisted late declaration",
+   "hoisted loop-body declaration",
+   "memory abstraction (memory safety assumed)",
+   "non-scalar return value dropped",
+   "nondeterministic result for feof",
+   "nondeterministic result for ferror",
+   "nondeterministic result for getc",
+   "opaque pointer-returning call dropped: xpalloc",
+   "pointer parameter abstracted: linebuffer",
+   "pointer parameter abstracted: stream",
+   "zero-initialized locals"
+  ],
+  "bounds": {
+   "delimiter": [
+    -128,
+    127
+   ]
+  },
+  "transcription": "int f(char delimiter)\n{\n  long oldsize = 0;\n  long long v__w = 0;\n  int c = 0;\n  if (unknown())\n  {\n    v__w = 0;\n    return 0;\n  }\n  v__w = nondet_long();\n  while (1)\n  {\n    c = unknown();\n    if (c == (-1))\n    {\n      if (nondet_int() || unknown())\n      {\n        v__w = 0;\n        return 0;\n      }\n      if ((nondet_char() + (0 * (-1))) == delimiter)\n      {\n        break;\n      }\n      c = delimiter;\n    }\n    if (nondet_int())\n    {\n      oldsize = nondet_long();\n      v__w = oldsize;\n      v__w = nondet_long();\n    }\n    v__w = c;\n    if (!(c != delimiter))\n    {\n      break;\n    }\n  }\n\n  v__w = nondet_long();\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "not applicable (globals or nondeterministic stubs)"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "houdini_loops",
+   "invariant": [
+    [
+     "oldsize >= -9223372036854775808",
+     "oldsize <= 9223372036854775807",
+     "v__w >= -9223372036854775808",
+     "v__w <= 9223372036854775807",
+     "c >= -2147483648",
+     "c <= 2147483647",
+     "__brk1 >= 0",
+     "__brk1 <= 1",
+     "(__brk1 == 0 or __brk1 == 1)",
+     "__done >= 0",
+     "__done <= 1",
+     "(__done == 0 or __done == 1)",
+     "__rv >= 0",
+     "__rv <= 0",
+     "__rv == 0",
+     "__rv % 2 == 0",
+     "__rv % 3 == 0",
+     "__rv % 4 == 0",
+     "delimiter - oldsize >= -9223372036854775935",
+     "delimiter - oldsize <= 9223372036854775935",
+     "delimiter + oldsize >= -9223372036854775936",
+     "delimiter + oldsize <= 9223372036854775934",
+     "delimiter - v__w <= 9223372036854775935",
+     "delimiter + v__w >= -9223372036854775936",
+     "delimiter - c >= -2147483775",
+     "delimiter - c <= 2147483775",
+     "delimiter + c >= -2147483776",
+     "delimiter + c <= 2147483774",
+     "delimiter - __brk1 >= -129",
+     "delimiter - __brk1 <= 127",
+     "delimiter + __brk1 >= -128",
+     "delimiter - __done <= 127",
+     "delimiter + __done >= -128",
+     "delimiter - __rv >= -128",
+     "delimiter - __rv <= 127",
+     "delimiter + __rv >= -128",
+     "delimiter + __rv <= 127",
+     "oldsize - v__w >= -9223372039002259455",
+     "oldsize - v__w <= 9223372039002259455",
+     "oldsize + v__w >= -9223372039002259456",
+     "oldsize + v__w <= 9223372039002259454",
+     "oldsize - c >= -9223372039002259455",
+     "oldsize - c <= 9223372039002259455",
+     "oldsize + c >= -9223372039002259456",
+     "oldsize + c <= 9223372039002259454",
+     "oldsize - __brk1 <= 9223372036854775807",
+     "oldsize + __brk1 >= -9223372036854775808",
+     "oldsize + __brk1 <= 9223372036854775808",
+     "oldsize - __done <= 9223372036854775807",
+     "oldsize + __done >= -9223372036854775808",
+     "oldsize + __done <= 9223372036854775808",
+     "oldsize - __rv >= -9223372036854775808",
+     "oldsize - __rv <= 9223372036854775807",
+     "oldsize + __rv >= -9223372036854775808",
+     "oldsize + __rv <= 9223372036854775807",
+     "v__w - c >= -9223372036854775808",
+     "v__w + c <= 9223372036854775807",
+     "v__w - __brk1 <= 9223372036854775807",
+     "v__w + __brk1 >= -9223372036854775808",
+     "v__w - __done >= -9223372036854775808",
+     "v__w - __done <= 9223372036854775807",
+     "v__w + __done >= -9223372036854775808",
+     "v__w + __done <= 9223372036854775807",
+     "v__w - __rv >= -9223372036854775808",
+     "v__w - __rv <= 9223372036854775807",
+     "v__w + __rv >= -9223372036854775808",
+     "v__w + __rv <= 9223372036854775807",
+     "c - __brk1 >= -2147483648",
+     "c - __brk1 <= 2147483647",
+     "c + __brk1 >= -2147483648",
+     "c + __brk1 <= 2147483647",
+     "c - __done >= -2147483648",
+     "c - __done <= 2147483647",
+     "c + __done >= -2147483648",
+     "c + __done <= 2147483647",
+     "c - __rv >= -2147483648",
+     "c - __rv <= 2147483647",
+     "c + __rv >= -2147483648",
+     "c + __rv <= 2147483647",
+     "__brk1 - __done >= -1",
+     "__brk1 - __done <= 1",
+     "__brk1 + __done >= 0",
+     "__brk1 + __done <= 1",
+     "__brk1 - __rv >= 0",
+     "__brk1 - __rv <= 1",
+     "__brk1 + __rv >= 0",
+     "__brk1 + __rv <= 1",
+     "__brk1 >= __rv",
+     "__done - __rv >= 0",
+     "__done - __rv <= 1",
+     "__done + __rv >= 0",
+     "__done + __rv <= 1",
+     "__done >= __rv",
+     "1*__rv == 0",
+     "__brk1 >= -1",
+     "__brk1 <= 2",
+     "__done >= -1",
+     "__done <= 2",
+     "__rv >= -1",
+     "__rv <= 1",
+     "__rv <= 2"
+    ]
+   ],
+   "rounds": 19
+  },
+  "memsafe": {
+   "status": "NOT_PROVED",
+   "untracked_derefs": 1,
+   "untracked_exprs": [
+    "p[-1]"
+   ],
+   "checked_accesses": 7,
+   "unchecked_call_args": 6,
+   "bases": [
+    "linebuffer",
+    "stream"
+   ],
+   "strings": [],
+   "len_params": [
+    "linebuffer__n",
+    "stream__n"
+   ],
+   "null_params": [
+    "linebuffer__null",
+    "stream__null"
+   ],
+   "libcall_checks": 0,
+   "callee_checks": 0,
+   "summary_params": [
+    [
+     "linebuffer",
+     true
+    ],
+    [
+     "stream",
+     true
+    ],
+    [
+     "delimiter",
+     false
+    ]
+   ],
+   "notes": [
+    "memory-safety pass: 7 checked accesses, 6 unchecked (calls)",
+    "tracked bases: linebuffer, stream"
+   ]
+  }
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "cut.c",
+  "function": "mcel_scant",
+  "class": "loop",
+  "src_sha1": "f15115c30f04",
+  "stage": "rejected",
+  "reason": "unresolved free identifier MCEL_LEN_MAX"
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "cut.c",
+  "function": "mbbuf_fill",
+  "class": "loop",
+  "src_sha1": "1dbde86a5fa4",
+  "stage": "rejected",
+  "reason": "unresolved free identifier MCEL_LEN_MAX"
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "cut.c",
+  "function": "u8_count",
+  "class": "loop",
+  "src_sha1": "e8ae5b31078a",
+  "stage": "not_certified",
+  "notes": [
+   "for -> while",
+   "hoisted late declaration",
+   "hoisted loop-body declaration",
+   "implicitly declared function u8_check (C: returns int)",
+   "memory abstraction (memory safety assumed)",
+   "nondeterministic result for u8_check",
+   "pointer parameter abstracted: buf",
+   "pointer parameter abstracted: nbytes",
+   "side effect hoisted out of an expression",
+   "zero-initialized locals"
+  ],
+  "bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "transcription": "long f(int __z)\n{\n  long i__u1 = 0;\n  long long v__w = 0;\n  long n = nondet_long();\n  unsigned char bits = (n) ? (nondet_uchar() + (0 * 0)) : (0);\n  long count = 0;\n  long i = 0;\n  if (!(bits & 128))\n  {\n    i__u1 = 0;\n    while (i__u1 < n)\n    {\n      bits |= nondet_uchar() + (0 * i__u1);\n      i__u1++;\n    }\n\n  }\n  if (!(bits & 128))\n  {\n    return n;\n  }\n  if (nondet_int())\n  {\n    n = nondet_long();\n    v__w = n;\n  }\n  count = 0;\n  i = 0;\n  while (i < n)\n  {\n    count += ((nondet_uchar() + (0 * i)) & 192) != 128;\n    i++;\n  }\n\n  return count;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "not applicable (globals or nondeterministic stubs)"
+  },
+  "certification": {
+   "status": "STUCK:initialization defined",
+   "method": "houdini_loops",
+   "invariant": null,
+   "rounds": 1
+  }
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "expand.c",
+  "function": "mbbuf_fill",
+  "class": "loop",
+  "src_sha1": "1dbde86a5fa4",
+  "stage": "rejected",
+  "reason": "unresolved free identifier MCEL_LEN_MAX"
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "fold.c",
+  "function": "mbbuf_fill",
+  "class": "loop",
+  "src_sha1": "1dbde86a5fa4",
+  "stage": "rejected",
+  "reason": "unresolved free identifier MCEL_LEN_MAX"
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "join.c",
+  "function": "skip_str_matching",
+  "class": "loop",
+  "src_sha1": "6eb940685cbb",
+  "stage": "rejected",
+  "reason": "struct value"
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "join.c",
+  "function": "skip_buf_matching",
+  "class": "loop",
+  "src_sha1": "85009859ae88",
+  "stage": "rejected",
+  "reason": "struct value"
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "factor.c",
+  "function": "mpz_va_init",
+  "class": "unparsed",
+  "src_sha1": "c08b7a4a25d7",
+  "stage": "rejected",
+  "reason": "parse failure"
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "factor.c",
+  "function": "binv_limb",
+  "class": "loop",
+  "src_sha1": "de4e649846de",
+  "stage": "not_certified",
+  "notes": [
+   "for -> while",
+   "hoisted late declaration",
+   "memory abstraction (memory safety assumed)",
+   "zero-initialized locals"
+  ],
+  "bounds": {
+   "n": [
+    0,
+    18446744073709551615
+   ]
+  },
+  "transcription": "unsigned long f(unsigned long n)\n{\n  unsigned long inv = nondet_uchar() + (0 * ((n / 2) & 127));\n  int invbits = 0;\n  if (8 < 64)\n  {\n    inv = (2 * inv) - ((inv * inv) * n);\n  }\n  if (16 < 64)\n  {\n    inv = (2 * inv) - ((inv * inv) * n);\n  }\n  if (32 < 64)\n  {\n    inv = (2 * inv) - ((inv * inv) * n);\n  }\n  invbits = 64;\n  while (invbits < 64)\n  {\n    inv = (2 * inv) - ((inv * inv) * n);\n    invbits *= 2;\n  }\n\n  return inv;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmpq8e7wkmq/h.c: In function \u2018binv_limb\u2019:\n/tmp/tmpq8e7wkmq/h.c:8:25: error:"
+  },
+  "certification": {
+   "status": "STUCK:top/loop0: invariant at entry (path 0)",
+   "method": "houdini_loops",
+   "invariant": null,
+   "rounds": 5
+  }
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "factor.c",
+  "function": "mp_mulredc",
+  "class": "loop",
+  "src_sha1": "cc14586070d7",
+  "stage": "certified",
+  "notes": [
+   "callee mp_modadd not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "dead trailing return",
+   "for -> while",
+   "hoisted late declaration",
+   "implicitly declared function mpn_addmul_1 (C: returns int)",
+   "implicitly declared function mpn_mul_1 (C: returns int)",
+   "memory abstraction (memory safety assumed)",
+   "nondeterministic result for mpn_addmul_1",
+   "nondeterministic result for mpn_mul_1",
+   "opaque void call dropped: mp_modadd",
+   "pointer parameter abstracted: ap",
+   "pointer parameter abstracted: bp",
+   "pointer parameter abstracted: mp",
+   "pointer parameter abstracted: rp",
+   "pointer parameter abstracted: tp",
+   "void -> int",
+   "zero-initialized locals"
+  ],
+  "bounds": {
+   "n": [
+    -9223372036854775808,
+    9223372036854775807
+   ],
+   "m0inv": [
+    0,
+    18446744073709551615
+   ]
+  },
+  "transcription": "int f(long n, unsigned long m0inv)\n{\n  long long v__w = 0;\n  long i = 0;\n  v__w = n;\n  v__w = unknown();\n  v__w = 0;\n  v__w = unknown();\n  i = 1;\n  while (i < n)\n  {\n    v__w = n + i;\n    v__w = unknown();\n    v__w = i;\n    v__w = unknown();\n    i++;\n  }\n\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "not applicable (globals or nondeterministic stubs)"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "trivial_invariants",
+   "invariant": [
+    "True"
+   ],
+   "rounds": 1,
+   "precondition": {
+    "n": [
+     0,
+     4611686018427387903
+    ],
+    "m0inv": [
+     0,
+     18446744073709551615
+    ]
+   }
+  },
+  "memsafe": {
+   "status": "NOT_APPLICABLE",
+   "reason": "opaque call with computed arguments: mpn_mul_1"
+  }
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "factor.c",
+  "function": "lbuf_putbitcnt",
+  "class": "loop",
+  "src_sha1": "bfd95f9ae557",
+  "stage": "certified",
+  "notes": [
+   "callee lbuf_putint_append not inlinable (callee with non-scalar parameter): treated as an opaque call",
+   "character constants converted",
+   "copied mutated parameter i",
+   "dead trailing return",
+   "for -> while",
+   "memory abstraction (memory safety assumed)",
+   "opaque void call dropped: lbuf_putint_append",
+   "sizeof evaluated",
+   "void -> int"
+  ],
+  "bounds": {
+   "i_in": [
+    0,
+    18446744073709551615
+   ]
+  },
+  "transcription": "int f(unsigned long i_in)\n{\n  unsigned long i = i_in;\n  long long v__w = 0;\n  v__w = 8;\n  while (((unsigned long) (-1)) < i)\n  {\n    v__w = 48 + (i % 10);\n    i /= 10;\n  }\n\n  return 0;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "compile error: /tmp/tmprqewzw2v/h.c: In function \u2018lbuf_putbitcnt\u2019:\n/tmp/tmprqewzw2v/h.c:8:20: e"
+  },
+  "certification": {
+   "status": "PROVED",
+   "method": "trivial_invariants",
+   "invariant": [
+    "True"
+   ],
+   "rounds": 1
+  },
+  "memsafe": {
+   "status": "NOT_APPLICABLE",
+   "reason": "no trackable pointer"
+  }
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "mkdir.c",
+  "function": "make_ancestor",
+  "class": "unparsed",
+  "src_sha1": "3ca813c57812",
+  "stage": "rejected",
+  "reason": "translation-unit errors (missing project macros/headers)"
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "numfmt.c",
+  "function": "skip_str_matching",
+  "class": "loop",
+  "src_sha1": "6eb940685cbb",
+  "stage": "rejected",
+  "reason": "struct value"
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "numfmt.c",
+  "function": "skip_buf_matching",
+  "class": "loop",
+  "src_sha1": "85009859ae88",
+  "stage": "rejected",
+  "reason": "struct value"
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "numfmt.c",
+  "function": "u8_count",
+  "class": "loop",
+  "src_sha1": "e8ae5b31078a",
+  "stage": "not_certified",
+  "notes": [
+   "for -> while",
+   "hoisted late declaration",
+   "hoisted loop-body declaration",
+   "implicitly declared function u8_check (C: returns int)",
+   "memory abstraction (memory safety assumed)",
+   "nondeterministic result for u8_check",
+   "pointer parameter abstracted: buf",
+   "pointer parameter abstracted: nbytes",
+   "side effect hoisted out of an expression",
+   "zero-initialized locals"
+  ],
+  "bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "transcription": "long f(int __z)\n{\n  long i__u1 = 0;\n  long long v__w = 0;\n  long n = nondet_long();\n  unsigned char bits = (n) ? (nondet_uchar() + (0 * 0)) : (0);\n  long count = 0;\n  long i = 0;\n  if (!(bits & 128))\n  {\n    i__u1 = 0;\n    while (i__u1 < n)\n    {\n      bits |= nondet_uchar() + (0 * i__u1);\n      i__u1++;\n    }\n\n  }\n  if (!(bits & 128))\n  {\n    return n;\n  }\n  if (nondet_int())\n  {\n    n = nondet_long();\n    v__w = n;\n  }\n  count = 0;\n  i = 0;\n  while (i < n)\n  {\n    count += ((nondet_uchar() + (0 * i)) & 192) != 128;\n    i++;\n  }\n\n  return count;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "not applicable (globals or nondeterministic stubs)"
+  },
+  "certification": {
+   "status": "STUCK:initialization defined",
+   "method": "houdini_loops",
+   "invariant": null,
+   "rounds": 1
+  }
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "remove.c",
+  "function": "mark_ancestor_dirs",
+  "class": "loop",
+  "src_sha1": "4c9944282547",
+  "stage": "rejected",
+  "reason": "untyped memory access: p->fts_level"
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "uniq.c",
+  "function": "skip_str_matching",
+  "class": "loop",
+  "src_sha1": "6eb940685cbb",
+  "stage": "rejected",
+  "reason": "struct value"
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "uniq.c",
+  "function": "skip_buf_matching",
+  "class": "loop",
+  "src_sha1": "85009859ae88",
+  "stage": "rejected",
+  "reason": "struct value"
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "unexpand.c",
+  "function": "mbbuf_fill",
+  "class": "loop",
+  "src_sha1": "1dbde86a5fa4",
+  "stage": "rejected",
+  "reason": "unresolved free identifier MCEL_LEN_MAX"
+ },
+ {
+  "suite": "coreutils:src",
+  "file": "wc.c",
+  "function": "u8_count",
+  "class": "loop",
+  "src_sha1": "e8ae5b31078a",
+  "stage": "not_certified",
+  "notes": [
+   "for -> while",
+   "hoisted late declaration",
+   "hoisted loop-body declaration",
+   "implicitly declared function u8_check (C: returns int)",
+   "memory abstraction (memory safety assumed)",
+   "nondeterministic result for u8_check",
+   "pointer parameter abstracted: buf",
+   "pointer parameter abstracted: nbytes",
+   "side effect hoisted out of an expression",
+   "zero-initialized locals"
+  ],
+  "bounds": {
+   "__z": [
+    0,
+    0
+   ]
+  },
+  "transcription": "long f(int __z)\n{\n  long i__u1 = 0;\n  long long v__w = 0;\n  long n = nondet_long();\n  unsigned char bits = (n) ? (nondet_uchar() + (0 * 0)) : (0);\n  long count = 0;\n  long i = 0;\n  if (!(bits & 128))\n  {\n    i__u1 = 0;\n    while (i__u1 < n)\n    {\n      bits |= nondet_uchar() + (0 * i__u1);\n      i__u1++;\n    }\n\n  }\n  if (!(bits & 128))\n  {\n    return n;\n  }\n  if (nondet_int())\n  {\n    n = nondet_long();\n    v__w = n;\n  }\n  count = 0;\n  i = 0;\n  while (i < n)\n  {\n    count += ((nondet_uchar() + (0 * i)) & 192) != 128;\n    i++;\n  }\n\n  return count;\n}\n\n",
+  "native": {
+   "equivalent": null,
+   "detail": "not applicable (globals or nondeterministic stubs)"
+  },
+  "certification": {
+   "status": "STUCK:initialization defined",
+   "method": "houdini_loops",
+   "invariant": null,
+   "rounds": 1
+  }
+ }
+]

@@ -1,0 +1,65 @@
+{
+  "index": 17,
+  "case": "upstream2026/nla-digbench-scaling/geo3-ll2_unwindbound1",
+  "corpus": "upstream2026",
+  "expected": false,
+  "model": "claude-sonnet-4-5-20250929",
+  "repeat": 0,
+  "status": "UNKNOWN",
+  "retained": 0.5000000006984919,
+  "pre": {
+    "k": [
+      -2147483648,
+      2
+    ]
+  },
+  "narrowed": {
+    "z": [
+      -2147483648,
+      2147483647
+    ],
+    "a": [
+      -2147483648,
+      2147483647
+    ],
+    "k": [
+      -2147483648,
+      2
+    ]
+  },
+  "per_dim": {
+    "z": 1.0,
+    "a": 1.0,
+    "k": 0.500000001
+  },
+  "shrunk": [
+    "k"
+  ],
+  "widened": [],
+  "empty_interval": [],
+  "aliased": [],
+  "parse_error": null,
+  "model_reply": "Looking at the function: all locals are `long long`, parameters are `int`. I need to check every arithmetic operation for 64-bit overflow.\n\n**Pre-loop:** `az = ((long long)a) * z` \u2014 product of two 32-bit ints maxes at ~2^62, fits in `long long`. Safe for all `a, z`.\n\n**Loop body** (`counter++ < 1` with unknown global `counter` \u2014 could start negative, so the loop may run many times; the real bound on *arithmetic* iterations is the `c < k` break): `c` starts at 1 and increments by 1 each iteration, breaking when `c >= k`. So the number of arithmetic iterations is `max(0, k-1)`.\n\nEach iteration computes `x = a\u00b7(z^{n+1}\u22121)/(z\u22121)` (Horner) and `y = z^n`. For `|z| \u2265 2` and large `k`, these grow exponentially and overflow `long long`. For instance, `k=3, a=2^31\u22121, z=2^31\u22121` gives `x\u2082 \u2248 2^93` on the second iteration \u2014 overflow.\n\n**When `k \u2264 1`:** `c=1 \u2265 k` immediately, zero arithmetic iterations. Fully safe.\n**When `k = 2`:** exactly one arithmetic iteration: `x = a\u00b7z + a` (max ~2^62+2^31 < 2^63), `y = z` (fits). Safe for all `a, z`.\n**When `k \u2265 3`:** two or more iterations; `x\u2081\u00b7z` can reach ~2^93. Unsafe.\n\nSo the safe cutoff is `k \u2264 2`, with `a` and `z` at full declared bounds.\n\n```json\n{\"pre\": {\"k\": [-2147483648, 2]}}\n```",
+  "served_model": "claude-sonnet-4-5-20250929",
+  "stub": false,
+  "phases": [
+    {
+      "poly": false,
+      "status": "STUCK:top/loop0: invariant at entry (path 0)",
+      "rounds": 4
+    },
+    {
+      "poly": true,
+      "status": "STUCK:top/loop0: invariant at entry (path 0)",
+      "rounds": 6
+    }
+  ],
+  "calls": 1,
+  "prompt_tokens": 497,
+  "completion_tokens": 1500,
+  "seconds": 174.496,
+  "ask_stop_reason": null,
+  "verify_stop_reason": null,
+  "verify_wall_seconds": 15.366088407999996,
+  "verify_peak_rss_bytes": 248836096
+}

@@ -1,0 +1,79 @@
+{
+  "index": 741,
+  "case": "termination-restricted-15/McCarthyIterative.c",
+  "model": "gpt-4.1-mini",
+  "repeat": 0,
+  "status": "PROVED",
+  "rounds": [
+    {
+      "round": 0,
+      "proposed": 23,
+      "atoms_total": 23,
+      "status": "STUCK:top/loop0/body operations defined",
+      "phases": [
+        {
+          "poly": false,
+          "status": "STUCK:top/loop0/body operations defined",
+          "rounds": 21,
+          "invariant_size": 1
+        },
+        {
+          "poly": true,
+          "status": "STUCK:top/loop0/body operations defined",
+          "rounds": 20,
+          "invariant_size": 1
+        }
+      ],
+      "transport_ok": true,
+      "repair": {
+        "stuck": "STUCK:top/loop0/body operations defined",
+        "atoms": [
+          "c >= 0",
+          "c <= 1 + max(0, 11 - (x - 100))",
+          "x >= -2147483648",
+          "x <= 2147483647",
+          "x__in >= -2147483648",
+          "x__in <= 2147483647",
+          "c == 1 or c > 0",
+          "c <= 2147483647",
+          "x == x__in + 11 * (c - 1) - 10 * (1 - c) if c <= 1 else x <= 2147483647",
+          "not (x > 100 and c == 0)",
+          "not (x <= 100 and c == 0)",
+          "abs(x - x__in) <= 11 * c",
+          "(x > 100) or (x <= 111)",
+          "x - 10 * (1 - c) >= -2147483648",
+          "x + 11 * c <= 2147483647",
+          "c == 1 or c > 0",
+          "c <= 11 + 1",
+          "x > 100 or x <= 111",
+          "c == 1 or (x > 100 and c <= 1) or (x <= 100 and c >= 1)",
+          "c + x == x__in + 1",
+          "c >= 1",
+          "x == x__in + 11 * (c - 1) - 10 * (1 - c)",
+          "c >= 0 and c <= 12"
+        ]
+      }
+    },
+    {
+      "round": 1,
+      "proposed": 21,
+      "atoms_total": 41,
+      "status": "PROVED",
+      "phases": [
+        {
+          "poly": false,
+          "status": "PROVED",
+          "rounds": 19,
+          "invariant_size": 1
+        }
+      ],
+      "transport_ok": true,
+      "repair": null
+    }
+  ],
+  "calls": 2,
+  "generation_seconds": 8.229,
+  "prompt_tokens": 1532,
+  "completion_tokens": 637,
+  "tokens_available": true
+}

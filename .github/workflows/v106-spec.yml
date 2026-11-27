@@ -1,0 +1,226 @@
+name: v1.06 E6b, the model gets room and the control gets the shape
+
+# Frozen protocol: experiments/v106/e6b/protocol.json (83 cases, 1 model, 3 repeats, 249 units).
+#
+# Two repairs to the v1.05 contract arm, both of them about the *comparison* rather than about the
+# model:
+#
+#   * the cap. `deepseek-v4.1-flash-ark` returned empty content in 207 of 249 units at 1500 tokens
+#     and hit the cap in 208. Same failure as the v1.04 atom arm at 6000, same answer: a separate
+#     frozen follow-up at 16384. One model, 249 calls, so this arm cannot be compared on cost.
+#   * the control family. The two cases the model won in v1.05 (`gj2007b`: `n in [1, 2^31-1]`,
+#     `half`: `k in [-1e6, -1]`) are single-parameter sign splits, and the uniform-shrink family
+#     cannot write them. The family now contains them: the same 11 uniform rungs plus every
+#     single-parameter half at (midpoint, 0, 1, -1), merged and ordered by descending retained
+#     volume, with the same "largest box that proves wins" rule as before.
+#
+# The ruling changed too, and that is the point of the whole run: v1.05 decided on one retained-volume
+# floor of 1e-3, which is two orders of magnitude above where the informative answers on this
+# benchmark live (the correct box for `n*n` is 2.2e-5 of the domain). Moving that constant after
+# seeing the data is the failure this repository documents. So the floor is a pre-registered ladder
+# and the claim has to hold at every rung of it. A threshold can no longer decide the conclusion.
+#
+# The control needs no model and is committed (`baseline/`, 83 cases), computed locally, keyed on
+# `cases_payload_sha256`. The runner only pays for the 249 calls.
+#
+# The first dispatch of this workflow (run on f03750329) answered 18 calls and then got
+# `HTTP 403 Insufficient user quota` for the other 231, which the driver of that day recorded as
+# MALFORMED -- a capability column, filled by a billing failure. That is why the job below starts
+# with `preflight`: one eight-token call, and if the account cannot answer, the shards are skipped
+# instead of spending 249 calls to learn the same thing. The merge step also refuses to let a summary
+# that says "THIS RUN IS NOT A RESULT" pass as a green build.
+on:
+  push:
+    branches: [research/v103-exec]
+    paths: ['.github/workflows/v106-spec.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  PYTHONPATH: ${{ github.workspace }}
+
+jobs:
+  freeze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: |
+          python -m pip install -q --upgrade pip
+          python -m pip install -q -e '.[test,smt,exp]'
+          python -m pip install -q pyyaml psutil
+      - name: The driver's own tests, on the platform they run on
+        run: |
+          python -m pytest -q tests/test_spec_v106.py tests/test_spec_v105.py \
+            tests/test_check_protocols.py
+      - name: Re-derive the freeze and compare it byte for byte
+        # Not `freeze`: this protocol depends on nothing that the runner would compute differently
+        # (no key probe, no clock), so a *regeneration* is a valid comparison. v1.05 could only
+        # compare one hash, and the one thing that differed was a line ending.
+        run: |
+          python -u scripts/spec_v106.py check --output experiments/v106/e6b
+          python - <<'PY'
+          import json, pathlib
+          p = json.loads(pathlib.Path('experiments/v106/e6b/protocol.json').read_text())
+          assert p['study'] == 'v106_e6b', p['study']
+          assert p['max_tokens'] == 16384, p['max_tokens']
+          assert len(p['cases']) == 83 and len(p['cases']) * p['repeats'] == 249
+          raw = pathlib.Path('experiments/v106/e6b/cases_payload.json').read_bytes()
+          assert b'\r\n' not in raw, 'the payload is CRLF: its hash cannot be compared across platforms'
+          print('frozen', len(p['cases']), 'cases,', len(p['cases']) * p['repeats'], 'units')
+          print('ruling:', p['decision_rule'][:120])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e6b-frozen
+          path: experiments/v106/e6b
+          if-no-files-found: error
+
+  preflight:
+    needs: freeze
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      quota: ${{ steps.q.outputs.quota }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: |
+          python -m pip install -q --upgrade pip
+          python -m pip install -q -e '.[test,smt,exp]'
+          python -m pip install -q pyyaml psutil
+      - uses: actions/download-artifact@v4
+        with:
+          name: e6b-frozen
+          path: experiments/v106/e6b
+      - id: q
+        name: One call, to find out whether the account can answer at all
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+        run: |
+          set +e
+          out=$(python -u scripts/spec_v106.py preflight --output experiments/v106/e6b 2>&1)
+          rc=$?
+          printf '%s\n' "$out"
+          {
+            echo '### preflight: can the account answer this model?'
+            echo '```json'
+            echo "$out"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$rc" -eq 0 ]; then
+            echo "quota=ok" >> "$GITHUB_OUTPUT"
+          else
+            # Red on purpose. The second dispatch of this workflow (run 45505864480, 2026-11-25)
+            # finished green with `spec` and `merge` skipped and only an annotation saying the account
+            # could not answer: a reader who skims the run conclusion sees success and a full
+            # 249-call arm that never happened. That is the same shape as the `record evidence and
+            # push` step that pushed nothing. "The experiment did not run" has to be a failed run.
+            echo "quota=out" >> "$GITHUB_OUTPUT"
+            echo "::error::the account cannot answer this model; the 249 calls were not dispatched, and this run is red so that it cannot be read as a result"
+            exit 1
+          fi
+
+  spec:
+    needs: [freeze, preflight]
+    if: needs.preflight.outputs.quota == 'ok'
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        shard: [0, 1, 2, 3]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: |
+          python -m pip install -q --upgrade pip
+          python -m pip install -q -e '.[test,smt,exp]'
+          python -m pip install -q pyyaml psutil
+      - uses: actions/download-artifact@v4
+        with:
+          name: e6b-frozen
+          path: experiments/v106/e6b
+      - name: Run the frozen schedule, shard ${{ matrix.shard }} of 4
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+        run: |
+          python -u scripts/spec_v106.py run --output experiments/v106/e6b \
+            --shard ${{ matrix.shard }} --shards 4 --workers 4
+      - name: Summarise the shard
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          for f in sorted(pathlib.Path('experiments/v106/e6b/shards').glob('shard_*.json')):
+              d = json.loads(f.read_text())
+              print(f.name, d['planned'], json.dumps(d['counts'], sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e6b-shard-${{ matrix.shard }}
+          # the whole directory: a shard that fails should not need another 249 calls to diagnose
+          path: experiments/v106/e6b
+          if-no-files-found: warn
+
+  merge:
+    needs: [freeze, spec]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: |
+          python -m pip install -q --upgrade pip
+          python -m pip install -q -e '.[test,smt,exp]'
+          python -m pip install -q pyyaml psutil
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: e6b-shard-*
+          merge-multiple: true
+          path: experiments/v106/e6b
+      - name: Merge the shards against the committed control
+        run: python -u scripts/spec_v106.py merge --output experiments/v106/e6b
+      - name: Show the summary
+        run: cat experiments/v106/e6b/summary.md
+      - name: Trim the logs GitHub will not take
+        run: python -u scripts/trim_logs.py experiments/v106/e6b
+      - name: Record evidence and push
+        run: |
+          bash scripts/push_evidence.sh research/v103-exec experiments/v106/e6b \
+            "v1.06 E6b: 16384-token follow-up, and a control that can split a sign, 83 cases x 3 [skip ci]"
+      - name: Refuse to go green on a run that declared itself void
+        # Pushing first and failing second is deliberate: the evidence of a broken run is worth
+        # keeping, and a job that hides it to keep the tick green is the failure mode of §4.6.
+        run: |
+          if grep -q "THIS RUN IS NOT A RESULT" experiments/v106/e6b/summary.md; then
+            echo "::error::the summary says this run is not a result; see its first block"
+            exit 1
+          fi

@@ -1,0 +1,46 @@
+{
+  "model_requested": "deepseek-v4.1-flash-ark",
+  "request": {
+    "model": "deepseek-v4.1-flash-ark",
+    "temperature": 0.7,
+    "max_tokens": 16384,
+    "messages": [
+      {
+        "role": "system",
+        "content": "You state preconditions. You never prove anything: a separate verifier checks every value in the box you give, and it rejects the program if any of them overflows. Reply with one JSON object and nothing else."
+      },
+      {
+        "role": "user",
+        "content": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int n, int sum__in, int i__in){\nint i = i__in;\nint sum = sum__in;\nwhile (i < n)\n{\n  sum = sum + i;\n  i++;\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"i__in\": [0, 0], \"n\": [0, 2147483647], \"sum__in\": [0, 0]}"
+      }
+    ]
+  },
+  "started_utc": "2026-11-23T14:26:31Z",
+  "endpoint": "https://api.square16.org/v1",
+  "attempts": [
+    {
+      "attempt": 0,
+      "ok": true,
+      "http_status": 200,
+      "seconds": 5.327
+    }
+  ],
+  "response_text": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"logprobs\":null,\"message\":{\"content\":\"{\\\"pre\\\":{\\\"n\\\":[0,65536]}}\",\"reasoning_content\":\"We need answer only JSON. Need determine largest box within declared bounds such that loop no signed integer overflow. Function: i starts i__in (declared 0). sum starts sum__in (declared 0). while i\\u003cn, sum += i; i++. n up to INT_MAX. i increments. At i=INT_MAX-1? Loop condition i\\u003cn. If n=INT_MAX, i goes from 0 to INT_MAX-1 inclusive adding sum, then i++ from INT_MAX-1 to INT_MAX, exits because i\\u003cn false. i++ on i=INT_MAX-1 safe yields INT_MAX. No overflow in i++? At last iteration i=INT_MAX-1, i++ = INT_MAX safe. It never increments INT_MAX because loop exits when i=INT_MAX not \\u003c n (n\\u003c=INT_MAX). So i no overflow.\\n\\nsum overflow: sum starts 0, adds i for i=0..n-1 if n positive. Sum = n(n-1)/2. Need \\u003c= INT_MAX = 2147483647 to avoid signed overflow at each addition (partial sums increasing nonnegative, final max). Find max n such that n(n-1)/2 \\u003c= 2147483647. Solve n^2 - n - 4294967294 \\u003c=0. sqrt(1+4*4294967294)=sqrt(17179869177) \u2248 131071.999996? Let's compute. 65536^2 = 4,294,967,296. n around 65536. 65536*65535/2 =? 65536*65535 = 4,294,901,760? Let's compute: 65536*65536=4,294,967,296; minus 65536 =4,294,901,760; /2=2,147,450,880 \\u003c= 2,147,483,647. For n=65537: 65537*65536/2 = 2,147,483,? 65536*65537 = 4,294,967,296 + 65,536? Wait 65,536*65,537 = 4,294,967,296 + 65,536 = 4,295,032,832; /2 = 2,147,516,416 \\u003e INT_MAX. So max n = 65536. Because sum adds 0 through n-1. If n=65536, final sum = sum_{0}^{65535}=65535*65536/2=2,147,450,880 safe. If n=65537, adding i=65536 to sum 2,147,450,880 gives 2,147,516,416 \\u003e INT_MAX overflow. So precondition n \\u003c= 65536. i__in and sum__in declared [0,0] safe? Need may include them or omit since declared. We need largest box. For n, lower declared 0. So pre n [0,65536]. i__in and sum__in can remain declared [0,0]. Since output schema parameters named may appear. Could include only n because others declared bounds already safe. But \\\"Leave out a parameter to keep its declared bounds.\\\" So pre {\\\"n\\\":[0,65536]} sufficient. Need ensure i__in [0,0], sum [0,0]. Yes.\\n\\nBut double-check potential i increment overflow if n=INT_MAX and i starts 0: last i=INT_MAX-1, increment to INT_MAX, no overflow. safe.\\n\\nNeed final JSON only.\",\"role\":\"assistant\"}}],\"created\":1795443996,\"id\":\"021795443992761a5cf16cfa3c4ebff37e7c43914719d1a130f57\",\"model\":\"deepseek-v4-1-flash-261017\",\"service_tier\":\"default\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":760,\"prompt_tokens\":395,\"total_tokens\":1155,\"prompt_tokens_details\":{\"cached_tokens\":256},\"completion_tokens_details\":{\"reasoning_tokens\":748}}}",
+  "served_model": "deepseek-v4-1-flash-261017",
+  "usage": {
+    "completion_tokens": 760,
+    "prompt_tokens": 395,
+    "total_tokens": 1155,
+    "prompt_tokens_details": {
+      "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 748
+    }
+  },
+  "content": "{\"pre\":{\"n\":[0,65536]}}",
+  "finish_reason": "stop",
+  "seconds": 5.327,
+  "prompt_sha256": "5c174928552cb9beb2e539f64f786aa6de554cefd4c6267c1ceb136ce6162264",
+  "prompt_text": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int n, int sum__in, int i__in){\nint i = i__in;\nint sum = sum__in;\nwhile (i < n)\n{\n  sum = sum + i;\n  i++;\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"i__in\": [0, 0], \"n\": [0, 2147483647], \"sum__in\": [0, 0]}"
+}

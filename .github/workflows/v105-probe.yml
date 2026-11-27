@@ -1,0 +1,82 @@
+name: E6 probe, one unit, and the log kept in the repository
+
+# All eight shards of run 45105136591 failed at "Run the frozen schedule" and the merge was skipped.
+# The GitHub log needs a token I do not have here, and the shard artifacts are zip downloads that
+# need one too -- so the diagnostic has to come *from* the job, not from the web UI. This workflow
+# runs exactly one unit in exactly the runner environment, keeps the full stdout/stderr as
+# `probe/run.log` inside the repository, and commits it.
+#
+# `--shard 0 --shards 747` selects indices where `i % 747 == 0`, i.e. unit 0 and nothing else, so the
+# cost is one model call rather than 747. Writes to experiments/v105/probe, never to the real study.
+on:
+  push:
+    branches: [research/v103-exec]
+    paths: ['.github/workflows/v105-probe.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: |
+          python -m pip install -q --upgrade pip
+          python -m pip install -q -e '.[test,smt,exp]'
+          python -m pip install -q pyyaml psutil
+      - name: Environment facts worth having in writing
+        run: |
+          set -o pipefail
+          python -V
+          python -c "import z3, llmloop, psutil, yaml; print('imports ok', z3.get_version_string())"
+          df -h . | tail -2
+          git rev-parse HEAD
+      - name: Freeze into a throwaway directory
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+        run: |
+          set -o pipefail
+          python -u scripts/spec_v105.py freeze --output experiments/v105/probe 2>&1 | tail -20
+          python - <<'PY'
+          import json
+          p = json.load(open('experiments/v105/probe/protocol.json'))
+          print('cases', len(p['cases']), 'served', json.dumps(p['served_model_strings']))
+          print('key present?', not all(str(v).startswith('not-contacted') for v in p['served_model_strings'].values()))
+          PY
+      - name: One unit, log kept
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+        run: |
+          mkdir -p experiments/v105/probe
+          set -o pipefail
+          python -u scripts/spec_v105.py run --output experiments/v105/probe \
+            --shard 0 --shards 747 --workers 1 2>&1 | tee experiments/v105/probe/run.log
+      - name: Keep whatever happened
+        if: always()
+        run: |
+          mkdir -p experiments/v105/probe
+          if [ ! -f experiments/v105/probe/run.log ]; then
+            echo "the run step produced no log at all" > experiments/v105/probe/run.log
+          fi
+          ls -la experiments/v105/probe || true
+          for f in $(find experiments/v105/probe/raw -name 'stderr.txt' 2>/dev/null); do
+            echo "=== $f"; tail -40 "$f"
+          done
+          # the probe's own protocol is not a study: keeping it would add a sixteenth entry to
+          # check_protocols.py and drift the moment anybody touches this driver
+          rm -f experiments/v105/probe/protocol.json experiments/v105/probe/cases_payload.json \
+                experiments/v105/probe/schedule.json
+          python -u scripts/trim_logs.py experiments/v105/probe || true
+          bash scripts/push_evidence.sh research/v103-exec experiments/v105/probe \
+            "E6 probe: one unit under runner conditions [skip ci]"

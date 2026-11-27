@@ -1,0 +1,72 @@
+{
+  "model_requested": "claude-sonnet-4-5-20250929",
+  "request": {
+    "model": "claude-sonnet-4-5-20250929",
+    "temperature": 0.7,
+    "max_tokens": 1500,
+    "messages": [
+      {
+        "role": "system",
+        "content": "You state preconditions. You never prove anything: a separate verifier checks every value in the box you give, and it rejects the program if any of them overflows. Reply with one JSON object and nothing else."
+      },
+      {
+        "role": "user",
+        "content": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int nlen){\nint offset;\nint length;\nint i = 0;\nint j = 0;\nint __a = 0;\nfor (i = 0; i < nlen; i++)\n{\n  for (j = 0; j < 8; j++)\n  {\n    __a = 1 / (0 <= ((nlen - 1) - i));\n    __a = 1 / (((nlen - 1) - i) < nlen);\n  }\n\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"nlen\": [-2147483648, 2147483647]}"
+      }
+    ]
+  },
+  "started_utc": "2026-11-23T04:30:45Z",
+  "endpoint": "https://api.square16.org/v1",
+  "attempts": [
+    {
+      "attempt": 0,
+      "ok": true,
+      "http_status": 200,
+      "seconds": 3.22
+    }
+  ],
+  "response_text": "{\"id\":\"msg_011CgzfnVgqRkJAMgyzEi08a\",\"model\":\"claude-sonnet-4-5-20250929\",\"object\":\"chat.completion\",\"created\":1795408249,\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"pre\\\": {\\\"nlen\\\": [1, 2147483647]}}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":440,\"completion_tokens\":27,\"total_tokens\":467,\"usage_semantic\":\"openai\",\"usage_source\":\"anthropic\",\"billing_usage\":{\"source\":\"claude_messages\",\"semantic\":\"anthropic\",\"claude_usage\":{\"input_tokens\":440,\"cache_creation_input_tokens\":0,\"cache_read_input_tokens\":0,\"output_tokens\":27,\"cache_creation\":{},\"claude_cache_creation_5_m_tokens\":0,\"claude_cache_creation_1_h_tokens\":0}},\"prompt_tokens_details\":{\"cached_tokens\":0,\"text_tokens\":0,\"audio_tokens\":0,\"image_tokens\":0},\"completion_tokens_details\":{\"text_tokens\":0,\"audio_tokens\":0,\"image_tokens\":0,\"reasoning_tokens\":0},\"input_tokens\":440,\"output_tokens\":0,\"input_tokens_details\":null,\"claude_cache_creation_5_m_tokens\":0,\"claude_cache_creation_1_h_tokens\":0}}",
+  "served_model": "claude-sonnet-4-5-20250929",
+  "usage": {
+    "prompt_tokens": 440,
+    "completion_tokens": 27,
+    "total_tokens": 467,
+    "usage_semantic": "openai",
+    "usage_source": "anthropic",
+    "billing_usage": {
+      "source": "claude_messages",
+      "semantic": "anthropic",
+      "claude_usage": {
+        "input_tokens": 440,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 27,
+        "cache_creation": {},
+        "claude_cache_creation_5_m_tokens": 0,
+        "claude_cache_creation_1_h_tokens": 0
+      }
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "text_tokens": 0,
+      "audio_tokens": 0,
+      "image_tokens": 0
+    },
+    "completion_tokens_details": {
+      "text_tokens": 0,
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "reasoning_tokens": 0
+    },
+    "input_tokens": 440,
+    "output_tokens": 0,
+    "input_tokens_details": null,
+    "claude_cache_creation_5_m_tokens": 0,
+    "claude_cache_creation_1_h_tokens": 0
+  },
+  "content": "{\"pre\": {\"nlen\": [1, 2147483647]}}",
+  "finish_reason": "stop",
+  "seconds": 3.22,
+  "prompt_sha256": "91dcf8105885159a48f5b591a8e3e60d1822adba395233489519791630beb2d6",
+  "prompt_text": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int nlen){\nint offset;\nint length;\nint i = 0;\nint j = 0;\nint __a = 0;\nfor (i = 0; i < nlen; i++)\n{\n  for (j = 0; j < 8; j++)\n  {\n    __a = 1 / (0 <= ((nlen - 1) - i));\n    __a = 1 / (((nlen - 1) - i) < nlen);\n  }\n\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"nlen\": [-2147483648, 2147483647]}"
+}

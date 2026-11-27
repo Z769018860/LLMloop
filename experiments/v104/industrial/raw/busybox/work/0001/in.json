@@ -1,0 +1,10 @@
+{
+ "source": "typedef unsigned char uint8_t;\ntypedef signed char int8_t;\ntypedef unsigned short uint16_t;\ntypedef short int16_t;\ntypedef unsigned int uint32_t;\ntypedef int int32_t;\ntypedef unsigned long long uint64_t;\ntypedef long long int64_t;\ntypedef unsigned long size_t;\ntypedef long ssize_t;\ntypedef int bool;\nunsigned long isqrt(unsigned long long N) {\n\tunsigned long x;\n\tunsigned shift;\n#define LL_WIDTH_BITS (unsigned)(sizeof(N)*8)\n\n\tshift = LL_WIDTH_BITS - 2;\n\tx = 0;\n\tdo {\n\t\tx = (x << 1) + 1;\n\t\tif ((unsigned long long)x * x > (N >> shift))\n\t\t\tx--; /* whoops, that +1 was too much */\n\t\tshift -= 2;\n\t} while ((int)shift >= 0);\n\treturn x;\n}\n",
+ "bounds": {
+  "N": [
+   0,
+   18446744073709551615
+  ]
+ },
+ "abi": "LP64"
+}

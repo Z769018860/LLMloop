@@ -1,0 +1,2228 @@
+{
+  "study": "v105_spec",
+  "purpose": "the model writes the contract, not the proof",
+  "base_commit": "a4f09efdc36ebda6e27529c4a5b0c24702e16ecd",
+  "population": "every llmloop unit of the two v1.04 studies that (a) the frozen front end translated -- so the translated source is on disk -- and (b) the frozen pipeline did not prove at the declared bounds, and (c) carries at least one parameter interval of positive width, without which there is nothing to narrow. 101 units satisfy (a) and (b); 18 fail (c) and are listed under no_room; 83 are the population. Nothing filtered on the label: 14 true, 69 false.",
+  "task": "the model states a box on the parameters; the frozen pipeline is re-run inside that box; the outcome is conditional on the box and reported with the retained fraction of the declared domain. One call per unit, no repair round, no failed obligation shown to the model.",
+  "control": "a model-free search over the one-parameter family \"shrink every interval towards its midpoint by the same factor s\", descending pre-registered grid [1.0, 0.85, 0.7, 0.55, 0.4, 0.28, 0.18, 0.1, 0.05, 0.02, 0.01], taking the first (largest) s that proves. Up to 11 attempts per case against the model arm's one, and 900 s of wall clock per case against the model arm's 600 s per verify: both asymmetries favour the control, which is the direction a control should be biased in. A case that exceeds its budget is recorded as TIMEOUT rather than as a failure of the method, and the summary reports the conclusion again with every timeout counted as provable.",
+  "decision_rule": "the contract arm is credited with a capability only if it proves at least one case that no uniform shrink proves (McNemar p < 0.05 over the paired cases); any proof whose retained volume is below 0.001 is reported but not counted as a result; the number of false-labelled cases \"proved\" under a contract is reported as masked reachable overflow, never as a success.",
+  "models": [
+    "deepseek-v4.1-flash-ark",
+    "gpt-4.1-mini",
+    "claude-sonnet-4-5-20250929"
+  ],
+  "served_model_strings": {
+    "deepseek-v4.1-flash-ark": "deepseek-v4-1-flash-261017",
+    "gpt-4.1-mini": "gpt-4.1-mini-2025-04-14",
+    "claude-sonnet-4-5-20250929": "claude-sonnet-4-5-20250929"
+  },
+  "repeats": 3,
+  "temperature": 0.7,
+  "max_tokens": 1500,
+  "attempts_per_call": 3,
+  "call_timeout_seconds": 240,
+  "system_prompt_sha256": "9eebedf934bd710d5296d321189002612982e435fc3f378b6821d721e7c8bdb2",
+  "prompt_template_note": "first draft, corrected once before any row existed: the sentence about `NAME__in` was removed, because it described the translator's entry-copy convention while the declared bounds use the plain parameter name. The first unit ever run on a runner answered with five `__in` names, all five were dropped as unknown, and the row would have read as \"the model chose not to narrow\" -- the arm silently becoming arm D. The parser now also accepts `NAME__in` as `NAME` and counts how often it happens. The metric the prompt states (retained fraction) is the metric the summary reports, so the prompt cannot bias it by omission.",
+  "pipeline": "llmloop.houdini_loops, integer_model=c, runs=60, max_rounds=150, solver_timeout_ms=5000, seed=1, default profile then the polynomial profile -- the v1.04 llmloop arm",
+  "budgets": {
+    "ask_wall_seconds": 300,
+    "ask_memory_bytes": 1073741824,
+    "verify_wall_seconds": 600,
+    "verify_memory_bytes": 2147483648,
+    "baseline_case_seconds": 900
+  },
+  "seeds": {
+    "schedule": 20261123,
+    "houdini": 1
+  },
+  "cases": [
+    {
+      "corpus": "loopbench",
+      "name": "loop-acceleration/diamond_1-1",
+      "expected": true,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(unsigned int y){\nunsigned int x = 0;\nwhile (x < 99)\n{\n  if ((y % 2) == 0)\n  {\n    x += 2;\n  }\n  else\n  {\n    x++;\n  }\n}\n\nreturn 1/(((x % 2) == (y % 2)));\n}\n",
+      "bounds": {
+        "y": [
+          0,
+          4294967295
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "bd9be28702be20fbd75b67eebfdc5f85895ff340c238c235c391c2a8578e7b23",
+      "translation_sha256": "df0d44ff8fe4dbfa85c77b3883c91349461cce6545d82ffd0edef5357d5e82c9",
+      "study_index": 480
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-acceleration/diamond_1-2",
+      "expected": false,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(unsigned int y){\nunsigned int x = 0;\nwhile (x < 99)\n{\n  if ((y % 2) == 0)\n  {\n    x++;\n  }\n  else\n  {\n    x += 2;\n  }\n}\n\nreturn 1/(((x % 2) == (y % 2)));\n}\n",
+      "bounds": {
+        "y": [
+          0,
+          4294967295
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "278330930f6296a6ef523f9a21bb3281878247b5e50b78eb9077d2b7690716c4",
+      "translation_sha256": "9c594c02c32fb58cf8911378ec97f077088627a5d31ce72b5480b27232a7ab92",
+      "study_index": 354
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-acceleration/diamond_2-2",
+      "expected": true,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(unsigned int y){\nunsigned int x = 0;\nwhile (x < 99)\n{\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x++;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x -= 2;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x += 2;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x -= 2;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x += 2;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x -= 4;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x += 4;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x += 2;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x -= 4;\n  if ((y % 2) == 0)\n    x += 2;\n  else\n    x -= 4;\n}\n\nreturn 1/(((x % 2) == (y % 2)));\n}\n",
+      "bounds": {
+        "y": [
+          0,
+          4294967295
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "5b285e679a61ee5ec3c0d899a4a7682d4249c0885f5b4a5875891b312f202de4",
+      "translation_sha256": "e92663049566d76fd999338377634326c50ade97c0fe77611314e87d7461d6cb",
+      "study_index": 214
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-acceleration/multivar_1-2",
+      "expected": false,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(unsigned int x__in){\nunsigned int x = x__in;\nunsigned int y = x + 1;\nwhile (x < 1024)\n{\n  x++;\n  y++;\n}\n\nreturn 1/((x == y));\n}\n",
+      "bounds": {
+        "x__in": [
+          0,
+          4294967295
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "cba7dca6ff66778f2b0713799020489351e0894eee3f1f22efefe84bd1d673ea",
+      "translation_sha256": "7f4cb7fe1a9512de0e8b8c597c3dc7b3467484b608f4e5703d12c108cb1db30d",
+      "study_index": 55
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-acceleration/phases_2-1",
+      "expected": false,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(unsigned int y){\nunsigned int x = 1;\nwhile (x < y)\n{\n  if (x < (y / x))\n  {\n    x *= x;\n  }\n  else\n  {\n    x++;\n  }\n}\n\nreturn 1/((x != y));\n}\n",
+      "bounds": {
+        "y": [
+          1,
+          4294967295
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "40774f15dea268138f2179cc2f832c9729515e75ef9c65e50e7b347c749bb02c",
+      "translation_sha256": "0aa425d4bc842efdf9dc88e0ec16f15a2a971a0b6775336a488f21f1eaa5ffb3",
+      "study_index": 449
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-acceleration/simple_2-2",
+      "expected": false,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(unsigned int x__in){\nunsigned int x = x__in;\nwhile (x < 0x0fffffff)\n{\n  x++;\n}\n\nreturn 1/((x > 0x0fffffff));\n}\n",
+      "bounds": {
+        "x__in": [
+          0,
+          4294967295
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "ca20d2ad08bf0f7fa23e269f0ee97814132c0c2a0f348f398575419f579ef49b",
+      "translation_sha256": "2f4bcceac2ac8fee576df78d2926c283ecc4d602639c9fbd74cb715a0e0fab45",
+      "study_index": 177
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-acceleration/simple_3-1",
+      "expected": false,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(unsigned short N){\nunsigned int x = 0;\nwhile (x < N)\n{\n  x += 2;\n}\n\nreturn 1/((x % 2));\n}\n",
+      "bounds": {
+        "N": [
+          0,
+          65535
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "f4f78d6adc1fe4ae02b4ca0ac1f0580fb6d17885a4734f4ab50570fc9f8ba024",
+      "translation_sha256": "f57699fab9a54a625ab271ed6ce29cee3abec7f22265587336b44f4a58874b98",
+      "study_index": 213
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-invgen/down",
+      "expected": true,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(int n){\nint k = 0;\nint i = 0;\nint __a = 0;\nwhile (i < n)\n{\n  i++;\n  k++;\n}\n\nint j = n;\nwhile (j > 0)\n{\n  __a = 1 / (k > 0);\n  j--;\n  k--;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "n": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "d04a78ae1349096e86c75d8b030d3583a89d6fe525fb162d8bd0fb26bd3a3cef",
+      "translation_sha256": "f5c6328555c2aa6720fad9991b239953e1deabaa4d2b1c59bd84468366095b27",
+      "study_index": 301
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-invgen/half_2",
+      "expected": true,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(int n){\nint i = 0;\nint k = 0;\nint __a = 0;\nk = n;\ni = 0;\nwhile (i < n)\n{\n  k--;\n  i = i + 2;\n}\n\nint j = 0;\nwhile (j < (n / 2))\n{\n  __a = 1 / (k > 0);\n  k--;\n  j++;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "n": [
+          -2147483648,
+          1000000
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "2c945d3fb17bfa15bf4cb20fe55a191c2294f003a82730e2d5b532d3ead10ba7",
+      "translation_sha256": "9160551d910ea80898ae1417c9128472e7de34c94908334d1679bfe935b9f2a2",
+      "study_index": 355
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-invgen/id_build",
+      "expected": true,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(int nlen){\nint offset;\nint length;\nint i = 0;\nint j = 0;\nint __a = 0;\nfor (i = 0; i < nlen; i++)\n{\n  for (j = 0; j < 8; j++)\n  {\n    __a = 1 / (0 <= ((nlen - 1) - i));\n    __a = 1 / (((nlen - 1) - i) < nlen);\n  }\n\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "nlen": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "ad943b1efd9f44d0d1fe94bdd69002c177222882b91ba1e9bd1712360125dc27",
+      "translation_sha256": "fb90d963871ce0adaf4d46398fa570ae38bdcba789805986120c90f8ed4fa391",
+      "study_index": 519
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-invgen/seq-3",
+      "expected": true,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(int n0, int n1){\nint i0 = 0;\nint k = 0;\nint __a = 0;\nwhile (i0 < n0)\n{\n  i0++;\n  k++;\n}\n\nint i1 = 0;\nwhile (i1 < n1)\n{\n  i1++;\n  k++;\n}\n\nint j1 = 0;\nwhile (j1 < (n0 + n1))\n{\n  __a = 1 / (k > 0);\n  j1++;\n  k--;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "n0": [
+          -1000000,
+          999999
+        ],
+        "n1": [
+          -1000000,
+          999999
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "68efa405fb7dff9fa020b11fb9bfb5106859f44a0cc841d47b9a402b3af0e3f3",
+      "translation_sha256": "d0bed76866b824b1bfaa011f824e4cb57115e247e16a94f0b84a2c93a1abc908",
+      "study_index": 77
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-invgen/up",
+      "expected": true,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(int n){\nint i = 0;\nint k = 0;\nint __a = 0;\nwhile (i < n)\n{\n  i++;\n  k++;\n}\n\nint j = 0;\nwhile (j < n)\n{\n  __a = 1 / (k > 0);\n  j++;\n  k--;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "n": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "6e8aa190d5a67470a6e8732e1ff3a59d7d6d7af29b1db86f5d09c06d069475e4",
+      "translation_sha256": "a8f44bb64603f6207ca4e4a769310c7ee48120a48b015847433ed8344999e80c",
+      "study_index": 255
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-lit/ddlm2013",
+      "expected": true,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(int flag){\nunsigned int i;\nunsigned int j = 1;\nunsigned int a = 0;\nunsigned int b = 0;\nint __a = 0;\nif (flag)\n{\n  i = 0;\n}\nelse\n{\n  i = 1;\n}\n\nwhile (__VERIFIER_nondet_int())\n{\n  a++;\n  b += j - i;\n  i += 2;\n  if ((i % 2) == 0)\n  {\n    j += 2;\n  }\n  else\n  {\n    j++;\n  }\n}\n\nif (flag)\n{\n  __a = 1 / (a == b);\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "flag": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "a62d432c78d3670c82fb7b52d5ac86f343c3a0249988f2b88979e9860d8770b2",
+      "translation_sha256": "49b29b2874eaad536808cc2e2c582862d38fbfc7ee06f06b6c0998be813ca87e",
+      "study_index": 555
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-lit/gj2007b",
+      "expected": true,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(int n){\nint x = 0;\nint m = 0;\nwhile (x < n)\n{\n  if (__VERIFIER_nondet_int())\n  {\n    m = x;\n  }\n  x = x + 1;\n}\n\nreturn 1/(((m >= 0) || (n <= 0)) && ((m < n) || (n <= 0)));\n}\n",
+      "bounds": {
+        "n": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "192296d577f5afe0201ef9fd226a4fbbd8046ff4ddd351fcf7c29d86f199cc6d",
+      "translation_sha256": "6f408a4846193add546df88e66a433613da3129aefe0118519da0b2e9389f60b",
+      "study_index": 366
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-new/count_by_k",
+      "expected": true,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(int k){\nint i = 0;\nfor (i = 0; i < (1000000 * k); i += k)\n  ;\n\nreturn 1/((i == (1000000 * k)));\n}\n",
+      "bounds": {
+        "k": [
+          0,
+          10
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "3e2fa04cab54ab13f2e9e9c7262d0e01d0f1229a66fc4d72f9bf05d1ae9689db",
+      "translation_sha256": "36e24be48e3eedcc64977b5e3ca6c2da03779c21f8739e9e965855408616f3b5",
+      "study_index": 68
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-new/half",
+      "expected": true,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(int k){\nint i = 0;\nint n = 0;\nfor (i = 0; i < (2 * k); i++)\n{\n  if ((i % 2) == 0)\n  {\n    n++;\n  }\n}\n\nreturn 1/(((k < 0) || (n == k)));\n}\n",
+      "bounds": {
+        "k": [
+          -1000000,
+          1000000
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "c93ccee4329caa7d959374f9f84485affb800634034f428b8af5cb59eb34f889",
+      "translation_sha256": "5b1baab96b11e4d3873033c97d46ec4a898252f6cdc9057a13cb9de63287d563",
+      "study_index": 310
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-new/nested-1",
+      "expected": true,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(int n, int m){\nint k = 0;\nint i = 0;\nint j = 0;\nfor (i = 0; i < n; i++)\n{\n  for (j = 0; j < m; j++)\n  {\n    k++;\n  }\n\n}\n\nreturn 1/((k >= 100));\n}\n",
+      "bounds": {
+        "n": [
+          10,
+          10000
+        ],
+        "m": [
+          10,
+          10000
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "5cd769f3d32b8d5e49a3bd4e11ff8ed7bee86404e25efab0194cdcb50687bc30",
+      "translation_sha256": "b7cce15dae0ee581ab67c7b303dc29dac2890253dd672638e259307d74b2f6e7",
+      "study_index": 417
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-zilu/benchmark08_conjunctive",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int n, int sum__in, int i__in){\nint i = i__in;\nint sum = sum__in;\nwhile (i < n)\n{\n  sum = sum + i;\n  i++;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "n": [
+          0,
+          2147483647
+        ],
+        "sum__in": [
+          0,
+          0
+        ],
+        "i__in": [
+          0,
+          0
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "a61545396ebb848fdffe04b6e1f5afa32e37f478d3228c0dd9c2570235894120",
+      "translation_sha256": "866f7872a225be3223482e66d79a839f8702c83b661075f3fa56c7acf9a095df",
+      "study_index": 283
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-zilu/benchmark13_conjunctive",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int i__in, int j__in, int k){\nint j = j__in;\nint i = i__in;\nwhile (i <= k)\n{\n  i++;\n  j = j + 1;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "i__in": [
+          0,
+          0
+        ],
+        "j__in": [
+          0,
+          0
+        ],
+        "k": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "2003091f7614783d9877ad62c7b43caf4644405782bf387d3c63828eca160ad6",
+      "translation_sha256": "dea74f1c4b8e53ac759a1d695ca88193360a48fc4d04656ade5c53e794b6c2a5",
+      "study_index": 199
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-zilu/benchmark16_conjunctive",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int i__in, int k__in){\nint k = k__in;\nint i = i__in;\nwhile (__VERIFIER_nondet_bool())\n{\n  i = i + 1;\n  k = k - 1;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "i__in": [
+          1,
+          1
+        ],
+        "k__in": [
+          0,
+          1
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "a1376ecc40fc824664ba8724836333114528b8e2f79ec447a2e677868159542c",
+      "translation_sha256": "039daa74713d53da70acc59f054fd1c1f604cc3634eeb5eaea5369ccdf7a87aa",
+      "study_index": 500
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-zilu/benchmark31_disjunctive",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nwhile (1)\n{\n  if (x >= 0)\n  {\n    break;\n  }\n  else\n  {\n    x = x + y;\n    y++;\n  }\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "x__in": [
+          -2147483648,
+          -1
+        ],
+        "y__in": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "51bbd5b2a0f60ba0020f0bbc1bf121ec672638435a9067ade29fdb85c71adb55",
+      "translation_sha256": "658851df4d429570db2ebd5bd0f103bc21e6a7d40cb48dac5bac4de04e286d05",
+      "study_index": 257
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench-scaling/geo1-ll2_unwindbound1",
+      "expected": true,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile ((counter++) < 1)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          1,
+          2147483647
+        ],
+        "k": [
+          1,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "bc74c1b33e1074c3a5a06ad6eff1da469d2065c9f566ce661be4cc84c215be29",
+      "translation_sha256": "541e384beec2006b0e81472b66b3fe77bed4371c7655bf8c1ebde04fd6d70904",
+      "study_index": 72
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench-scaling/geo1-ll2_unwindbound10",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile ((counter++) < 10)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          1,
+          2147483647
+        ],
+        "k": [
+          1,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "112107fc5c716e652a88d8f7f89344593e9707a3eff2542706a71844f3fcba7a",
+      "translation_sha256": "8abdba186fa38db8f5cb4e920dce6cc6b769490c465f3bf953a471d3bf172b8e",
+      "study_index": 715
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench-scaling/geo1-ll2_unwindbound100",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile ((counter++) < 100)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          1,
+          2147483647
+        ],
+        "k": [
+          1,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "b61db512cc77bff784b3cdbd5d852c5dc364bdc7776dcbb3369c7c75ae1fb315",
+      "translation_sha256": "9eb8fe93d9461d89ae0fab9dae797bcae84a8466b422e86cbef0d3b3e98f67f7",
+      "study_index": 20
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench-scaling/geo1-ll2_unwindbound2",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile ((counter++) < 2)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          1,
+          2147483647
+        ],
+        "k": [
+          1,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "7e2bf307cb8f7c9c94b988ac468881aa12e08b820a3a7e7ee2376cf91aff114e",
+      "translation_sha256": "f69f086e85af5f2bed700add456ef2bb87d9de0ee9dea0ae9f146b69f2fbaf3f",
+      "study_index": 761
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench-scaling/geo1-ll2_unwindbound20",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile ((counter++) < 20)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          1,
+          2147483647
+        ],
+        "k": [
+          1,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "358d950fcb60363ca711e5ee684e998bf5a6b6b14c5043f9c788a7a76c08fd00",
+      "translation_sha256": "6cf9b3e155e95f6579d6897aaf5a1399294bc0e97d48acc95e4b2d4aa837f61d",
+      "study_index": 192
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench-scaling/geo1-ll2_unwindbound5",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile ((counter++) < 5)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          1,
+          2147483647
+        ],
+        "k": [
+          1,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "757749d35671eda7818ce7a9276fa400eff8da4461713202236766545f2a8763",
+      "translation_sha256": "f3e991e37240bf052615f9b424a905df949f309fbbf77e1a1d36cf207cc8addc",
+      "study_index": 425
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench-scaling/geo1-ll2_unwindbound50",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile ((counter++) < 50)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          1,
+          2147483647
+        ],
+        "k": [
+          1,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "6730d7e2d0ed6d5662ed2cfed2073e9880e52e7f1f28b9287feb3ffdee545a5a",
+      "translation_sha256": "058d1c1c83cdb443f00fa3f74bf11ebee4c72782dce438205310ad402e519b25",
+      "study_index": 206
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench-scaling/geo1-u2_unwindbound1",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(unsigned int z, unsigned int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile ((counter++) < 1)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          0,
+          4294967295
+        ],
+        "k": [
+          0,
+          4294967295
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "fd71e81526c53a209c01167c5f9fb82334550a28a2ce7544b173ad186de6362e",
+      "translation_sha256": "863c488d98ee49a21a84c4d9794f0511d9139a5bd750e792b9f031323fba18ba",
+      "study_index": 672
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench-scaling/geo1-u2_unwindbound10",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(unsigned int z, unsigned int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile ((counter++) < 10)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          0,
+          4294967295
+        ],
+        "k": [
+          0,
+          4294967295
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "97bfd47a763eadf3b0af2f8e585b7163ffc0c68bcbafc8205f8cd9e774a99e69",
+      "translation_sha256": "314e56b3d5c340782b3fc10b091c6db46a8b1314ef3f873296c350b487c08941",
+      "study_index": 284
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench-scaling/geo1-u2_unwindbound100",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(unsigned int z, unsigned int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile ((counter++) < 100)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          0,
+          4294967295
+        ],
+        "k": [
+          0,
+          4294967295
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "fee025173b123742b5b08bb8895dc7c9911cdbb928d94cbe9fdb074ddb7a3572",
+      "translation_sha256": "f39d8ab32b452f5039a2e45d9cff71e6176dfe0ee9977ec4d6bc89a639f463fd",
+      "study_index": 326
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench-scaling/geo1-u2_unwindbound2",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(unsigned int z, unsigned int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile ((counter++) < 2)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          0,
+          4294967295
+        ],
+        "k": [
+          0,
+          4294967295
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "e57b7a688a4809923d49abd295c8957f721362e148c6f16fbec21211e82ecfa2",
+      "translation_sha256": "5ce63fd684c7856ccf56c83173135be3258d61c4959e215188d07aa6aec7d821",
+      "study_index": 34
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench-scaling/geo1-u2_unwindbound20",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(unsigned int z, unsigned int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile ((counter++) < 20)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          0,
+          4294967295
+        ],
+        "k": [
+          0,
+          4294967295
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "b63b7ff6572e9a0a2b1c55134bda19bbc388077099b845df6f31e10a08695ebb",
+      "translation_sha256": "e90f53e9883ea1db5e6f25de5392c60ce26724adc329b517a20c8ac35c530fcb",
+      "study_index": 572
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench-scaling/geo1-u2_unwindbound5",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(unsigned int z, unsigned int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile ((counter++) < 5)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          0,
+          4294967295
+        ],
+        "k": [
+          0,
+          4294967295
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "4751d3eb3f8125549e47ad071da84be7a54e1805eb31936796833555d65c49e8",
+      "translation_sha256": "de52dea7d6eb303353f3dcc24f031c0dd15ad55717e5f4f6ec479f818ec6adfe",
+      "study_index": 747
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench-scaling/geo1-u2_unwindbound50",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(unsigned int z, unsigned int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile ((counter++) < 50)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          0,
+          4294967295
+        ],
+        "k": [
+          0,
+          4294967295
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "78864722a29653368507db3b60ae2b93b33238a95b17a045203976708a818f43",
+      "translation_sha256": "dab216e448b5cd50de276b8883f55f0f22851289a8f9f0a8bf4c231f27e68715",
+      "study_index": 720
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench-scaling/geo2-ll2_unwindbound1",
+      "expected": true,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 1;\nlong long c = 1;\nwhile ((counter++) < 1)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          -2147483648,
+          2147483647
+        ],
+        "k": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "4f9eb6f5ed10e87bb24b60ecc008ae0f7d927414b72cef44f169022f555bf831",
+      "translation_sha256": "f8639e151996baec26a3feaa4e5971e9bd3ec4944c65f4e1c24785ae179683da",
+      "study_index": 78
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench-scaling/geo2-ll2_unwindbound10",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 1;\nlong long c = 1;\nwhile ((counter++) < 10)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          -2147483648,
+          2147483647
+        ],
+        "k": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "b401bdc3dc8602ce89fd6154d5bf5d175e6ca9a4768bf94d86273beff32d278f",
+      "translation_sha256": "3534c62eebed6b0ab9397f4512671542fc5cc16801bfaadbf76bdac4b097b949",
+      "study_index": 704
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench-scaling/geo2-ll2_unwindbound100",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 1;\nlong long c = 1;\nwhile ((counter++) < 100)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          -2147483648,
+          2147483647
+        ],
+        "k": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "9f50ec725f2d0539a1605de94af398ab61749c1d8954e8100cb71d8e6cff2c9e",
+      "translation_sha256": "585186ff69a045d77a4751deb061611aa13a246d9e44a7590f1a51fb96872db2",
+      "study_index": 728
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench-scaling/geo2-ll2_unwindbound2",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 1;\nlong long c = 1;\nwhile ((counter++) < 2)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          -2147483648,
+          2147483647
+        ],
+        "k": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "2e05249da124fa8fd89a00721e51c7b41eff3d4952cff855bee564f7b5deef09",
+      "translation_sha256": "c1b499a76c331770d85e92f1c153f2bd8da3e3e700be205aa274bf68860c6fe0",
+      "study_index": 653
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench-scaling/geo2-ll2_unwindbound20",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 1;\nlong long c = 1;\nwhile ((counter++) < 20)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          -2147483648,
+          2147483647
+        ],
+        "k": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "76a219f1c64e889b9539a62cf30988094d07e133bf7ccaa4e013534e44709a48",
+      "translation_sha256": "b1b0b61d0baacffb4f10d8515c8022edf757428aa503197df616d5ac13c30a65",
+      "study_index": 469
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench-scaling/geo2-ll2_unwindbound5",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 1;\nlong long c = 1;\nwhile ((counter++) < 5)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          -2147483648,
+          2147483647
+        ],
+        "k": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "67fda656db37d2c84b51be1cff67e15304d735894ee4d35488aab19b379eb57d",
+      "translation_sha256": "235d45c454f34e8fe54a097e1dd649d56b5f41286f2bbeec0f82c056d21104f2",
+      "study_index": 226
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench-scaling/geo2-ll2_unwindbound50",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 1;\nlong long c = 1;\nwhile ((counter++) < 50)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          -2147483648,
+          2147483647
+        ],
+        "k": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "a0940bfd96a0950756bd3792baab28449f2ca3b13416ea5e5123f1c4a993fcef",
+      "translation_sha256": "5a8df2c8bd7873b37addb105c1f4c270b2fba4f056bb4651c9efc96b10551d7f",
+      "study_index": 758
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench-scaling/geo3-ll2_unwindbound1",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int a, int k){\nlong long x = 0;\nlong long y = 0;\nlong long c = 0;\nlong long az = 0;\nx = a;\ny = 1;\nc = 1;\naz = ((long long) a) * z;\nwhile ((counter++) < 1)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + a;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          -2147483648,
+          2147483647
+        ],
+        "a": [
+          -2147483648,
+          2147483647
+        ],
+        "k": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "91c207b4b9ec9497b682edea4de56d410c70b882e6c03e91b56844bba1af20ff",
+      "translation_sha256": "e6a01cba0fff660c94cce085e2b0a211607f132d7cc12db6e7e4a3b042523b58",
+      "study_index": 169
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench-scaling/geo3-ll2_unwindbound10",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int a, int k){\nlong long x = 0;\nlong long y = 0;\nlong long c = 0;\nlong long az = 0;\nx = a;\ny = 1;\nc = 1;\naz = ((long long) a) * z;\nwhile ((counter++) < 10)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + a;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          -2147483648,
+          2147483647
+        ],
+        "a": [
+          -2147483648,
+          2147483647
+        ],
+        "k": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "2bd6e67b7fa2ee5ce263daa222a7fee92baa3ec009b3953f796d40da324e5524",
+      "translation_sha256": "17c56fdc6b57abf68f003b52e5de053737fbc10ae41fac9d109fb16d6a0286a8",
+      "study_index": 725
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench-scaling/geo3-ll2_unwindbound100",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int a, int k){\nlong long x = 0;\nlong long y = 0;\nlong long c = 0;\nlong long az = 0;\nx = a;\ny = 1;\nc = 1;\naz = ((long long) a) * z;\nwhile ((counter++) < 100)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + a;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          -2147483648,
+          2147483647
+        ],
+        "a": [
+          -2147483648,
+          2147483647
+        ],
+        "k": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "dcfa20afbcf57395283e6b29150825f75bf22f314560a1ef9f9a071a6a8d55a6",
+      "translation_sha256": "75653e54a946db77038c463bf7e9b34ef04ae2457a3af6b876363cb021113498",
+      "study_index": 646
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench-scaling/geo3-ll2_unwindbound2",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int a, int k){\nlong long x = 0;\nlong long y = 0;\nlong long c = 0;\nlong long az = 0;\nx = a;\ny = 1;\nc = 1;\naz = ((long long) a) * z;\nwhile ((counter++) < 2)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + a;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          -2147483648,
+          2147483647
+        ],
+        "a": [
+          -2147483648,
+          2147483647
+        ],
+        "k": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "9fcd44eaa3ebd405f2b1e22097631bccfcd3fffe0471ba695e470043120f86ec",
+      "translation_sha256": "5ae910ca1c4530409ffff385a9c10ebb3fa2d4a89348e495de8d93fce1edbfcf",
+      "study_index": 609
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench-scaling/geo3-ll2_unwindbound20",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int a, int k){\nlong long x = 0;\nlong long y = 0;\nlong long c = 0;\nlong long az = 0;\nx = a;\ny = 1;\nc = 1;\naz = ((long long) a) * z;\nwhile ((counter++) < 20)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + a;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          -2147483648,
+          2147483647
+        ],
+        "a": [
+          -2147483648,
+          2147483647
+        ],
+        "k": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "8da870150b2997ed8b5b2bd7f8bc29b32b30f67a033bb6d7b4e930c9ba2a33c8",
+      "translation_sha256": "9a6391caa79a8a27c19add9b1ad11eaf4a4c4c00d7f512617c562ccd77129466",
+      "study_index": 336
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench-scaling/geo3-ll2_unwindbound5",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int a, int k){\nlong long x = 0;\nlong long y = 0;\nlong long c = 0;\nlong long az = 0;\nx = a;\ny = 1;\nc = 1;\naz = ((long long) a) * z;\nwhile ((counter++) < 5)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + a;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          -2147483648,
+          2147483647
+        ],
+        "a": [
+          -2147483648,
+          2147483647
+        ],
+        "k": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "ecdd934011f0184386bb9e5e09961f3056f116a23d0d68c545d7785bb46c98e0",
+      "translation_sha256": "97c2e74648138875741c3b53855d712651cf3d77b9b389d226aa98fca85fe832",
+      "study_index": 668
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench-scaling/geo3-ll2_unwindbound50",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int a, int k){\nlong long x = 0;\nlong long y = 0;\nlong long c = 0;\nlong long az = 0;\nx = a;\ny = 1;\nc = 1;\naz = ((long long) a) * z;\nwhile ((counter++) < 50)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + a;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          -2147483648,
+          2147483647
+        ],
+        "a": [
+          -2147483648,
+          2147483647
+        ],
+        "k": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "f865ce2403889b362eca5ba5c175d767c3667187f591deab49a0624f78852be2",
+      "translation_sha256": "fe26292cb3dad4307dbe301fa0e9d2acd4095881e5bad0532fc6252321e01ac5",
+      "study_index": 546
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench/geo1-ll2",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile (1)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          1,
+          2147483647
+        ],
+        "k": [
+          1,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "f88e56db5d4a069a75f7d157c02a6d71e69f72bef3f2984433669539d06b3f44",
+      "translation_sha256": "bf6e8604827c50ad5c927eff13fb7afb19e139d583f1a1e645ed2f813adb7dd0",
+      "study_index": 666
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench/geo1-u2",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(unsigned int z, unsigned int k){\nlong long x = 1;\nlong long y = 0;\nlong long c = 0;\ny = z;\nc = 1;\nwhile (1)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          0,
+          4294967295
+        ],
+        "k": [
+          0,
+          4294967295
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "60503b6cfd2a800757639deb106bbf28191c36de345606f03caabc1a25a1beff",
+      "translation_sha256": "751ac7e37dd5e3419bc7d94367d71521654c057498efb34692053d2e508c8ff1",
+      "study_index": 176
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench/geo2-ll2",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int k){\nlong long x = 1;\nlong long y = 1;\nlong long c = 1;\nwhile (1)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          -2147483648,
+          2147483647
+        ],
+        "k": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "e871fa33b0334d5a32c7b72bf8c566167ee8ba89fea0452fc9132a1c10a2cca9",
+      "translation_sha256": "4286c8d7d699fadefa460f6f34784a45da18b4525d2418d278f7714890677d86",
+      "study_index": 150
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "nla-digbench/geo3-ll2",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int a, int k){\nlong long x = 0;\nlong long y = 0;\nlong long c = 0;\nlong long az = 0;\nx = a;\ny = 1;\nc = 1;\naz = ((long long) a) * z;\nwhile (1)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + a;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          -2147483648,
+          2147483647
+        ],
+        "a": [
+          -2147483648,
+          2147483647
+        ],
+        "k": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "a84b9c8d997e29e6dd212f98dff041043df0de4e5f86f5da66a42f473d3fe422",
+      "translation_sha256": "38e4c417458a592720949592a5b92f474797e2f4465abf8631356d378390050e",
+      "study_index": 122
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/bresenham1-both-nt",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int X, int Y){\nint v = 0;\nint x = 0;\nint y = 0;\nv = (2 * Y) - X;\ny = 0;\nx = 0;\nint c;\nint k;\nc = 0;\nwhile (((((((2 * Y) * x) - ((2 * X) * y)) - X) + (2 * Y)) - v) == 0)\n{\n  if (v < 0)\n  {\n    v = v + (2 * Y);\n  }\n  else\n  {\n    v = v + (2 * (Y - X));\n    y++;\n  }\n  x++;\n  c++;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "X": [
+          -2147483648,
+          2147483647
+        ],
+        "Y": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "6c193aa77bd4e5c249ae1495cd98658108162385613f8136ed84ef9dd75d1f9e",
+      "translation_sha256": "a3ffadb5ab0e4a153c8e961c407a228437535070aefa53121eb917670f6044a8",
+      "study_index": 491
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/bresenham1-both-t",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int X, int Y){\nint v = 0;\nint x = 0;\nint y = 0;\nv = (2 * Y) - X;\ny = 0;\nx = 0;\nint c;\nint k;\nc = 0;\nk = __VERIFIER_nondet_int();\nwhile ((((((((2 * Y) * x) - ((2 * X) * y)) - X) + (2 * Y)) - v) + c) <= k)\n{\n  if (v < 0)\n  {\n    v = v + (2 * Y);\n  }\n  else\n  {\n    v = v + (2 * (Y - X));\n    y++;\n  }\n  x++;\n  c++;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "X": [
+          -2147483648,
+          2147483647
+        ],
+        "Y": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "a7b31e2a13b75987a7fbb508d91f91263e8ed322db53b8f1e51f2bf1a12070b9",
+      "translation_sha256": "b62d15bc662d38148cfdad7704299d462ce3606b1a57c8e68d6ac84fe8211343",
+      "study_index": 387
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/cohencu1-both-nt",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int a){\nint n = 0;\nint x = 0;\nint y = 1;\nint z = 6;\nwhile (z <= ((6 * n) + 6))\n{\n  n = n + 1;\n  x = x + y;\n  y = y + z;\n  z = z + 6;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "a": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "ca80e9b36e5fc58b8f30c1bb1c05df2fc99c88b9aad13b3e482ed10946a6c2f8",
+      "translation_sha256": "2de22d4735abaa2eb6ead5a97754e81d7a745bdd043c9763b474c4dffaf4a8cd",
+      "study_index": 188
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/cohencu2-both-nt",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int a){\nint n = 0;\nint x = 0;\nint y = 1;\nint z = 6;\nwhile (y == ((((3 * n) * n) + (3 * n)) + 1))\n{\n  n = n + 1;\n  x = x + y;\n  y = y + z;\n  z = z + 6;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "a": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "e2817f3084a8852f4b330f9c6d3e372001677288c6bd96843f93de200f3970ca",
+      "translation_sha256": "19bc3287863b561527ee9e9be66d57e37d11e574aaccf84df066ec94679a1f5e",
+      "study_index": 605
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/cohencu3-both-nt",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int a){\nint n = 0;\nint x = 0;\nint y = 1;\nint z = 6;\nwhile (x == ((n * n) * n))\n{\n  n = n + 1;\n  x = x + y;\n  y = y + z;\n  z = z + 6;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "a": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "3ca7ce9ebd9ab1a6eee9fc9006cb49cb4f31e2e39b3b21c759320bb8210d6441",
+      "translation_sha256": "e31b75d0433526abd2c2ebfc0540bdcb0dc281ba4df7b609057533eb8f662ea6",
+      "study_index": 647
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/cohencu4-both-nt",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int a){\nint n = 0;\nint x = 0;\nint y = 1;\nint z = 6;\nwhile ((((((y * z) - (18 * x)) - (12 * y)) + (2 * z)) - 6) == 0)\n{\n  n = n + 1;\n  x = x + y;\n  y = y + z;\n  z = z + 6;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "a": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "7fd13595f3b5096b42d3b96a25fd9abd33fd3af5374ed62e7f19833538fa3307",
+      "translation_sha256": "32be58e5e596a5715499721b838f3c05c7523152f56e2dd021e2c7cf7aa7a9ca",
+      "study_index": 177
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/cohencu5-both-nt",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int a){\nint n = 0;\nint x = 0;\nint y = 1;\nint z = 6;\nwhile (((((z * z) - (12 * y)) - (6 * z)) + 12) == 0)\n{\n  n = n + 1;\n  x = x + y;\n  y = y + z;\n  z = z + 6;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "a": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "c93857281b5ec9fe14e30b99b222d261f13b497e3b825785e60f15b99c5a5215",
+      "translation_sha256": "731f37ec8d4d928a2adb82b8053020a1e1519cad699abee400c7169979690b74",
+      "study_index": 205
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/dijkstra3-both-nt",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int n){\nint p = 0;\nint q = 1;\nint r = 0;\nint h = 0;\nr = n;\nh = 0;\nif (q > n)\n{\n  while (((((((((h * h) * h) - (((12 * h) * n) * q)) + (((16 * n) * p) * q)) - ((h * q) * q)) - (((4 * p) * q) * q)) + (((12 * h) * q) * r)) - (((16 * p) * q) * r)) == 0)\n  {\n    if (((4 * (q / 4)) == q) && ((2 * (p / 2)) == p))\n    {\n      q = q / 4;\n      h = p + q;\n      p = p / 2;\n      if (r >= h)\n      {\n        p = p + q;\n        r = r - h;\n      }\n    }\n  }\n\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "n": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "be69f8550c7a913949aef3a5cd6eb246d75bd127b105ae8a64bfc7bda606bcfc",
+      "translation_sha256": "e880f2a9e9ce27760a864dbfafd0a715baa171e8ef3954d9cc4a2576ca5f2392",
+      "study_index": 216
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/dijkstra4-both-nt",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int n){\nint p = 0;\nint q = 1;\nint r = 0;\nint h = 0;\nr = n;\nh = 0;\nif (q > n)\n{\n  while (((((((((((h * h) * n) - (((4 * h) * n) * p)) + ((4 * (n * n)) * q)) - ((n * q) * q)) - ((h * h) * r)) + (((4 * h) * p) * r)) - (((8 * n) * q) * r)) + ((q * q) * r)) + (((4 * q) * r) * r)) == 0)\n  {\n    if (((4 * (q / 4)) == q) && ((2 * (p / 2)) == p))\n    {\n      q = q / 4;\n      h = p + q;\n      p = p / 2;\n      if (r >= h)\n      {\n        p = p + q;\n        r = r - h;\n      }\n    }\n  }\n\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "n": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "6d80bfac8239edb36458a39079f29084e725943de73140087509ea8c53e688bf",
+      "translation_sha256": "eb58bf9bd8a0bf227e48de114ec4a970f57f77e1a57dbb09a1eac57848b66bea",
+      "study_index": 250
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/dijkstra5-both-nt",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int n){\nint p = 0;\nint q = 1;\nint r = 0;\nint h = 0;\nr = n;\nh = 0;\nif (q > n)\n{\n  while ((((((((h * h) * p) - (((4 * h) * n) * q)) + (((4 * n) * p) * q)) - ((p * q) * q)) + (((4 * h) * q) * r)) - (((4 * p) * q) * r)) == 0)\n  {\n    if (((4 * (q / 4)) == q) && ((2 * (p / 2)) == p))\n    {\n      q = q / 4;\n      h = p + q;\n      p = p / 2;\n      if (r >= h)\n      {\n        p = p + q;\n        r = r - h;\n      }\n    }\n  }\n\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "n": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "1311e92b010f06e52be84ec52b75ec93594134b7a325e76c2963ae3ac9ab2bc2",
+      "translation_sha256": "62405f3159c17b4a81c8f1b297dcf8dd99208614cf4629e7303ffa80ed0defe6",
+      "study_index": 86
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/dijkstra6-both-nt",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int n){\nint p = 0;\nint q = 1;\nint r = 0;\nint h = 0;\nr = n;\nh = 0;\nif (q > n)\n{\n  while ((((p * p) - (n * q)) + (q * r)) == 0)\n  {\n    if (((4 * (q / 4)) == q) && ((2 * (p / 2)) == p))\n    {\n      q = q / 4;\n      h = p + q;\n      p = p / 2;\n      if (r >= h)\n      {\n        p = p + q;\n        r = r - h;\n      }\n    }\n  }\n\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "n": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "12afb8178f03cf9f30c3db13fe59541339718c2babf1801d998ad3c12365b61d",
+      "translation_sha256": "f935d79723cbe680037670f5e564b005e34db1b45e9ffbd2a1827d1419e8be12",
+      "study_index": 207
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/egcd-both-nt",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int x, int y){\nint a = 0;\nint b = 0;\nint p = 0;\nint q = 0;\nint r = 0;\nint s = 0;\nif ((x >= 1) && (y >= 1))\n{\n  a = x;\n  b = y;\n  p = 1;\n  q = 0;\n  r = 0;\n  s = 1;\n  while (b == ((x * q) + (y * s)))\n  {\n    if (a > b)\n    {\n      a = a - b;\n      p = p - q;\n      r = r - s;\n    }\n    else\n    {\n      b = b - a;\n      q = q - p;\n      s = s - r;\n    }\n  }\n\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "x": [
+          -2147483648,
+          2147483647
+        ],
+        "y": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "8191111967e355faaa9e1f9b07a30261823b2d1609aae7d52c8a75e30cb27230",
+      "translation_sha256": "22396fb62f33d726700793105ebb2d77dc29251cc135eff2f406e3382dbb9175",
+      "study_index": 613
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/egcd-both-t",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int x, int y){\nint a = 0;\nint b = 0;\nint p = 0;\nint q = 0;\nint r = 0;\nint s = 0;\nif ((x >= 1) && (y >= 1))\n{\n  a = x;\n  b = y;\n  p = 1;\n  q = 0;\n  r = 0;\n  s = 1;\n  while (((y * r) + (x * p)) != ((x * q) + (y * s)))\n  {\n    if (a > b)\n    {\n      a = a - b;\n      p = p - q;\n      r = r - s;\n    }\n    else\n    {\n      b = b - a;\n      q = q - p;\n      s = s - r;\n    }\n  }\n\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "x": [
+          -2147483648,
+          2147483647
+        ],
+        "y": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "e7efe18bdab4f1a3c265c6e5c60639885ed9cc4b50c9311d2c96f86da4a31387",
+      "translation_sha256": "f3f9dd640caf7756d35cb76287e125a5e99a56a72b14a8990ef104fe264b59cd",
+      "study_index": 689
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/egcd3-both-nt",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int x, int y){\nint a = 0;\nint b = 0;\nint p = 0;\nint q = 0;\nint r = 0;\nint s = 0;\na = x;\nb = y;\np = 1;\nq = 0;\nr = 0;\ns = 1;\nwhile (1)\n{\n  if (!(b != 0))\n    break;\n  int c;\n  int k;\n  c = a;\n  k = 0;\n  while (1)\n  {\n    if (!(c >= b))\n      break;\n    int d;\n    int v;\n    d = 1;\n    v = b;\n    while (1)\n    {\n      if (!(b == ((x * q) + (y * s))))\n        break;\n      d = 2 * d;\n      v = 2 * v;\n    }\n\n    c = c - v;\n    k = k + d;\n  }\n\n  a = b;\n  b = c;\n  int temp;\n  temp = p;\n  p = q;\n  q = temp - (q * k);\n  temp = r;\n  r = s;\n  s = temp - (s * k);\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "x": [
+          -2147483648,
+          2147483647
+        ],
+        "y": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "441ed385de0111f9f6047a22d0563bf22c3f11c2944a4555fcac4ead6b7adc06",
+      "translation_sha256": "a5f56195933f9fa40624234dff177929080b554d046933d783fdbd9aba7622e3",
+      "study_index": 518
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/egcd3-both-t",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int x, int y){\nint a = 0;\nint b = 0;\nint p = 0;\nint q = 0;\nint r = 0;\nint s = 0;\na = x;\nb = y;\np = 1;\nq = 0;\nr = 0;\ns = 1;\nwhile (1)\n{\n  if (!(b != 0))\n    break;\n  int c;\n  int k;\n  c = a;\n  k = 0;\n  while (1)\n  {\n    if (!(c >= b))\n      break;\n    int d;\n    int v;\n    d = 1;\n    v = b;\n    while (1)\n    {\n      if (!(c >= ((2 * b) * d)))\n        break;\n      d = 2 * d;\n      v = 2 * v;\n    }\n\n    c = c - v;\n    k = k + d;\n  }\n\n  a = b;\n  b = c;\n  int temp;\n  temp = p;\n  p = q;\n  q = temp - (q * k);\n  temp = r;\n  r = s;\n  s = temp - (s * k);\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "x": [
+          -2147483648,
+          2147483647
+        ],
+        "y": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "f30fb53ba1bb9e30e27f1f3b124700f21ddb3bb720786f227b85112bcaf73168",
+      "translation_sha256": "f6952b5199e2942e31bd175cfcd614e41dc3857312037b5ee0457392350629fd",
+      "study_index": 596
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/freire1-both-t",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int a){\nint r = 0;\nint x = 0;\nx = a / 2;\nr = 0;\nint c = 0;\nint k = __VERIFIER_nondet_int();\nwhile ((((((r * r) - a) - r) + (2 * x)) + c) <= k)\n{\n  x = x - r;\n  r = r + 1;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "a": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "dd092a6766612bbc84c4d30e8cb08b7ea7e92d604046ccadae0abd9f6c96c3d7",
+      "translation_sha256": "72a5048d40c57d5d17d2645e369ebbc205a556ec59da7813b2ed6105b243d3cb",
+      "study_index": 576
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/geo1-both-nt",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int k){\nint x = 1;\nint y = 0;\nint c = 0;\ny = z;\nc = 1;\nwhile (1)\n{\n  if (!(((((x * z) - x) - y) + 1) == 0))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          -2147483648,
+          2147483647
+        ],
+        "k": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "64402cc0cdfc94a0324e8ab84a270a5e9b14f3baf89bc76bde090a5ee54357b1",
+      "translation_sha256": "f734985798e33235083679a11d284d09380099d051b3f760712bef6f537825ce",
+      "study_index": 654
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/geo1-both-t",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int k){\nint x = 1;\nint y = 0;\nint c = 0;\ny = z;\nc = 1;\nwhile (1)\n{\n  if (!((((((x * z) - x) - y) + 1) + c) < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nx = x * (z - 1);\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          -2147483648,
+          2147483647
+        ],
+        "k": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "02059a7c4b7b922395986679dcda00ae0f1aedf3f381a067de494c2934fbed7c",
+      "translation_sha256": "c8ff084a0bbf9818a8f19164e9365590eb5a085215131f829b0a6552ac4a52a4",
+      "study_index": 4
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/geo2-both-nt",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int k){\nint x = 1;\nint y = 1;\nint c = 1;\nwhile (1)\n{\n  if (!((((1 + (x * z)) - x) - (z * y)) == 0))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          -2147483648,
+          2147483647
+        ],
+        "k": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "4c346fb221a00d06e6ee0c1e3f36ca32d6948aaf4526d1ed75b2c23fdf71aba5",
+      "translation_sha256": "589f277b66687b37eb0309378a93283096152f3d57a8398d9d7ba7c73004c41e",
+      "study_index": 261
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/geo2-both-t",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int k){\nint x = 1;\nint y = 1;\nint c = 1;\nwhile (1)\n{\n  if (!(((((1 + (x * z)) - x) - (z * y)) + c) < k))\n    break;\n  c = c + 1;\n  x = (x * z) + 1;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          -2147483648,
+          2147483647
+        ],
+        "k": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "5ec2eda2dc7a6956aa78652e41437b6d2cb11429629868e5f504a2e981ed38b8",
+      "translation_sha256": "a2b753f98515f188ce8d01065380185eaba0612f1ad10636846506bb3ba6bb35",
+      "study_index": 311
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/geo3-both-nt",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int a, int k){\nint x = 0;\nint y = 0;\nint c = 0;\nx = a;\ny = 1;\nc = 1;\nwhile (1)\n{\n  if (!(((((z * x) - x) + a) - ((a * z) * y)) == 0))\n    break;\n  c = c + 1;\n  x = (x * z) + a;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          -2147483648,
+          2147483647
+        ],
+        "a": [
+          -2147483648,
+          2147483647
+        ],
+        "k": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "c9d181f3f248245f99c875899fc6c007a934511caaf9a71b33d6cdc74f882fc7",
+      "translation_sha256": "b72264fac31e09539f006e5842dc72b3fece21f8f8edb57d3ca5931e804c7e74",
+      "study_index": 187
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/geo3-both-t",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int z, int a, int k){\nint x = 0;\nint y = 0;\nint c = 0;\nx = a;\ny = 1;\nc = 1;\nwhile (1)\n{\n  if (!((((((z * x) - x) + a) - ((a * z) * y)) + c) < k))\n    break;\n  c = c + 1;\n  x = (x * z) + a;\n  y = y * z;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "z": [
+          -2147483648,
+          2147483647
+        ],
+        "a": [
+          -2147483648,
+          2147483647
+        ],
+        "k": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "ed491d1bc5842f468de3223871c7c3d847b110797ca8e21263294172938eb205",
+      "translation_sha256": "1acc3a644aa7b1822f191051ae180ee157395fafac95cabced3c9f99afe68c03",
+      "study_index": 158
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/hard2-both-nt",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int A){\nint B = 1;\nint r = 0;\nint d = 0;\nint p = 0;\nint q = 0;\nr = A;\nd = B;\np = 1;\nq = 0;\nwhile (1)\n{\n  if (!(d == (B * p)))\n    break;\n  d = 2 * d;\n  p = 2 * p;\n}\n\nwhile (1)\n{\n  if (!(A == ((q * B) + r)))\n    break;\n  d = d / 2;\n  p = p / 2;\n  if (r >= d)\n  {\n    r = r - d;\n    q = q + p;\n  }\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "A": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "23ac641bc90237de255e915a5ed362430f6ac59f0f6642be7f9d8479ff0a7576",
+      "translation_sha256": "c44f858910e08575f535d2bc74d1facb20c88151224dabea0e0407c7cad80d75",
+      "study_index": 57
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/ps2-both-nt",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int k){\nint y = 0;\nint x = 0;\nint c = 0;\nwhile (1)\n{\n  if (!((((y * y) - (2 * x)) + y) == 0))\n    break;\n  c = c + 1;\n  y = y + 1;\n  x = y + x;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "k": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "b73e31328980bb314c7579072d8e4a89ec4ca4994cbdfb0690ff58d274b46cfc",
+      "translation_sha256": "0685d73ff7e14d4191704bca67e54dc3d857feb38e6036183d8692f416957132",
+      "study_index": 282
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/ps3-both-nt",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int k){\nint y = 0;\nint x = 0;\nint c = 0;\nwhile (1)\n{\n  if (!(((((6 * x) - (((2 * y) * y) * y)) - ((3 * y) * y)) - y) == 0))\n    break;\n  c = c + 1;\n  y = y + 1;\n  x = (y * y) + x;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "k": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "6e5c8795945414d852730e5c45b6f06012ad7941ebe47729ab52d390ead28a08",
+      "translation_sha256": "cedcc4dbccfae3eb0e4f8dce6d59e577718dafc618054005ed02b1ffc1ef2e4a",
+      "study_index": 324
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/ps4-both-nt",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int k){\nint y = 0;\nint x = 0;\nint c = 0;\nwhile (1)\n{\n  if (!(((((4 * x) - (((y * y) * y) * y)) - (((2 * y) * y) * y)) - (y * y)) == 0))\n    break;\n  c = c + 1;\n  y = y + 1;\n  x = ((y * y) * y) + x;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "k": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "63d6964a27a2633defbf4fad0bc200de1e673192bcaa510a6d3539fb9cbd17cb",
+      "translation_sha256": "56a8ad122a593e7666451b5db6ce8102136bff715856b156a09f90817f0b3e46",
+      "study_index": 692
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/ps5-both-nt",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int k){\nint y = 0;\nint x = 0;\nint c = 0;\nwhile (1)\n{\n  if (!((((((((((6 * y) * y) * y) * y) * y) + ((((15 * y) * y) * y) * y)) + (((10 * y) * y) * y)) - (30 * x)) - y) == 0))\n    break;\n  c = c + 1;\n  y = y + 1;\n  x = (((y * y) * y) * y) + x;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "k": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "e2037e7fb54bc1934ddf0365c3305939f9896c7c31de9bde015e44320e3f3c9d",
+      "translation_sha256": "eb4fd6b8b21bcdfbe42721a139e2fe3c040ccdcb4d728cb02e3cc1d2d8315f6b",
+      "study_index": 222
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/ps6-both-nt",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int k){\nint y = 0;\nint x = 0;\nint c = 0;\nwhile (1)\n{\n  if (!((((((((((((-2) * y) * y) * y) * y) * y) * y) - (((((6 * y) * y) * y) * y) * y)) - ((((5 * y) * y) * y) * y)) + (y * y)) + (12 * x)) == 0))\n    break;\n  c = c + 1;\n  y = y + 1;\n  x = ((((y * y) * y) * y) * y) + x;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "k": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "32e66fa5ba3b1091e41b22524f2240292238d833cea4ffc730b1e622c7455b67",
+      "translation_sha256": "515c75445fa6b064c13b509bfa93d7b5022eef74f8e0233c90c1ecba6a9b1eff",
+      "study_index": 429
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/sqrt1-both-nt",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int n){\nint a = 0;\nint s = 1;\nint t = 1;\nwhile (((((t * t) - (4 * s)) + (2 * t)) + 1) == 0)\n{\n  a = a + 1;\n  t = t + 2;\n  s = s + t;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "n": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "2f0ebd3c2c18d79b7b5cf15d06200769549c28f6b620b0cc174ddc702d0db6da",
+      "translation_sha256": "8b5bf85508335ffee9687ee28490919b2ec8f45d7ede3ce083bfbf7b584fc838",
+      "study_index": 310
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/sqrt2-both-nt",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int i__in, int j__in){\nint j = j__in;\nint i = i__in;\nint s = 1;\nint t = 1;\nwhile ((((((t * t) - (4 * s)) + (2 * t)) + 1) + i) >= 0)\n{\n  t = t + 2;\n  s = s + t;\n  i = i + j;\n  j = j + 1;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "i__in": [
+          -2147483648,
+          2147483647
+        ],
+        "j__in": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "f29864c02f98221b6fcd1d486dfbdcb30bbbd96cdca4ed616b67652e37cda5f3",
+      "translation_sha256": "a5f95b61967940ed8dd845f68f4104cd4c1b282dfc149cfa257d6e3b99577c9d",
+      "study_index": 23
+    }
+  ],
+  "no_room": [
+    {
+      "corpus": "loopbench",
+      "name": "loop-acceleration/const_1-2",
+      "expected": false,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(int __z){\nunsigned int x = 1;\nunsigned int y = 0;\nwhile (y < 1024)\n{\n  x = 0;\n  y++;\n}\n\nreturn 1/((x == 1));\n}\n",
+      "bounds": {
+        "__z": [
+          0,
+          0
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "806c78936017d752a8835e8cd9fbe8a1f06095f8d4eacbf3053870dd4f98f68e",
+      "translation_sha256": "377793319c2cfeb30359d87d49c55b5da61b7a7b05cca260f1f14ab13ab2b1ef",
+      "study_index": 122
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-acceleration/nested_1-1",
+      "expected": true,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(int __z){\nunsigned int x = 0;\nunsigned int y = 0;\nwhile (x < 0x0fffffff)\n{\n  y = 0;\n  while (y < 10)\n  {\n    y++;\n  }\n\n  x++;\n}\n\nreturn 1/((x % 2));\n}\n",
+      "bounds": {
+        "__z": [
+          0,
+          0
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "7d46306d0f449fc697e3921b4f35c60335f25019c8462cefcaf92538159e3d14",
+      "translation_sha256": "0b685ff20a285f66bcbf62d082530c9aed68c461ae08293b1be53c989445f5f9",
+      "study_index": 364
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-acceleration/nested_1-2",
+      "expected": false,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(int __z){\nunsigned int x = 0;\nunsigned int y = 0;\nwhile (x < 0x0fffffff)\n{\n  y = 0;\n  while (y < 10)\n  {\n    y++;\n  }\n\n  x++;\n}\n\nreturn 1/((!(x % 2)));\n}\n",
+      "bounds": {
+        "__z": [
+          0,
+          0
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "8828f6ff39cd2bcfba4fe3d04f0119d60137bcad91eabef2e2b840cbd0802b98",
+      "translation_sha256": "1c8356d1f250ebbbb9fd243239ad8342745bbdd7d802893169794cab6683d0de",
+      "study_index": 337
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-acceleration/phases_1-1",
+      "expected": true,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(int __z){\nunsigned int x = 0;\nwhile (x < 0x0fffffff)\n{\n  if (x < 0xfff0)\n  {\n    x++;\n  }\n  else\n  {\n    x += 2;\n  }\n}\n\nreturn 1/((!(x % 2)));\n}\n",
+      "bounds": {
+        "__z": [
+          0,
+          0
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "bc900b1bfcaecf91bc89637deaef4e1ddf2476faf43fa7e6f1e197c315ae3982",
+      "translation_sha256": "3fb36e45b860a1ae570bc18ce5a3c66ec89b190f2a406efb7d84e9b4e828c644",
+      "study_index": 196
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-acceleration/phases_1-2",
+      "expected": false,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(int __z){\nunsigned int x = 0;\nwhile (x < 0x0fffffff)\n{\n  if (x < 0xfff1)\n  {\n    x++;\n  }\n  else\n  {\n    x += 2;\n  }\n}\n\nreturn 1/((!(x % 2)));\n}\n",
+      "bounds": {
+        "__z": [
+          0,
+          0
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "4f868671c12bae02e06798527bc7c1ed7b8332d3fee83b3ff24f9cd503da0a60",
+      "translation_sha256": "52e7e8a046957de9fdd8ee18ddd760b4c75f6f85397fa12c700e89b3c024e5a4",
+      "study_index": 303
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-acceleration/simple_1-1",
+      "expected": false,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(int __z){\nunsigned int x = 0;\nwhile (x < 0x0fffffff)\n{\n  x += 2;\n}\n\nreturn 1/((x % 2));\n}\n",
+      "bounds": {
+        "__z": [
+          0,
+          0
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "311ca7a26a816b19bf2f80b95fa3e10e4e95b99dff1e77c10bd7566050baa8ec",
+      "translation_sha256": "e00a56ada4268a81ff7ebbe2da1ae3daa35a40f81344f213d44bed10012992e9",
+      "study_index": 349
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-acceleration/simple_4-1",
+      "expected": false,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(int __z){\nunsigned int x = 0x0ffffff1;\nwhile (x > 1)\n{\n  x -= 2;\n}\n\nreturn 1/((!(x % 2)));\n}\n",
+      "bounds": {
+        "__z": [
+          0,
+          0
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "9950a3ef699b75b517ce9b65b2c32dbbe13ac0a027bb7e02ceeaeee924f6aade",
+      "translation_sha256": "60f30f21245a73145231247bad2c1d49b8a2d213ab3c21b6698d1eda0effdd31",
+      "study_index": 281
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-acceleration/underapprox_1-1",
+      "expected": false,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(int __z){\nunsigned int x = 0;\nunsigned int y = 1;\nwhile (x < 6)\n{\n  x++;\n  y *= 2;\n}\n\nreturn 1/((y != 64));\n}\n",
+      "bounds": {
+        "__z": [
+          0,
+          0
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "11d6d848444c2f9afc2eba3aace7d6b72c4d182e1953661ba8811794c092f478",
+      "translation_sha256": "e053bf0cdef1ff37eba64c09e152ef71a951f5b46392ce3e3f5cf77ac11c3562",
+      "study_index": 160
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-acceleration/underapprox_1-2",
+      "expected": true,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(int __z){\nunsigned int x = 0;\nunsigned int y = 1;\nwhile (x < 6)\n{\n  x++;\n  y *= 2;\n}\n\nreturn 1/((y % 3));\n}\n",
+      "bounds": {
+        "__z": [
+          0,
+          0
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "3627a732530e36fdf7a132fca7d3f33785550e6f2e2a95fdbae864743bbd37d1",
+      "translation_sha256": "6ca3c34ba4065daf7914562ce2cc57f1cd0f01ee0d754461353cc1111adc53a6",
+      "study_index": 325
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-acceleration/underapprox_2-1",
+      "expected": false,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(int __z){\nunsigned int x = 0;\nunsigned int y = 1;\nwhile (x < 6)\n{\n  x++;\n  y *= 2;\n}\n\nreturn 1/((x != 6));\n}\n",
+      "bounds": {
+        "__z": [
+          0,
+          0
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "dc138f274319e5e58145eabf3fb84043b6d1bd3c616751e51efeb5e2ee2997a6",
+      "translation_sha256": "145d18d44f40cc07750431db4d5e1a22c9414fc1b831864dcbe34cde4420c57a",
+      "study_index": 427
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-industry-pattern/mod3",
+      "expected": true,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(int __z){\nunsigned int x;\nunsigned int y = 1;\nint __a = 0;\nwhile (__VERIFIER_nondet_int())\n{\n  if ((x % 3) == 1)\n  {\n    x += 2;\n    y = 0;\n  }\n  else\n  {\n    if ((x % 3) == 2)\n    {\n      x += 1;\n      y = 0;\n    }\n    else\n    {\n      if (__VERIFIER_nondet_int())\n      {\n        x += 4;\n        y = 1;\n      }\n      else\n      {\n        x += 5;\n        y = 1;\n      }\n    }\n  }\n}\n\nif (y == 0)\n  __a = 1 / ((x % 3) == 0);\n\nreturn 0;\n}\n",
+      "bounds": {
+        "__z": [
+          0,
+          0
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "d6b1716040f3ac0d20317f4b1840cbb1eb3d6ede4c468ae774c814182bb0372d",
+      "translation_sha256": "d7bfa44a21232f0425cdb6449fd59429a980419951873647165b600e9d03d022",
+      "study_index": 134
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-invgen/fragtest_simple",
+      "expected": true,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(int __z){\nint i = 0;\nint pvlen = 0;\nint tmp___1 = 0;\nint k = 0;\nint n = 0;\nint __a = 0;\npvlen = __VERIFIER_nondet_int();\nwhile (__VERIFIER_nondet_int() && (i <= 1000000))\n{\n  i = i + 1;\n}\n\nif (i > pvlen)\n{\n  pvlen = i;\n}\n\ni = 0;\nwhile (__VERIFIER_nondet_int() && (i <= 1000000))\n{\n  tmp___1 = i;\n  i = i + 1;\n  k = k + 1;\n}\n\nint j = 0;\nn = i;\nwhile (1)\n{\n  __a = 1 / (k >= 0);\n  k = k - 1;\n  i = i - 1;\n  j = j + 1;\n  if (j >= n)\n  {\n    break;\n  }\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "__z": [
+          0,
+          0
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "74a43b4798a69588c9ff82b9594318764b6e916664334d583f065abad1787cf0",
+      "translation_sha256": "7a2f6691e78041369f3dbd229bb8cac74bd6ae9b878633dbd5595863ebc1d713",
+      "study_index": 84
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-lit/gcnr2008",
+      "expected": false,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(int __z){\nint x = 0;\nint y;\nint z;\nint w;\nx = (y = (z = (w = 0)));\nwhile (__VERIFIER_nondet_int() && (y < 10000))\n{\n  if (__VERIFIER_nondet_int())\n  {\n    x = x + 1;\n    y = y + 100;\n  }\n  else\n    if (__VERIFIER_nondet_int())\n  {\n    if (x >= 4)\n    {\n      x = x + 1;\n      y = y + 1;\n    }\n  }\n  else\n    if ((y > (10 * w)) && (z >= (100 * x)))\n  {\n    y = -y;\n  }\n  w = w + 1;\n  z = z + 10;\n}\n\nreturn 1/(((x >= 4) && (y <= 2)));\n}\n",
+      "bounds": {
+        "__z": [
+          0,
+          0
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "82199719b79022b6b8e9c40cc4a8aa5220003ca4a5b7635e90614d2755bf8a81",
+      "translation_sha256": "840ea8d74a6d87b0e06a578fdfa83ab9d9093fd30a73ba23f8b16c64dc7169df",
+      "study_index": 90
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-lit/gr2006",
+      "expected": true,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(int __z){\nint x = 0;\nint y = 0;\nwhile (1)\n{\n  if (x < 50)\n  {\n    y++;\n  }\n  else\n  {\n    y--;\n  }\n  if (y < 0)\n    break;\n  x++;\n}\n\nreturn 1/((x == 100));\n}\n",
+      "bounds": {
+        "__z": [
+          0,
+          0
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "0cce601d3e06b5cd8415f99be251710ece6e8fb7c3e319a09ed18922ee72babd",
+      "translation_sha256": "88d81778118142212c6b2c4ed3ebc44b6da3c159f748c72369e96d95ad7bf9f7",
+      "study_index": 279
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-simple/nested_1b",
+      "expected": false,
+      "property": "unreach-call",
+      "abi": "ILP32",
+      "source": "int f(int __z){\nint a = 6;\nint __a = 0;\nfor (a = 0; a < 6; ++a)\n{\n}\n\n__a = 1 / (!(a == 6));\nreturn 0;\n}\n",
+      "bounds": {
+        "__z": [
+          0,
+          0
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "de4c7bf005639409d0c5506b91694c0a93e2905c64b2cd28aafb6e9617d859e5",
+      "translation_sha256": "c897028e19f0cb3c8a90a0e24915dc04a46e37051293686545a09ef1039d1c97",
+      "study_index": 559
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-zilu/benchmark01_conjunctive",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nwhile (__VERIFIER_nondet_bool())\n{\n  x = x + y;\n  y = x;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "x__in": [
+          1,
+          1
+        ],
+        "y__in": [
+          1,
+          1
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "eb49260461cefbf5c3dd21d1ceae53b12fc63b5489fca03ef4e30dd6952fd124",
+      "translation_sha256": "7b3cf85d48523b656b18474757429305ee547448f52ed13f33dc3be60dfaa10d",
+      "study_index": 183
+    },
+    {
+      "corpus": "loopbench",
+      "name": "loop-zilu/benchmark22_conjunctive",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int x__in, int y__in){\nint y = y__in;\nint x = x__in;\nwhile (__VERIFIER_nondet_bool())\n{\n  x = x + y;\n  y++;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "x__in": [
+          1,
+          1
+        ],
+        "y__in": [
+          0,
+          0
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "332149e5bab02f901d22a394d7fc8b75a68c916816faa3fd6dccce4a7c616f3c",
+      "translation_sha256": "cc04269095a294452e63aab1703ed004d87287c35b9253295a9731156392d4e9",
+      "study_index": 5
+    },
+    {
+      "corpus": "upstream2026",
+      "name": "termination-nla/freire1-both-nt",
+      "expected": false,
+      "property": "no-overflow",
+      "abi": "ILP32",
+      "source": "int f(int __z){\nint r = 0;\nint x = 0;\nint a = 2 * __VERIFIER_nondet_int();\nx = a / 2;\nr = 0;\nwhile (((((r * r) - a) - r) + (2 * x)) == 0)\n{\n  x = x - r;\n  r = r + 1;\n}\n\nreturn 0;\n}\n",
+      "bounds": {
+        "__z": [
+          0,
+          0
+        ]
+      },
+      "previous_status": "UNKNOWN",
+      "source_sha256": "1adb3359053d55dc1f371353b0c6f7046d6999c323f92a2191878842c8d6ac98",
+      "translation_sha256": "1dce08f175f44a0260e867df171e01c306921f4d8d0a65b83610567c7bd2582e",
+      "study_index": 195
+    }
+  ],
+  "cases_payload_sha256": "1285ffc819b1e805af9d648d774ca95c414360688fa397ec228fb6f5b3fbbef2",
+  "frozen_source_sha256": {
+    "scripts/spec_v105.py": "083482e1fdd7074131768c62d4397ab977f84dd455bd76b78dd97ba6bb09ea28",
+    "scripts/resource_capture.py": "53bb121bee8c601f9133a0d89d43976486d6416fccdda36de903ed32807b02e2",
+    "llmloop/__init__.py": "86f0a7168338daa9f7f93646152136b3fe6dfeef92c0d1357cafabf4c00c0e95",
+    "llmloop/api.py": "b87e7353dda83ded54e23a825d0bfd16c6e7345021694aa9eae42eb2a5b6fb7a",
+    "llmloop/bounded.py": "4ca183a7afb417324d9684295e987f0064ccd4b9b8bc481ba4a25ab3a8660bba",
+    "llmloop/bounded_affine.py": "f1abf1a87a392585c7cd6faa5ee8271a99c863d8c9f0eab6a5aa210f9841de75",
+    "llmloop/bounded_vla.py": "646a05e96d4f8fc11739d841bdad6fd2ff9ea826ac3a35f8d47fe73900d609e5",
+    "llmloop/bv_cuts.py": "e01452534a21b04ff5175cb1544dfe11e664533492a5ed86b793b5251b659a2c",
+    "llmloop/c_cli.py": "15bccfa284c17361b40f90717f1b0d7be3e37250df17145c47e1fca0fdcb3970",
+    "llmloop/c_frontend.py": "a1e9217560cb3b95ed9c840b384b5f0a0041970a9cee1618bf3471d9f1fc2ecb",
+    "llmloop/c_integers.py": "3b780b89c1ca9021934fda953b0f9a91b4f99c70a48ba5a0dad7f9a25f18256b",
+    "llmloop/c_validation.py": "fbc91f18aaf204bc6899ff060f080bb5c033891ac3dabb98c0b0fee15aadb01b",
+    "llmloop/candidate_normalize.py": "4fe9b1f680e4cc0e45744dd8c9f201ea0f055d3fbd5b78e20e7c350b170b3bd5",
+    "llmloop/candidate_synthesis.py": "8ee8f46ce009178e83cb971b9a2895c20b80c4fc313adb14fbcd1be2b7396fe2",
+    "llmloop/cfg_frontend.py": "ea66e86d81630271d0b8cf4d477c635e6e920eb340aaee0ea950cd0dc514d67a",
+    "llmloop/clang_adapter.py": "beea9facff0111f27872204b3e7544edb5e7c850accc8c331db7bc441ef36d99",
+    "llmloop/clang_bit_builtins.py": "ac798bbbf2e65de3704e5bc9a6d7649e01be17cbb99d7e94464935408113b9f8",
+    "llmloop/clang_linked.py": "347bb7d285ded7162be87e172d720e9aa50ea6760568178209c45308eb716230",
+    "llmloop/clang_linked_records.py": "47e54e0665a47000ad954a5025a376e57ada68aac552f088a83eed4a2e8442fc",
+    "llmloop/clang_memory_proof.py": "d72201fc7cd0d397bab8f39877fb19eb6d7bea3c262835374c0aaf97b9683f50",
+    "llmloop/clang_parameters.py": "d4d395363d9d20187df949921c7ea195a5c58d6971b2eba62ae658e1e11a6b5e",
+    "llmloop/clang_proof.py": "597d0bacaf0b239ba05e63c419c72b0902d6193709ec4e739f4e47014ada38fa",
+    "llmloop/clang_union_views.py": "d3e70c96e0c2f8ed81d299e2754c007cd3130685ac322d2e82645e42f0d9f1ed",
+    "llmloop/cli.py": "484cf84a42902396ee07940e54baf8a3f26124a4190db6411aa082963c88b1ff",
+    "llmloop/closed_forms.py": "b7fd7dbb38870a77eda761164e44bba13265ec840aa112274544d7654054f366",
+    "llmloop/core.py": "32486f14931464b08f441614c3bb4feab1d670d2f7c0e488634d0954d7167e8c",
+    "llmloop/counted_c.py": "c1cb3796367a2dc5d30b8191f2f786c3439c9e8f4a7de602c5714fee83682b02",
+    "llmloop/division_induction.py": "a7066d53e1fafeb506657a23430a8e3f2d0d6c892c7802943dbaeced5b50aa71",
+    "llmloop/expressions.py": "aabfe98e5fb0d551cd78026c7838dcad042920d33439fc291b4e53bac2100938",
+    "llmloop/finite_choices.py": "08f6c79177708a1d6fc05d09bf3d3e0a57df8aed64a640e0f7070d7bc5a51f84",
+    "llmloop/graph.py": "e785908bb5a202e078094929c27186ce8c03b0e8cc93c9b0f2aad619c113d968",
+    "llmloop/graph_c.py": "9b4a52e6d18b85e05563ecf7d950aa1761504c5bf3b4e495e43ad8354ce9f834",
+    "llmloop/graph_cli.py": "adb60ef6aaf06d97915e3a9e7f1ba75144afb31cede49c75614aabbdeca70a7b",
+    "llmloop/graph_nested.py": "9d78446903830c266e617904faf2b9cc46b706e34a553056efdffbb755ef6db0",
+    "llmloop/guarded_recurrence.py": "dfc67d835e9617eb8086b1b9cd4f2e548ac0070f476a3610d43435510b0ff3b6",
+    "llmloop/houdini_loops.py": "719809bd6335507cc00c67a2d299e0d8f55709663678e1f28ce1232a8d5c55e3",
+    "llmloop/houdini_while.py": "26b231aa07d96cd2ec949f04ad7445ae7e0525c73b3e8667fc1c5bf71a98e06b",
+    "llmloop/integer_lift.py": "b4cbd2d166f6edd54154975a7f5d4c5dc5a43f9bb8e8024bb5616cf6cbe43f76",
+    "llmloop/integer_polynomial_audit.py": "53e9602909f977750bca78f3475a8c3bc1a7e8d928da0c3785e622dfbba6f5e9",
+    "llmloop/interval_certificate.py": "90fe61fc8ec142dabecd60458efcce4c986a89e163d2a1c155f189c8d6e34c11",
+    "llmloop/invariant_synthesis.py": "4c8e044da6bb9801fcb810bef49bffa919619ea75afd2cedfca577755cf59e71",
+    "llmloop/invariants.py": "263bac53240987ef9c0ba4accad84fd68fcf65afd8f94cbc3678ad3bd0697e7f",
+    "llmloop/jump_eliminate.py": "bb8d97420143df96addbe6813a07066569bbf4d2f9dd7e41a6eb4cb1735f4549",
+    "llmloop/linear_scan.py": "42944c6acdd58eae7056a906a156a9e5aefd97f4183cc9c222554fb4583f541e",
+    "llmloop/list_heap.py": "51ca1ae2b739baa846e24c7557d2829b0b54611a508e289fb7537ebf8d35f965",
+    "llmloop/list_heap_calls.py": "fc876960288a4c68ee0898ad5b0ee7663a737a7a42269fbf3100b5bdb466953e",
+    "llmloop/llm.py": "b4a1891e6af1441642d715e10fab9b7285b21f68b1b48e6dec5f9f0b6e0a2987",
+    "llmloop/llm_invariants.py": "e9c4e2bf3b51af71404b5f1876541275cfc4d5a381aec4d34cccd39a4a77cf54",
+    "llmloop/llvm_benchmarks.py": "ce522ebc7c8b8e2353f02540a916b1e4f144616e5eb8446c358a6b7b452b7feb",
+    "llmloop/loop_index_normalize.py": "3e5593c3ec769abd654264e0acd10e0c913203e16458f77bcbf988253743ae86",
+    "llmloop/memory_frontend.py": "6f7c5d4f6fa95f8022cd48d0e30becbd4182a33cf477a8a115d0e37a5f822214",
+    "llmloop/nested.py": "85f68b7ae6cbe7c9cf5e0ac4ec87c7486ccc694469601f11de0921605eb117b9",
+    "llmloop/ordered_c.py": "26188dfea7b9a36bcaebf20285b0e40789c00636c62d94455d6c1f86a0e81f74",
+    "llmloop/oscillation.py": "5ccceb5dd249d5fb29dd205ee911170e271e1a3f65be32a75f380dd12791c0de",
+    "llmloop/oscillation_c.py": "20a14c3014a7656bfe21a04c1615347935dccf9ea33e939fad22f8bb0878b155",
+    "llmloop/oscillation_c_cli.py": "4ced9249060133ea5e7c2a55ef2df46820f9b8e450daaa1bec471024e34d4a1b",
+    "llmloop/oscillation_cli.py": "da673387c81bc48de68abd701329bd2ec2f9ef595c22dc8e538497aaefb50a68",
+    "llmloop/periodic_c.py": "25cee82b001f9f8dd8cfbdfff8876a1e273095002d76e48b3637523d64c4e118",
+    "llmloop/periodic_recurrence.py": "fe0a7aebbbce88e4ee1bc0fa5613eadf3283e9c9192d9e7082c4a43feab88d37",
+    "llmloop/phase_invariants.py": "28c3b34e0156bb2764c2fad96a6c185da9481faded8abb2cf875f31d085e6ba2",
+    "llmloop/polynomial_recurrence.py": "92bc53aaef27a7fec61ecfe379cb06ae63719d418e9a46ae84737aa2583d3b48",
+    "llmloop/private_allocations.py": "f85812129c4466475a3ac46496ab0bf9f19fa88aad9536dce9186a115893c81b",
+    "llmloop/proof_normalization.py": "ec1114ca4cb07b2aaaa9e9976f4ce479f0d474717ff65d435559a15972d7f68d",
+    "llmloop/qfbv_integers.py": "764d0f9acce7c0edcfffe9fdfa4754050bec55a43153095559e5f3b841d18c65",
+    "llmloop/ranking.py": "d04ccba50cd2911e0496236cf89070f1212c36aa220944cb51adce0b591ee23b",
+    "llmloop/ranking_templates.py": "4291221043b1f28404bd413c2c8142a789ec9a0f553bb96b75364a1e86b6baa9",
+    "llmloop/recurrence.py": "fc765dfd344528774ce74c65e93e9fe4aa82a0fe7c6bb94d511b949cdc71c498",
+    "llmloop/scan_c.py": "14b1dabfbf0345e4c70294fef86d1d6b02fba332af991e5578ab74fe367aee7b",
+    "llmloop/sizeof_expression.py": "2bfa3b7d557e141226f81a33f2efd4babf33820ec35c36a9f10234ed6e691255",
+    "llmloop/smt_c.py": "3b4686272f7b2cb9153b8066c667d6306afbbd4161bf423a4e3b17aa2d666bbd",
+    "llmloop/smt_cli.py": "ceb1f402b37652407e4da57f7ba36c19461c51d62529f7336601037d77a07277",
+    "llmloop/smt_llm.py": "faec6bc43f7a9a0e50d82bffe9891ed99b0404bd1d8dfd8f91bc7a632387a291",
+    "llmloop/smt_spath.py": "f109e3c8046096cd0ed193ee577eaa9c4188e3005848716d7c37f5dfacbfd781",
+    "llmloop/struct_heap.py": "7d4edc63e4bccc69aee0a069cf41c5a4cafdfa97a2f463824c8398147b85c9a7",
+    "llmloop/summary_portfolio.py": "e9820f295291c93caf6636aa56071de37279eee02374adca4621e6644538e3f8",
+    "llmloop/sweep_c.py": "373502694f1aa7b05d569359bdf5bc8baab58e1b586beeb3280865e1471447bd",
+    "llmloop/sweep_memory.py": "bc840143a9a5c8e8f3931611026073033c4d59e5869a6326562824bc2727f436",
+    "llmloop/symbolic_cli.py": "42b2ae4169244e6210e559cb327045b8035011e9bc11f3f30dd6668c6b7f5512",
+    "llmloop/symbolic_integers.py": "6ffc431bde5c03dbc1073ff1cc148f64cca00577b45556e4876e7cfa1fd5ffe5",
+    "llmloop/traj_fit.py": "23efe2881db39eed632f6582af7e1551cc74677aa7d35a9ccf9f0821262de6e0",
+    "llmloop/typed_bv_cfg.py": "f53d074caa91da15bb4dd2aa736c3b06c654a01c4f4569c5118f8a93681ddb46",
+    "llmloop/typed_c.py": "2bf8d4398730fcbc6ec30009d604fa8024d0e6a0bd264cc2490290a06eeecf2d",
+    "llmloop/typed_cfg_calls.py": "67bd56934995481aea5964abbd42faeb3b403576bb5f2592549f7de88bbc17b4",
+    "llmloop/typed_cfg_heap.py": "6bd313dc283988dbe73d122220db3f0597cdbf8f18ee9a5d71feba6774ea759f",
+    "llmloop/typed_chc.py": "d768bb62187ea85bfb51b914b22e35b0e03265ea89abc622784a4a3fc4682d6b",
+    "llmloop/typed_invariant.py": "94774b9129de32a83e901c54e4b56773492272460a775476afcf0a5cc89b9140",
+    "llmloop/typed_invariant_loops.py": "1d184db37a5d7dae15cfbc06ecb3ad4a13fed7063f2e3817b021de2e22d047f0",
+    "llmloop/typed_invariant_nested.py": "159e08059404ef96aec9216e5d8c9b456d19d2f5b6bcb89cfed4590495d05d4a",
+    "llmloop/typed_invariant_tree.py": "38ca35526a100bd2d79757466ff1912d090e71da910c9b54ec5b4a35dbf3e50f",
+    "llmloop/typed_invariant_while.py": "b74daab90291a7cb7500bf6802b0c53237d7efb9d98799f2215de073ba914096",
+    "llmloop/typed_memory.py": "ad15cfc9c1702120b7e3392e777c0dc36e7e0ca34d279d76d7408b8d84a2fe28",
+    "llmloop/typed_nested.py": "c33cf716b98d7beb802a1b1b5fd5209e994f97d92fa7d2169e882561668ac8b1",
+    "llmloop/typed_recurrence.py": "3a9d942f8e97a0922c6fbd3e793548cc2ae12061efe7563a64221b0af25a8ab5",
+    "llmloop/unbounded_memory.py": "1e316db2e4fecd2266be2052dee97d37f9eb9dabfd1b8270c766201b7684f9c5"
+  },
+  "driver_amendments": [
+    {
+      "script": "scripts/spec_v105.py",
+      "frozen_sha256": "083482e1fdd7074131768c62d4397ab977f84dd455bd76b78dd97ba6bb09ea28",
+      "current_sha256": "0d77ff41159fddbd7375b65f2cfa7cbcd80a6d385ddfbc0e170ce593f274c170",
+      "changed_in": "3c89458f",
+      "change": "the summary writer only. The first 46,702 bytes -- everything up to `def write_summary`, i.e. ask, verify, prove, prompt, narrow, volume, baseline, baseline_case, run, merge -- are byte-identical to the frozen file. The real merge died on `unnamed status in the S arm: ['ERROR']`: four units whose frozen pipeline raised, which had no column. So `ERROR` is now a named bucket with its own column, the paired comparison is reported twice (all proofs / proofs above the pre-registered 1e-3 retained floor) with the verdict on the second, empty replies and cap hits are counted per model so a degenerate arm cannot be read as judgement, and the 'why not proved' breakdown is computed instead of described. No verdict in this directory was produced by the changed code: `merge` re-derives summary.md/json from the shard rows and the committed control. Adding `driver_amendments` here edits this file, which changes its sha256 and would break `merge`'s 'the shards ran under this protocol' check on its own evidence, so the sha the run actually used is recorded as `protocol_sha256_used` and `merge` accepts either that or the current bytes. The status vocabulary also moved to module level (`STATUSES`, `BASELINE_STATUSES`) so a test can walk it instead of trusting that I listed every outcome.",
+      "to_rerun": "git checkout a4f09efd -- scripts/spec_v105.py, then merge -- but the summary needs the four `ERROR` rows and 1e-3 pairing to be reportable, so re-running the *analysis* with the frozen bytes reproduces the old crash, not the old numbers"
+    }
+  ],
+  "protocol_sha256_used": "3163e0d0ba9db197451825f904a4b5d3f3bd0112c5ad0d5820f96f268536dd55"
+}

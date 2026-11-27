@@ -1,0 +1,117 @@
+name: v1.04 witness export, first batch
+
+# E1, step 1. `scripts/witness_v104.py` exports the verifier's per-loop invariants as SV-COMP YAML
+# correctness witnesses and asks a third-party verifier to re-verify the program from them alone.
+#
+# The validator is Ultimate, not CPAchecker: run 45007628049 handed CPAchecker 4.2.2 a YAML witness
+# and it answered "The Witness format found for ... is currently not supported" (its `--witness`
+# reads GraphML only, and it tried to parse the YAML as XML). Ultimate 0.3.2 is the tool that writes
+# this format, and has a `--validate` mode. This job runs
+# it on six cases that v1.03 proved, plus the non-vacuity control, and prints one program and one
+# witness so the shape can be read without downloading an artifact.
+#
+# It is not a result: six cases cannot support a rate. It is the check that the exporter, the
+# harness and the validator agree on a format before the same code is pointed at all 165 (and at the
+# 400 of the scale-up).
+#
+# Both the control and the batch are allowed to fail without stopping the job, because the useful
+# thing to get out of a red run is the validator's own output, which the last step prints either way.
+on:
+  push:
+    paths: ['.github/workflows/v104-witness.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '21'}
+      - name: Install package
+        run: python -m pip install -q -e '.[test,smt,exp]'
+      - name: Fetch tools, corpora, CPAchecker
+        run: |
+          EXT="${{ runner.temp }}/ext"
+          chmod +x scripts/ci_setup_v103.sh
+          scripts/ci_setup_v103.sh "$EXT" svbench
+          scripts/ci_setup_v103.sh "$EXT" tools
+          curl -fsSL --retry 3 -o "$EXT/cpa.zip" https://cpachecker.sosy-lab.org/CPAchecker-4.2.2-unix.zip
+          echo "183adce15ced2641784dd16dd1dda3c4d88bb463674d8adb688fb28c3656525f  $EXT/cpa.zip" | sha256sum -c -
+          unzip -q -o "$EXT/cpa.zip" -d "$EXT"
+      - name: Non-vacuity control (a true invariant must pass, a false one must fail)
+        continue-on-error: true
+        run: |
+          python -u scripts/witness_v104.py selftest \
+            --external "${{ runner.temp }}/ext" \
+            --output experiments/v104/witness/selftest --validator ultimate
+      - name: Ask Ultimate what its own witness looks like
+        continue-on-error: true
+        run: |
+          EXT="${{ runner.temp }}/ext"; W="${{ runner.temp }}/uw"; mkdir -p "$W"
+          S=experiments/v104/witness/selftest/cases/selftest
+          printf 'CHECK( init(main()), LTL(G ! overflow) )\n' > "$W/o.prp"
+          cp "$S"/program.c "$W"/program.c
+          cd "$W"
+          timeout 300 python3 "$EXT/ultimate-v0.3.2/UAutomizer-linux/Ultimate.py" \
+            --spec o.prp --file program.c --architecture 64bit \
+            --witness-type correctness_witness --witness-dir "$W" --witness-name uw > u.out 2>&1 || true
+          grep -E '^Result:' -A2 u.out || true
+          echo "===== program with line numbers"; cat -n program.c
+          echo "===== ULTIMATE'S OWN WITNESS BEGIN"
+          ls -la "$W"
+          for f in uw.yml uw.graphml; do [ -f "$f" ] && { echo "--- $f"; cat "$f"; }; done
+          echo "===== ULTIMATE'S OWN WITNESS END"
+      - name: Column base 1 (what pycparser reports)
+        continue-on-error: true
+        run: |
+          python -u scripts/witness_v104.py selftest \
+            --external "${{ runner.temp }}/ext" \
+            --output experiments/v104/witness/selftest_col1 --validator ultimate --column-base 1
+      - name: Export six proved cases
+        continue-on-error: true
+        run: |
+          python -u scripts/witness_v104.py make \
+            --external "${{ runner.temp }}/ext" \
+            --output experiments/v104/witness/batch1 \
+            --cases termination-restricted-15/java_Break.c,termination-restricted-15/PastaA7.c,termination-restricted-15/b.02.c,termination-restricted-15/b.16.c,termination-restricted-15/WhileSingle.c,termination-restricted-15/NO_13.c
+      - name: Validate the witnesses with Ultimate
+        continue-on-error: true
+        run: |
+          python -u scripts/witness_v104.py validate \
+            --external "${{ runner.temp }}/ext" \
+            --output experiments/v104/witness/batch1 --validator ultimate
+      - name: Print everything the run produced
+        if: always()
+        run: |
+          S=experiments/v104/witness/selftest
+          B=experiments/v104/witness/batch1
+          echo "===== selftest.json"; cat "$S"/selftest.json 2>/dev/null || true
+          echo "===== selftest program"; cat -n "$S"/cases/selftest/program.c 2>/dev/null || true
+          echo "===== selftest witness (true)"; cat "$S"/cases/selftest/witness_true.yml 2>/dev/null || true
+          echo "===== selftest logs"
+          for f in "$S"/logs/*.txt; do echo "--- $f"; cat "$f" 2>/dev/null | tail -40; done
+          C=experiments/v104/witness/selftest_col1
+          echo "===== selftest, column base 1"; cat "$C"/selftest.json 2>/dev/null || true
+          echo "===== batch plan"; cat "$B"/plan.json 2>/dev/null || true
+          echo "===== batch program 0000"; cat -n "$B"/cases/0000/program.c 2>/dev/null || true
+          echo "===== batch witness 0000"; cat "$B"/cases/0000/witness.yml 2>/dev/null || true
+          echo "===== batch validation"; cat "$B"/validation.json 2>/dev/null || true
+          echo "===== batch logs"; for f in "$B"/logs/*.txt; do echo "--- $f"; tail -25 "$f" 2>/dev/null; done
+          python -u scripts/witness_v104.py merge --output "$B" 2>/dev/null || true
+      - name: Trim CPAchecker work dirs
+        if: always()
+        run: rm -rf experiments/v104/witness/*/cpa && du -sh experiments/v104/witness/* || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: witness-batch1
+          path: experiments/v104/witness
+          if-no-files-found: warn
+          retention-days: 30

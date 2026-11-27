@@ -1,0 +1,125 @@
+name: v1.04 hold-out witnesses
+
+# Independent validation of the proofs made on the 41 pre-registered exclusions.
+#
+# The hold-out run answers "how many of these unseen cases do we prove". This answers the question
+# that matters more: are the answers right? Each proof is exported as an SV-COMP correctness witness
+# and re-checked by CPAchecker 4.2.2 and Ultimate 0.3.2, exactly as the 165-case study did, but on
+# programs no earlier experiment translated. 25 of the 41 carry an upstream `false` label -- an
+# overflow exists -- so a TRUE there would be a false certification on data nothing was tuned on.
+#
+# First attempt (run 45059550446) was wrong twice and its evidence is deleted, not kept:
+#   * all four export shards wrote to the same output directory, so each overwrote the others'
+#     `plan.json` and the merge saw 10 cases instead of 41;
+#   * CPAchecker was never fetched -- `ci_setup_v103.sh tools` installs Ultimate and CBMC -- so all
+#     four exported witnesses came back `NO_CPA`, and the summary read "both validators confirm 0",
+#     which is a statement about a missing binary.
+# Shards now own their directory and CPAchecker is fetched with a sha256 check.
+on:
+  push:
+    branches: [research/v103-exec]
+    paths: ['.github/workflows/v104-holdout-witness.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  shard:
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '21'}
+      - name: Install package
+        run: python -m pip install -q -e '.[test,smt,exp]'
+      - name: Fetch corpora, CPAchecker and Ultimate
+        run: |
+          EXT="${{ runner.temp }}/ext"
+          mkdir -p "$EXT"
+          chmod +x scripts/ci_setup_v103.sh
+          scripts/ci_setup_v103.sh "$EXT" scale
+          scripts/ci_setup_v103.sh "$EXT" tools
+          for i in 1 2 3 4 5; do
+            curl -fsSL --retry 3 --retry-delay 5 --retry-all-errors --max-time 600 \
+              -o "$EXT/cpa.zip" https://cpachecker.sosy-lab.org/CPAchecker-4.2.2-unix.zip && break
+            echo "attempt $i failed, waiting" >&2; sleep 15
+          done
+          echo "183adce15ced2641784dd16dd1dda3c4d88bb463674d8adb688fb28c3656525f  $EXT/cpa.zip" | sha256sum -c -
+          unzip -q -o "$EXT/cpa.zip" -d "$EXT"
+      - name: Export witnesses for shard ${{ matrix.shard }}
+        timeout-minutes: 120
+        continue-on-error: true
+        run: |
+          EXT="${{ runner.temp }}/ext"
+          python -u scripts/witness_v104.py make --external "$EXT" \
+            --output "experiments/v104/witness/holdout41/shard${{ matrix.shard }}" \
+            --protocol experiments/v104/holdout41/protocol.json --svbench svbench-scale \
+            --shard ${{ matrix.shard }}/4 --column-base 1 --dialect set-20
+      - name: Validate with CPAchecker
+        timeout-minutes: 60
+        continue-on-error: true
+        run: |
+          EXT="${{ runner.temp }}/ext"
+          python -u scripts/witness_v104.py validate --external "$EXT" \
+            --output "experiments/v104/witness/holdout41/shard${{ matrix.shard }}" \
+            --validator cpachecker --timeout 600 --workers 2
+      - name: Validate with Ultimate
+        timeout-minutes: 60
+        continue-on-error: true
+        run: |
+          EXT="${{ runner.temp }}/ext"
+          python -u scripts/witness_v104.py validate --external "$EXT" \
+            --output "experiments/v104/witness/holdout41/shard${{ matrix.shard }}" \
+            --validator ultimate --timeout 600 --workers 2
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: holdout41-witness-${{ matrix.shard }}
+          path: experiments/v104/witness/holdout41
+          if-no-files-found: error
+          retention-days: 30
+
+  merge:
+    needs: shard
+    if: always()
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install package
+        run: python -m pip install -q -e '.[test,smt,exp]'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: holdout41-witness-*
+          merge-multiple: true
+          path: incoming
+      - name: Fold the shards in
+        run: |
+          set -e
+          cp -a incoming/. experiments/v104/witness/holdout41/
+          n=$(ls -d experiments/v104/witness/holdout41/shard* 2>/dev/null | wc -l)
+          echo "$n shard directories of 4"
+          if [ "$n" -ne 4 ]; then echo "incomplete: $n of 4 shards; nothing is recorded" >&2; exit 1; fi
+          python -u scripts/witness_v104.py merge --output experiments/v104/witness/holdout41 \
+            --inputs "$(ls -d experiments/v104/witness/holdout41/shard* | paste -sd, -)"
+          cat experiments/v104/witness/holdout41/summary.md
+      - name: Trim the logs GitHub will not take
+        run: python -u scripts/trim_logs.py experiments/v104/witness/holdout41
+      - name: Record evidence and push
+        # A retry loop's exit status is the loop's, so three rejected pushes looked like
+        # success in v1.05 (GH001, a 361 MB log). push_evidence.sh checks the remote.
+        run: |
+          bash scripts/push_evidence.sh research/v103-exec experiments/v104/witness/holdout41 \
+            "v1.04: witnesses for the 41-case hold-out, checked by two validators [skip ci]"

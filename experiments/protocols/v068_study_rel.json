@@ -1,0 +1,325 @@
+{
+  "schema_version": 1,
+  "study": "v068_study_rel",
+  "seed": 20261202,
+  "models": [
+    "deepseek-v4.1-flash-ark",
+    "glm-5.3-ark",
+    "deepseek-v4.1-flash-itkk",
+    "gpt-4.1-mini",
+    "claude-dsflash-itkk",
+    "gemini-3-flash"
+  ],
+  "arms": [
+    "box",
+    "rel"
+  ],
+  "reps": 2,
+  "temperature": 0.7,
+  "max_tokens": 12000,
+  "corpus_seed": 20261201,
+  "roles": {
+    "split01": "provable_safe",
+    "split02": "provable_safe",
+    "split03": "provable_safe",
+    "split04": "provable_safe",
+    "split05": "provable_safe",
+    "diff06": "provable_safe",
+    "diff07": "provable_safe",
+    "diff08": "provable_safe",
+    "diff09": "provable_safe",
+    "comp10": "provable_safe",
+    "comp11": "provable_safe",
+    "comp12": "provable_safe",
+    "wgt13": "provable_safe",
+    "wgt14": "provable_safe",
+    "wgt15": "provable_safe",
+    "nest16": "provable_safe",
+    "nest17": "provable_safe",
+    "nest18": "provable_safe",
+    "nest19": "provable_safe",
+    "narrow20": "provable_safe",
+    "narrow21": "provable_safe",
+    "narrow22": "provable_safe",
+    "uns23": "unsafe_source_control",
+    "uns24": "unsafe_source_control",
+    "uns25": "unsafe_source_control",
+    "uns26": "unsafe_source_control",
+    "uns27": "unsafe_source_control"
+  },
+  "hypothesis": "H1: the rel arm certifies more safe programs than the box arm (paired by model x program x rep). H2: 0 unsafe controls certified in either arm. Exploratory: per-family, per-model effects.",
+  "note": "Disclosure: the rel-arm second worked example (a-b relation, equal increments) resembles the R_diff/R_nested/R_narrow families, so rel-arm gains there partly reflect example proximity. Exact-box references exist for every safe program (floors allowed), so relations are a convenience/expressiveness gain, not strictly necessary; claude-dsflash-itkk is a DeepSeek V4.1 Flash alias. Unsafe controls confirmed by native UBSan.",
+  "verifier": "typed_summary_portfolio backend typed_invariant_tree, solver_profile auto, no fallback",
+  "programs": [
+    {
+      "name": "split01",
+      "family": "R_split",
+      "role": "provable_safe",
+      "source_sha256": "92794171ec4907c1251bf7a496caeba0953349413811bda49829d7f03d00371a",
+      "prompt_sha256": {
+        "box": "9e2de6227d763d7e805d949c4ae10e9db833d64b9016b3328e17133bf07c8f06",
+        "rel": "dbae68a9309a3e0e02ddc347e07e33c8936804f8487a5edbd68bb5fc1c2dca2b"
+      }
+    },
+    {
+      "name": "split02",
+      "family": "R_split",
+      "role": "provable_safe",
+      "source_sha256": "47d0659224c819affff25ddea8e0352a5afbad0b1e13e794d3c2c6a6b74145a0",
+      "prompt_sha256": {
+        "box": "a68cb19493e8dd01bb2d6b4e2ab111e87dda491516a3e195e66a8f6decd236a6",
+        "rel": "379b1fb5054e79d4799409e8c545315eb3698b6e117a350aeae44f8b3a2c8264"
+      }
+    },
+    {
+      "name": "split03",
+      "family": "R_split",
+      "role": "provable_safe",
+      "source_sha256": "308721d580bb7a834cd0b36c435b093bb6c099a8324eb8981b7463832ea29b3e",
+      "prompt_sha256": {
+        "box": "d5633c08864b1423e7e54b6d5ebbf945f3d964c3760ffcd091cd33533b6987f4",
+        "rel": "bffe9beb4590103a0f8040a6ed23a7e6f557135352f48d378acdb0b22560d832"
+      }
+    },
+    {
+      "name": "split04",
+      "family": "R_split",
+      "role": "provable_safe",
+      "source_sha256": "03277a3e41e8c2d11777d9c0d619432c2ed82b9df80006a2fa1d2b344d13f291",
+      "prompt_sha256": {
+        "box": "f2d3fe063cadeb0bb41b2b1cbd071f9d4219173b49ea5009d8f98d39e1cf93cb",
+        "rel": "7e48444d28d46c84346fa94dcdfc7566103374b5c226f0304a108ac1c35e8ddd"
+      }
+    },
+    {
+      "name": "split05",
+      "family": "R_split",
+      "role": "provable_safe",
+      "source_sha256": "85f38e8a64292d9805e262f4685a2bf04a6be0a30dae481847a3db43045ac82b",
+      "prompt_sha256": {
+        "box": "ad65dd578f12db9e01c102d776607f1e4fdfe553d735a1bd1aee123682da78e2",
+        "rel": "95bdb119722b889bb8a4966c14377f5bf3378b34edd4c26b723e0e60f0d3c7bb"
+      }
+    },
+    {
+      "name": "diff06",
+      "family": "R_diff",
+      "role": "provable_safe",
+      "source_sha256": "02d787d114176e429533aa880e4f4dd23a86779dff98a4fbc565e1e37579a115",
+      "prompt_sha256": {
+        "box": "ccf418534b37f36e7242336196a257cc9214ea5f32c1cf9d3048bb826c21b5c1",
+        "rel": "9056ad586379d32e5f8762b2612a1cda6f1dffbdc1e78f5a4717692e071cc1e8"
+      }
+    },
+    {
+      "name": "diff07",
+      "family": "R_diff",
+      "role": "provable_safe",
+      "source_sha256": "7ebf8ee5ef699306d6955f7dbd20d24f41b896abc222a6cb42210b3fa765adda",
+      "prompt_sha256": {
+        "box": "5e0ab3df59b4f9293fcf1bc09363834579f75169f056dc04af786ff39ef507c1",
+        "rel": "093a6479ffd186a5f21351b0c7f849d085c2a21248df84d21d6d192ab411e11e"
+      }
+    },
+    {
+      "name": "diff08",
+      "family": "R_diff",
+      "role": "provable_safe",
+      "source_sha256": "fd56a5df02a0f81d975352d01e86dd5e0fb6883eb98073bde9170c02d4036872",
+      "prompt_sha256": {
+        "box": "4ad86f70827db7f70da8b8f7e50db39f6ac4704d9c86bb7992aca79dc39f9c39",
+        "rel": "286978e7a6e8c95700aa397a2499657bc31c00cec405bf2a474ea4f602b795e6"
+      }
+    },
+    {
+      "name": "diff09",
+      "family": "R_diff",
+      "role": "provable_safe",
+      "source_sha256": "7043cb916f3334c62ee05f8083df735b5fe6b923f962a30547b9ddba2bbdd01f",
+      "prompt_sha256": {
+        "box": "d796a2e990204b7093d9f430cbeb6f1110c0167dd8f84a7954016b40de6a6fd9",
+        "rel": "ca5f424109d14e5a80ac0e309f57db05c1dba518853633e3dde8c06e0cf8ab23"
+      }
+    },
+    {
+      "name": "comp10",
+      "family": "R_comp",
+      "role": "provable_safe",
+      "source_sha256": "55f813a863691397bdde85a0ba4bb513c241205c3d0b4b63297ca68a6ad9be78",
+      "prompt_sha256": {
+        "box": "520215d637350423da44c4cea6505b657b0f6dfb57189717bc5bd910879f5dbc",
+        "rel": "7a13f700457632053d42ec33bb6337842b2fe6fcc1c3f3ff509d8159888060d6"
+      }
+    },
+    {
+      "name": "comp11",
+      "family": "R_comp",
+      "role": "provable_safe",
+      "source_sha256": "16150ed393c473286b06f59cab2f1413cd6a9bedb1c0ba4a4ae57be5c837156d",
+      "prompt_sha256": {
+        "box": "04c95ec62234271c971645bd0dd4687be8e173ec80bb477aaee12282a62b5c12",
+        "rel": "fc1f14fe2f9f26307ab751a774fe26fd0deb84ee9272a232e6b808d5d28cca92"
+      }
+    },
+    {
+      "name": "comp12",
+      "family": "R_comp",
+      "role": "provable_safe",
+      "source_sha256": "fc9f3373744f93b36daaaf155ac086b92f3d391ee9c38c758883542090e92798",
+      "prompt_sha256": {
+        "box": "e43eed62580dde96501c8d6274fd806ca78745a20a1b540db689416f6e8490c4",
+        "rel": "92d6d1dcade10a31c07563ca51569fd56a3453c7df3760034d6226ecf428d44a"
+      }
+    },
+    {
+      "name": "wgt13",
+      "family": "R_weight",
+      "role": "provable_safe",
+      "source_sha256": "107bf0720d70caac25b8f276bfb7ab0754e458fb8eaebbeba268c23c7059a790",
+      "prompt_sha256": {
+        "box": "fc9747db5f03d91475defe2953be1bd6d2a0d0440681bda2384f62eb459b116f",
+        "rel": "d1a008988198d6f116ff1b376c9401b347351027583a1329e2f55eeabb2b6349"
+      }
+    },
+    {
+      "name": "wgt14",
+      "family": "R_weight",
+      "role": "provable_safe",
+      "source_sha256": "9af4467053e2c33e30481c790040817adce1ffd7ecf53420c721738af9ed138c",
+      "prompt_sha256": {
+        "box": "0da203bd064090227dd6bfc9c44a380b6ee5eef5585c31c589a7bb1fd89c1e91",
+        "rel": "160b9914e65e1bb8d580a46eb8e57f6e0e972df6e948c80cb1ff7254d157db63"
+      }
+    },
+    {
+      "name": "wgt15",
+      "family": "R_weight",
+      "role": "provable_safe",
+      "source_sha256": "1505cb558da5a43652f2b542369132d8269529bf61268f3e35df1ca3ddf21138",
+      "prompt_sha256": {
+        "box": "051cd048c0ecaf3bd2d01a092a19581ec675481fea4ecd0b172f1de8e6f6d6f2",
+        "rel": "aec534a415bbce6b5ea011143cb2ad831cf9b38f09f66fa277d0e45fd710a5c7"
+      }
+    },
+    {
+      "name": "nest16",
+      "family": "R_nested",
+      "role": "provable_safe",
+      "source_sha256": "4de32f493a83466c8f5362b2d2dc669f400bafe39003eeb7043d8cc6beee8f8a",
+      "prompt_sha256": {
+        "box": "c6aaa8b54945eeb054afa529ad5a9c873b0b91e15c930e01088131df9e927240",
+        "rel": "5e97365e1abad24667b8b6b3c0e9e3b06327db32378e11647756315974bb50f6"
+      }
+    },
+    {
+      "name": "nest17",
+      "family": "R_nested",
+      "role": "provable_safe",
+      "source_sha256": "ce456e4edc939f289e1ebc644d4de2fd7bd9e6a46beb2406cc6036087b79651e",
+      "prompt_sha256": {
+        "box": "8df237a3a78d501e4d4a13593035a9fe76baa4433a7e611fcada084c729cdf83",
+        "rel": "322b261f3f9fbd54f531b06e194c778503a4675365ce3d0cdbd631e4c60756a0"
+      }
+    },
+    {
+      "name": "nest18",
+      "family": "R_nested",
+      "role": "provable_safe",
+      "source_sha256": "a82807c5e3cabeb91185c9bfe2039d1a32c5d6f4f694017287d46e4cd0060da4",
+      "prompt_sha256": {
+        "box": "1692bcd5a81d4c10029f3350b8765e1a41b087059577b8639ec01b8f7f4779fa",
+        "rel": "a988fee7fcb87d811b5980dc2e41d678ce43e78221ca125e38dfaead7cbab852"
+      }
+    },
+    {
+      "name": "nest19",
+      "family": "R_nested",
+      "role": "provable_safe",
+      "source_sha256": "c4b679d73576931b5adc5559142251dc255d3519815951e41328f0cd66ae2b47",
+      "prompt_sha256": {
+        "box": "5e5ec84812bf76d4c3fb3c0408125b72bd6afd2f2ab943d961d9f8ec0145137a",
+        "rel": "282f57ee23f06aff66a840c97fe7713a56bbbb44e475584faedfbf41776fef9d"
+      }
+    },
+    {
+      "name": "narrow20",
+      "family": "R_narrow",
+      "role": "provable_safe",
+      "source_sha256": "74f76c07ead6b3c9042d4219cfffb497768cd982c20a60b3ecc027e9f9e18316",
+      "prompt_sha256": {
+        "box": "ab7cdf5948dc7d58d8a3282ba38e2cb25cd3bd03bbb51a1ddde6cfaa2391b86a",
+        "rel": "36ba069623d885f02720e36bf9d1f26da5cf51575881dda276667c3986d624ed"
+      }
+    },
+    {
+      "name": "narrow21",
+      "family": "R_narrow",
+      "role": "provable_safe",
+      "source_sha256": "ebb7bab4ab9c2fe1b04eafb07564d8a6f4c7a703c3cb0eceddfde3c775582a47",
+      "prompt_sha256": {
+        "box": "c07489f523ece4ade4cb53a6457133ff713b68ca5ea75b121de933f9347e2fde",
+        "rel": "8aff4944d5f6e6b92add724ff1445f983f509669cc862f7dea43306476bd46e3"
+      }
+    },
+    {
+      "name": "narrow22",
+      "family": "R_narrow",
+      "role": "provable_safe",
+      "source_sha256": "365a3247310ffebc3e32550ebc6245f1329297c7fc656bd1bfd7529547b20ea0",
+      "prompt_sha256": {
+        "box": "d3378614cd0e458bacb0f05d40d02736eb7ea3fc23fd7db2b9ec1d001c55f2a9",
+        "rel": "7f86ff8975a9f26f4e0a4ca2d1e1fd4887c4658940968c93104be9f863d63043"
+      }
+    },
+    {
+      "name": "uns23",
+      "family": "X_unsafe",
+      "role": "unsafe_source_control",
+      "source_sha256": "adf82d34deb6092156510a0ff68dfbda0c0ef6c9f91bbf9dec93bc5ab4811c5d",
+      "prompt_sha256": {
+        "box": "2861fa1b556214fcbab3726ce91fc88da11e081433c33a5df95e1975959eedca",
+        "rel": "99263cb6d91a5ac1f09345270781651e119869bf9a8060735b7036838356cf68"
+      }
+    },
+    {
+      "name": "uns24",
+      "family": "X_unsafe",
+      "role": "unsafe_source_control",
+      "source_sha256": "16274a4ca1579ff4c2ef68d159e74c816abc765c3b9a89e50e2d7b40c097987a",
+      "prompt_sha256": {
+        "box": "6510ed0fa63a4766879662c6dcfe2dc107aaf4056214d7b78ab09155717015aa",
+        "rel": "5d3e6aa8c3921a2a45853f3693e0d187298d8bbde1e9f09f0f9aedffa5a4978a"
+      }
+    },
+    {
+      "name": "uns25",
+      "family": "X_unsafe",
+      "role": "unsafe_source_control",
+      "source_sha256": "28349b92afdb6033342a4749383c845b635bcbf8330fba2d2d8f30b465ffc3b7",
+      "prompt_sha256": {
+        "box": "59c4edec063d448bdf81cd8e6dc9adfb23aaaaeb4430dd42d7c7890c0da960d9",
+        "rel": "01fc69ab76290703ba6a90bf192273982c2061f4667cfcaa92c158a0b617255a"
+      }
+    },
+    {
+      "name": "uns26",
+      "family": "X_unsafe",
+      "role": "unsafe_source_control",
+      "source_sha256": "9384b36a4a8a621cb28b0b4c831ae769df244a7da016c42f7d1b8e04f9d54ca6",
+      "prompt_sha256": {
+        "box": "4881eff452d6aed8fb2102480196113cbcd871e4466b51de1fdd0755d0fb6645",
+        "rel": "d8a9485d55821704fb9f59655bb091ca6a9eeb8291d99588d935a3ce458929ae"
+      }
+    },
+    {
+      "name": "uns27",
+      "family": "X_unsafe",
+      "role": "unsafe_source_control",
+      "source_sha256": "dee3efaa0847dbde021d6524897c375872f94e44d31cba2f0a99e2ff072d8c58",
+      "prompt_sha256": {
+        "box": "6ab7e184d3dc5a8f67692dce51c8c21dae30c7c47f6edb35f4e7d22a4e8e8e94",
+        "rel": "134798e12ad92062d45b142d6f19c3230b0bc20b4c79c8a4ae58ca907999d95f"
+      }
+    }
+  ]
+}

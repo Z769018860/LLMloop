@@ -1,0 +1,65 @@
+{
+  "index": 516,
+  "case": "upstream2026/nla-digbench-scaling/geo3-ll2_unwindbound10",
+  "corpus": "upstream2026",
+  "expected": false,
+  "model": "claude-sonnet-4-5-20250929",
+  "repeat": 2,
+  "status": "UNKNOWN",
+  "retained": 0.5000000006984919,
+  "pre": {
+    "k": [
+      -2147483648,
+      2
+    ]
+  },
+  "narrowed": {
+    "z": [
+      -2147483648,
+      2147483647
+    ],
+    "a": [
+      -2147483648,
+      2147483647
+    ],
+    "k": [
+      -2147483648,
+      2
+    ]
+  },
+  "per_dim": {
+    "z": 1.0,
+    "a": 1.0,
+    "k": 0.500000001
+  },
+  "shrunk": [
+    "k"
+  ],
+  "widened": [],
+  "empty_interval": [],
+  "aliased": [],
+  "parse_error": null,
+  "model_reply": "Looking at the function, I need to find where signed integer overflow can occur in the `long long` arithmetic.\n\n**Key operations:**\n- `az = ((long long) a) * z` \u2014 product of two 32-bit ints cast to 64-bit. Max magnitude ~2^62, always fits in `long long`. Safe for all inputs.\n- Loop body runs `n = min(max(0, k-1), 10)` times (assuming `counter` starts at 0, the worst case).\n- Inside the loop: `x = (x * z) + a` and `y = y * z`, both `long long` arithmetic.\n\n**Overflow analysis by iteration count:**\n\nFor **n=0** (k \u2264 1): no loop body executes. Always safe.\n\nFor **n=1** (k=2): one iteration. `x*z = a*z`, max |a\u00b7z| = 2^31 \u00d7 2^31 = 2^62 < 2^63. Addition `a*z + a = a*(z+1)`, max |a\u00b7(z+1)| \u2264 2^62 < 2^63. `y*z = z`, |z| \u2264 2^31 < 2^63. **Safe for all a, z.**\n\nFor **n=2** (k=3): `x*z` in the second iteration computes `a\u00b7z\u00b7(z+1)`, which can reach ~2^31 \u00d7 2^62 = 2^93 \u2014 **overflow** for large z. Would need |z| \u2264 65535, losing ~99.997% of z's domain.\n\nFor **n=10** (k\u226511): `y = z^10` overflows when |z| \u2265 79; `x` overflows when |z| \u2265 10 (with full-range a).\n\n**Box comparison:**\n- Restricting z to [-9, 9] (keeping k, a full): fraction \u2248 19/2^32 \u2248 4.4\u00d710\u207b\u2079\n- Restricting k to [-2^31, 2] (keeping a, z full): fraction \u2248 (2^31+3)/2^32 \u2248 50%\n\nRestricting k is far superior \u2014 it keeps the entire domain for a and z while excluding only k values that trigger multi-iteration overflow.\n\n```json\n{\"pre\": {\"k\": [-2147483648, 2]}}\n```",
+  "served_model": "claude-sonnet-4-5-20250929",
+  "stub": false,
+  "phases": [
+    {
+      "poly": false,
+      "status": "STUCK:top/loop0: invariant at entry (path 0)",
+      "rounds": 6
+    },
+    {
+      "poly": true,
+      "status": "STUCK:top/loop0: invariant at entry (path 0)",
+      "rounds": 7
+    }
+  ],
+  "calls": 1,
+  "prompt_tokens": 497,
+  "completion_tokens": 1500,
+  "seconds": 158.72,
+  "ask_stop_reason": null,
+  "verify_stop_reason": null,
+  "verify_wall_seconds": 17.892144648,
+  "verify_peak_rss_bytes": 256790528
+}

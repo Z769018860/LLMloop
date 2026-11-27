@@ -1,0 +1,46 @@
+{
+  "model_requested": "deepseek-v4.1-flash-ark",
+  "request": {
+    "model": "deepseek-v4.1-flash-ark",
+    "temperature": 0.7,
+    "max_tokens": 16384,
+    "messages": [
+      {
+        "role": "system",
+        "content": "You state preconditions. You never prove anything: a separate verifier checks every value in the box you give, and it rejects the program if any of them overflows. Reply with one JSON object and nothing else."
+      },
+      {
+        "role": "user",
+        "content": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int nlen){\nint offset;\nint length;\nint i = 0;\nint j = 0;\nint __a = 0;\nfor (i = 0; i < nlen; i++)\n{\n  for (j = 0; j < 8; j++)\n  {\n    __a = 1 / (0 <= ((nlen - 1) - i));\n    __a = 1 / (((nlen - 1) - i) < nlen);\n  }\n\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"nlen\": [-2147483648, 2147483647]}"
+      }
+    ]
+  },
+  "started_utc": "2026-11-27T00:48:32Z",
+  "endpoint": "https://api.square16.org/v1",
+  "attempts": [
+    {
+      "attempt": 0,
+      "ok": true,
+      "http_status": 200,
+      "seconds": 5.535
+    }
+  ],
+  "response_text": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"logprobs\":null,\"message\":{\"content\":\"{\\\"pre\\\": {}}\",\"reasoning_content\":\"We need answer JSON only. Need analyze function. Need preconditions for nlen avoiding signed integer overflow, division by zero, bad shifts. Only nlen. Code loops i=0; i\\u003cnlen; i++. Inner j 0..7. Expressions: (nlen - 1) - i. Potential signed overflow in nlen - 1 if nlen = INT_MIN? nlen -1 underflows if nlen = INT_MIN? INT_MIN - 1 = -2147483649 cannot represent. Also i increment? i++ could overflow? i \\u003c nlen. nlen bounded int. If nlen positive, i increments until nlen-1, then i++ to nlen. If nlen = INT_MAX, i goes to INT_MAX? Let's see i starts 0, condition i \\u003c nlen. For nlen=INT_MAX, i reaches INT_MAX-1, body, i++ -\\u003e INT_MAX, condition INT_MAX \\u003c INT_MAX false. i++ from INT_MAX-1 to INT_MAX safe. So no i overflow. If nlen \\u003c=0 loop not executed. nlen - 1 inside loop only. If nlen positive. nlen-1 safe for nlen \\u003e=1? For nlen positive, nlen-1 \\u003e=0 no underflow. (nlen-1)-i: i ranges 0..nlen-1, so expression ranges nlen-1 down to 0, no overflow. Division by zero: denominator is 0 \\u003c= ((nlen-1)-i). This is boolean 0/1. If expression negative, denominator 0 -\\u003e division by zero. But loop i \\u003c nlen; expression = nlen-1-i \\u003e=0 for i \\u003c= nlen-1, so 1. For all i in loop, true. For nlen? If nlen positive, i max nlen-1, expression 0, so true. No div zero. Second denominator (((nlen -1)-i) \\u003c nlen). For positive nlen, expression max nlen-1 \\u003c nlen true, min 0 \\u003c nlen true, so 1. If nlen maybe? But loop only positive. For nlen \\u003c=0 no loop. The only potential overflow is nlen -1 when nlen = INT_MIN? But loop not executed if nlen negative. C evaluation: for loop initialization i=0; condition i \\u003c nlen. If nlen negative false, body not executed, expression not evaluated. So nlen=INT_MIN safe? Wait i starts 0, condition 0 \\u003c INT_MIN false, no body. No nlen-1. So no overflow. Thus entire declared bounds safe? Need consider nlen = INT_MAX? Body executes. nlen -1 = INT_MAX-1 safe. (nlen-1)-i for i up to nlen-1 = 0 safe. i++ from INT_MAX-1 to INT_MAX safe. Condition i \\u003c nlen: when i=INT_MAX? false. No overflow in i++? i++ evaluated after body at i=INT_MAX-1 yields INT_MAX, safe. So entire domain safe. However there is division by zero? Let's inspect first denominator: 0 \\u003c= ((nlen - 1) - i). For nlen positive and i \\u003c= nlen-1, yes. For nlen? if nlen=0, loop not executed. nlen negative loop not. So no. Second similarly. Therefore empty precondition.\\n\\nBut need be careful: C signed integer overflow in nlen - 1 if nlen = INT_MIN only if evaluated. Not evaluated due loop condition false? In for loop, initial i=0; condition i \\u003c nlen. If nlen = INT_MIN, 0 \\u003c -2147483648 false, loop body skipped. So safe. But what about nlen=INT_MIN and i? no.\\n\\nThus pre empty {}. Output JSON only.\",\"role\":\"assistant\"}}],\"created\":1795740520,\"id\":\"0217957405153760730b6660d857180baac0c56a1cd6448c9c0e2\",\"model\":\"deepseek-v4-1-flash-261017\",\"service_tier\":\"default\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":823,\"prompt_tokens\":437,\"total_tokens\":1260,\"prompt_tokens_details\":{\"cached_tokens\":384},\"completion_tokens_details\":{\"reasoning_tokens\":817}}}",
+  "served_model": "deepseek-v4-1-flash-261017",
+  "usage": {
+    "completion_tokens": 823,
+    "prompt_tokens": 437,
+    "total_tokens": 1260,
+    "prompt_tokens_details": {
+      "cached_tokens": 384
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 817
+    }
+  },
+  "content": "{\"pre\": {}}",
+  "finish_reason": "stop",
+  "seconds": 5.535,
+  "prompt_sha256": "91dcf8105885159a48f5b591a8e3e60d1822adba395233489519791630beb2d6",
+  "prompt_text": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int nlen){\nint offset;\nint length;\nint i = 0;\nint j = 0;\nint __a = 0;\nfor (i = 0; i < nlen; i++)\n{\n  for (j = 0; j < 8; j++)\n  {\n    __a = 1 / (0 <= ((nlen - 1) - i));\n    __a = 1 / (((nlen - 1) - i) < nlen);\n  }\n\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"nlen\": [-2147483648, 2147483647]}"
+}

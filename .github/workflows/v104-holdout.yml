@@ -1,0 +1,95 @@
+name: v1.04 hold-out, the 41 pre-registered exclusions
+
+# Frozen protocol: experiments/v104/holdout41/protocol.json (41 cases, 123 units, 5 shards).
+#
+# The 400-case study took the 118 c/termination-crafted-lit cases with the smallest sha256(name).
+# That rule was frozen before any result existed, so its complement is a set no outcome could have
+# influenced: 41 cases that were never translated by any earlier experiment and never appeared in a
+# prompt. Same property, same tools, same caps, same directory as the 400 -- so the numbers are
+# directly comparable, and any movement is the cases, not the setup.
+#
+# What this can and cannot say is written into the protocol: it is the same family as the
+# development set. It supports "not tuned to these particular programs"; it does not support
+# "generalises to another population". The latter is what E2 wanted and what no corpus in this
+# family can give.
+on:
+  push:
+    branches: [research/v103-exec]
+    paths: ['.github/workflows/v104-holdout.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  holdout:
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '21'}
+      - name: Install package
+        run: python -m pip install -q -e '.[test,smt,exp]'
+      - name: Prepare pinned inputs
+        run: |
+          chmod +x scripts/ci_setup_v103.sh
+          EXT="${{ runner.temp }}/ext"
+          scripts/ci_setup_v103.sh "$EXT" scale
+          scripts/ci_setup_v103.sh "$EXT" tools
+      - name: Run shard ${{ matrix.shard }}
+        run: |
+          EXT="${{ runner.temp }}/ext"
+          python -u scripts/heldout_v104.py run --external "$EXT" \
+            --output experiments/v104/holdout41 --shard ${{ matrix.shard }} --shards 5
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: holdout41-shard-${{ matrix.shard }}
+          path: experiments/v104/holdout41
+          if-no-files-found: error
+          retention-days: 30
+
+  merge:
+    needs: holdout
+    if: always()
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install package
+        run: python -m pip install -q -e '.[test,smt,exp]'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: holdout41-shard-*
+          merge-multiple: true
+          path: incoming
+      - name: Fold the shards in
+        run: |
+          set -e
+          # Upload the whole output directory: a status without the per-unit command line and stderr
+          # is not evidence (the first attempt at the loop-suite workflow uploaded `shards/` alone).
+          cp -a incoming/. experiments/v104/holdout41/
+          n=$(ls -1 experiments/v104/holdout41/shards/shard_*.json 2>/dev/null | wc -l)
+          echo "$n shard result(s) of 5"
+          if [ "$n" -ne 5 ]; then echo "incomplete: $n of 5; nothing is recorded" >&2; exit 1; fi
+          python -u scripts/heldout_v104.py merge --output experiments/v104/holdout41
+          cat experiments/v104/holdout41/summary.md
+      - name: Trim the logs GitHub will not take
+        run: python -u scripts/trim_logs.py experiments/v104/holdout41
+      - name: Record evidence and push
+        # A retry loop's exit status is the loop's, so three rejected pushes looked like
+        # success in v1.05 (GH001, a 361 MB log). push_evidence.sh checks the remote.
+        run: |
+          bash scripts/push_evidence.sh research/v103-exec experiments/v104/holdout41 \
+            "v1.04: the 41-case pre-registered hold-out [skip ci]"

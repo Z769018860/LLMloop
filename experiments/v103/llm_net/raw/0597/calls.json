@@ -1,0 +1,49 @@
+[
+  {
+    "model_requested": "deepseek-v4.1-flash-ark",
+    "request": {
+      "model": "deepseek-v4.1-flash-ark",
+      "temperature": 0.7,
+      "max_tokens": 6000,
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a loop-summary hypothesis generator. You only PROPOSE candidates; a separate verifier checks them against the real C semantics and rejects wrong ones. Reply with one JSON object and nothing else."
+        },
+        {
+          "role": "user",
+          "content": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int i__in){\nint i = i__in;\nwhile (i > 5)\n{\n  i = i - 1;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"i__in\": [-2147483648, 2147483647]}"
+        }
+      ]
+    },
+    "started_utc": "2026-11-22T00:42:37Z",
+    "endpoint": "https://api.square16.org/v1",
+    "attempts": [
+      {
+        "attempt": 0,
+        "ok": true,
+        "http_status": 200,
+        "seconds": 4.138
+      }
+    ],
+    "seconds": 4.138,
+    "response_text": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"logprobs\":null,\"message\":{\"content\":\"{\\\"atoms\\\": [\\\"i \\u003c= i__in\\\", \\\"i \\u003e= i__in - 2147483647\\\", \\\"i \\u003e= 6\\\", \\\"i \\u003e 5\\\", \\\"i \\u003c= i__in\\\", \\\"i__in - i \\u003e= 0\\\", \\\"i \\u003e= min(i__in, 6)\\\", \\\"i \\u003c= max(i__in, 6)\\\", \\\"i__in \\u003e= i\\\", \\\"i - i__in \\u003c= 0\\\", \\\"i \\u003c= 2147483647\\\", \\\"i \\u003e= -2147483648\\\", \\\"i__in - i \\u003c= 2147483647 - 6\\\", \\\"i \\u003e= 6 and i \\u003c= i__in\\\", \\\"i__in - i \\u003e= 0 and i \\u003e= 6\\\", \\\"i + (i__in - i) == i__in\\\", \\\"abs(i) \\u003c= max(abs(i__in), 6)\\\", \\\"i__in \\u003e= 6 or i == i__in\\\", \\\"i \\u003c= i__in + 0\\\", \\\"i - 1 \\u003e= 5\\\", \\\"i - 1 \\u003c= i__in - 1\\\", \\\"i != i__in or i \\u003c= 5 or i__in \\u003c= 5\\\", \\\"i__in - i \\u003e= 0\\\", \\\"i \\u003e= 5\\\", \\\"i - 1 \\u003e= -2147483648\\\", \\\"i__in - i + 5 \\u003e= 0\\\", \\\"i \\u003c= 2147483647 and i \\u003e= 6\\\", \\\"i__in - i == (i__in if i__in \\u003c= 5 else i__in - i)\\\"]}\",\"reasoning_content\":\"The function: i = i__in; while (i \\u003e 5) i = i - 1; return 0. No overflow since i decreases. Need atoms showing i \\u003c= i__in, i \\u003e= min(i__in, 5)... at loop head: i \\u003e= 6? Actually guard i \\u003e 5 gives i \\u003e= 6. And i \\u003c= i__in. No overflow subtracting 1 since i \\u003e= 6 when decrementing.\\n\\nPropose atoms.\",\"role\":\"assistant\"}}],\"created\":1795308161,\"id\":\"0217953081582452cb8822a4864991e162f30172d7ae7b648bad0\",\"model\":\"deepseek-v4-1-flash-261017\",\"service_tier\":\"default\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":429,\"prompt_tokens\":551,\"total_tokens\":980,\"prompt_tokens_details\":{\"cached_tokens\":512},\"completion_tokens_details\":{\"reasoning_tokens\":99}}}",
+    "served_model": "deepseek-v4-1-flash-261017",
+    "usage": {
+      "completion_tokens": 429,
+      "prompt_tokens": 551,
+      "total_tokens": 980,
+      "prompt_tokens_details": {
+        "cached_tokens": 512
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 99
+      }
+    },
+    "content": "{\"atoms\": [\"i <= i__in\", \"i >= i__in - 2147483647\", \"i >= 6\", \"i > 5\", \"i <= i__in\", \"i__in - i >= 0\", \"i >= min(i__in, 6)\", \"i <= max(i__in, 6)\", \"i__in >= i\", \"i - i__in <= 0\", \"i <= 2147483647\", \"i >= -2147483648\", \"i__in - i <= 2147483647 - 6\", \"i >= 6 and i <= i__in\", \"i__in - i >= 0 and i >= 6\", \"i + (i__in - i) == i__in\", \"abs(i) <= max(abs(i__in), 6)\", \"i__in >= 6 or i == i__in\", \"i <= i__in + 0\", \"i - 1 >= 5\", \"i - 1 <= i__in - 1\", \"i != i__in or i <= 5 or i__in <= 5\", \"i__in - i >= 0\", \"i >= 5\", \"i - 1 >= -2147483648\", \"i__in - i + 5 >= 0\", \"i <= 2147483647 and i >= 6\", \"i__in - i == (i__in if i__in <= 5 else i__in - i)\"]}",
+    "finish_reason": "stop",
+    "round": 0,
+    "prompt_sha256": "caa4fbfed7a3c1b3725c93e6f04805caabffac90d979492efa44a6812ccd4772",
+    "prompt_text": "Task: propose candidate ATOMS (single formulas, not necessarily inductive) that help a verifier prove that the C function below never executes undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts) for any parameter values inside the stated bounds.\nOnly the absence of undefined behaviour matters; there is no assertion to prove. Unsigned and narrow types wrap (defined). ABI: LP64.\nParameters named `NAME__in` hold the ENTRY value of NAME; the local `NAME` is a copy that the code modifies. Atoms may relate running variables to entry values (e.g. `x + z == z__in`, `2*(x__in - x) == y*y - y - 506`).\nThe function may contain several loops (also nested); an atom you propose is tried at EVERY loop head and kept only where it survives, so propose atoms for all loops. Calls to __VERIFIER_nondet_*() return arbitrary values; `while (nondet)` loops may run any number of times.\nA verifier will discard wrong atoms automatically, so be generous: propose 20-30 diverse atoms. Useful shapes: bounds implied by loop guards (`i <= n`, `x >= -1`), type-range bounds, linear equalities between variables and entry copies, relations that explain WHY a counter cannot overflow (it is bounded by a parameter, or the loop terminates after a bounded number of steps: polynomial relations such as the sum of an arithmetic progression), parities / divisibility, values of variables that are reset at the start of an inner loop.\nFormula language (python syntax, exact mathematical integers): names of parameters and locals (values at the loop head), integers, + - *, floor division // and modulo % by POSITIVE literals only, comparisons < <= > >= == !=, and / or / not, min(a,b), max(a,b), abs(x), `a if cond else b`.\nOutput schema (JSON only): {\"atoms\": [\"<formula>\", ...]}\n\nSource: int f(int i__in){\nint i = i__in;\nwhile (i > 5)\n{\n  i = i - 1;\n}\n\nreturn 0;\n}\n\nParameter bounds: {\"i__in\": [-2147483648, 2147483647]}"
+  }
+]

@@ -1,0 +1,37 @@
+- entry_type: invariant_set
+  metadata:
+    format_version: '2.0'
+    uuid: 55d39529-a78f-5fcd-9dd0-f76929e5584e
+    creation_time: '2026-11-22T00:00:00+00:00'
+    producer:
+      name: llmloop
+      version: 1.04
+      configuration: llmloop v1.04 deterministic pipeline, invariants exported as loop heads
+    task:
+      input_files:
+      - program.c
+      input_file_hashes:
+        program.c: 6a507d7b0d645d9809238423e57425a0014f84b5a98f632fd040f18129613773
+      specification: |
+        CHECK( init(main()), LTL(G ! overflow) )
+      data_model: LP64
+      language: C
+  content:
+  - invariant:
+      type: loop_invariant
+      location:
+        file_name: program.c
+        line: 4
+        column: 1
+        function: f
+      value: '(i >= 0) && (i <= 60) && (j >= 0) && (j <= 0) && (j == 0) && (((j % 2) + 2) % 2 == 0) && (((j % 3) + 3) % 3 == 0) && (((j % 4) + 4) % 4 == 0) && (((long long)__z - (long long)i) >= -60) && (((long long)__z - (long long)i) <= 0) && (((long long)__z + (long long)i) >= 0) && (((long long)__z + (long long)i) <= 60) && (__z <= i) && (__z - j == 0) && ((((__z - j) % 2) + 2) % 2 == 0) && ((((__z - j) % 3) + 3) % 3 == 0) && ((((__z - j) % 4) + 4) % 4 == 0) && (__z + j == 0) && (__z <= j) && (__z >= j) && (((long long)i - (long long)j) >= 0) && (((long long)i - (long long)j) <= 60) && (((long long)i + (long long)j) >= 0) && (((long long)i + (long long)j) <= 60) && (i >= j) && (1*__z == 0) && (1*j == 0) && (i >= -1) && (i <= 0) && (i <= 1) && (i <= 2) && (i <= 99) && (i <= 100) && (i <= 101) && (j >= -1) && (j <= 1) && (j <= 2) && (j <= 99) && (j <= 100) && (j <= 101) && (j == __z)'
+      format: c_expression
+  - invariant:
+      type: loop_invariant
+      location:
+        file_name: program.c
+        line: 7
+        column: 3
+        function: f
+      value: '(i >= 0) && (i <= 6) && (j >= 0) && (j <= 0) && (j == 0) && (((j % 2) + 2) % 2 == 0) && (((j % 3) + 3) % 3 == 0) && (((j % 4) + 4) % 4 == 0) && (((long long)__z - (long long)i) >= -6) && (((long long)__z - (long long)i) <= 0) && (((long long)__z + (long long)i) >= 0) && (((long long)__z + (long long)i) <= 6) && (__z <= i) && (__z - j == 0) && ((((__z - j) % 2) + 2) % 2 == 0) && ((((__z - j) % 3) + 3) % 3 == 0) && ((((__z - j) % 4) + 4) % 4 == 0) && (__z + j == 0) && (__z <= j) && (__z >= j) && (((long long)i - (long long)j) >= 0) && (((long long)i - (long long)j) <= 6) && (((long long)i + (long long)j) >= 0) && (((long long)i + (long long)j) <= 6) && (i >= j) && (1*__z == 0) && (1*j == 0) && (i >= -1) && (i <= 0) && (i <= 1) && (i <= 2) && (i <= 99) && (i <= 100) && (i <= 101) && (j >= -1) && (j <= 1) && (j <= 2) && (j <= 99) && (j <= 100) && (j <= 101) && (j == __z)'
+      format: c_expression

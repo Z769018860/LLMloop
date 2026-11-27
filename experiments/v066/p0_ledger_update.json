@@ -1,0 +1,82 @@
+{
+  "milestone": "v066",
+  "all_p0_complete": false,
+  "items": [
+    {
+      "id": "P0-02",
+      "requirement": "真实 LLM",
+      "status": "substantially_addressed_six_models_four_families",
+      "completed_evidence": [
+        "新增 gpt-4.1-mini、gemini-3-flash（新家族）与 claude-dsflash-itkk（DeepSeek V4.1 Flash 别名，非独立 Claude）；精确/区间/嵌套区间/规范化留出研究均已覆盖",
+        "6 个模型的嵌套区间不变式（Study N）：认证 16–30/32，不安全 0/24",
+        "规范化扩展的新留出确认 H2（6 模型）：ark 6→16/16，glm 0→11/16，gpt-4.1-mini 0→7/16，其余无显著变化；不安全 0/24"
+      ],
+      "remaining_acceptance": [
+        "claude-dsflash-itkk 与 deepseek-v4.1-flash-itkk 同底层模型：独立家族仍只有 DeepSeek/GLM/OpenAI/Google",
+        "弱模型（gpt-4.1-mini、gemini-3-flash）的能力差距未被主机侧修复弥补"
+      ],
+      "evidence_paths": [
+        "stats_new_models_c.json",
+        "stats_new_models_fgh.json",
+        "stats_h2_n.json",
+        "../../paper/llm_experiment_report_v066_zh.md"
+      ]
+    },
+    {
+      "id": "P0-03",
+      "requirement": "外部基线",
+      "status": "partial_more_tools_and_region_map",
+      "completed_evidence": [
+        "新增非 LLM 工具：CBMC 5.95.1（有界模型检查）与 Z3 Spacer（CHC/PDR 自动不变式合成，与 LLMloop 共用语义引擎）",
+        "区间图：单层 34 个安全程序 CBMC 在域界≤1024 为 34/34、完整域 0/34，LLMloop 34/34；嵌套 8 个 CBMC 8/8/4/2/0，LLMloop 8/8；Spacer 17–22/34",
+        "MALICE 在 3 个新模型上运行：仅预测 2/1/0（共 8），修正后独立复核 1/7/4，不安全 0；19 个修正后文件 symexec 复核 19/19"
+      ],
+      "remaining_acceptance": [
+        "ESBMC、CPAchecker、Ultimate（下载被网络策略拒绝，未运行）",
+        "MALICE 在堆形状任务上的评估",
+        "会议版 LoopSCC artifact",
+        "CBMC 的找 bug 优势未被 LLMloop 复现（LLMloop 只拒绝认证）"
+      ],
+      "evidence_paths": [
+        "cbmc_baseline.json",
+        "spacer_baseline.json",
+        "spacer_scales.json",
+        "region_map.json",
+        "malice_new_models_summary.json",
+        "matched_13_six_models.json"
+      ]
+    },
+    {
+      "id": "P0-04",
+      "requirement": "消融/修复",
+      "status": "substantially_addressed",
+      "completed_evidence": [
+        "嵌套区间不变式模式（typed_invariant_nested）及随机性质测试",
+        "native_division 编码配置与 auto 策略：404 个候选找回 10、丢失 1、0 个可靠性翻转，并集 150 对 140"
+      ],
+      "remaining_acceptance": [
+        "会议版 LoopSCC 参考配置",
+        "三层及以上嵌套、状态相关的内层边界、堆"
+      ],
+      "evidence_paths": [
+        "profile_consistency.json",
+        "../../tests/test_typed_invariant_nested.py"
+      ]
+    }
+  ],
+  "code_changes": [
+    "llmloop/typed_invariant_nested.py (new)",
+    "llmloop/typed_chc.py (new, Spacer baseline)",
+    "llmloop/candidate_normalize.py (entry quoting, stray keys)",
+    "llmloop/phase_invariants.py (opt-in integer_division)",
+    "llmloop/typed_recurrence.py, typed_invariant.py (solver_profile)",
+    "llmloop/summary_portfolio.py (solver_profile auto, typed_invariant_nested backend)",
+    "llmloop/api.py (frontend typed_invariant_nested, solver_profile)"
+  ],
+  "disclosures": [
+    "claude-dsflash-itkk returns the DeepSeek V4.1 Flash model id: alias, not an independent Claude model",
+    "ESBMC/CPAchecker/Ultimate downloads blocked (403): not run",
+    "all fixes were designed after inspecting failures; H2 and region map are the confirmations"
+  ],
+  "no_speedup_claimed": true
+}

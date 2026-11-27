@@ -1,0 +1,65 @@
+{
+  "index": 353,
+  "case": "upstream2026/nla-digbench-scaling/geo3-ll2_unwindbound20",
+  "corpus": "upstream2026",
+  "expected": false,
+  "model": "claude-sonnet-4-5-20250929",
+  "repeat": 1,
+  "status": "UNKNOWN",
+  "retained": 0.5000000006984919,
+  "pre": {
+    "k": [
+      -2147483648,
+      2
+    ]
+  },
+  "narrowed": {
+    "z": [
+      -2147483648,
+      2147483647
+    ],
+    "a": [
+      -2147483648,
+      2147483647
+    ],
+    "k": [
+      -2147483648,
+      2
+    ]
+  },
+  "per_dim": {
+    "z": 1.0,
+    "a": 1.0,
+    "k": 0.500000001
+  },
+  "shrunk": [
+    "k"
+  ],
+  "widened": [],
+  "empty_interval": [],
+  "aliased": [],
+  "parse_error": null,
+  "model_reply": "Looking at the function, I need to find the largest parameter box preventing signed integer overflow in the 64-bit (`long long`) arithmetic.\n\nThe key operations are inside the `while` loop:\n- `x = (x * z) + a` \u2014 64-bit multiply-add\n- `y = y * z` \u2014 64-bit multiply\n- `c = c + 1` \u2014 64-bit increment\n\nThe loop is bounded two ways: the `counter` global (at most ~20 iterations if it starts near 0, but potentially up to `k-1` iterations if `counter` starts very negative since we can't constrain it) and the break condition `c >= k` (since `c` starts at 1 and increments by 1, the loop runs at most `k-1` times).\n\nFor `k <= 1`: the break fires immediately \u2014 zero loop iterations. All remaining operations (`x = a` widening, `az = (long long)a * z` where both operands are 32-bit so the product fits in 64-bit) are safe.\n\nFor `k = 2`: exactly one iteration regardless of `counter`. We get `x = a*z + a` and `y = z`. The product `a*z` in 64-bit has magnitude at most `(2^31)^2 = 2^62`, and adding `a` (at most `2^31`) keeps it under `2^63`. `y = z` trivially fits. Safe.\n\nFor `k = 3`: two iterations. `x = a*(z^2+z+1)`, `y = z^2`. With `a = z = 2^31-1`, `|x| \u2248 2^31 * 2^62 = 2^93` \u2014 massive overflow. Restricting `z` to make this safe (roughly `|z| <= 65536`) shrinks the box volume by a factor of ~`2^15`, far worse than the tiny gain from extending `k` by one.\n\nExtending `k` further only makes the trade-off worse. The optimal box keeps `k <= 2` with `a` and `z` fully unrestricted \u2014 about 50% of the declared domain.\n\n```json\n{\"pre\": {\"k\": [-2147483648, 2]}}\n```",
+  "served_model": "claude-sonnet-4-5-20250929",
+  "stub": false,
+  "phases": [
+    {
+      "poly": false,
+      "status": "STUCK:top/loop0: invariant at entry (path 0)",
+      "rounds": 6
+    },
+    {
+      "poly": true,
+      "status": "STUCK:top/loop0: invariant at entry (path 0)",
+      "rounds": 7
+    }
+  ],
+  "calls": 1,
+  "prompt_tokens": 497,
+  "completion_tokens": 1500,
+  "seconds": 80.443,
+  "ask_stop_reason": null,
+  "verify_stop_reason": null,
+  "verify_wall_seconds": 15.544385802000079,
+  "verify_peak_rss_bytes": 237006848
+}

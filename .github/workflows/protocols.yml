@@ -1,0 +1,55 @@
+name: can this repository still reproduce itself
+
+# Every experiment froze the code that produced its numbers (`frozen_source_sha256` in its
+# `protocol.json`). A frozen file that moved with nothing said about it means the numbers in that
+# directory can no longer be re-derived from the tree -- and nothing about the failure is visible in
+# the results, which is why it went unnoticed until a hand-written script found four of them at once.
+#
+# `check_protocols.py` answers the question in one table and three states: ok / amended / DRIFT.
+# Only DRIFT is a failure. `amended` means the move is recorded in the protocol's `driver_amendments`
+# (which commit, why, and how to restore the frozen bytes); it is not a pass, because such a protocol
+# cannot be re-run as frozen, and it is not a failure, because the numbers it contains were produced
+# by the bytes it froze.
+#
+# Why not on every push: editing a frozen driver is normal during active work, and the DRIFT that
+# follows is the mechanism reporting itself rather than a regression -- it clears in the same commit
+# that re-freezes the protocol. A periodic run catches the case that actually matters: a protocol
+# that drifted and nobody came back to.
+#
+# Note on the schedule: GitHub only runs scheduled workflows from the default branch, and this file
+# lives on `research/v103-exec`. So the weekly run below is a placeholder until it lands on `main`;
+# until then this is dispatched by hand, which is still one click instead of one forgotten script.
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  protocols:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: |
+          python -m pip install -q --upgrade pip
+          python -m pip install -q pyyaml pytest
+      - name: Every frozen protocol, in one table
+        run: python -u scripts/check_protocols.py
+      - name: The three-state machine itself
+        run: python -m pytest -q tests/test_check_protocols.py
+      # Gate 16: a generated document is only worth its generator. `--check` recomputes the ledger
+      # from the five results.json files and diffs it against the committed markdown, so a number
+      # that stopped being true fails the build instead of waiting to be noticed by a reader.
+      - name: The ledger still matches the data it summarises
+        run: |
+          python -u scripts/llm_ledger.py --check
+          python -m pytest -q tests/test_llm_ledger.py

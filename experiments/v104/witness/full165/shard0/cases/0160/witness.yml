@@ -1,0 +1,28 @@
+- entry_type: invariant_set
+  metadata:
+    format_version: '2.0'
+    uuid: c224e65b-96ee-5be3-aaa4-8ab10af03d6f
+    creation_time: '2026-11-22T00:00:00+00:00'
+    producer:
+      name: llmloop
+      version: 1.04
+      configuration: llmloop v1.04 deterministic pipeline, invariants exported as loop heads
+    task:
+      input_files:
+      - program.c
+      input_file_hashes:
+        program.c: 877387b929a32ad4076f55bcd5c4cc33cba1ded740584519255097d2bbf95f54
+      specification: |
+        CHECK( init(main()), LTL(G ! overflow) )
+      data_model: LP64
+      language: C
+  content:
+  - invariant:
+      type: loop_invariant
+      location:
+        file_name: program.c
+        line: 9
+        column: 3
+        function: f
+      value: '(i >= 0) && (x >= -2147483648) && (x <= 2147483647) && (y >= -2147483648) && (y <= 2147483647) && (((long long)__z - (long long)i) <= 0) && (((long long)__z + (long long)i) >= 0) && (__z <= i) && (((long long)__z - (long long)x) >= -2147483647) && (((long long)__z - (long long)x) <= 2147483648) && (((long long)__z + (long long)x) >= -2147483648) && (((long long)__z + (long long)x) <= 2147483647) && (((long long)__z - (long long)y) >= -2147483647) && (((long long)__z - (long long)y) <= 2147483648) && (((long long)__z + (long long)y) >= -2147483648) && (((long long)__z + (long long)y) <= 2147483647) && (((long long)i - (long long)x) >= -2147483647) && (((long long)i + (long long)x) >= -2147483648) && (((long long)i + (long long)x) <= 2147483647) && (((long long)i - (long long)y) >= -2147483647) && (((long long)i - (long long)y) <= 2147483648) && (((long long)i + (long long)y) >= -2147483648) && (((long long)x - (long long)y) >= -4294967295) && (((long long)x - (long long)y) <= 4294967295) && (1*__z == 0) && (i >= -1)'
+      format: c_expression

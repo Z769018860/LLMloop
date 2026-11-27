@@ -1,0 +1,46 @@
+{
+  "model_requested": "deepseek-v4.1-flash-ark",
+  "request": {
+    "model": "deepseek-v4.1-flash-ark",
+    "temperature": 0.7,
+    "max_tokens": 16384,
+    "messages": [
+      {
+        "role": "system",
+        "content": "You state preconditions. You never prove anything: a separate verifier checks every value in the box you give, and it rejects the program if any of them overflows. Reply with one JSON object and nothing else."
+      },
+      {
+        "role": "user",
+        "content": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int n){\nint i = 0;\nint k = 0;\nint __a = 0;\nwhile (i < n)\n{\n  i++;\n  k++;\n}\n\nint j = 0;\nwhile (j < n)\n{\n  __a = 1 / (k > 0);\n  j++;\n  k--;\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"n\": [-2147483648, 2147483647]}"
+      }
+    ]
+  },
+  "started_utc": "2026-11-27T00:48:27Z",
+  "endpoint": "https://api.square16.org/v1",
+  "attempts": [
+    {
+      "attempt": 0,
+      "ok": true,
+      "http_status": 200,
+      "seconds": 7.622
+    }
+  ],
+  "response_text": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"logprobs\":null,\"message\":{\"content\":\"{\\\"pre\\\":{}}\",\"reasoning_content\":\"We need answer JSON only. Need analyze C function preconditions for signed integer overflow, division by zero, bad shifts. Parameter n declared int range full. Need largest box on n such that no UB in execution.\\n\\nFunction:\\nint f(int n){\\n int i=0,k=0,__a=0;\\n while(i\\u003cn){ i++; k++; }\\n int j=0;\\n while(j\\u003cn){ __a = 1/(k\\u003e0); j++; k--; }\\n return 0;\\n}\\n\\nNeed consider signed integer overflow in increments/decrements and comparisons? i++ when i reaches? Loop while i\\u003cn. If n positive max INT_MAX, i increments from 0 to n? For n=INT_MAX: i goes 0..INT_MAX-1, inside when i=INT_MAX-1, i++ =\\u003e INT_MAX (safe). Then condition i\\u003c n false at INT_MAX. k similarly k increments from 0 to n times; for n=INT_MAX, final k=INT_MAX safe. No overflow if n \\u003c= INT_MAX and n \\u003e=? If n negative or zero first loop not execute? i=0\\u003cn false for n\\u003c=0. k=0. Second loop j\\u003cn: if n\\u003c=0, false (j=0\\u003cn false for n\\u003c=0? For n=0: 0\\u003c0 false. For n negative false). No division because loop body not executed. Return. So n\\u003c=0 safe? Need j++ etc no.\\n\\nFor n positive: first loop executes n times. k = n. If n=INT_MAX, k=INT_MAX safe. i=n safe. second loop executes n times. j increments to n. k decrements each iteration from n down to 0? Loop condition j\\u003cn. For n positive, iterations count n: j from 0 to n-1, k from n down to 1. Body computes __a = 1 / (k \\u003e 0). k\\u003e0 boolean. Since k positive at start each body? Let's check iteration order: initial k=n \\u003e0. Body division denom (k\\u003e0)=1. Then j++; k--. After n iterations, k=0. Loop ends j=n. During last iteration before body, j=n-1, k=1 \\u003e0. denom 1. Safe. If n=0 no body. k-- never below? At last body k=1, then k-- to 0. No negative. So no underflow. If n negative: first loop no, k=0. second loop condition j=0 \\u003c n false for n\\u003c=0. no body. safe. For n full INT_MIN? i\\u003cn: 0 \\u003c INT_MIN false. j\\u003cn false. safe. No overflow.\\n\\nWait signed integer overflow maybe i++ when n=INT_MAX? i=INT_MAX-1 increments to INT_MAX safe. condition i\\u003cn: INT_MAX\\u003cINT_MAX false. k++ same. j++ when n=INT_MAX: j reaches INT_MAX after increment from INT_MAX-1. safe. k-- from? for n=INT_MAX, k initial after first loop = INT_MAX. second loop body executed when j=0..INT_MAX-1? Wait j is int. Loop condition j \\u003c n where n=INT_MAX. j starts 0, increments each iteration. Number iterations = n = INT_MAX = 2,147,483,647. Last body starts j = n-1 = INT_MAX-1, k? Let's compute k initial = n = INT_MAX. After t iterations (0-index), at start of iteration t, j=t, k=n-t. For t = n-1 = INT_MAX-1, k = n - (n-1)=1. body safe. After body j++: j goes from INT_MAX-1 to INT_MAX safe. k--: k goes from 1 to 0. Then condition j\\u003cn: INT_MAX \\u003c INT_MAX false. So safe. No overflow.\\n\\nThus declared bounds already safe? Need check division by zero: denominator (k\\u003e0) is 0 or 1, never zero? Wait expression 1/(k\\u003e0). If k\\u003e0 false, denominator 0. Could k ever \\u003c=0 in second loop? For positive n, at start k=n, after each iteration decrements. Number iterations n, at start k \\u003e=1. After last decrement to 0 then loop exits because j=n. For n positive. For n negative loop not entered. For n=0 no. So k\\u003e0 always inside. For n positive yes.\\n\\nThus no UB across full int range. Return empty precondition. Need ensure if n negative? k=0, second while j\\u003cn not executed. safe. n = INT_MIN: comparison 0 \\u003c -2147483648 false, no overflow. j=0. yes.\\n\\nBut wait declared bounds include INT_MIN. Any issue with i++? only if loop executes. n negative no. n=0 no. n positive max INT_MAX. safe. So pre {}. JSON: {\\\"pre\\\":{}}. Need output exactly.\",\"role\":\"assistant\"}}],\"created\":1795740517,\"id\":\"0217957405104860730b6660d857180baac0c56a1cd644888eefd\",\"model\":\"deepseek-v4-1-flash-261017\",\"service_tier\":\"default\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":1063,\"prompt_tokens\":400,\"total_tokens\":1463,\"prompt_tokens_details\":{\"cached_tokens\":384},\"completion_tokens_details\":{\"reasoning_tokens\":1057}}}",
+  "served_model": "deepseek-v4-1-flash-261017",
+  "usage": {
+    "completion_tokens": 1063,
+    "prompt_tokens": 400,
+    "total_tokens": 1463,
+    "prompt_tokens_details": {
+      "cached_tokens": 384
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 1057
+    }
+  },
+  "content": "{\"pre\":{}}",
+  "finish_reason": "stop",
+  "seconds": 7.622,
+  "prompt_sha256": "ee8d0badf204b522f6a96f07e4bd9219b90b9efc8a8ea2940c60c886d391882b",
+  "prompt_text": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int n){\nint i = 0;\nint k = 0;\nint __a = 0;\nwhile (i < n)\n{\n  i++;\n  k++;\n}\n\nint j = 0;\nwhile (j < n)\n{\n  __a = 1 / (k > 0);\n  j++;\n  k--;\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"n\": [-2147483648, 2147483647]}"
+}

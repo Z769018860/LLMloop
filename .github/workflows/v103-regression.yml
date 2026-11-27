@@ -1,0 +1,49 @@
+name: v1.03 regression only
+# Full pytest suite on a clean runner; the record of what passes, skips and fails goes with the evidence.
+on:
+  push:
+    branches: [research/v103-exec]
+    paths: ['.github/workflows/v103-regression.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: v103-regression
+  cancel-in-progress: false
+jobs:
+  regression:
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install package, tests and Clang
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y clang-18
+          python -m pip install -q -e '.[test,smt,exp]'
+          mkdir -p "$RUNNER_TEMP/bin"
+          ln -sf "$(command -v clang-18)" "$RUNNER_TEMP/bin/clang"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+      - name: Full regression
+        run: python -u scripts/regression_v103.py
+      - name: Record evidence and push
+        if: always()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A experiments/v103/regression
+          if git diff --cached --quiet; then echo 'no change'; exit 0; fi
+          git commit -q -m "v1.03: regression record after the CBMC-dependent test skip [skip ci]"
+          git pull --rebase --quiet origin research/v103-exec || true
+          git push origin HEAD:refs/heads/research/v103-exec
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v103-regression-only
+          path: experiments/v103/regression
+          if-no-files-found: warn
+          retention-days: 30
