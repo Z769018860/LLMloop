@@ -1,6 +1,6 @@
 # 由不受信的提案生成并经未改动验证器认证的循环安全不变式 / Certified loop-safety invariants from untrusted proposals checked by an unchanged verifier（论文草稿 / paper draft, 中英文）
 
-> 状态 / status（v1.07）: 整合草稿；§4m（pin 之后的上游新增）、§4n（契约臂 E6）、§4o（补上对照族边界之后 E6 的残余信号消失）、§4p（同一问题的重新定价与结果）与 §5b 为最新；§4e/§4f 为被更正的旧数字（各自段落内写着是怎么被更正的）。v1.01 及更早的"优于外部工具"表述已在 §4e 与 §5b 第 9 条撤回。**本轮新增摘要与 5 条贡献、引言、§1c（相关工作，23 条文献）、§8（结论）与文末参考文献**；书目与核验记录在 `paper/REFERENCES.md`，`python scripts/check_references.py --live` 逐条探测 23 个 PDF 链接。**仍缺图（两张）。** Consolidated draft; §4m (post-cutoff additions), §4n (the contract arm, E6), §4o (what extending the control's family did to it) and §5b are current; §4e/§4f are superseded numbers whose paragraphs say how and why. The pre-v1.03 "better than" claims are retracted in §4e and §5b item 9. This revision adds §1c (related work, 23 references), §8 (conclusion) and the bibliography; the two figures are still missing.
+> 状态 / status（v1.08）: 整合草稿；§4m–§4r 与 §5b 为最新。**v1.08 新增 §4q（第二价位 + 三次抽样）与 §4r（补齐 void 之后：上限就是那个变量），两者都改了正文里已有的句子**——§4p 的"t = 0.5 上模型一个独有证明都没有"与 §4q(a) 的"两个价位都落后"都被收紧为"在 2048 上限下"。§4e/§4f 为被更正的旧数字（各自段落内写着是怎么被更正的）。v1.01 及更早的"优于外部工具"表述已在 §4e 与 §5b 第 9 条撤回。参考文献 23 条在文末，核验记录在 `paper/REFERENCES.md`（`--live` 逐条探测 PDF）。**仍缺图（两张）。** This revision adds §4q (a second price point, three draws) and §4r (closing the void: the cap was the variable); both retract sentences that were already in the draft. The two figures are still missing.
 
 ## 摘要 / Abstract
 
@@ -12,10 +12,11 @@ Z3 验证器**在任意满足候选的类型化状态上检查入口、归纳与
 校验器**零驳回**，Ultimate 独立确认 **121/121** 条不变式。**覆盖率**：全体 165 例上 Ultimate 证 135、
 我们证 90（精确 McNemar p ≈ 3×10⁻⁹），故只声称 **8/165** 的独有覆盖，并把差距归因于"程序进不来"
 ——上游 pin 之后新增的 7,072 例里前端只接住 265 个，工业代码 2,085 个含循环函数里 **2,067** 个第一处
-阻塞是内存。**大模型的边际价值**：三次测量没有一次为正，最贵的两臂买 3 个净新增证明（p = 0.375 /
-0.25），契约臂 10/83 对无模型对照 6/83（p = 0.219，过预注册门槛后 p = 1），便宜价位上 5/83 对 17/83
-（p = 0.0018）在把臂放宽成三模型九次并集后只剩 3 对 8（**p = 0.227**）。2,663 次调用、639.9 万
-completion token 的账单为 **$25.74**（区间 $12.87–51.49），由脚本从原始结果现算。
+阻塞是内存。**大模型的边际价值**：五次测量没有一次为正。两次显著反向都落在 **2048 的上限**上——便宜价位
+5/83 对 17/83（p = 0.0018）、贵二十倍的价位 4/83 对 17/83（p = 0.000977）；把上限放到 16,384，
+同一个对照下落后就消失（13/83 对 17/83，**p = 0.289**），而把臂放宽成三模型九次并集也只剩
+3 对 8（**p = 0.227**）。**所以"模型更差"和"模型有用"都不成立**，成立的是"在两个 2048 臂上没有
+净贡献"。2,912 次调用、966.5 万 token 的账单为 **$26.98**（区间 $13.49–53.96），由脚本现算。
 
 **English.** Proving absence of undefined behaviour for C loops is usually limited not by the solver
 but by where the invariants come from. We let *any* source — an LLM, a trajectory fitter, Houdini
@@ -31,10 +32,11 @@ claim only **8/165** exclusive coverage and trace the gap to programs that never
 the front end admits 265 of the 7,072 cases the community added after our pin, and **2,067 of 2,085**
 loop-bearing functions in industrial code are blocked first by memory. **The LLM's marginal value:**
 three measurements, none positive — the two most expensive arms buy 3 net new proofs (p = 0.375 /
-0.25), the contract arm 10/83 against a model-free control's 6/83 (p = 0.219, p = 1 above the
-pre-registered floor), and a cheap re-run 5/83 against 17/83 (p = 0.0018) that falls to 3 against 8
-(**p = 0.227**) once the arm is widened to three models and nine samples. The bill for 2,663 calls and
-6.40 M completion tokens is **$25.74** (range $12.87–51.49), computed by script from the raw results.
+0.25), and a cheap re-run at a 2,048 cap 5/83 against 17/83 (p = 0.0018) that falls to 3 against 8
+(**p = 0.227**) once the arm is widened to three models and nine samples. The two significant
+reversals both sit at a 2,048 cap; at 16,384 the same control leaves the model 13/83 against 17/83
+(p = 0.289), i.e. behind but not significantly so. Neither "the model is worse" nor "the model helps"
+survives. The bill for 2,912 calls and 9.67 M tokens is **$26.98** (range $13.49–53.96).
 
 **贡献 / contributions.**
 
@@ -49,9 +51,10 @@ pre-registered floor), and a cheap re-run 5/83 against 17/83 (p = 0.0018) that f
 - **C4 覆盖边界被量化 / the coverage boundary, quantified.** 8/165 独有覆盖、93/165 前端可译、
   64/265 上游新增可译、8/2085 工业函数进入片段，且八条工业失败**没有一条**是"不变式难找"
   （§4e、§4k、§4l、§4m）。
-- **C5 三次否定测量与可复算账单 / three null measurements, and a reproducible bill.** 含对照族被
-  逐个补齐的过程（§4n→§4o）：模型赢过的形状一旦进入对照族，对照就不需要模型（§4p）。账单由
-  `scripts/llm_ledger.py` 现算，`--check` 不一致即非零退出（附录 A）。
+- **C5 五次否定测量与可复算账单 / five null measurements, and a reproducible bill.** 含对照族被
+  逐个补齐的过程（§4n→§4o）：模型赢过的形状一旦进入对照族，对照就不需要模型（§4p）。每一次补都
+  在削掉一个"模型可能只是运气好"的解释——先补 token 上限，再补对照族，最后换价位（§4q）与放开
+  上限（§4r）。账单由 `scripts/llm_ledger.py` 现算，`--check` 不一致即非零退出（附录 A）。
 
 **不声称 / not claimed.** 不优于 Ultimate（§4e）；不外推到别的程序种群（§4l、§4m 的分母写明了）；
 不含非线性多项式不变式（§5b 第 1 条）；不证明终止性；定理未经机器检验（§5b 第 4 条）。
@@ -83,9 +86,9 @@ that invariant comes from decides whether the proof can be trusted at all.
    加进对照族，信号就没了。**
 
 **做法 / the approach.** 一句话：把候选降级成字符串，把接受权交给一个不改的验证器，然后把力气花在
-测**净增量**而不是测准确率上。§1b 把这件事写成推理规则并给出可靠性证明（含它不覆盖什么）；§4n–§4p
-是三次测量，每一次都在补掉一个"模型可能只是运气好"的解释——先补 token 上限，再补对照族，最后换
-价钱重问一遍。 The candidates are strings, the verifier is unchanged, and the effort goes into
+测**净增量**而不是测准确率上。§1b 把这件事写成推理规则并给出可靠性证明（含它不覆盖什么）；§4n–§4r
+是五次测量，每一次都在补掉一个"模型可能只是运气好"的解释——先补 token 上限，再补对照族，然后换
+价钱重问，最后把上限本身放开、把那个 void 的臂补上。 The candidates are strings, the verifier is unchanged, and the effort goes into
 measuring the *net* contribution against a model-free family rather than into accuracy.
 
 **贡献与不声称 / contributions and non-claims.** 见上 C1–C5 与"不声称"四条；它们与 §5b 的十二条
@@ -450,6 +453,11 @@ by the summary instead of found by hand.
 
 ## 4o. 把对照族的边界补上，然后那 2 个用例就不见了（v1.06 E6b）/ Extending the control's family removes the last positive signal (v1.06 E6b)
 
+> **补记（2026-11-27）**：这一臂当年只答了 18 个单元就被余额挡住，因此记为 void、不给判定。
+> 233 个空单元已于本轮补齐（$0.95），249/249 全部有答案，结果见 **§4r**——它翻转了这一节的方向。
+> **Addendum**: this arm was void (18 of 249 answered before the balance went negative). The 233
+> empty units were filled in ($0.95); see §4r, which reverses the sign of this section.
+
 §4n 的两处偏离在写作时被列为"必须先修，才谈得上结论"。这一节两件事都做了：给模型一个能说完的上限，
 给对照一个能写符号的族；同时把判定从"一个门槛"改成"一条阶梯"，因为 §4n 里最刺眼的一处偏差是
 **结论取决于门槛取在哪**。 §4n named two repairs as prerequisites for any conclusion. Both are done here, and the ruling became a ladder instead of a floor, because §4n's most uncomfortable property was that the verdict depended on where the floor was put.
@@ -542,9 +550,11 @@ only-control, 4 both, exact McNemar p = 0.0018, and every rung of the ladder poi
 | 0.5 | 6 | 0 | 6 | **0.031** |
 
 把模型臂从"一个模型一次"换成"三个模型九次"，**t = 0 上的反向证据从 p = 0.0018 掉到 p = 0.227**：
-同一份对照、同一批用例，结论从"显著更差"退化为"无显著差异"。仍然稳的只有一处，而且它比"窄"更窄：
+同一份对照、同一批用例，结论从"显著更差"退化为"无显著差异"。在这一臂上仍有一处成立，而且它比"窄"更窄：
 **在 t = 0.5 上，宽臂一个独有的证明都没有**（它自己那 6 个全部已被对照覆盖，对照另有 6 个，p = 0.031）。
-E6c 那一臂在 0.5 上是 0 个、宽臂是 6 个，所以"盒子窄多少"依赖臂，"一个独有都没有"不依赖。
+但这也不是跨臂的：§4r 补齐的那一臂（deepseek @16k）在 `t = 0.5` 上有 **2 个**独有证明（2 对 4，
+p = 0.69）。所以"盒子窄多少"依赖臂，"一个独有都没有"也依赖臂——凡是跨臂的话，在这份数据里都要
+重新测一遍。
 The same control against the three-model, nine-sample union: 3 only-model, 8 only-control, p = 0.227.
 The reverse evidence does not survive a wider model arm. What survives is weaker than "narrower boxes":
 above the half-domain rung the wide arm has no exclusive proof at all (0 versus 6, p = 0.031).
@@ -565,9 +575,118 @@ are narrower rather than fewer: at t = 0.5 the control has 12 proofs and the mod
 
 **这一臂不能说什么 / what this arm cannot say.** 它测的是**一个价位**，不是模型的极限。便宜模型
 在后，不能写成"模型不行"，只能写成"在这个价位上，模型没有净贡献"。`deepseek` 在 16k 下能做什么，
-在有人付那 1.4 M 之前**仍然是一个未回答的问题**，本文不作断言；重复间一致性也没有测，那正是
-被砍掉的那 166 次调用。 It measures one price point, not a capability ceiling; whether deepseek at
-16k would do better remains unanswered, and so does run-to-run consistency.
+在那 1.4 M token 被买下之前是一个未回答的问题——**它现在被回答了，见 §4r，而答案削弱了这一句的
+边界**。重复间一致性在 v1.09 里测了（§4q(b)：83 例里 5 例判定翻转、47 例保留域漂移）。
+It measures one price point, not a capability ceiling. Whether deepseek at 16k would do better is
+answered in §4r, and the answer narrows this paragraph's scope; run-to-run consistency is measured
+in §4q(b).
+
+## 4q. 换一个价位，再问三次：§4p 那句话的边界（v1.08 E6d / v1.09 E6e）/ A second price point and three draws
+
+§4p 结尾自己标了两处空白：它测的是**一个价位**，而且**重复间一致性没有测**。这一节把两处都补上，
+新增花费 **$0.28**（第二价位 $0.24、三次抽样 $0.03）。两处都没有产生新结论——它们只是把"那句话
+能说多硬"的边界钉住。 Two blanks were declared at the end of §4p — one price point, no run-to-run
+consistency. Both are filled here for $0.28, and neither adds a claim: both bound the existing one.
+
+**(a) 贵二十倍的模型，给出同一个答案 / twenty times the price, the same answer.** 同一批 83 个程序、
+同一份对照（17/83，1481 次验证尝试，哈希校验）、同一系统提示、同一 2048 上限、同一验证器、同一
+判定规则（以代码导入，不是重写），只把模型从 `gpt-4.1-mini`（$0.40/$1.60 每百万 token）换成
+`claude-sonnet-4-5-20250929`（$3.00/$15.00，贵约二十倍）。协议在第一次真实调用之前冻结
+（`experiments/v108/e6d/protocol.json`），83/83 单元完成，零 void。
+
+| 臂 | 模型 | 证出 | 仅 S | 仅 B | p（t = 0） | 付费调用 | 花费 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| v1.07 E6c | `gpt-4.1-mini` | 5 | 1 | 13 | 0.0018 | 83 | $0.017 |
+| v1.08 E6d | `claude-sonnet-4-5` | **4** | **1** | **14** | **0.000977** | 83 | $0.24 |
+| 对照 B2（两臂共用） | 无模型 | 17 | — | — | — | 0 | $0 |
+
+价格差 **约十四倍**（按这一臂的实际 token 计），结果差 **一个证明**。贵的那一臂在每一级阶梯上都
+同向：`t = 1e-4` 及以上只有对照在证，`t = 0.5` 上模型 **0** 个、对照 **12** 个。
+The cheap arm pays $0.017 and the expensive one $0.24 for the same 83 programs; the difference in
+outcome is one proof. At every rung the sign is the same, and at `t = 0.5` the control has 12 proofs
+to the model's none.
+
+**这句话因此可以说到哪儿 / what this therefore licenses.** 如果只有一个便宜模型落后，"模型不行"
+与"这个模型不行"在观测上无法区分——这正是 §4p 结尾的保留。现在两个价位、两个厂商、同一设计、同一
+**2048 上限**都落后，那句话可以写成"**在 2048 这个上限下，写契约的模型没有净贡献**"。
+**上限本身是另一个变量，而它不是无害的**：§4r 把同一份对照搬到 16k 的 deepseek 臂上，落后就消失
+（13 对 17，p = 0.289）。仍然**不能**外推到前沿模型：两个 2048 臂都不是前沿模型，本文没有测过。
+With two price points and two vendors behind the control under one design, "the model has no net
+contribution at this task position" survives; "this cheap model cannot do it" is no longer the
+reading. Nothing here extends to frontier models — neither arm is one, and none was tested.
+
+**(b) 同一个问题问三次 / the same question, three times.** 所有臂在此之前都是**一次抽样**，而没有
+一处报告过抽样的离散程度。v1.09 用同一模型（`gpt-4.1-mini`）、同一 83 例，每例问三次
+（249 单元；第 0 次是 v1.07 已付过钱的那一行，从缓存取，83 次命中、0 次调用；第 1–2 次是 166 次
+真实调用）。**请求级缓存必须为后两次关掉**：缓存键是 (model, messages, temperature, max_tokens)，
+不含抽样序号，开着它会把同一个答案返回三次，然后报告"完全一致"——那是缓存的性质，不是模型的。
+第一次运行正是这样，27 个单元零付费调用、全部相同；那批行被删除，不是被重新解释。
+Every arm before this one was a single draw, and none reported the spread. The request cache keys on
+(model, messages, temperature, max_tokens) with no draw index, so serving repeats from cache would
+return one answer three times and report perfect agreement — a property of the cache. The first run
+did exactly that (27 units, zero paid calls); those rows were deleted, not reinterpreted.
+
+| 项 | 值 |
+| --- | --- |
+| 三次判定完全一致的程序 | **78 / 83** |
+| 判定在抽样间翻转的程序 | **5** |
+| 只取第 0 次（v1.07 的口径）证出 | **5 / 83** |
+| 三次取并集（best-of-3）证出 | **7 / 83** |
+| 保留域三次完全相同的程序 | 36 / 83 |
+| 保留域有漂移的程序 | **47 / 83**（中位极差 2.3e-4） |
+| `egcd3` 两个用例的判定阶段崩溃 | 3 个单元（`KeyError: 'temp'`，非模型行为） |
+
+**这句话的意义 / what it changes.** 第 0 次抽样证出的 5 个程序里，有 **2 个**只在第 1 或第 2 次
+出现。"5/83 证出"因此不是这个模型能做什么的估计，而是**一次抽样的一个实现**——同一条流水线再问
+两次，会得到 7 个或 3 个。§4p 的表里那些 1 对 13、1 对 14 的配对，同样带着这个抖动：翻转的 5 例
+中每一例都可能把"仅 S"或"仅 B"移动一。**这不会翻转方向**（两个价位都是 1 对 13/14，要翻转需要
+移动七级），但它限定了精度：本文的独有覆盖计数应读作 ±5 例，不该被当作精确到个位的测量。
+Two of the five programs proved by draw 0 appear only in draws 1–2, so "5 of 83" is one realisation
+of a draw, not an estimate of what the model can do. The 1-versus-13 pairings carry the same jitter
+per case; the sign cannot flip (it would take seven levels), but the counts are ±5, not exact.
+
+## 4r. 把 void 补上之后：上限就是那个变量（v1.06 E6b 补齐）/ closing the void: the cap was the variable
+
+§4o 把 E6b 记为 void——249 个单元里 18 个有答案、其中 16 个解析成功，其余 233 个被
+`HTTP 403 Insufficient user quota` 挡住，账户余额被打成负数。那一节因此不给判定，那 18 个答案
+只作记录保留。2026-11-27 补齐：233 个空单元重新发送，花费 **$0.95**，现在 249/249 全部有答案。
+协议、模型、上限、提示、验证器、判定规则一字未动（`experiments/v106/e6b/protocol.json` 的
+`frozen_source_sha256` 在补齐前后都通过）。
+
+补齐的结果不是"补上一个已经知道答案的洞"。它把方向翻了过来：
+
+| 臂 | 模型 | 上限 | 证出 | 仅 S | 仅 B | p（t = 0） | 抽样 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| v1.05 E6 | 3 模型 | 1500 | 12 | 3 | 8 | 0.227 | 3 次并集 |
+| v1.06 E6b | `deepseek-v4.1-flash-ark` | **16384** | **13** | **2** | **6** | **0.289** | 3 次并集 |
+| v1.07 E6c | `gpt-4.1-mini` | 2048 | 5 | 1 | 13 | 0.0018 | 1 次 |
+| v1.08 E6d | `claude-sonnet-4-5` | 2048 | 4 | 1 | 14 | 0.000977 | 1 次 |
+
+**上限一放开，落后就消失了。** 两个 2048 的臂证出 4–5 例、p ≈ 0.001；16k 的臂证出 13 例、p = 0.289。
+同一个对照（17/83，1481 次验证尝试）在这四行里没有动过。放开上限之后模型仍落后 4 个证明，
+但 McNemar 不再支持"更差"。
+The two arms at a 2,048 cap prove 4–5 programs with p ≈ 0.001; the arm at 16,384 proves 13 with
+p = 0.289, against the same 17/83 control. Loosening the cap does not make the model win -- it makes
+the loss insignificant.
+
+**这句话修正前面三处 / what this corrects.**
+
+1. §4p 说"仍然稳的只有一处：在 `t = 0.5` 上模型一个独有证明都没有"。**这不跨臂成立。** v1.05
+   宽臂是 0 对 6，但 deepseek 在 16k 上是 **2 对 4**（p = 0.69）。那条"唯一稳"的结论只在它自己
+   那一臂上成立，和"p = 0.0018"是同一种错误的两面——一侧的臂不能替另一侧说话。
+2. §4q(a) 的"两个价位都落后"要读作"**在 2048 这个上限下**两个价位都落后"。换到 16k，落后消失。
+3. "模型没有净贡献"在 16k 这一臂上只能读成"**没有显著差异**"（13 对 17，仍落后 4 个，不显著），
+   不能读成"模型更差"，也不能读成"模型有用"。
+
+**这恰好是本文的主题 / this is the paper's own subject.** 从 §4e 起，这篇文章反复说"上限是混淆
+变量：1500 让模型退化，16k 才算公平"。现在用同一份对照把这句话测了一遍，而它成立的方向**对模型
+有利**。论文没有因此变成"模型有用"——13/83 仍低于 17/83，只是不显著；但"模型更差"同样不成立。
+**两边都不成立，这才是数据说的。** 一个只在自己偏好的那一侧报告显著性的读者，会在 §4p 停下；
+那不是这份数据允许的读法。
+From §4e on this paper has argued that the cap confounds the model arm. Measured against one fixed
+control, that argument holds in the model's favour: 13 versus 17, p = 0.289. Neither "the model is
+worse" nor "the model helps" survives. The study does not get to report the significant side and
+stop there -- and that is what it spent the last four sections saying about other people's numbers.
 
 ## 5b. 能力边界（明确不声称的）/ Capability boundary (explicitly NOT claimed)
 以下是**当前方法的已知边界**，不是待办的"小问题"；论文把它们作为结果的一部分报告。 / These are **known limits of the current method**, reported as part of the results, not left as minor TODOs.
@@ -637,14 +756,16 @@ industrial failure was about finding an invariant.
 证明（p = 0.375 / 0.25）；②契约臂：10/83 对无模型对照 6/83（p = 0.219），过预注册门槛后 7 对 6
 （p = 1），而把模型赢过的"按符号切半"加进对照族之后，对照**不需要任何模型**就证出了那两例（17/83），
 残余信号消失；③在便宜价位上重问（E6c）：单模型单次 5/83 对 17/83、仅 S 1、仅 B 13、**p = 0.0018**，
-但把同一份对照配上三模型九次的并集只剩 3 对 8、**p = 0.227**——所以只能说"这一臂上模型落后"，
-不能说"模型更差"。三次测量合起来支持一句可检验的话：**在我们这个片段里，模型提议的边际价值低于一个
-不含模型的候选族，而"低多少"随臂而变，这正是必须给对照族与分母的理由。** Three measurements, none
-positive: 3 net proofs at p = 0.375/0.25; a contract arm at p = 0.219 (p = 1 above the floor) whose
-residual vanished once the control could write the shape the model used; and a cheap re-run at
-p = 0.0018 that falls to p = 0.227 when the arm is widened. The defensible sentence is that the
-model's marginal value is below a model-free candidate family in this fragment — not that it is
-worse in general.
+但把同一份对照配上三模型九次的并集只剩 3 对 8、**p = 0.227**——所以只能说"这一臂上模型落后"；
+④换到贵二十倍的价位（E6d）：4/83、1 对 14、**p = 0.000977**，几乎同一个结果，"便宜模型不行"
+这个解释因此也被排除；⑤把上限从 2048 放到 16,384（E6b 补齐）：同一个对照下 13/83 对 17/83、
+仅 S 2、仅 B 6、**p = 0.289**——**落后消失**。
+五次测量合起来支持一句更窄也更可检验的话：**在这个片段里，模型的净贡献从未为正；而"落后"本身
+取决于上限，不取决于模型或价位。** Five measurements, none positive. Two are significantly negative
+and both sit at a 2,048 cap; at the same cap a model twenty times the price gives the same answer, so
+"the cheap model cannot do it" is out; and at 16,384 the loss is no longer significant. What survives
+is narrower: no positive net contribution in this fragment, and "behind" is a property of the cap,
+not of the model or the price.
 
 **边界 / the boundary, in one sentence.** 我们不声称优于 Ultimate（§4e）、不把结论外推到别的程序
 种群（§4l、§4m 的分母都写明了）、不含非线性多项式不变式（§5b 第 1 条），且可靠性定理是纸面证明、
@@ -653,7 +774,7 @@ invariants, and the soundness theorem is proved on paper rather than in a proof 
 
 ## 附录 A. LLM 实验总账 / Appendix A. The whole bill
 
-全文所有 LLM 调用的 token 与开销，按臂列出。每个数字由 `scripts/llm_ledger.py` 从五个
+全文所有 LLM 调用的 token 与开销，按臂列出。每个数字由 `scripts/llm_ledger.py` 从七个
 `results.json` 现算（`--check` 在不一致时非零退出），逐条明细在 `docs/LLM_LEDGER.md`。
 
 | 实验 | 单元 | 调用 | prompt | completion | 生成耗时 | 估算 USD |
@@ -661,24 +782,26 @@ invariants, and the soundness theorem is proved on paper rather than in a proof 
 | v1.04 arm L（原子，3 模型 × 3 次） | 837 | 970 | 658,687 | 2,255,652 | 5.27 h | 9.17 |
 | v1.04 追加 16k | 558 | 614 | 421,321 | 3,592,229 | 7.40 h | 14.62 |
 | v1.05 E6（契约臂，3 模型 × 3 次） | 747 | 747 | 329,844 | 438,571 | 2.32 h | 1.87 |
-| v1.06 E6b（void；249 次里 231 次被拒，未计费） | 249 | 249 | 7,689 | 110,400 | 0.17 h | 0.07 |
-| v1.07 E6c（83 次流式） | 83 | 83 | 34,555 | 1,709 | 0.05 h | 0.02 |
-| **合计** | **2,474** | **2,663** | **1,452,096** | **6,398,561** | **15.2 h** | **25.74** |
+| v1.06 E6b（deepseek @16k；曾 void，2026-11-27 补齐） | 249 | 249 | 110,337 | 1,666,913 | 2.77 h | **1.02** |
+| v1.07 E6c（gpt-4.1-mini @2048，83 次流式） | 83 | 83 | 34,555 | 1,709 | 0.05 h | 0.02 |
+| v1.08 E6d（claude @2048，第二价位） | 83 | 83 | 38,614 | 8,263 | 0.12 h | 0.24 |
+| v1.09 E6e（gpt-4.1-mini，每例三次抽样；83 次命中缓存故只付 166 次） | 249 | 166 | 103,665 | 4,978 | 0.06 h | 0.05 |
+| **合计** | **2,806** | **2,912** | **1,697,023** | **7,968,315** | **17.98 h** | **26.98** |
 
 **金额是估算，不是发票 / an estimate, not an invoice.** 端点是代理，其账单不在仓库里；价目按公开
 价目代入（`gpt-4.1-mini` 0.40/1.60、`claude-sonnet-4-5` 3.00/15.00 USD 每百万 token；
 `deepseek-v4.1-flash-ark` 是内部别名，按 DeepSeek 官方 flash 价目 0.15/0.60 代入（2026-11 核对），
-别名可能含代理加价）。价目减半到加倍给出 **$12.87 – $51.49**，所以正确的写法是"十到五十美元量级"。 The endpoint is a
-proxy whose invoice is not in this repository, so the money column is a list-price estimate with a
-2x bracket; the correct statement is "on the order of ten to fifty dollars".
+别名可能含代理加价）。价目减半到加倍给出 **$13.49 – $53.96**，所以正确的写法是"十到五十美元量级"。
+The endpoint is a proxy whose invoice is not in this repository, so the money column is a list-price
+estimate with a 2x bracket; the correct statement is "on the order of ten to fifty dollars".
 
-三件事只有这张表能说清 / three things only the table shows. ①**87% 的账单在 `claude-sonnet-4-5`
-的两臂上**（$22.39），从 v1.05 到 v1.07 的全部契约臂实验合计 **$1.96**；贵不贵由"输出单价 ×
-输出长度"决定，不由实验数量决定。②**把 E6b 那个 void 补上不到一美元**（231 次调用、1.34–1.42 M
-completion，$0.82–0.86）——它此前写作"1.4 M token"，读起来像一大笔钱。③**最贵的两臂买的是 3 个
-净新增证明**（p = 0.375 / 0.25），而最便宜的 E6c 买的是本文学到的最尖锐的一个否定结果。
-87% of the bill is two `claude` arms; the whole contract-arm line costs $1.96; the one open question
-costs under a dollar.
+三件事只有这张表能说清 / three things only the table shows. ①**84% 的账单在 `claude-sonnet-4-5`
+上**（$22.63，几乎全在 v1.04 的两臂）；整个契约臂线（E6 → E6e，五个臂、1,411 个单元）合计
+**$3.20**。贵不贵由"输出单价 × 输出长度"决定，不由实验数量决定。②**把 E6b 那个 void 补上只花了
+$0.95**，而它是这份总账里最后一个未回答的问题——现在它回答了，而且答案是反向的（§4r）。
+③**最贵的两臂买的是 3 个净新增证明**（p = 0.375 / 0.25），而最便宜的 E6c（$0.02）买的是本文
+学到的最尖锐的一个否定结果。 84% of the bill is `claude` and nearly all of it is v1.04's two arms;
+the entire contract-arm line, five arms and 1,411 units, costs $3.20; closing the void cost $0.95.
 
 ## 参考文献 / References
 

@@ -1,0 +1,44 @@
+{
+  "index": 16,
+  "case": "loopbench/loop-new/nested-1",
+  "expected": true,
+  "model": "claude-sonnet-4-5-20250929",
+  "repeat": 0,
+  "model_reply": "```json\n{\"pre\": {}}\n```\n\nWait \u2014 I need to reason about the two UB sources before answitting.\n\n**Division by zero:** `1/((k >= 100))` is zero only when `k < 100`. With `n \u2265 10` and `m \u2265 10`, the minimum value of `k` after the loops is `10 \u00d7 10 = 100`, so `(k >= 100)` is always 1 (never 0) inside the declared box. No division-by-zero risk.\n\n**Signed integer overflow on `k++`:** `k` accumulates `n \u00d7 m` increments. The maximum is `10000 \u00d7 10000 = 100,000,000`, which is well within `INT_MAX` (2,147,483,647) on ILP32. No overflow.\n\nThe declared bounds are already safe.\n\n```json\n{\"pre\": {}}\n```",
+  "served_model": "claude-sonnet-4-5-20250929",
+  "finish_reason": "stop",
+  "cached": false,
+  "aborted": null,
+  "ttft": 2.793,
+  "tokens_estimated": false,
+  "seconds": 4.572,
+  "tokens": {
+    "prompt": 415,
+    "completion": 423,
+    "total": 838,
+    "available": true
+  },
+  "reasoning_tokens": 0,
+  "parse_error": null,
+  "pre": {},
+  "narrowed": {
+    "n": [
+      10,
+      10000
+    ],
+    "m": [
+      10,
+      10000
+    ]
+  },
+  "retained": 1.0,
+  "per_dim": {
+    "n": 1.0,
+    "m": 1.0
+  },
+  "widened": [],
+  "unknown_parameters": [],
+  "shrunk": [],
+  "empty_interval": [],
+  "aliased": []
+}

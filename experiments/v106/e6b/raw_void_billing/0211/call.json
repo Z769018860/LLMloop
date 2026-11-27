@@ -1,0 +1,46 @@
+{
+  "model_requested": "deepseek-v4.1-flash-ark",
+  "request": {
+    "model": "deepseek-v4.1-flash-ark",
+    "temperature": 0.7,
+    "max_tokens": 16384,
+    "messages": [
+      {
+        "role": "system",
+        "content": "You state preconditions. You never prove anything: a separate verifier checks every value in the box you give, and it rejects the program if any of them overflows. Reply with one JSON object and nothing else."
+      },
+      {
+        "role": "user",
+        "content": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int z, int a, int k){\nlong long x = 0;\nlong long y = 0;\nlong long c = 0;\nlong long az = 0;\nx = a;\ny = 1;\nc = 1;\naz = ((long long) a) * z;\nwhile ((counter++) < 20)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + a;\n  y = y * z;\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"a\": [-2147483648, 2147483647], \"k\": [-2147483648, 2147483647], \"z\": [-2147483648, 2147483647]}"
+      }
+    ]
+  },
+  "started_utc": "2026-11-23T14:28:54Z",
+  "endpoint": "https://api.square16.org/v1",
+  "attempts": [
+    {
+      "attempt": 0,
+      "ok": false,
+      "http_status": 403,
+      "seconds": 0.719,
+      "error": "HTTPError: {\"error\":{\"message\":\"Insufficient user quota, remaining quota: \u00a5-0.212976 (request id: 202611231428553974621028268d9d6733eGRqK)\",\"type\":\"new_api_error\",\"param\":\"\",\"code\":\"insufficient_user_quota\"}}"
+    },
+    {
+      "attempt": 1,
+      "ok": false,
+      "http_status": 403,
+      "seconds": 0.735,
+      "error": "HTTPError: {\"error\":{\"message\":\"Insufficient user quota, remaining quota: \u00a5-0.212976 (request id: 202611231428571301542858268d9d6nHub0lj5)\",\"type\":\"new_api_error\",\"param\":\"\",\"code\":\"insufficient_user_quota\"}}"
+    },
+    {
+      "attempt": 2,
+      "ok": false,
+      "http_status": 403,
+      "seconds": 0.829,
+      "error": "HTTPError: {\"error\":{\"message\":\"Insufficient user quota, remaining quota: \u00a5-0.212976 (request id: 202611231428599185098668268d9d6HM2D2aRt)\",\"type\":\"new_api_error\",\"param\":\"\",\"code\":\"insufficient_user_quota\"}}"
+    }
+  ],
+  "seconds": 2.283,
+  "prompt_sha256": "2615fc61578431e3e2d56e0c10600e88b83547106307dccbe3011c4b7c788271",
+  "prompt_text": "Task: state a PRECONDITION for the C function below.\nWithin its declared parameter bounds the code may execute undefined behaviour of the kind \"signed integer overflow\" (also division by zero, bad shifts). Do not prove it and do not propose invariant atoms: write the CONTRACT -- the largest box on the parameters inside which you believe no such undefined behaviour occurs.\nA verifier checks every value in the box you give. The proof it obtains is reported as conditional on your box, together with the fraction of the declared box you kept; a box that is merely small is worthless, so keep as much of the declared domain as you can.\nRules: only the parameters named below may appear, each as [lo, hi] inclusive integers. Leave out a parameter to keep its declared bounds. Return an empty precondition if you believe the declared bounds are already safe. Use the names exactly as they appear in \"Declared bounds\": those are the entry values, and any other name is dropped.\nOutput schema (JSON only): {\"pre\": {\"<parameter>\": [lo, hi], ...}}\n\nSource:\nint f(int z, int a, int k){\nlong long x = 0;\nlong long y = 0;\nlong long c = 0;\nlong long az = 0;\nx = a;\ny = 1;\nc = 1;\naz = ((long long) a) * z;\nwhile ((counter++) < 20)\n{\n  if (!(c < k))\n    break;\n  c = c + 1;\n  x = (x * z) + a;\n  y = y * z;\n}\n\nreturn 0;\n}\n\n\nABI: ILP32\nDeclared bounds: {\"a\": [-2147483648, 2147483647], \"k\": [-2147483648, 2147483647], \"z\": [-2147483648, 2147483647]}"
+}

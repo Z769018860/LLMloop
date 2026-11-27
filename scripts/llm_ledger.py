@@ -44,10 +44,14 @@ ARMS = [
      '只重跑两个撞上限的模型，事后追加，不并入主数字'),
     ('v1.05 E6（契约臂）', 'experiments/v105/spec/results.json',
      '3 模型 × 83 例 × 3 次重复，每单元一次调用'),
-    ('v1.06 E6b（void）', 'experiments/v106/e6b/results.json',
-     'deepseek 16k；249 次调用里 231 次被拒，只有 18 个 usage'),
+    ('v1.06 E6b（已补齐）', 'experiments/v106/e6b/results.json',
+     'deepseek 16k；曾因余额为负只答 18 个，2026-11-27 补齐到 249/249'),
     ('v1.07 E6c', 'experiments/v107/e6c/results.json',
      'gpt-4.1-mini 2048、流式，83 例 × 1 次重复'),
+    ('v1.08 E6d（第二价位）', 'experiments/v108/e6d/results.json',
+     'claude-sonnet-4-5 2048，83 例 × 1 次；与 E6c 只差模型，贵约二十倍'),
+    ('v1.09 E6e（三次抽样）', 'experiments/v109/e6e/results.json',
+     'gpt-4.1-mini 2048，83 例 × 3 次；repeat 0 命中缓存，166 次真实调用'),
 ]
 
 
@@ -104,6 +108,12 @@ def collect():
             for a in models.values():
                 a['calls'] = a['usage'] or a['units']
             if sum(a['calls'] for a in models.values()) != paid:
+                # a cached row carries `usage` from the replay but cost nothing, so counting
+                # answers would overstate this arm by 83 calls (v1.09 hits exactly that)
+                for m, a in models.items():
+                    a['calls'] = sum(1 for r in rows
+                                     if (r.get('model') or '?') == m and not r.get('cached'))
+            if sum(a['calls'] for a in models.values()) != paid:
                 raise SystemExit('%s: derived calls %d != paid_calls %d'
                                  % (path, sum(a['calls'] for a in models.values()), paid))
         arms.append({'label': label, 'path': path, 'note': note, 'docs': doc,
@@ -157,8 +167,11 @@ def render(arms, total):
     L.append('## 1. 口径 / what counts\n')
     L.append('- **调用 / call**：真正发出去的请求数。v1.03 那两臂每个程序多轮生成，所以调用数多于单元数；'
              '其余各臂一单元一次调用。')
-    L.append('- **有 usage 的回答 / answers with usage**：只有这些才贡献 token。E6b 的 249 次调用里 '
-             '231 次被 `HTTP 403` 拒掉，没有 `usage`，也没有计费。')
+    L.append('- **有 usage 的回答 / answers with usage**：只有这些才贡献 token。E6b 曾有 231 次调用被 '
+             '`HTTP 403` 拒掉（余额为负），既没有 `usage` 也没有计费；那 231 个单元已于 2026-11-27 补齐，'
+             '现在这一臂 249/249 全部有 usage。')
+    L.append('- **缓存命中 / cache hit**：请求体与某次已付费的调用逐字节相同，答案从磁盘返回，**0 次调用**。'
+             'v1.09 的 repeat 0 就是这样复用了 v1.07 的 83 行，所以它 249 个单元只付了 166 次。')
     L.append('- **钱 / money**：端点 `api.square16.org` 是代理，它的账单不在仓库里，所以金额是**按公开价目'
              '代入的估算**，不是发票。价目与敏感度在 §4。')
     L.append('- **不计入 / not counted**：只读的本地分析、`merge`、对照臂的求解尝试（1,481 + 46 次，零模型调用）、'
@@ -186,14 +199,13 @@ def render(arms, total):
     L.append('')
     e6b = next((a for a in arms if 'E6b' in a['label']), None)
     if e6b is not None:
-        L.append('两列要分开读：**生成耗时**只算拿到回答的单元；E6b 的墙钟是 %.0f s，其中 %.0f s 是 '
-                 '231 次被拒调用之间的退避，不是生成。v1.03 与 v1.05 的驱动早于 `reasoning_tokens` '
-                 '这一列，所以那里写「未记录」而不是 0——把没记录的当 0 会让「推理占多少」这种问题'
-                 '得到一个虚假的答案。'
-                 % (e6b['seconds'], e6b['seconds'] - e6b['answered_seconds']))
+        L.append('两列要分开读：**生成耗时**只算拿到回答的单元，不含求解器时间，也不含失败重试的退避'
+                 '（E6b 曾有一轮 745 s 全是退避；补齐后这一臂已无退避）。v1.03 与 v1.05 的驱动早于 '
+                 '`reasoning_tokens` 这一列，所以那里写「未记录」而不是 0——把没记录的当 0 会让'
+                 '「推理占多少」这种问题得到一个虚假的答案。')
         L.append('')
     L.append('读法：**%d 次调用、%s token、%.2f 美元、%.1f 小时生成**。这是这项研究全部 LLM 开销，'
-             '从 v1.04 的原子臂到 v1.07 的契约臂，一次没漏。'
+             '从 v1.04 的原子臂到 v1.09 的三次抽样臂，一次没漏。'
              % (sum(a['calls'] for a in arms),
                 f"{sum(a['prompt'] for a in arms) + sum(a['completion'] for a in arms):,}",
                 total, sum(a['answered_seconds'] for a in arms) / 3600))
@@ -245,30 +257,30 @@ def render(arms, total):
     L.append('所以正确的句子是「**十到五十美元量级**」，不是「%.2f 美元」。这个精度足够回答本节的'
              '问题（哪一臂贵、哪一臂便宜、把没跑的那一臂补上要多少钱），不足以报销。\n' % total)
 
-    nb = unbought(arms)
-    if nb is not None:
-        L.append('## 5. 没买的那部分 / the arm that was frozen and never paid for\n')
-        L.append('E6b 的 231 次调用被 `HTTP 403` 挡在门外（余额为负），账户没有为它们付钱，这一臂'
-                 '因而是 void。把答案数量按已答的 %d 个外推：'
-                 % next(a for a in arms if 'E6b' in a['label'])['usage'])
-        L.append('')
+    e6b = next((a for a in arms if 'E6b' in a['label']), None)
+    if e6b is not None:
+        L.append('## 5. 曾是 void 的那一臂，和补上它的价钱 / the arm that was void, and what closing it cost\n')
+        L.append('E6b 在 2026-11-23 只答了 18 个单元就被 `HTTP 403 Insufficient user quota` 挡住，余额被'
+                 '打成负数。它因此在论文 §4o 里写作 void、不参与判定，那 18 个答案只作记录保留。\n')
+        L.append('2026-11-27 补齐：233 个空单元重新发送（旧目录移进 `raw_void_billing/` 归档，不删——'
+                 '那批空回答本身就是余额事件的证据），其余 16 个原样保留。现在 **249/249 全部有答案**。\n')
         L.append('| 项 | 值 |')
         L.append('| --- | --- |')
-        L.append('| 剩余调用 | %d |' % nb['remaining'])
-        L.append('| 每次 completion：均值 / 中位 | %.0f / %.0f tokens |'
-                 % (nb['mean_completion'], nb['median_completion']))
-        L.append('| completion 合计（两条统计各推一次） | %s – %s tokens |'
-                 % (f"{nb['completion_low']:,.0f}", f"{nb['completion']:,.0f}"))
-        L.append('| prompt 合计 | %s tokens |' % f"{nb['prompt']:,.0f}")
-        nb_low = cost_usd(nb['prompt'], nb['completion_low'], nb['model'])
-        nb_cost = cost_usd(nb['prompt'], nb['completion'], nb['model'])
-        L.append('| 按声明价目 | **%.2f – %.2f USD** |' % (nb_low, nb_cost))
-        L.append('| 按价目 × 2 | %.2f – %.2f USD |' % (nb_low * 2, nb_cost * 2))
+        L.append('| 单元 | 249（补齐前 18 个有 usage、其中 16 个解析成功；233 个无任何回答） |')
+        L.append('| 整臂 token | %s prompt / %s completion |'
+                 % (f"{e6b['prompt']:,}", f"{e6b['completion']:,}"))
+        L.append('| 整臂估算 | **%.2f USD**（其中 233 个单元是本轮新付，约 %.2f） |'
+                 % (e6b['usd'], e6b['usd'] * 233 / 249))
+        L.append('| 每次 completion：中位 | %s tokens |'
+                 % f"{int(sorted(r['completion_tokens'] for r in e6b['docs']['rows'] if r.get('completion_tokens'))[len(e6b['docs']['rows']) // 2]):,}")
         L.append('')
-        L.append('**这把「要不要把那个 void 补上」从立场问题变成了价格问题：不到一美元。** 它此前被写成'
-                 '「1.4 M token」，读起来像一大笔钱；换算之后它是这份总账里最便宜的一件事，而它是唯一还'
-                 '未回答的问题。反过来，最贵的是两个早已有结论的臂（v1.04 及其 16k 追加），它们买了 3 个'
-                 '净新增证明、p 分别为 0.375 与 0.25。\n')
+        L.append('**补齐之后这一臂不再是 void，而它给出的答案是反向的**：deepseek @16k 证出 **13/83**，'
+                 '对照 17/83；`t = 0` 上仅 S 为 2、仅 B 为 6，精确 McNemar **p = 0.289，不显著**。'
+                 '2048 上限的两个臂（E6c、E6d）是 4–5/83 与 p ≈ 0.001。也就是说「模型更差」这句话'
+                 '**取决于上限**，而这篇文章从 §4p 起就在说上限是混淆变量——现在它自己撞上了同一个问题。'
+                 '这一条已写进论文 §4r。它不给任何正向主张背书：13 对 17 仍然落后，只是不再显著落后。\n')
+        L.append('价格上，这把「要不要把那个 void 补上」从立场问题变成了价格问题：**不到一美元**。'
+                 '而这份总账里最贵的是两个早已有结论的臂（v1.04 及其 16k 追加）。\n')
 
     L.append('## 6. 复算 / recompute\n')
     L.append('```')
